@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/base}">
+
+<head>
+  <title>Quan ly Nguoi Dung</title>
+</head>
+
+<body>
+<div layout:fragment="content">
+
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a th:href="@{/dashboard}">Trang chu</a></li>
+      <li class="breadcrumb-item active">Quan ly Nguoi Dung</li>
+    </ol>
+  </nav>
+
+  <!-- Flash Messages -->
+  <div th:if="${successMsg}" class="alert alert-success alert-dismissible fade show alert-flash" role="alert">
+    <i class="bi bi-check-circle-fill me-2"></i>
+    <span th:text="${successMsg}"></span>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+  <div th:if="${errorMsg}" class="alert alert-danger alert-dismissible fade show alert-flash" role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    <span th:text="${errorMsg}"></span>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <div class="page-header-label">He thong</div>
+      <h4 class="page-header-title">Quan ly Nguoi Dung</h4>
+    </div>
+    <div class="page-header-actions d-flex gap-2">
+      <!-- Import Excel -->
+      <button class="btn btn-outline-secondary btn-sm"
+              data-bs-toggle="modal" data-bs-target="#modalImport">
+        <i class="bi bi-file-earmark-excel me-1"></i> Import Excel
+      </button>
+      <!-- Them moi -->
+      <a th:href="@{/nguoi-dung/them}" class="btn btn-primary btn-sm">
+        <i class="bi bi-person-plus me-1"></i> Them Nguoi Dung
+      </a>
+    </div>
+  </div>
+
+  <!-- Filter + Search -->
+  <div class="card mb-3">
+    <div class="card-body py-3">
+      <form th:action="@{/nguoi-dung}" method="get" class="row g-2 align-items-end">
+        <div class="col-md-5">
+          <label class="form-label small text-muted mb-1">Tim kiem</label>
+          <div class="input-group input-group-sm">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input type="text" name="keyword" class="form-control"
+                   placeholder="Ma, ho ten, email..."
+                   th:value="${keyword}">
+          </div>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small text-muted mb-1">Vai tro</label>
+          <select name="vaiTro" class="form-select form-select-sm">
+            <option value="">-- Tat ca vai tro --</option>
+            <option th:each="vt : ${danhSachVaiTro}"
+                    th:value="${vt.name()}"
+                    th:text="${vt.moTa}"
+                    th:selected="${vt.name() == vaiTroFilter}">
+            </option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <button type="submit" class="btn btn-primary btn-sm w-100">
+            <i class="bi bi-filter me-1"></i> Loc
+          </button>
+        </div>
+        <div class="col-md-2">
+          <a th:href="@{/nguoi-dung}" class="btn btn-outline-secondary btn-sm w-100">
+            <i class="bi bi-x-circle me-1"></i> Xoa loc
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Table Card -->
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <span><i class="bi bi-people me-2"></i>Danh sach nguoi dung</span>
+      <span class="badge bg-light text-dark" th:text="'Tong: ' + ${page.totalElements} + ' nguoi'"></span>
+    </div>
+    <div class="card-body p-0">
+
+      <!-- Empty State -->
+      <div th:if="${page.totalElements == 0}" class="empty-state">
+        <i class="bi bi-person-x empty-state-icon"></i>
+        <h6 class="empty-state-title">Chua co nguoi dung nao</h6>
+        <p class="empty-state-desc">
+          <span th:if="${keyword != null and !keyword.isBlank()}">
+            Khong tim thay ket qua cho tu khoa "<strong th:text="${keyword}"></strong>".
+          </span>
+          <span th:if="${keyword == null or keyword.isBlank()}">
+            Nhan "Them Nguoi Dung" de bat dau them moi.
+          </span>
+        </p>
+        <a th:href="@{/nguoi-dung/them}" class="btn btn-primary btn-sm">
+          <i class="bi bi-person-plus me-1"></i> Them Nguoi Dung
+        </a>
+      </div>
+
+      <!-- Table -->
+      <div th:if="${page.totalElements > 0}" class="table-responsive">
+        <table class="table table-hover table-bordered align-middle mb-0">
+          <thead>
+            <tr>
+              <th style="width:120px">Ma ND</th>
+              <th>Ho va Ten</th>
+              <th>Email</th>
+              <th style="width:120px">Ten DN</th>
+              <th style="width:110px">Vai Tro</th>
+              <th style="width:90px">Trang Thai</th>
+              <th style="width:110px" class="text-center">Thao Tac</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="nd : ${page.content}">
+              <td>
+                <code class="text-primary" th:text="${nd.maNguoiDung}"></code>
+              </td>
+              <td>
+                <div class="fw-500" th:text="${nd.hoTen}"></div>
+                <small class="text-muted" th:text="${nd.soDienThoai != null ? nd.soDienThoai : ''}"></small>
+              </td>
+              <td th:text="${nd.email}"></td>
+              <td th:text="${nd.tenDangNhap}"></td>
+              <td>
+                <div th:each="vt : ${nd.vaiTros}">
+                  <span class="badge bg-primary me-1 mb-1"
+                        th:text="${vt.id.vaiTro.moTa}"></span>
+                </div>
+              </td>
+              <td class="text-center">
+                <span th:if="${nd.trangThaiTK}" class="badge bg-success">Hoat dong</span>
+                <span th:unless="${nd.trangThaiTK}" class="badge bg-secondary">Bi khoa</span>
+              </td>
+              <td class="text-center">
+                <div class="d-flex justify-content-center gap-1">
+                  <!-- Sua -->
+                  <a th:href="@{/nguoi-dung/{id}/sua(id=${nd.maNguoiDung})}"
+                     class="btn btn-sm btn-outline-primary"
+                     data-bs-toggle="tooltip" title="Chinh sua">
+                    <i class="bi bi-pencil"></i>
+                  </a>
+                  <!-- Khoa / Mo khoa -->
+                  <form th:action="@{/nguoi-dung/{id}/khoa(id=${nd.maNguoiDung})}" method="post"
+                        th:if="${nd.trangThaiTK}"
+                        onsubmit="return confirmDelete(event, 'Khoa tai khoan ' + this.dataset.ten + '?')">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <input type="hidden" name="trangThai" value="false">
+                    <button type="submit" class="btn btn-sm btn-outline-warning"
+                            data-bs-toggle="tooltip" title="Khoa tai khoan"
+                            th:attr="data-ten=${nd.hoTen}">
+                      <i class="bi bi-lock"></i>
+                    </button>
+                  </form>
+                  <form th:action="@{/nguoi-dung/{id}/khoa(id=${nd.maNguoiDung})}" method="post"
+                        th:unless="${nd.trangThaiTK}">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <input type="hidden" name="trangThai" value="true">
+                    <button type="submit" class="btn btn-sm btn-outline-success"
+                            data-bs-toggle="tooltip" title="Mo khoa tai khoan">
+                      <i class="bi bi-unlock"></i>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="card-footer d-flex justify-content-between align-items-center"
+         th:if="${page.totalPages > 1}">
+      <small class="text-muted"
+             th:text="'Trang ' + (${page.number} + 1) + ' / ' + ${page.totalPages}"></small>
+      <nav>
+        <ul class="pagination pagination-sm mb-0">
+          <li class="page-item" th:classappend="${page.first} ? 'disabled'">
+            <a class="page-link"
+               th:href="@{/nguoi-dung(page=${page.number - 1}, keyword=${keyword}, vaiTro=${vaiTroFilter})}">
+              <i class="bi bi-chevron-left"></i>
+            </a>
+          </li>
+          <li class="page-item"
+              th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}"
+              th:classappend="${i == page.number} ? 'active'">
+            <a class="page-link"
+               th:href="@{/nguoi-dung(page=${i}, keyword=${keyword}, vaiTro=${vaiTroFilter})}"
+               th:text="${i + 1}">1</a>
+          </li>
+          <li class="page-item" th:classappend="${page.last} ? 'disabled'">
+            <a class="page-link"
+               th:href="@{/nguoi-dung(page=${page.number + 1}, keyword=${keyword}, vaiTro=${vaiTroFilter})}">
+              <i class="bi bi-chevron-right"></i>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+
+</div><!-- end layout:fragment content -->
+
+<!-- Modal Import Excel -->
+<div th:fragment="modals">
+  <div class="modal fade" id="modalImport" tabindex="-1" aria-labelledby="modalImportLabel">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalImportLabel">
+            <i class="bi bi-file-earmark-excel me-2"></i>Import Nguoi Dung tu Excel
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <form th:action="@{/nguoi-dung/import}" method="post" enctype="multipart/form-data"
+              onsubmit="showLoading(this)">
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+          <div class="modal-body">
+            <div class="alert alert-info small">
+              <i class="bi bi-info-circle me-1"></i>
+              File Excel phai co sheet ten "<strong>NguoiDung</strong>" voi cac cot:
+              MaNguoiDung | HoTen | Email | TenDangNhap | VaiTro | MaLopHC | MaDoanhNghiep.
+              Mat khau mac dinh se la MaNguoiDung.
+            </div>
+            <div class="mb-3">
+              <label for="fileImport" class="form-label">
+                Chon file Excel <span class="text-danger">*</span>
+              </label>
+              <input type="file" class="form-control" id="fileImport"
+                     name="file" accept=".xlsx" required>
+              <div class="form-text">Chi chap nhan dinh dang .xlsx (Excel 2007+)</div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Huy</button>
+            <button type="submit" class="btn btn-success">
+              <i class="bi bi-upload me-1"></i> Import
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

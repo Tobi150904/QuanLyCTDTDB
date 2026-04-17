@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/base}">
+
+<head>
+  <title>Trang Chu</title>
+</head>
+
+<body>
+<div layout:fragment="content">
+
+  <!-- ===== Welcome Strip ===== -->
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+      <p class="text-muted mb-1" style="font-size:0.8rem;">
+        <i class="bi bi-clock me-1"></i>
+        <span id="currentTime"></span>
+      </p>
+      <h4 class="mb-0 fw-bold" style="color:var(--primary);">
+        Xin chao,
+        <span th:text="${hoTen}">Nguoi Dung</span>!
+      </h4>
+      <p class="mb-0 text-muted" style="font-size:0.82rem;">
+        Ma so:
+        <code class="text-secondary" th:text="${maNguoiDung}">--</code>
+        &nbsp;&bull;&nbsp;
+        <span th:each="role, stat : ${roles}"
+              th:text="${#strings.replace(role.authority,'ROLE_','')} + (${stat.last} ? '' : ', ')"
+              class="fw-medium"></span>
+      </p>
+    </div>
+  </div>
+
+  <!-- ==========================================================
+       PDT: Phong Dao Tao
+  =========================================================== -->
+  <div sec:authorize="hasRole('PDT')">
+    <h6 class="text-uppercase fw-semibold mb-3"
+        style="color:#adb5bd;letter-spacing:.5px;font-size:.72rem;">
+      <i class="bi bi-grid-fill me-1"></i> Quan Tri He Thong
+    </h6>
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-sm-4 col-xl-3">
+        <a th:href="@{/nguoi-dung}" class="shortcut-card">
+          <div class="card p-3 h-100">
+            <div class="shortcut-icon navy"><i class="bi bi-people-fill"></i></div>
+            <div class="fw-semibold mb-1" style="font-size:.9rem;">Nguoi Dung</div>
+            <div class="text-muted" style="font-size:.8rem;">Quan ly tai khoan</div>
+          </div>
+        </a>
+      </div>
+      <div class="col-6 col-sm-4 col-xl-3">
+        <a th:href="@{/hoc-ky}" class="shortcut-card">
+          <div class="card p-3 h-100">
+            <div class="shortcut-icon green"><i class="bi bi-calendar3"></i></div>
+            <div class="fw-semibold mb-1" style="font-size:.9rem;">Hoc Ky</div>
+            <div class="text-muted" style="font-size:.8rem;">Nam hoc &amp; hoc ky</div>
+          </div>
+        </a>
+      </div>
+      <div class="col-6 col-sm-4 col-xl-3">
+        <a th:href="@{/doanh-nghiep}" class="shortcut-card">
+          <div class="card p-3 h-100">
+            <div class="shortcut-icon teal"><i class="bi bi-building-fill"></i></div>
+            <div class="fw-semibold mb-1" style="font-size:.9rem;">Doanh Nghiep</div>
+            <div class="text-muted" style="font-size:.8rem;">Danh sach doi tac</div>
+          </div>
+        </a>
+      </div>
+      <div class="col-6 col-sm-4 col-xl-3">
+        <a th:href="@{/ctdt}" class="shortcut-card">
+          <div class="card p-3 h-100">
+            <div class="shortcut-icon amber"><i class="bi bi-journal-bookmark-fill"></i></div>
+            <div class="fw-semibold mb-1" style="font-size:.9rem;">CTDT</div>
+            <div class="text-muted" style="font-size:.8rem;">Chuong trinh dao tao</div>
+          </div>
+        </a>
+      </div>
+      <div class="col-6 col-sm-4 col-xl-3">
+        <a th:href="@{/bao-cao}" class="shortcut-card">
+          <div class="card p-3 h-100">
+            <div class="shortcut-icon purple"><i class="bi bi-bar-chart-fill"></i></div>
+            <div class="fw-semibold mb-1" style="font-size:.9rem;">Bao Cao</div>
+            <div class="text-muted" style="font-size:.8rem;">Thong ke &amp; xuat file</div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================
+       BCN: Ban Chu Nhiem
+  =========================================================== -->
+  <div sec:authorize="hasRole('BCN')">
+    <h6 class="text-uppercase fw-semibold mb-3"
+        style="color:#adb5bd;letter-spacing:.5px;font-size:.72rem;">
+      <i class="bi bi-grid-fill me-1"></i> Quan Ly Khoa / Bo Mon
+    </h6>
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-sm-4 col-xl-3">
+        <a th:href="@{/ctdt}" class="shortcut-card">
+          <div class="card p-3 h-100">
+            <div class="shortcut-icon amber"><i class="bi bi-journal-bookmark-fill"></i></div>
+            <div class="fw-semibold mb-1" style="font-size:.9rem;">Chuong Trinh DT</div>
+            <div class="text-muted" style="font-size:.8rem;">Tao &amp; phe duyet CTDT</div>
+          </div>
+        </a>
+      </div>
+      <div class="col-6 col-sm-4 col-xl-3">
+        <a th:href="@{/hoc-phan}" class="shortcut-card">
+          <div class="card p-3 h-100">
+            <div class="shortcut-icon navy"><i class="bi bi-book-fill"></i></div>
+            <div class="fw-semibold mb-1" style="font-size:.9rem;">Hoc Phan</div>
+            <div class="text-muted" style="font-size:.8rem;">Quan ly hoc phan</div>
+          </div>
+        </a>
+      </div>
+      <div class="col-6 col-sm-4 col-xl-3">
+        <a th:href="@{/kien-tap}" class="shortcut-card">
+          <div class="card p-3 h-100">
+            <div class="shortcut-icon green"><i class="bi bi-briefcase-fill"></i></div>
+            <div class="fw-semibold mb-1" style="font-size:.9rem;">Kien Tap</div>
+            <div class="text-muted" style="font-size:.8rem;">Dot kien tap</div>
+          </div>
+        </a>
+      </div>
+      <div class="col-6 col-sm-4 col-xl-3">
+        <a th:href="@{/thuc-tap}" class="shortcut-card">
+          <div class="card p-3 h-100">
+            <div class="shortcut-icon red"><i class="bi bi-building-check"></i></div>
+            <div class="fw-semibold mb-1" style="font-size:.9rem;">Thuc Tap</div>
+            <div class="text-muted" style="font-size:.8rem;">Dot thuc tap</div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================
+       CNHP: Chu Nhiem Hoc Phan
+  =========================================================== -->
+  <div sec:authorize="hasRole('CNHP')">
+    <h6 class="text-uppercase fw-semibold mb-3"
+        style="color:#adb5bd;letter-spacing:.5px;font-size:.72rem;">
+      <i class="bi bi-grid-fill me-1"></i> Quan Ly Hoc Phan
+    </h6>
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-sm-4">
+        <a th:href="@{/hoc-phan}" class="shortcut-card">
+          <div class="card p-3 h-100">
+            <div class="shortcut-icon navy"><i class="bi bi-book-fill"></i></div>
+            <div class="fw-semibold mb-1" style="font-size:.9rem;">Hoc Phan Phu Trach</div>
+            <div class="text-muted" style="font-size:.8rem;">Xem &amp; quan ly doi ngu GV</div>
+          </div>
+        </a>
+      </div>
+      <div class="col-6 col-sm-4">
+        <a th:href="@{/lop-hoc-phan}" class="shortcut-card">
+          <div class="card p-3 h-100">
+            <div class="shortcut-icon green"><i class="bi bi-building"></i></div>
+            <div class="fw-semibold mb-1" style="font-size:.9rem;">Lop Hoc Phan</div>
+            <div class="text-muted" style="font-size:.8rem;">Phan cong giang vien</div>
+          </div>
+        </a>
+      </div>
+      <div class="col-6 col-sm-4">
+        <a th:href="@{/tai-lieu}" class="shortcut-card">
+          <div class="card p-3 h-100">
+            <div class="shortcut-icon amber"><i class="bi bi-file-earmark-text"></i></div>
+            <div class="fw-semibold mb-1" style="font-size:.9rem;">Tai Lieu Mon Hoc</div>
+            <div class="text-muted" style="font-size:.8rem;">Duyet de cuong chi tiet</div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================
+       GV: Giang Vien
+  =========================================================== -->
+  <div sec:authorize="hasRole('GV')">
+    <h6 class="text-uppercase fw-semibold mb-3"
+        style="color:#adb5bd;letter-spacing:.5px;font-size:.72rem;">
+      <i class="bi bi-grid-fill me-1"></i> Cong Viec Giang Day
+    </h6>
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-sm-4 col-xl-3">
+        <a th:href="@{/lop-hoc-phan}" class="shortcut-card">
+          <div class="card p-3 h-100">
+            <div class="shortcut-icon navy"><i class="bi bi-building"></i></div>
+            <div class="fw-semibold mb-1" style="font-size:.9rem;">Lop Phu Trach</div>
+            <div class="text-muted" style="font-size:.8rem;">Cac lop dang day</div>
+          </div>
+        </a>
+      </div>
+      <div class="col-6 col-sm-4 col-xl-3">
+        <a th:href="@{/tai-lieu}" class="shortcut-card">
+          <div class="card p-3 h-100">
+            <div class="shortcut-icon green"><i class="bi bi-file-earmark-arrow-up"></i></div>
+            <div class="fw-semibold mb-1" style="font-size:.9rem;">Nop Tai Lieu</div>
+            <div class="text-muted" style="font-size:.8rem;">De cuong chi tiet</div>
+          </div>
+        </a>
+      </div>
+      <div class="col-6 col-sm-4 col-xl-3">
+        <a th:href="@{/danh-gia}" class="shortcut-card">
+          <div class="card p-3 h-100">
+            <div class="shortcut-icon amber"><i class="bi bi-clipboard2-check-fill"></i></div>
+            <div class="fw-semibold mb-1" style="font-size:.9rem;">Nhan Xet SV</div>
+            <div class="text-muted" style="font-size:.8rem;">Danh gia sinh vien</div>
+          </div>
+        </a>
+      </div>
+      <div class="col-6 col-sm-4 col-xl-3">
+        <a th:href="@{/kien-tap}" class="shortcut-card">
+          <div class="card p-3 h-100">
+            <div class="shortcut-icon teal"><i class="bi bi-briefcase-fill"></i></div>
+            <div class="fw-semibold mb-1" style="font-size:.9rem;">Kien / Thuc Tap</div>
+            <div class="text-muted" style="font-size:.8rem;">Giam sat sinh vien</div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================
+       CVHT: Co Van Hoc Tap
+  =========================================================== -->
+  <div sec:authorize="hasRole('CVHT')">
+    <h6 class="text-uppercase fw-semibold mb-3"
+        style="color:#adb5bd;letter-spacing:.5px;font-size:.72rem;">
+      <i class="bi bi-grid-fill me-1"></i> Co Van Hoc Tap
+    </h6>
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-sm-4">
+        <a th:href="@{/danh-gia}" class="shortcut-card">
+          <div class="card p-3 h-100">
+            <div class="shortcut-icon navy"><i class="bi bi-clipboard2-check-fill"></i></div>
+            <div class="fw-semibold mb-1" style="font-size:.9rem;">Theo Doi SV</div>
+            <div class="text-muted" style="font-size:.8rem;">Nhan xet tu giang vien</div>
+          </div>
+        </a>
+      </div>
+      <div class="col-6 col-sm-4">
+        <a th:href="@{/canh-bao}" class="shortcut-card">
+          <div class="card p-3 h-100">
+            <div class="shortcut-icon amber"><i class="bi bi-exclamation-triangle-fill"></i></div>
+            <div class="fw-semibold mb-1" style="font-size:.9rem;">Canh Bao</div>
+            <div class="text-muted" style="font-size:.8rem;">Xu ly SV co van de</div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================
+       TTDTXS: Truong Trung Tam DAO TAO Xuat Sac
+  =========================================================== -->
+  <div sec:authorize="hasRole('TTDTXS')">
+    <h6 class="text-uppercase fw-semibold mb-3"
+        style="color:#adb5bd;letter-spacing:.5px;font-size:.72rem;">
+      <i class="bi bi-grid-fill me-1"></i> Trung Tam Dao Tao Xuat Sac
+    </h6>
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-sm-4 col-xl-3">
+        <a th:href="@{/ctdt}" class="shortcut-card">
+          <div class="card p-3 h-100">
+            <div class="shortcut-icon amber"><i class="bi bi-journal-bookmark-fill"></i></div>
+            <div class="fw-semibold mb-1" style="font-size:.9rem;">Duyet CTDT</div>
+            <div class="text-muted" style="font-size:.8rem;">Phe duyet chuong trinh</div>
+          </div>
+        </a>
+      </div>
+      <div class="col-6 col-sm-4 col-xl-3">
+        <a th:href="@{/kien-tap}" class="shortcut-card">
+          <div class="card p-3 h-100">
+            <div class="shortcut-icon green"><i class="bi bi-briefcase-fill"></i></div>
+            <div class="fw-semibold mb-1" style="font-size:.9rem;">Kien Tap</div>
+            <div class="text-muted" style="font-size:.8rem;">Quan ly dot kien tap</div>
+          </div>
+        </a>
+      </div>
+      <div class="col-6 col-sm-4 col-xl-3">
+        <a th:href="@{/thuc-tap}" class="shortcut-card">
+          <div class="card p-3 h-100">
+            <div class="shortcut-icon red"><i class="bi bi-building-check"></i></div>
+            <div class="fw-semibold mb-1" style="font-size:.9rem;">Thuc Tap</div>
+            <div class="text-muted" style="font-size:.8rem;">Quan ly dot thuc tap</div>
+          </div>
+        </a>
+      </div>
+      <div class="col-6 col-sm-4 col-xl-3">
+        <a th:href="@{/bao-cao}" class="shortcut-card">
+          <div class="card p-3 h-100">
+            <div class="shortcut-icon purple"><i class="bi bi-bar-chart-fill"></i></div>
+            <div class="fw-semibold mb-1" style="font-size:.9rem;">Bao Cao</div>
+            <div class="text-muted" style="font-size:.8rem;">Thong ke &amp; xuat file</div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================
+       DN: Doanh Nghiep
+  =========================================================== -->
+  <div sec:authorize="hasRole('DN')">
+    <h6 class="text-uppercase fw-semibold mb-3"
+        style="color:#adb5bd;letter-spacing:.5px;font-size:.72rem;">
+      <i class="bi bi-building-fill me-1"></i> Doanh Nghiep
+    </h6>
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-sm-4">
+        <a th:href="@{/kien-tap}" class="shortcut-card">
+          <div class="card p-3 h-100">
+            <div class="shortcut-icon green"><i class="bi bi-briefcase-fill"></i></div>
+            <div class="fw-semibold mb-1" style="font-size:.9rem;">Kien Tap</div>
+            <div class="text-muted" style="font-size:.8rem;">SV dang kien tap tai DN</div>
+          </div>
+        </a>
+      </div>
+      <div class="col-6 col-sm-4">
+        <a th:href="@{/thuc-tap}" class="shortcut-card">
+          <div class="card p-3 h-100">
+            <div class="shortcut-icon navy"><i class="bi bi-building-check"></i></div>
+            <div class="fw-semibold mb-1" style="font-size:.9rem;">Thuc Tap</div>
+            <div class="text-muted" style="font-size:.8rem;">SV dang thuc tap tai DN</div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================
+       SV: Sinh Vien
+  =========================================================== -->
+  <div sec:authorize="hasRole('SV')">
+    <h6 class="text-uppercase fw-semibold mb-3"
+        style="color:#adb5bd;letter-spacing:.5px;font-size:.72rem;">
+      <i class="bi bi-grid-fill me-1"></i> Cong Viec Hoc Tap
+    </h6>
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-sm-4">
+        <a th:href="@{/thuc-tap/cua-toi}" class="shortcut-card">
+          <div class="card p-3 h-100">
+            <div class="shortcut-icon navy"><i class="bi bi-person-check"></i></div>
+            <div class="fw-semibold mb-1" style="font-size:.9rem;">Thuc Tap Cua Toi</div>
+            <div class="text-muted" style="font-size:.8rem;">Thong tin phan cong</div>
+          </div>
+        </a>
+      </div>
+      <div class="col-6 col-sm-4">
+        <a th:href="@{/danh-gia}" class="shortcut-card">
+          <div class="card p-3 h-100">
+            <div class="shortcut-icon amber"><i class="bi bi-clipboard2-check-fill"></i></div>
+            <div class="fw-semibold mb-1" style="font-size:.9rem;">Nhan Xet Cua Toi</div>
+            <div class="text-muted" style="font-size:.8rem;">Nhan xet tu giang vien</div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<th:block layout:fragment="scripts">
+<script>
+  function updateTime() {
+    const el = document.getElementById('currentTime');
+    if (!el) return;
+    const opts = {
+      weekday: 'long', year: 'numeric',
+      month: 'long',   day: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    };
+    el.textContent = new Date().toLocaleDateString('vi-VN', opts);
+  }
+  updateTime();
+  setInterval(updateTime, 60000);
+</script>
+</th:block>
+</body>
+</html>

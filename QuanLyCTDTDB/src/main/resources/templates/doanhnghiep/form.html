@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+
+<head>
+  <title th:text="${isEdit} ? 'Sua Doanh Nghiep' : 'Them Doanh Nghiep'">Doanh Nghiep</title>
+</head>
+
+<body>
+<div layout:fragment="content">
+
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a th:href="@{/dashboard}">Trang chu</a></li>
+      <li class="breadcrumb-item"><a th:href="@{/doanh-nghiep}">Quan ly Doanh Nghiep</a></li>
+      <li class="breadcrumb-item active"
+          th:text="${isEdit} ? 'Chinh sua' : 'Them moi'">Them moi</li>
+    </ol>
+  </nav>
+
+  <!-- Error flash -->
+  <div th:if="${errorMsg}" class="alert alert-danger alert-dismissible fade show alert-flash" role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    <span th:text="${errorMsg}"></span>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <div class="page-header-label">Quan ly Doanh Nghiep</div>
+      <h4 class="page-header-title"
+          th:text="${isEdit} ? 'Chinh sua thong tin doanh nghiep' : 'Them doanh nghiep moi'">Form</h4>
+    </div>
+    <a th:href="@{/doanh-nghiep}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-arrow-left me-1"></i> Quay lai
+    </a>
+  </div>
+
+  <!-- Notice khi them moi -->
+  <div th:if="${!isEdit}" class="alert alert-info mb-3">
+    <i class="bi bi-info-circle-fill me-2"></i>
+    Khi tao moi doanh nghiep, he thong se <strong>tu dong tao tai khoan dang nhap</strong>
+    voi ten dang nhap = Ma Doanh Nghiep va mat khau mac dinh = Ma Doanh Nghiep.
+  </div>
+
+  <!-- Form Card -->
+  <div class="card" style="max-width: 820px;">
+    <div class="card-header">
+      <i class="bi bi-building me-2"></i>
+      <span th:text="${isEdit} ? 'Thong tin doanh nghiep' : 'Nhap thong tin doanh nghiep moi'"></span>
+    </div>
+    <div class="card-body">
+
+      <form th:action="${isEdit}
+                ? @{/doanh-nghiep/{ma}/sua(ma=${doanhNghiepDTO.maDoanhNghiep})}
+                : @{/doanh-nghiep/them}"
+            th:object="${doanhNghiepDTO}"
+            method="post"
+            onsubmit="showLoading(this)">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+
+        <!-- Section: Thong tin chinh -->
+        <h6 class="section-title mb-3">Thong tin doanh nghiep</h6>
+        <div class="row g-3 mb-4">
+
+          <!-- Ma doanh nghiep -->
+          <div class="col-md-4">
+            <div class="form-floating">
+              <input type="text" class="form-control"
+                     th:class="${#fields.hasErrors('maDoanhNghiep')} ? 'form-control is-invalid' : 'form-control'"
+                     id="maDoanhNghiep" placeholder="Ma DN"
+                     th:field="*{maDoanhNghiep}"
+                     th:readonly="${isEdit}">
+              <label for="maDoanhNghiep">Ma doanh nghiep <span class="text-danger">*</span></label>
+              <div class="invalid-feedback" th:errors="*{maDoanhNghiep}"></div>
+            </div>
+            <div class="form-text" th:if="${!isEdit}">
+              VD: DN001. Cung la ten dang nhap va mat khau mac dinh.
+            </div>
+          </div>
+
+          <!-- Ten doanh nghiep -->
+          <div class="col-md-8">
+            <div class="form-floating">
+              <input type="text" class="form-control"
+                     th:class="${#fields.hasErrors('tenDoanhNghiep')} ? 'form-control is-invalid' : 'form-control'"
+                     id="tenDoanhNghiep" placeholder="Ten doanh nghiep"
+                     th:field="*{tenDoanhNghiep}">
+              <label for="tenDoanhNghiep">Ten doanh nghiep <span class="text-danger">*</span></label>
+              <div class="invalid-feedback" th:errors="*{tenDoanhNghiep}"></div>
+            </div>
+          </div>
+
+          <!-- Linh vuc hoat dong -->
+          <div class="col-md-6">
+            <div class="form-floating">
+              <input type="text" class="form-control" id="linhVucHoatDong"
+                     placeholder="Linh vuc" th:field="*{linhVucHoatDong}">
+              <label for="linhVucHoatDong">Linh vuc hoat dong</label>
+            </div>
+          </div>
+
+          <!-- Nguoi dai dien -->
+          <div class="col-md-6">
+            <div class="form-floating">
+              <input type="text" class="form-control" id="nguoiDaiDien"
+                     placeholder="Nguoi dai dien" th:field="*{nguoiDaiDien}">
+              <label for="nguoiDaiDien">Nguoi dai dien</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section: Lien he -->
+        <h6 class="section-title mb-3">Thong tin lien he</h6>
+        <div class="row g-3 mb-4">
+
+          <!-- Email -->
+          <div class="col-md-6">
+            <div class="form-floating">
+              <input type="email" class="form-control"
+                     th:class="${#fields.hasErrors('emailDN')} ? 'form-control is-invalid' : 'form-control'"
+                     id="emailDN" placeholder="Email" th:field="*{emailDN}">
+              <label for="emailDN">Email lien he</label>
+              <div class="invalid-feedback" th:errors="*{emailDN}"></div>
+            </div>
+          </div>
+
+          <!-- So dien thoai -->
+          <div class="col-md-6">
+            <div class="form-floating">
+              <input type="text" class="form-control" id="soDienThoaiDN"
+                     placeholder="So dien thoai" th:field="*{soDienThoaiDN}">
+              <label for="soDienThoaiDN">So dien thoai</label>
+            </div>
+          </div>
+
+          <!-- Dia chi -->
+          <div class="col-12">
+            <label for="diaChiDN" class="form-label">Dia chi</label>
+            <textarea class="form-control" id="diaChiDN" rows="2"
+                      th:field="*{diaChiDN}" placeholder="Dia chi doanh nghiep..."></textarea>
+          </div>
+        </div>
+
+        <!-- Trang thai (chi khi sua) -->
+        <div class="row g-3 mb-4" th:if="${isEdit}">
+          <div class="col-md-4">
+            <div class="form-floating">
+              <select class="form-select" id="trangThai" th:field="*{trangThai}">
+                <option value="DangHopTac">Dang hop tac</option>
+                <option value="TamNgung">Tam ngung</option>
+              </select>
+              <label for="trangThai">Trang thai hop tac</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Submit -->
+        <div class="d-flex gap-2 pt-2 border-top">
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-save me-1"></i>
+            <span th:text="${isEdit} ? 'Luu thay doi' : 'Them doanh nghiep'">Luu</span>
+          </button>
+          <a th:href="@{/doanh-nghiep}" class="btn btn-outline-secondary">
+            <i class="bi bi-x-circle me-1"></i> Huy
+          </a>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+</div><!-- end content -->
+</body>
+</html>
