@@ -11,63 +11,50 @@ import java.util.List;
 
 import com.ntu.quanlyctdtdb.enums.TrangThaiCTDT;
 
-/**
- * Bang: ChuongTrinhDaoTao
- * PK : MaCTDT (VARCHAR 10) - VD: CTDT2024
- * created_at / updated_at tu dong qua BaseAuditEntity.
- */
 @Entity
 @Table(name = "ChuongTrinhDaoTao")
-@Getter
-@Setter
+@Getter @Setter
 @NoArgsConstructor
 public class ChuongTrinhDaoTao extends BaseAuditEntity {
 
     @Id
-    @Column(name = "MaCTDT", length = 10, nullable = false)
+    @Column(name = "MaCTDT", length = 20, nullable = false)
     private String maCTDT;
 
     @Column(name = "TenCTDT", length = 200, nullable = false)
     private String tenCTDT;
 
-    @Column(name = "NamApDung")
-    private Integer namApDung;
+    @Column(name = "Khoa", length = 20)
+    private String khoa;
 
-    @Column(name = "MoTa", columnDefinition = "TEXT")
-    private String moTa;
-
-    /**
-     * DuongDanFile: Duong dan file Word CTDT (luu tren disk)
-     */
-    @Column(name = "DuongDanFile", length = 500)
-    private String duongDanFile;
+    @Column(name = "FileWord", length = 255)
+    private String fileWord;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "TrangThai", length = 20, nullable = false)
     private TrangThaiCTDT trangThai = TrangThaiCTDT.BanNhap;
 
-    // FK: NguoiTao -> NguoiDung (BCN)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "MaNguoiTao", referencedColumnName = "MaNguoiDung")
+    @JoinColumn(name = "NguoiTao", referencedColumnName = "MaNguoiDung", nullable = false)
     private NguoiDung nguoiTao;
 
-    // FK: NguoiPheduyet -> NguoiDung (TTDTXS / PDT)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "MaNguoiPheduyet", referencedColumnName = "MaNguoiDung")
-    private NguoiDung nguoiPheduyet;
+    @JoinColumn(name = "NguoiDuyet", referencedColumnName = "MaNguoiDung")
+    private NguoiDung nguoiDuyet;
 
-    @Column(name = "NgayPheduyet")
-    private LocalDateTime ngayPheduyet;
+    @Column(name = "NgayDuyet")
+    private LocalDateTime ngayDuyet;
 
-    @Column(name = "GhiChuTuChoi", columnDefinition = "TEXT")
-    private String ghiChuTuChoi;
+    @OneToMany(mappedBy = "chuongTrinhDaoTao", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CTDT_HocPhan> chiTietHocPhans = new ArrayList<>();
 
-    // ---- Relations (mappedBy) ----
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-        name = "CTDT_HocPhan",
-        joinColumns = @JoinColumn(name = "MaCTDT"),
-        inverseJoinColumns = @JoinColumn(name = "MaHocPhan")
-    )
-    private List<HocPhan> hocPhans = new ArrayList<>();
+    public void addChiTietHocPhan(CTDT_HocPhan chiTiet) {
+        chiTietHocPhans.add(chiTiet);
+        chiTiet.setChuongTrinhDaoTao(this);
+    }
+
+    public void removeChiTietHocPhan(CTDT_HocPhan chiTiet) {
+        chiTietHocPhans.remove(chiTiet);
+        chiTiet.setChuongTrinhDaoTao(null);
+    }
 }

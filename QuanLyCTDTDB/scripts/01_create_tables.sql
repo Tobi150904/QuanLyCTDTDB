@@ -1,7 +1,7 @@
 -- ============================================================
--- DATABASE: QuanLyCTDTDB (Phiên bản 14 bảng hoàn chỉnh)
--- CHARSET: utf8mb4 (hỗ trợ tiếng Việt)
--- ENGINE: InnoDB (hỗ trợ transaction & FK)
+-- DATABASE: QuanLyCTDTDB (Phiên bản 15 bảng - ĐÃ CẬP NHẬT LẦN CUỐI)
+-- CHARSET: utf8mb4
+-- ENGINE: InnoDB
 -- ============================================================
 
 DROP DATABASE IF EXISTS QuanLyCTDTDB;
@@ -15,11 +15,11 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- ------------------------------------------------------------
 DROP TABLE IF EXISTS HocKyNamHoc;
 CREATE TABLE HocKyNamHoc (
-    MaHocKy VARCHAR(20) PRIMARY KEY COMMENT 'Mã học kỳ (VD: 2024.1)',
-    TenHocKy VARCHAR(50) NOT NULL COMMENT 'Tên học kỳ',
-    NgayBatDau DATE NOT NULL COMMENT 'Ngày bắt đầu',
-    NgayKetThuc DATE NOT NULL COMMENT 'Ngày kết thúc',
-    TrangThai ENUM('SapDienRa','DangDienRa','DaKetThuc') DEFAULT 'SapDienRa' COMMENT 'Trạng thái',
+    MaHocKy VARCHAR(20) PRIMARY KEY,
+    TenHocKy VARCHAR(50) NOT NULL,
+    NgayBatDau DATE NOT NULL,
+    NgayKetThuc DATE NOT NULL,
+    TrangThai ENUM('SapDienRa','DangDienRa','DaKetThuc') DEFAULT 'SapDienRa',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_trangthai (TrangThai)
@@ -30,11 +30,11 @@ CREATE TABLE HocKyNamHoc (
 -- ------------------------------------------------------------
 DROP TABLE IF EXISTS LopHanhChinh;
 CREATE TABLE LopHanhChinh (
-    MaLopHC VARCHAR(20) PRIMARY KEY COMMENT 'Mã lớp hành chính',
-    TenLop VARCHAR(100) NOT NULL COMMENT 'Tên lớp',
-    MaCTDT VARCHAR(20) COMMENT 'Mã CTĐT',
-    KhoaHoc VARCHAR(20) COMMENT 'Khóa học',
-    MaCoVan VARCHAR(20) COMMENT 'Cố vấn học tập',
+    MaLopHC VARCHAR(20) PRIMARY KEY,
+    TenLop VARCHAR(100) NOT NULL,
+    MaCTDT VARCHAR(20),
+    KhoaHoc VARCHAR(20),
+    MaCoVan VARCHAR(20),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_khoa (KhoaHoc)
@@ -45,18 +45,18 @@ CREATE TABLE LopHanhChinh (
 -- ------------------------------------------------------------
 DROP TABLE IF EXISTS NguoiDung;
 CREATE TABLE NguoiDung (
-    MaNguoiDung VARCHAR(20) PRIMARY KEY COMMENT 'Mã định danh duy nhất',
-    TenDangNhap VARCHAR(50) NOT NULL UNIQUE COMMENT 'Tên đăng nhập',
-    MatKhauHash VARCHAR(255) NOT NULL COMMENT 'Mật khẩu đã băm',
-    Email VARCHAR(100) NOT NULL UNIQUE COMMENT 'Email',
-    HoTen VARCHAR(100) NOT NULL COMMENT 'Họ tên',
-    SoDienThoai VARCHAR(15) COMMENT 'Số điện thoại',
-    MaLopHC VARCHAR(20) COMMENT 'Mã lớp hành chính (nếu là SV)',
-    TrangThaiSV ENUM('DangHoc','BaoLuu','ThoiHoc','TotNghiep') DEFAULT 'DangHoc' COMMENT 'Trạng thái SV',
-    HocHam VARCHAR(50) COMMENT 'Học hàm',
-    HocVi VARCHAR(50) COMMENT 'Học vị',
-    ChuyenNganh VARCHAR(200) COMMENT 'Chuyên ngành',
-    TrangThaiTK BIT DEFAULT 1 COMMENT '1=Hoạt động, 0=Khóa',
+    MaNguoiDung VARCHAR(20) PRIMARY KEY,
+    TenDangNhap VARCHAR(50) NOT NULL UNIQUE,
+    MatKhauHash VARCHAR(255) NOT NULL,
+    Email VARCHAR(100) NOT NULL UNIQUE,
+    HoTen VARCHAR(100) NOT NULL,
+    SoDienThoai VARCHAR(15),
+    MaLopHC VARCHAR(20),
+    TrangThaiSV ENUM('DangHoc','BaoLuu','ThoiHoc','TotNghiep') DEFAULT 'DangHoc',
+    HocHam VARCHAR(50),
+    HocVi VARCHAR(50),
+    ChuyenNganh VARCHAR(200),
+    TrangThaiTK BIT DEFAULT 1,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (MaLopHC) REFERENCES LopHanhChinh(MaLopHC) ON DELETE SET NULL,
@@ -71,7 +71,7 @@ CREATE TABLE NguoiDung (
 DROP TABLE IF EXISTS NguoiDung_VaiTro;
 CREATE TABLE NguoiDung_VaiTro (
     MaNguoiDung VARCHAR(20) NOT NULL,
-    VaiTro ENUM('SV','GV','CVHT','BCN','CNHP','PDT','TTDTXS','DN') NOT NULL COMMENT 'Vai trò',
+    VaiTro ENUM('SV','GV','CVHT','BCN','CNHP','PDT','TTDTXS','DN') NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (MaNguoiDung, VaiTro),
     FOREIGN KEY (MaNguoiDung) REFERENCES NguoiDung(MaNguoiDung) ON DELETE CASCADE,
@@ -83,15 +83,15 @@ CREATE TABLE NguoiDung_VaiTro (
 -- ------------------------------------------------------------
 DROP TABLE IF EXISTS ChuongTrinhDaoTao;
 CREATE TABLE ChuongTrinhDaoTao (
-    MaCTDT VARCHAR(20) PRIMARY KEY COMMENT 'Mã CTĐT',
-    TenCTDT VARCHAR(200) NOT NULL COMMENT 'Tên chương trình',
-    Khoa VARCHAR(20) COMMENT 'Khóa áp dụng',
-    FileWord VARCHAR(255) COMMENT 'Đường dẫn file Word CTĐT',
-    TrangThai ENUM('BanNhap','ChoDuyet','DaDuyet','DaHuy') DEFAULT 'BanNhap' COMMENT 'Trạng thái phê duyệt',
-    NguoiTao VARCHAR(20) NOT NULL COMMENT 'Người tạo',
+    MaCTDT VARCHAR(20) PRIMARY KEY,
+    TenCTDT VARCHAR(200) NOT NULL,
+    Khoa VARCHAR(20),
+    FileWord VARCHAR(255),
+    TrangThai ENUM('BanNhap','ChoDuyet','DaDuyet','DaHuy') DEFAULT 'BanNhap',
+    NguoiTao VARCHAR(20) NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    NguoiDuyet VARCHAR(20) COMMENT 'Người duyệt',
-    NgayDuyet DATETIME COMMENT 'Ngày duyệt',
+    NguoiDuyet VARCHAR(20),
+    NgayDuyet DATETIME,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (NguoiTao) REFERENCES NguoiDung(MaNguoiDung) ON DELETE RESTRICT,
     FOREIGN KEY (NguoiDuyet) REFERENCES NguoiDung(MaNguoiDung) ON DELETE SET NULL,
@@ -99,7 +99,6 @@ CREATE TABLE ChuongTrinhDaoTao (
     INDEX idx_khoa (Khoa)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Liên kết LopHanhChinh với ChuongTrinhDaoTao và CoVan
 ALTER TABLE LopHanhChinh ADD FOREIGN KEY (MaCTDT) REFERENCES ChuongTrinhDaoTao(MaCTDT) ON DELETE SET NULL;
 ALTER TABLE LopHanhChinh ADD FOREIGN KEY (MaCoVan) REFERENCES NguoiDung(MaNguoiDung) ON DELETE SET NULL;
 
@@ -108,12 +107,12 @@ ALTER TABLE LopHanhChinh ADD FOREIGN KEY (MaCoVan) REFERENCES NguoiDung(MaNguoiD
 -- ------------------------------------------------------------
 DROP TABLE IF EXISTS HocPhan;
 CREATE TABLE HocPhan (
-    MaHocPhan VARCHAR(20) PRIMARY KEY COMMENT 'Mã học phần',
-    TenHocPhan VARCHAR(200) NOT NULL COMMENT 'Tên học phần',
-    SoTinChi INT NOT NULL COMMENT 'Số tín chỉ',
-    ChuNhiemHP VARCHAR(20) NOT NULL COMMENT 'Chủ nhiệm học phần',
-    FileDeCuong VARCHAR(255) COMMENT 'Đường dẫn file đề cương',
-    TrangThai ENUM('BanNhap','ChoDuyet','DaDuyet') DEFAULT 'BanNhap' COMMENT 'Trạng thái phê duyệt',
+    MaHocPhan VARCHAR(20) PRIMARY KEY,
+    TenHocPhan VARCHAR(200) NOT NULL,
+    SoTinChi INT NOT NULL,
+    ChuNhiemHP VARCHAR(20) NOT NULL,
+    FileDeCuong VARCHAR(255),
+    TrangThai ENUM('BanNhap','ChoDuyet','DaDuyet') DEFAULT 'BanNhap',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (ChuNhiemHP) REFERENCES NguoiDung(MaNguoiDung) ON DELETE RESTRICT,
@@ -128,7 +127,7 @@ DROP TABLE IF EXISTS DoiNguGiangVienHP;
 CREATE TABLE DoiNguGiangVienHP (
     MaHocPhan VARCHAR(20) NOT NULL,
     MaGiangVien VARCHAR(20) NOT NULL,
-    TrangThai BIT DEFAULT 1 COMMENT '1=Còn trong đội ngũ',
+    TrangThai BIT DEFAULT 1,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (MaHocPhan, MaGiangVien),
     FOREIGN KEY (MaHocPhan) REFERENCES HocPhan(MaHocPhan) ON DELETE CASCADE,
@@ -141,39 +140,41 @@ CREATE TABLE DoiNguGiangVienHP (
 -- ------------------------------------------------------------
 DROP TABLE IF EXISTS DoanhNghiep;
 CREATE TABLE DoanhNghiep (
-    MaDoanhNghiep VARCHAR(20) PRIMARY KEY COMMENT 'Mã doanh nghiệp',
-    TenDoanhNghiep VARCHAR(200) NOT NULL COMMENT 'Tên doanh nghiệp',
-    LinhVuc VARCHAR(200) COMMENT 'Lĩnh vực',
-    NguoiDaiDien VARCHAR(100) COMMENT 'Người đại diện',
-    Email VARCHAR(100) COMMENT 'Email',
-    SoDienThoai VARCHAR(15) COMMENT 'SĐT',
-    TrangThai ENUM('DangHopTac','TamNgung') DEFAULT 'DangHopTac' COMMENT 'Trạng thái hợp tác',
+    MaDoanhNghiep VARCHAR(20) PRIMARY KEY,
+    TenDoanhNghiep VARCHAR(200) NOT NULL,
+    LinhVuc VARCHAR(200),
+    NguoiDaiDien VARCHAR(100),
+    Email VARCHAR(100),
+    SoDienThoai VARCHAR(15),
+    TrangThai ENUM('DangHopTac','TamNgung') DEFAULT 'DangHopTac',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_trangthai (TrangThai)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------
--- 9. LopHocPhan
+-- 9. LopHocPhan (ĐÃ CẬP NHẬT KHÓA CHÍNH)
 -- ------------------------------------------------------------
 DROP TABLE IF EXISTS LopHocPhan;
 CREATE TABLE LopHocPhan (
-    MaLopHP VARCHAR(20) PRIMARY KEY COMMENT 'Mã lớp học phần',
-    MaHocPhan VARCHAR(20) NOT NULL COMMENT 'Mã học phần',
-    MaHocKy VARCHAR(20) NOT NULL COMMENT 'Mã học kỳ',
-    MaGiangVien VARCHAR(20) COMMENT 'Giảng viên dạy',
-    NhomLop INT COMMENT 'Nhóm lớp',
-    SiSoToiDa INT NOT NULL COMMENT 'Sĩ số tối đa',
-    SiSoThucTe INT DEFAULT 0 COMMENT 'Sĩ số thực tế',
-    TrangThai ENUM('DangMo','DaDong','DaHuy') DEFAULT 'DangMo' COMMENT 'Trạng thái lớp',
+    MaHocPhan VARCHAR(20) NOT NULL,
+    MaHocKy VARCHAR(20) NOT NULL,
+    MaLopHC VARCHAR(20) NOT NULL,
+    NhomHocPhan INT NOT NULL UNIQUE,
+    MaGiangVien VARCHAR(20),
+    SiSoToiDa INT NOT NULL,
+    SiSoThucTe INT DEFAULT 0,
+    TrangThai ENUM('DangMo','DaDong','DaHuy') DEFAULT 'DangMo',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (MaHocPhan, MaHocKy, MaLopHC),
     FOREIGN KEY (MaHocPhan) REFERENCES HocPhan(MaHocPhan) ON DELETE RESTRICT,
     FOREIGN KEY (MaHocKy) REFERENCES HocKyNamHoc(MaHocKy) ON DELETE RESTRICT,
+    FOREIGN KEY (MaLopHC) REFERENCES LopHanhChinh(MaLopHC) ON DELETE RESTRICT,
     FOREIGN KEY (MaGiangVien) REFERENCES NguoiDung(MaNguoiDung) ON DELETE SET NULL,
-    UNIQUE KEY uk_lophp_hocphan_hocky_nhom (MaHocPhan, MaHocKy, NhomLop),
     INDEX idx_trangthai (TrangThai),
     INDEX idx_magiangvien (MaGiangVien),
+    INDEX idx_nhomhocphan (NhomHocPhan),
     CHECK (SiSoToiDa BETWEEN 30 AND 60)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -182,20 +183,22 @@ CREATE TABLE LopHocPhan (
 -- ------------------------------------------------------------
 DROP TABLE IF EXISTS TaiLieuMonHoc;
 CREATE TABLE TaiLieuMonHoc (
-    MaTaiLieu INT AUTO_INCREMENT PRIMARY KEY COMMENT 'Mã tài liệu',
-    MaLopHP VARCHAR(20) NOT NULL COMMENT 'Lớp học phần',
-    Loai ENUM('DeCuongChiTiet','DeThiGiuaKy','DeThiCuoiKy') NOT NULL COMMENT 'Loại tài liệu',
-    FileDinhKem VARCHAR(255) NOT NULL COMMENT 'Đường dẫn file',
-    NgayNop DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Ngày nộp',
-    TrangThai ENUM('ChoDuyet','DaDuyet','TuChoi') DEFAULT 'ChoDuyet' COMMENT 'Trạng thái duyệt',
-    NguoiDuyet VARCHAR(20) COMMENT 'Người duyệt',
-    NgayDuyet DATETIME COMMENT 'Ngày duyệt',
-    NhanXet TEXT COMMENT 'Nhận xét',
+    MaTaiLieu INT AUTO_INCREMENT PRIMARY KEY,
+    MaHocPhan VARCHAR(20) NOT NULL,
+    MaHocKy VARCHAR(20) NOT NULL,
+    MaLopHC VARCHAR(20) NOT NULL,
+    Loai ENUM('DeCuongChiTiet','DeThiGiuaKy','DeThiCuoiKy') NOT NULL,
+    FileDinhKem VARCHAR(255) NOT NULL,
+    NgayNop DATETIME DEFAULT CURRENT_TIMESTAMP,
+    TrangThai ENUM('ChoDuyet','DaDuyet','TuChoi') DEFAULT 'ChoDuyet',
+    NguoiDuyet VARCHAR(20),
+    NgayDuyet DATETIME,
+    NhanXet TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (MaLopHP) REFERENCES LopHocPhan(MaLopHP) ON DELETE CASCADE,
+    FOREIGN KEY (MaHocPhan, MaHocKy, MaLopHC) REFERENCES LopHocPhan(MaHocPhan, MaHocKy, MaLopHC) ON DELETE CASCADE,
     FOREIGN KEY (NguoiDuyet) REFERENCES NguoiDung(MaNguoiDung) ON DELETE SET NULL,
-    UNIQUE KEY uk_taidieu_loai (MaLopHP, Loai),
+    UNIQUE KEY uk_taidieu_lophp_loai (MaHocPhan, MaHocKy, MaLopHC, Loai),
     INDEX idx_trangthai (TrangThai),
     INDEX idx_loai (Loai)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -205,22 +208,26 @@ CREATE TABLE TaiLieuMonHoc (
 -- ------------------------------------------------------------
 DROP TABLE IF EXISTS DanhGiaVaCanhBao;
 CREATE TABLE DanhGiaVaCanhBao (
-    MaDanhGia INT AUTO_INCREMENT PRIMARY KEY COMMENT 'Mã nhận xét/cảnh báo',
-    MaSV VARCHAR(20) NOT NULL COMMENT 'Sinh viên',
-    MaLopHP VARCHAR(20) NOT NULL COMMENT 'Lớp học phần',
-    NguoiNhanXet VARCHAR(20) NOT NULL COMMENT 'Người nhận xét',
-    LoaiNhanXet ENUM('TichCuc','TieuCuc') NOT NULL COMMENT 'Loại nhận xét',
-    NoiDung TEXT NOT NULL COMMENT 'Nội dung nhận xét',
-    DaXuLy BIT DEFAULT 0 COMMENT '0=Chưa xử lý, 1=Đã xử lý',
-    KetQuaXuLy TEXT COMMENT 'Kết quả xử lý',
+    MaDanhGia INT AUTO_INCREMENT PRIMARY KEY,
+    MaSV VARCHAR(20) NOT NULL,
+    MaHocPhan VARCHAR(20) NULL,
+    MaHocKy VARCHAR(20) NULL,
+    MaLopHC VARCHAR(20) NULL,
+    NguoiNhanXet VARCHAR(20) NOT NULL,
+    LoaiNhanXet ENUM('TichCuc','TieuCuc') NOT NULL,
+    LoaiDanhGia ENUM('QuaTrinh','TongKetKy') DEFAULT 'QuaTrinh' NOT NULL,
+    NoiDung TEXT NOT NULL,
+    DaXuLy BIT DEFAULT 0,
+    KetQuaXuLy TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (MaSV) REFERENCES NguoiDung(MaNguoiDung) ON DELETE CASCADE,
-    FOREIGN KEY (MaLopHP) REFERENCES LopHocPhan(MaLopHP) ON DELETE CASCADE,
+    FOREIGN KEY (MaHocPhan, MaHocKy, MaLopHC) REFERENCES LopHocPhan(MaHocPhan, MaHocKy, MaLopHC) ON DELETE CASCADE,
     FOREIGN KEY (NguoiNhanXet) REFERENCES NguoiDung(MaNguoiDung) ON DELETE RESTRICT,
     INDEX idx_masv (MaSV),
     INDEX idx_daxuly (DaXuLy),
-    INDEX idx_loai (LoaiNhanXet)
+    INDEX idx_loai (LoaiNhanXet),
+    INDEX idx_loaidanhgia (LoaiDanhGia)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------
@@ -228,18 +235,19 @@ CREATE TABLE DanhGiaVaCanhBao (
 -- ------------------------------------------------------------
 DROP TABLE IF EXISTS DotKienTap;
 CREATE TABLE DotKienTap (
-    MaDotKT INT AUTO_INCREMENT PRIMARY KEY COMMENT 'Mã đợt kiến tập',
-    TenDotKT VARCHAR(200) NOT NULL COMMENT 'Tên đợt',
-    MaLopHC VARCHAR(20) NOT NULL COMMENT 'Lớp hành chính',
-    MaHocKy VARCHAR(20) NOT NULL COMMENT 'Học kỳ',
-    ThoiGian DATE COMMENT 'Ngày tổ chức',
-    MaGVPhuTrach VARCHAR(20) COMMENT 'GV phụ trách',
-    MaDoanhNghiep VARCHAR(20) NOT NULL COMMENT 'Doanh nghiệp',
-    NhanXetGV TEXT COMMENT 'Nhận xét của GV',
-    NhanXetDN TEXT COMMENT 'Nhận xét của DN',
-    TrangThai ENUM('ChuanBi','ChoDuyet','DaDuyet','DaThucHien','DaHuy') DEFAULT 'ChuanBi' COMMENT 'Trạng thái',
-    NguoiDuyet VARCHAR(20) COMMENT 'Người duyệt',
-    NgayDuyet DATETIME COMMENT 'Ngày duyệt',
+    MaDotKT INT AUTO_INCREMENT PRIMARY KEY,
+    TenDotKT VARCHAR(200) NOT NULL,
+    MaLopHC VARCHAR(20) NOT NULL,
+    MaHocKy VARCHAR(20) NOT NULL,
+    ThoiGian DATE,
+    MaGVPhuTrach VARCHAR(20),
+    MaDoanhNghiep VARCHAR(20) NOT NULL,
+    NhanXetGV TEXT,
+    NhanXetDN TEXT,
+    FileMinhChung VARCHAR(255),
+    TrangThai ENUM('ChuanBi','ChoDuyet','DaDuyet','DaThucHien','DaHuy') DEFAULT 'ChuanBi',
+    NguoiDuyet VARCHAR(20),
+    NgayDuyet DATETIME,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (MaLopHC) REFERENCES LopHanhChinh(MaLopHC) ON DELETE RESTRICT,
@@ -256,14 +264,15 @@ CREATE TABLE DotKienTap (
 -- ------------------------------------------------------------
 DROP TABLE IF EXISTS DotThucTap;
 CREATE TABLE DotThucTap (
-    MaDotTT INT AUTO_INCREMENT PRIMARY KEY COMMENT 'Mã đợt thực tập',
-    TenDotTT VARCHAR(200) NOT NULL COMMENT 'Tên đợt',
-    MaHocKy VARCHAR(20) NOT NULL COMMENT 'Học kỳ',
-    NgayBatDau DATE COMMENT 'Ngày bắt đầu',
-    NgayKetThuc DATE COMMENT 'Ngày kết thúc',
-    TrangThai ENUM('ChuanBi','ChoDuyet','DaDuyet','DangThucHien','DaKetThuc') DEFAULT 'ChuanBi' COMMENT 'Trạng thái',
-    NguoiDuyet VARCHAR(20) COMMENT 'Người duyệt',
-    NgayDuyet DATETIME COMMENT 'Ngày duyệt',
+    MaDotTT INT AUTO_INCREMENT PRIMARY KEY,
+    TenDotTT VARCHAR(200) NOT NULL,
+    MaHocKy VARCHAR(20) NOT NULL,
+    NgayBatDau DATE,
+    NgayKetThuc DATE,
+    FileMinhChung VARCHAR(255),
+    TrangThai ENUM('ChuanBi','ChoDuyet','DaDuyet','DangThucHien','DaKetThuc') DEFAULT 'ChuanBi',
+    NguoiDuyet VARCHAR(20),
+    NgayDuyet DATETIME,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (MaHocKy) REFERENCES HocKyNamHoc(MaHocKy) ON DELETE RESTRICT,
@@ -277,17 +286,17 @@ CREATE TABLE DotThucTap (
 -- ------------------------------------------------------------
 DROP TABLE IF EXISTS PhanCongThucTap;
 CREATE TABLE PhanCongThucTap (
-    MaThucTap INT AUTO_INCREMENT PRIMARY KEY COMMENT 'Mã phân công thực tập',
-    MaDotTT INT NOT NULL COMMENT 'Đợt thực tập',
-    MaSV VARCHAR(20) NOT NULL COMMENT 'Sinh viên',
-    MaDoanhNghiep VARCHAR(20) NOT NULL COMMENT 'Doanh nghiệp',
-    MaGiangVienGiamSat VARCHAR(20) COMMENT 'GV giám sát',
-    DiemDN DECIMAL(4,2) COMMENT 'Điểm DN (thang 10)',
-    NhanXetDN TEXT COMMENT 'Nhận xét DN',
-    DiemGV DECIMAL(4,2) COMMENT 'Điểm GV (thang 10)',
-    NhanXetGV TEXT COMMENT 'Nhận xét GV',
-    NhanXetSV TEXT COMMENT 'Nhận xét SV',
-    TrangThai ENUM('DaPhanCong','DangThucTap','DaKetThuc','DaHuy') DEFAULT 'DaPhanCong' COMMENT 'Trạng thái',
+    MaThucTap INT AUTO_INCREMENT PRIMARY KEY,
+    MaDotTT INT NOT NULL,
+    MaSV VARCHAR(20) NOT NULL,
+    MaDoanhNghiep VARCHAR(20) NOT NULL,
+    MaGiangVienGiamSat VARCHAR(20),
+    DiemDN DECIMAL(4,2),
+    NhanXetDN TEXT,
+    DiemGV DECIMAL(4,2),
+    NhanXetGV TEXT,
+    NhanXetSV TEXT,
+    TrangThai ENUM('DaPhanCong','DangThucTap','DaKetThuc','DaHuy') DEFAULT 'DaPhanCong',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (MaDotTT) REFERENCES DotThucTap(MaDotTT) ON DELETE CASCADE,
@@ -299,6 +308,25 @@ CREATE TABLE PhanCongThucTap (
     INDEX idx_masv (MaSV),
     CHECK (DiemDN IS NULL OR (DiemDN >= 0 AND DiemDN <= 10)),
     CHECK (DiemGV IS NULL OR (DiemGV >= 0 AND DiemGV <= 10))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ------------------------------------------------------------
+-- 15. CTDT_HocPhan
+-- ------------------------------------------------------------
+DROP TABLE IF EXISTS CTDT_HocPhan;
+CREATE TABLE CTDT_HocPhan (
+    MaCTDT VARCHAR(20) NOT NULL,
+    MaHocPhan VARCHAR(20) NOT NULL,
+    HocKyThu INT NOT NULL,
+    SoLopDuKien INT DEFAULT 1,
+    BatBuoc BIT DEFAULT 1,
+    GhiChu VARCHAR(255),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (MaCTDT, MaHocPhan),
+    FOREIGN KEY (MaCTDT) REFERENCES ChuongTrinhDaoTao(MaCTDT) ON DELETE CASCADE,
+    FOREIGN KEY (MaHocPhan) REFERENCES HocPhan(MaHocPhan) ON DELETE RESTRICT,
+    INDEX idx_hockythu (HocKyThu)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;

@@ -10,15 +10,9 @@ import java.time.LocalDateTime;
 
 import com.ntu.quanlyctdtdb.enums.TrangThaiDotKT;
 
-/**
- * Bang: DotKienTap
- * PK : MaDotKT (INT, auto increment)
- * Workflow: ChuanBi -> ChoDuyet -> DaDuyet -> DaThucHien | DaHuy
- */
 @Entity
 @Table(name = "DotKienTap")
-@Getter
-@Setter
+@Getter @Setter
 @NoArgsConstructor
 public class DotKienTap extends BaseAuditEntity {
 
@@ -27,39 +21,27 @@ public class DotKienTap extends BaseAuditEntity {
     @Column(name = "MaDotKT")
     private Integer maDotKT;
 
-    @Column(name = "TenDot", length = 100, nullable = false)
-    private String tenDot;
+    @Column(name = "TenDotKT", length = 200, nullable = false)
+    private String tenDotKT;
 
-    // FK: LopHanhChinh (lop duoc kien tap)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "MaLopHC", referencedColumnName = "MaLopHC", nullable = false)
+    @JoinColumn(name = "MaLopHC", nullable = false)
     private LopHanhChinh lopHanhChinh;
 
-    @Column(name = "NgayBatDau")
-    private LocalDate ngayBatDau;
-
-    @Column(name = "NgayKetThuc")
-    private LocalDate ngayKetThuc;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "TrangThai", length = 20, nullable = false)
-    private TrangThaiDotKT trangThai = TrangThaiDotKT.ChuanBi;
-
-    @Column(name = "NoiDungKienTap", columnDefinition = "TEXT")
-    private String noiDungKienTap;
-
-    // FK: NguoiTao -> NguoiDung (BCN)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "MaNguoiTao", referencedColumnName = "MaNguoiDung", nullable = false)
-    private NguoiDung nguoiTao;
+    @JoinColumn(name = "MaHocKy", nullable = false)
+    private HocKyNamHoc hocKy;
 
-    // FK: NguoiPheduyet -> NguoiDung (TTDTXS/PDT)
+    @Column(name = "ThoiGian")
+    private LocalDate thoiGian;
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "MaNguoiPheduyet", referencedColumnName = "MaNguoiDung")
-    private NguoiDung nguoiPheduyet;
+    @JoinColumn(name = "MaGVPhuTrach")
+    private NguoiDung gvPhuTrach;
 
-    @Column(name = "NgayPheduyet")
-    private LocalDateTime ngayPheduyet;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "MaDoanhNghiep", nullable = false)
+    private DoanhNghiep doanhNghiep;
 
     @Column(name = "NhanXetGV", columnDefinition = "TEXT")
     private String nhanXetGV;
@@ -67,8 +49,17 @@ public class DotKienTap extends BaseAuditEntity {
     @Column(name = "NhanXetDN", columnDefinition = "TEXT")
     private String nhanXetDN;
 
-    // FK: DoanhNghiepTiepNhan -> DoanhNghiep
+    @Column(name = "FileMinhChung", length = 255)
+    private String fileMinhChung;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "TrangThai", length = 20, nullable = false)
+    private TrangThaiDotKT trangThai = TrangThaiDotKT.ChuanBi;
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "MaDoanhNghiep", referencedColumnName = "MaDoanhNghiep")
-    private DoanhNghiep doanhNghiep;
+    @JoinColumn(name = "NguoiDuyet")
+    private NguoiDung nguoiDuyet;
+
+    @Column(name = "NgayDuyet")
+    private LocalDateTime ngayDuyet;
 }

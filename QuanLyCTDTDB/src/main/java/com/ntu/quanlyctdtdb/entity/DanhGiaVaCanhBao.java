@@ -5,20 +5,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
-
 import com.ntu.quanlyctdtdb.enums.LoaiNhanXet;
+import com.ntu.quanlyctdtdb.enums.LoaiDanhGia;
 
-/**
- * Bang: DanhGiaVaCanhBao
- * PK : MaDanhGia (INT, auto increment)
- * RULE: LoaiNhanXet = TieuCuc -> tu dong gui email + tao canh bao cho CVHT
- * created_at/updated_at tu dong qua BaseAuditEntity.
- */
 @Entity
 @Table(name = "DanhGiaVaCanhBao")
-@Getter
-@Setter
+@Getter @Setter
 @NoArgsConstructor
 public class DanhGiaVaCanhBao extends BaseAuditEntity {
 
@@ -27,47 +19,36 @@ public class DanhGiaVaCanhBao extends BaseAuditEntity {
     @Column(name = "MaDanhGia")
     private Integer maDanhGia;
 
-    // FK: LopHocPhan
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "MaLopHP", referencedColumnName = "MaLopHP", nullable = false)
-    private LopHocPhan lopHocPhan;
-
-    // FK: SinhVien -> NguoiDung (role SV)
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "MaSinhVien", referencedColumnName = "MaNguoiDung", nullable = false)
+    @JoinColumn(name = "MaSV", referencedColumnName = "MaNguoiDung", nullable = false)
     private NguoiDung sinhVien;
 
-    // FK: GiangVien -> NguoiDung (role GV, nguoi nhap nhan xet)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "MaGiangVien", referencedColumnName = "MaNguoiDung", nullable = false)
-    private NguoiDung giangVien;
+    @JoinColumns({
+        @JoinColumn(name = "MaHocPhan", referencedColumnName = "MaHocPhan"),
+        @JoinColumn(name = "MaHocKy", referencedColumnName = "MaHocKy"),
+        @JoinColumn(name = "MaLopHC", referencedColumnName = "MaLopHC")
+    })
+    private LopHocPhan lopHocPhan;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "NguoiNhanXet", referencedColumnName = "MaNguoiDung", nullable = false)
+    private NguoiDung nguoiNhanXet;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "LoaiNhanXet", length = 10, nullable = false)
     private LoaiNhanXet loaiNhanXet;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "LoaiDanhGia", length = 20, nullable = false)
+    private LoaiDanhGia loaiDanhGia = LoaiDanhGia.QuaTrinh;
+
     @Column(name = "NoiDung", columnDefinition = "TEXT", nullable = false)
     private String noiDung;
 
-    @Column(name = "NgayNhanXet", nullable = false,
-            columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
-    private LocalDateTime ngayNhanXet = LocalDateTime.now();
-
-    /**
-     * DaXuLy: CVHT xu ly canh bao
-     * true = 1 = Da xu ly, false = 0 = Chua xu ly
-     */
-    @Column(name = "DaXuLy", nullable = false, columnDefinition = "BIT(1) DEFAULT 0")
+    @Column(name = "DaXuLy", nullable = false)
     private Boolean daXuLy = false;
 
     @Column(name = "KetQuaXuLy", columnDefinition = "TEXT")
     private String ketQuaXuLy;
-
-    @Column(name = "NgayXuLy")
-    private LocalDateTime ngayXuLy;
-
-    // FK: NguoiXuLy -> NguoiDung (role CVHT)
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "MaNguoiXuLy", referencedColumnName = "MaNguoiDung")
-    private NguoiDung nguoiXuLy;
 }

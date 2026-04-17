@@ -1,50 +1,43 @@
 package com.ntu.quanlyctdtdb.dto;
 
 import com.ntu.quanlyctdtdb.enums.TrangThaiCTDT;
-
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * DTO cho ChuongTrinhDaoTao.
- *
- * QUAN TRONG - autoCreateLopHocPhan (Rule 5, docs/04_QUICK_LOOKUP.md):
- *   Khi TTDTXS/PDT phe duyet CTDT (trangThai -> DaDuyet),
- *   Service phai goi autoCreateLopHocPhan() trong cung @Transactional.
- *   Ket qua: moi HocPhan trong CTDT se co 1 LopHocPhan moi voi MaGiangVien = null.
- *
- * FileWord: duong dan sau khi upload, khong phai MultipartFile.
- */
-@Getter
-@Setter
+import java.util.ArrayList;
+import java.util.List;
+
+@Getter @Setter
 @NoArgsConstructor
 public class ChuongTrinhDaoTaoDTO {
 
-    @NotBlank(message = "Ma CTDT khong duoc de trong")
-    @Size(max = 20, message = "Ma CTDT toi da 20 ky tu (VD: CNTT-CLC-K64)")
+    @NotBlank @Size(max = 20)
     private String maCTDT;
 
-    @NotBlank(message = "Ten CTDT khong duoc de trong")
-    @Size(max = 200)
+    @NotBlank @Size(max = 200)
     private String tenCTDT;
 
-    @Size(max = 20, message = "Khoa hoc toi da 20 ky tu (VD: K64)")
+    @Size(max = 20)
     private String khoa;
 
-    // Duong dan file Word sau upload (set boi Service)
     private String fileWord;
-
     private TrangThaiCTDT trangThai = TrangThaiCTDT.BanNhap;
-
-    // NguoiTao: lay tu @AuthenticationPrincipal, khong de nguoi dung nhap
     private String maNguoiTao;
-
-    // NguoiDuyet: TTDTXS hoac PDT
     private String maNguoiDuyet;
-
-    // Ly do tu choi khi trangThai -> TuChoi (tranh trung voi DaHuy)
-    @Size(max = 1000)
     private String lyDoTuChoi;
+
+    private List<CTDT_HocPhanDTO> chiTietHocPhans = new ArrayList<>();
+
+    @Getter @Setter
+    @NoArgsConstructor
+    public static class CTDT_HocPhanDTO {
+        private String maHocPhan;
+        private Integer hocKyThu;
+        private Integer soLopDuKien = 1;
+        private Boolean batBuoc = true;
+        private String ghiChu;
+    }
 }

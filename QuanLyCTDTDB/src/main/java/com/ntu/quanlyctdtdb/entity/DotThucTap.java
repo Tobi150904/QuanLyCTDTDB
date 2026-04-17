@@ -12,15 +12,9 @@ import java.util.List;
 
 import com.ntu.quanlyctdtdb.enums.TrangThaiDotTT;
 
-/**
- * Bang: DotThucTap
- * PK : MaDotTT (INT, auto increment)
- * Workflow: ChuanBi -> ChoDuyet -> DaDuyet -> DangThucHien -> DaKetThuc
- */
 @Entity
 @Table(name = "DotThucTap")
-@Getter
-@Setter
+@Getter @Setter
 @NoArgsConstructor
 public class DotThucTap extends BaseAuditEntity {
 
@@ -29,12 +23,11 @@ public class DotThucTap extends BaseAuditEntity {
     @Column(name = "MaDotTT")
     private Integer maDotTT;
 
-    @Column(name = "TenDot", length = 100, nullable = false)
-    private String tenDot;
+    @Column(name = "TenDotTT", length = 200, nullable = false)
+    private String tenDotTT;
 
-    // FK: HocKy
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "MaHocKy", referencedColumnName = "MaHocKy", nullable = false)
+    @JoinColumn(name = "MaHocKy", nullable = false)
     private HocKyNamHoc hocKy;
 
     @Column(name = "NgayBatDau")
@@ -43,27 +36,20 @@ public class DotThucTap extends BaseAuditEntity {
     @Column(name = "NgayKetThuc")
     private LocalDate ngayKetThuc;
 
+    @Column(name = "FileMinhChung", length = 255)
+    private String fileMinhChung;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "TrangThai", length = 20, nullable = false)
     private TrangThaiDotTT trangThai = TrangThaiDotTT.ChuanBi;
 
-    @Column(name = "MoTa", columnDefinition = "TEXT")
-    private String moTa;
-
-    // FK: NguoiTao -> NguoiDung (PDT/TTDTXS)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "MaNguoiTao", referencedColumnName = "MaNguoiDung", nullable = false)
-    private NguoiDung nguoiTao;
+    @JoinColumn(name = "NguoiDuyet")
+    private NguoiDung nguoiDuyet;
 
-    // FK: NguoiPheduyet -> NguoiDung
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "MaNguoiPheduyet", referencedColumnName = "MaNguoiDung")
-    private NguoiDung nguoiPheduyet;
+    @Column(name = "NgayDuyet")
+    private LocalDateTime ngayDuyet;
 
-    @Column(name = "NgayPheduyet")
-    private LocalDateTime ngayPheduyet;
-
-    // ---- Relations (mappedBy) ----
-    @OneToMany(mappedBy = "dotThucTap", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "dotThucTap", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PhanCongThucTap> phanCongs = new ArrayList<>();
 }

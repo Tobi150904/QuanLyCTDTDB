@@ -8,41 +8,33 @@ import lombok.Setter;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Bang: LopHanhChinh
- * PK : MaLopHC (VARCHAR 10) - VD: CNTT2021A
- */
 @Entity
 @Table(name = "LopHanhChinh")
-@Getter
-@Setter
+@Getter @Setter
 @NoArgsConstructor
 public class LopHanhChinh extends BaseAuditEntity {
 
     @Id
-    @Column(name = "MaLopHC", length = 10, nullable = false)
+    @Column(name = "MaLopHC", length = 20, nullable = false)
     private String maLopHC;
 
-    @Column(name = "TenLopHC", length = 50, nullable = false)
-    private String tenLopHC;
+    @Column(name = "TenLop", length = 100, nullable = false)
+    private String tenLop;
 
-    @Column(name = "Khoa", length = 20)
-    private String khoa;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "MaCTDT")
+    private ChuongTrinhDaoTao chuongTrinhDaoTao;
 
-    @Column(name = "NamNhapHoc")
-    private Integer namNhapHoc;
+    @Column(name = "KhoaHoc", length = 20)
+    private String khoaHoc;
 
-    /**
-     * FK -> NguoiDung.MaNguoiDung (role CVHT)
-     * Dung String de tranh circular reference voi NguoiDung
-     */
-    @Column(name = "MaCoVan", length = 10)
-    private String maCoVan;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "MaCoVan", referencedColumnName = "MaNguoiDung")
+    private NguoiDung coVan;
 
-    // ---- Relations (mappedBy) ----
-    @OneToMany(mappedBy = "lopHanhChinh", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "lopHanhChinh")
     private List<NguoiDung> sinhViens = new ArrayList<>();
 
-    @OneToMany(mappedBy = "lopHanhChinh", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "lopHanhChinh")
     private List<DotKienTap> dotKienTaps = new ArrayList<>();
 }

@@ -1,11 +1,13 @@
 package com.ntu.quanlyctdtdb.repository;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-
+import com.ntu.quanlyctdtdb.entity.LopHocPhanId;
 import com.ntu.quanlyctdtdb.entity.TaiLieuMonHoc;
 import com.ntu.quanlyctdtdb.enums.LoaiTaiLieu;
 import com.ntu.quanlyctdtdb.enums.TrangThaiTaiLieu;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
@@ -13,36 +15,14 @@ import java.util.Optional;
 @Repository
 public interface TaiLieuMonHocRepository extends JpaRepository<TaiLieuMonHoc, Integer> {
 
-    /**
-     * Lay tat ca tai lieu cua mot lop HP
-     */
-    List<TaiLieuMonHoc> findByLopHocPhan_MaLopHP(String maLopHP);
+    @Query("SELECT t FROM TaiLieuMonHoc t WHERE t.lopHocPhan.id = :id")
+    List<TaiLieuMonHoc> findByLopHocPhanId(@Param("id") LopHocPhanId id);
 
-    /**
-     * Rule 6: Tim tai lieu cu de UPDATE (thay vi INSERT moi)
-     * Dung khi GV nop lai sau khi bi tu choi
-     */
-    Optional<TaiLieuMonHoc> findByLopHocPhan_MaLopHPAndLoai(String maLopHP, LoaiTaiLieu loai);
+    @Query("SELECT t FROM TaiLieuMonHoc t WHERE t.lopHocPhan.id = :id AND t.loai = :loai")
+    Optional<TaiLieuMonHoc> findByLopHocPhanIdAndLoai(@Param("id") LopHocPhanId id, @Param("loai") LoaiTaiLieu loai);
 
-    /**
-     * Lay tai lieu theo trang thai (cho CNHP xem danh sach can duyet)
-     */
     List<TaiLieuMonHoc> findByTrangThai(TrangThaiTaiLieu trangThai);
 
-    /**
-     * Lay tai lieu cua lop HP theo trang thai
-     */
-    List<TaiLieuMonHoc> findByLopHocPhan_MaLopHPAndTrangThai(
-            String maLopHP, TrangThaiTaiLieu trangThai);
-
-    /**
-     * Lay tai lieu GV da nop (xem lich su nop)
-     */
-    List<TaiLieuMonHoc> findByNguoiNop_MaNguoiDung(String maGV);
-
-    /**
-     * Dem so tai lieu cho duyet trong lop HP cua CNHP
-     */
-    long countByLopHocPhan_HocPhan_ChuNhiemHP_MaNguoiDungAndTrangThai(
-            String maCNHP, TrangThaiTaiLieu trangThai);
+    @Query("SELECT t FROM TaiLieuMonHoc t WHERE t.lopHocPhan.hocPhan.chuNhiemHP.maNguoiDung = :maCNHP AND t.trangThai = :trangThai")
+    List<TaiLieuMonHoc> findByCNHPAndTrangThai(@Param("maCNHP") String maCNHP, @Param("trangThai") TrangThaiTaiLieu trangThai);
 }
