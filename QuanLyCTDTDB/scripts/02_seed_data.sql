@@ -1,5 +1,5 @@
 -- ============================================================================
--- SEED DATA: Dữ liệu mẫu phù hợp với cấu trúc mới (Nhóm học phần)
+-- SEED DATA: Dữ liệu mẫu phù hợp với cấu trúc cuối cùng
 -- ============================================================================
 
 -- Học kỳ
@@ -9,13 +9,13 @@ INSERT INTO HocKyNamHoc (MaHocKy, TenHocKy, NgayBatDau, NgayKetThuc, TrangThai) 
 ('K64-HK3', 'Học kỳ 3 Khóa 64', '2025-06-01', '2025-08-31', 'SapDienRa');
 
 -- Doanh nghiệp
-INSERT INTO DoanhNghiep (MaDoanhNghiep, TenDoanhNghiep, LinhVuc, NguoiDaiDien, Email, SoDienThoai, TrangThai) VALUES
-('DN001', 'Công ty Cổ phần FPT Solutions', 'Phần mềm & IT', 'Ông Trần Văn A', 'hr@fpt.com', '0938123456', 'DangHopTac'),
-('DN002', 'Viettel Corporation', 'Viễn thông & Công nghệ', 'Ông Nguyễn Văn B', 'contact@viettel.com.vn', '0976543210', 'DangHopTac'),
-('DN003', 'Samsung Electronics Vietnam', 'Điện tử & Công nghệ', 'Bà Lê Thị C', 'career@samsung.com.vn', '0934567890', 'DangHopTac'),
-('DN004', 'Techcombank', 'Tài chính & Banking', 'Ông Hoàng Văn D', 'recruitment@techcombank.com.vn', '0919876543', 'DangHopTac');
+INSERT INTO DoanhNghiep (MaDoanhNghiep, TenDoanhNghiep, LinhVuc, NguoiDaiDien, Email, SoDienThoai, DiaChiDN, TrangThai) VALUES
+('DN001', 'Công ty Cổ phần FPT Solutions', 'Phần mềm & IT', 'Ông Trần Văn A', 'hr@fpt.com', '0938123456', '123 Nguyễn Văn Cừ, Q.1, TP.HCM', 'DangHopTac'),
+('DN002', 'Viettel Corporation', 'Viễn thông & Công nghệ', 'Ông Nguyễn Văn B', 'contact@viettel.com.vn', '0976543210', '45 Giải Phóng, Hà Nội', 'DangHopTac'),
+('DN003', 'Samsung Electronics Vietnam', 'Điện tử & Công nghệ', 'Bà Lê Thị C', 'career@samsung.com.vn', '0934567890', 'KCN Yên Phong, Bắc Ninh', 'DangHopTac'),
+('DN004', 'Techcombank', 'Tài chính & Banking', 'Ông Hoàng Văn D', 'recruitment@techcombank.com.vn', '0919876543', '191 Bà Triệu, Hà Nội', 'DangHopTac');
 
--- Người dùng (PDT, TTDT, BCN, GV, CVHT, DN, SV)
+-- Người dùng
 INSERT INTO NguoiDung (MaNguoiDung, TenDangNhap, MatKhauHash, Email, HoTen, TrangThaiTK) VALUES
 ('PDT001', 'pdt_admin', '$2a$10$example_hash_pdt', 'pdt@university.edu', 'Trần Văn X - Phòng Đào tạo', 1);
 INSERT INTO NguoiDung_VaiTro (MaNguoiDung, VaiTro) VALUES ('PDT001', 'PDT');
@@ -62,7 +62,7 @@ INSERT INTO LopHanhChinh (MaLopHC, TenLop, MaCTDT, KhoaHoc, MaCoVan) VALUES
 ('64.HTTT-CLC', 'HTTT Chất lượng cao K64', NULL, 'K64', 'CVHT002'),
 ('64.KHMT', 'Khoa học máy tính K64', NULL, 'K64', 'CVHT003');
 
--- Sinh viên (cập nhật MaLopHC theo mã mới)
+-- Sinh viên
 INSERT INTO NguoiDung (MaNguoiDung, TenDangNhap, MatKhauHash, Email, HoTen, MaLopHC, TrangThaiSV, TrangThaiTK) VALUES
 ('SV001', 'sv_trana', '$2a$10$example_hash_sv1', 'tran.a@student.edu', 'Trần Văn A', '64.CNTT-CLC', 'DangHoc', 1),
 ('SV002', 'sv_nguyenb', '$2a$10$example_hash_sv2', 'nguyen.b@student.edu', 'Nguyễn Thị B', '64.CNTT-CLC', 'DangHoc', 1),
@@ -93,7 +93,7 @@ INSERT INTO DoiNguGiangVienHP (MaHocPhan, MaGiangVien, TrangThai) VALUES
 ('CSC201', 'GV003', 1), ('CSC201', 'GV005', 1),
 ('WEB101', 'GV004', 1), ('WEB101', 'GV002', 1);
 
--- Cấu trúc CTDT chi tiết
+-- Cấu trúc CTDT
 INSERT INTO CTDT_HocPhan (MaCTDT, MaHocPhan, HocKyThu, SoLopDuKien, BatBuoc) VALUES
 ('CNTT-CLC-K64', 'MAT322', 1, 2, 1),
 ('CNTT-CLC-K64', 'CSC101', 1, 2, 1),
@@ -102,13 +102,9 @@ INSERT INTO CTDT_HocPhan (MaCTDT, MaHocPhan, HocKyThu, SoLopDuKien, BatBuoc) VAL
 ('CNTT-CLC-K64', 'CSC201', 2, 1, 1),
 ('CNTT-CLC-K64', 'WEB101', 2, 1, 1);
 
--- Lớp học phần (theo cấu trúc mới: MaHocPhan, MaHocKy, NhomHocPhan, MaLopHC)
-INSERT INTO LopHocPhan (MaHocPhan, MaHocKy, NhomHocPhan, MaLopHC, MaGiangVien, SiSoToiDa, SiSoThucTe, TrangThai) VALUES
--- MAT322: 2 nhóm cho 2 lớp hành chính khác nhau
-('MAT322', 'K64-HK1', 9, '64.CNTT-CLC', 'GV001', 70, 60, 'DangMo'),
-('MAT322', 'K64-HK1', 15, '64.HTTT-CLC', 'GV002', 70, 59, 'DangMo'),
--- CSC101: 2 nhóm cho cùng 1 lớp hành chính (chia nhóm thực hành)
-('CSC101', 'K64-HK1', 1, '64.CNTT-CLC', 'GV002', 45, 45, 'DangMo'),
-('CSC101', 'K64-HK1', 2, '64.CNTT-CLC', 'GV004', 45, 40, 'DangMo'),
--- CSC102: 1 nhóm
-('CSC102', 'K64-HK1', 1, '64.CNTT-CLC', 'GV003', 50, 48, 'DangMo');
+-- Lớp học phần
+INSERT INTO LopHocPhan (MaHocPhan, MaHocKy, MaLopHC, NhomHocPhan, MaGiangVien, SiSoToiDa, SiSoThucTe, TrangThai) VALUES
+('MAT322', 'K64-HK1', '64.CNTT-CLC', 9, 'GV001', 60, 60, 'DangMo'),
+('MAT322', 'K64-HK1', '64.HTTT-CLC', 15, 'GV002', 60, 59, 'DangMo'),
+('CSC101', 'K64-HK1', '64.CNTT-CLC', 1, 'GV002', 45, 45, 'DangMo'),
+('CSC102', 'K64-HK1', '64.CNTT-CLC', 2, 'GV003', 50, 48, 'DangMo');

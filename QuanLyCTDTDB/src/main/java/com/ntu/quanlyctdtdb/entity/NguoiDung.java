@@ -48,9 +48,6 @@ public class NguoiDung extends BaseAuditEntity {
     @Column(name = "SoDienThoai", length = 15)
     private String soDienThoai;
 
-    @Column(name = "DiaChi", length = 255)
-    private String diaChi;
-
     /**
      * ChuyenNganh: Chi dung voi GV
      */

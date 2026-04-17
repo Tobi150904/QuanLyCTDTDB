@@ -74,9 +74,9 @@ public interface NguoiDungRepository extends JpaRepository<NguoiDung, String> {
      * Lay CVHT cua mot SV (de gui email canh bao - Rule 4)
      */
     @Query("SELECT cvht FROM NguoiDung cvht " +
-           "JOIN LopHanhChinh lhc ON lhc.maCoVan = cvht.maNguoiDung " +
-           "JOIN NguoiDung sv ON sv.lopHanhChinh.maLopHC = lhc.maLopHC " +
-           "WHERE sv.maNguoiDung = :maSV")
+       "JOIN LopHanhChinh lhc ON lhc.coVan.maNguoiDung = cvht.maNguoiDung " +
+       "JOIN NguoiDung sv ON sv.lopHanhChinh.maLopHC = lhc.maLopHC " +
+       "WHERE sv.maNguoiDung = :maSV")
     Optional<NguoiDung> findCVHTByMaSV(@Param("maSV") String maSV);
 
     /**

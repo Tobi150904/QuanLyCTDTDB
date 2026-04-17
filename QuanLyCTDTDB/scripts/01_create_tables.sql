@@ -1,5 +1,5 @@
 -- ============================================================
--- DATABASE: QuanLyCTDTDB (Phiên bản 15 bảng - ĐÃ CẬP NHẬT LẦN CUỐI)
+-- DATABASE: QuanLyCTDTDB (Phiên bản 15 bảng - HOÀN CHỈNH)
 -- CHARSET: utf8mb4
 -- ENGINE: InnoDB
 -- ============================================================
@@ -26,60 +26,7 @@ CREATE TABLE HocKyNamHoc (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------
--- 2. LopHanhChinh
--- ------------------------------------------------------------
-DROP TABLE IF EXISTS LopHanhChinh;
-CREATE TABLE LopHanhChinh (
-    MaLopHC VARCHAR(20) PRIMARY KEY,
-    TenLop VARCHAR(100) NOT NULL,
-    MaCTDT VARCHAR(20),
-    KhoaHoc VARCHAR(20),
-    MaCoVan VARCHAR(20),
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_khoa (KhoaHoc)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ------------------------------------------------------------
--- 3. NguoiDung
--- ------------------------------------------------------------
-DROP TABLE IF EXISTS NguoiDung;
-CREATE TABLE NguoiDung (
-    MaNguoiDung VARCHAR(20) PRIMARY KEY,
-    TenDangNhap VARCHAR(50) NOT NULL UNIQUE,
-    MatKhauHash VARCHAR(255) NOT NULL,
-    Email VARCHAR(100) NOT NULL UNIQUE,
-    HoTen VARCHAR(100) NOT NULL,
-    SoDienThoai VARCHAR(15),
-    MaLopHC VARCHAR(20),
-    TrangThaiSV ENUM('DangHoc','BaoLuu','ThoiHoc','TotNghiep') DEFAULT 'DangHoc',
-    HocHam VARCHAR(50),
-    HocVi VARCHAR(50),
-    ChuyenNganh VARCHAR(200),
-    TrangThaiTK BIT DEFAULT 1,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (MaLopHC) REFERENCES LopHanhChinh(MaLopHC) ON DELETE SET NULL,
-    INDEX idx_email (Email),
-    INDEX idx_tendangnhap (TenDangNhap),
-    INDEX idx_maloPhc (MaLopHC)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ------------------------------------------------------------
--- 4. NguoiDung_VaiTro
--- ------------------------------------------------------------
-DROP TABLE IF EXISTS NguoiDung_VaiTro;
-CREATE TABLE NguoiDung_VaiTro (
-    MaNguoiDung VARCHAR(20) NOT NULL,
-    VaiTro ENUM('SV','GV','CVHT','BCN','CNHP','PDT','TTDTXS','DN') NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (MaNguoiDung, VaiTro),
-    FOREIGN KEY (MaNguoiDung) REFERENCES NguoiDung(MaNguoiDung) ON DELETE CASCADE,
-    INDEX idx_vaitro (VaiTro)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ------------------------------------------------------------
--- 5. ChuongTrinhDaoTao
+-- 2. ChuongTrinhDaoTao
 -- ------------------------------------------------------------
 DROP TABLE IF EXISTS ChuongTrinhDaoTao;
 CREATE TABLE ChuongTrinhDaoTao (
@@ -99,11 +46,82 @@ CREATE TABLE ChuongTrinhDaoTao (
     INDEX idx_khoa (Khoa)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-ALTER TABLE LopHanhChinh ADD FOREIGN KEY (MaCTDT) REFERENCES ChuongTrinhDaoTao(MaCTDT) ON DELETE SET NULL;
-ALTER TABLE LopHanhChinh ADD FOREIGN KEY (MaCoVan) REFERENCES NguoiDung(MaNguoiDung) ON DELETE SET NULL;
+-- ------------------------------------------------------------
+-- 3. LopHanhChinh
+-- ------------------------------------------------------------
+DROP TABLE IF EXISTS LopHanhChinh;
+CREATE TABLE LopHanhChinh (
+    MaLopHC VARCHAR(20) PRIMARY KEY,
+    TenLop VARCHAR(100) NOT NULL,
+    MaCTDT VARCHAR(20),
+    KhoaHoc VARCHAR(20),
+    MaCoVan VARCHAR(20),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (MaCTDT) REFERENCES ChuongTrinhDaoTao(MaCTDT) ON DELETE SET NULL,
+    FOREIGN KEY (MaCoVan) REFERENCES NguoiDung(MaNguoiDung) ON DELETE SET NULL,
+    INDEX idx_khoa (KhoaHoc)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------
--- 6. HocPhan
+-- 4. NguoiDung
+-- ------------------------------------------------------------
+DROP TABLE IF EXISTS NguoiDung;
+CREATE TABLE NguoiDung (
+    MaNguoiDung VARCHAR(20) PRIMARY KEY,
+    TenDangNhap VARCHAR(50) NOT NULL UNIQUE,
+    MatKhauHash VARCHAR(255) NOT NULL,
+    Email VARCHAR(100) NOT NULL UNIQUE,
+    HoTen VARCHAR(100) NOT NULL,
+    SoDienThoai VARCHAR(15),
+    MaLopHC VARCHAR(20),
+    TrangThaiSV ENUM('DangHoc','BaoLuu','ThoiHoc','TotNghiep') DEFAULT 'DangHoc',
+    HocHam VARCHAR(50),
+    HocVi VARCHAR(50),
+    ChuyenNganh VARCHAR(200),
+    TrangThaiTK BIT DEFAULT 1,
+    MaDoanhNghiep VARCHAR(20),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (MaLopHC) REFERENCES LopHanhChinh(MaLopHC) ON DELETE SET NULL,
+    FOREIGN KEY (MaDoanhNghiep) REFERENCES DoanhNghiep(MaDoanhNghiep) ON DELETE SET NULL,
+    INDEX idx_email (Email),
+    INDEX idx_tendangnhap (TenDangNhap),
+    INDEX idx_maloPhc (MaLopHC)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ------------------------------------------------------------
+-- 5. NguoiDung_VaiTro
+-- ------------------------------------------------------------
+DROP TABLE IF EXISTS NguoiDung_VaiTro;
+CREATE TABLE NguoiDung_VaiTro (
+    MaNguoiDung VARCHAR(20) NOT NULL,
+    VaiTro ENUM('SV','GV','CVHT','BCN','CNHP','PDT','TTDTXS','DN') NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (MaNguoiDung, VaiTro),
+    FOREIGN KEY (MaNguoiDung) REFERENCES NguoiDung(MaNguoiDung) ON DELETE CASCADE,
+    INDEX idx_vaitro (VaiTro)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ------------------------------------------------------------
+-- 6. DoanhNghiep
+-- ------------------------------------------------------------
+DROP TABLE IF EXISTS DoanhNghiep;
+CREATE TABLE DoanhNghiep (
+    MaDoanhNghiep VARCHAR(20) PRIMARY KEY,
+    TenDoanhNghiep VARCHAR(200) NOT NULL,
+    LinhVuc VARCHAR(200),
+    NguoiDaiDien VARCHAR(100),
+    Email VARCHAR(100),
+    SoDienThoai VARCHAR(15),
+    TrangThai ENUM('DangHopTac','TamNgung') DEFAULT 'DangHopTac',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_trangthai (TrangThai)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ------------------------------------------------------------
+-- 7. HocPhan
 -- ------------------------------------------------------------
 DROP TABLE IF EXISTS HocPhan;
 CREATE TABLE HocPhan (
@@ -121,7 +139,7 @@ CREATE TABLE HocPhan (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------
--- 7. DoiNguGiangVienHP
+-- 8. DoiNguGiangVienHP
 -- ------------------------------------------------------------
 DROP TABLE IF EXISTS DoiNguGiangVienHP;
 CREATE TABLE DoiNguGiangVienHP (
@@ -136,24 +154,7 @@ CREATE TABLE DoiNguGiangVienHP (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------
--- 8. DoanhNghiep
--- ------------------------------------------------------------
-DROP TABLE IF EXISTS DoanhNghiep;
-CREATE TABLE DoanhNghiep (
-    MaDoanhNghiep VARCHAR(20) PRIMARY KEY,
-    TenDoanhNghiep VARCHAR(200) NOT NULL,
-    LinhVuc VARCHAR(200),
-    NguoiDaiDien VARCHAR(100),
-    Email VARCHAR(100),
-    SoDienThoai VARCHAR(15),
-    TrangThai ENUM('DangHopTac','TamNgung') DEFAULT 'DangHopTac',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_trangthai (TrangThai)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ------------------------------------------------------------
--- 9. LopHocPhan (ĐÃ CẬP NHẬT KHÓA CHÍNH)
+-- 9. LopHocPhan
 -- ------------------------------------------------------------
 DROP TABLE IF EXISTS LopHocPhan;
 CREATE TABLE LopHocPhan (
