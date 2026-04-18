@@ -1,477 +1,294 @@
-# 01_ERD_SCHEMA — Schema Chi Tiet 20 Bang
-
-> Nhất quán với `scripts/01_create_tables.sql` và `00_MASTER_REFERENCE.md`.
-> Mọi thay đổi DDL phải cập nhật file này.
-
----
-
-## SO DO QUAN HE (ERD Text)
-
-```
-HocKyNamHoc (MaHocKy)
-    |-- LopHocPhan.MaHocKy
-    |-- DotKienTap.MaHocKy
-    |-- DotThucTap.MaHocKy
-
-NguoiDung (MaNguoiDung)
-    |-- GiangVien.MaNguoiDung       [1-1]
-    |-- SinhVien.MaNguoiDung        [1-1]
-    |-- NhomNguoiDung.MaNguoiDung   [1-N]
-    |-- ChuongTrinhDaoTao.NguoiTao
-    |-- ChuongTrinhDaoTao.NguoiDuyet
-    |-- DotKienTap.NguoiTao
-    |-- DotKienTap.NguoiDuyet
-    |-- DotThucTap.NguoiTao
-    |-- DotThucTap.NguoiDuyet
-    |-- KetQuaThucTap.MaNguoiDanhGia
-
-GiangVien (MaGV) -> NguoiDung
-    |-- BCN_ThanhVien.MaGV
-    |-- HocPhan.ChuNhiemHP
-    |-- DoiNguGiangVienHP.MaGiangVien
-    |-- LopHanhChinh.MaCoVan
-    |-- LopHocPhan.MaGiangVien
-    |-- DotKienTap.MaGVPhuTrach
-
-SinhVien (MaSV) -> NguoiDung, LopHanhChinh
-    |-- DanhSachSinhVienLopHocPhan.MaSV
-    |-- DanhSachSinhVienKienTap.MaSV
-    |-- DanhSachThucTap.MaSV
-
-NhomNguoiDung (MaNguoiDung, VaiTro) -> NguoiDung   [PK composite]
-
-DoanhNghiep (MaDoanhNghiep)
-    |-- DotKienTap.MaDoanhNghiep
-    |-- DanhSachThucTap.MaDoanhNghiep
-
-ChuongTrinhDaoTao (MaCTDT) -> NguoiDung x2
-    |-- BCN_ThanhVien.MaCTDT
-    |-- CTDT_HocPhan.MaCTDT
-    |-- LopHanhChinh.MaCTDT
-    |-- DotThucTap.MaCTDT
-
-BCN_ThanhVien (MaCTDT, MaGV, ChucDanh)              [PK composite]
-
-HocPhan (MaHocPhan) -> GiangVien
-    |-- DoiNguGiangVienHP.MaHocPhan
-    |-- CTDT_HocPhan.MaHocPhan
-    |-- DotThucTap.MaHocPhan
-
-DoiNguGiangVienHP (MaHocPhan, MaGiangVien)           [PK composite]
-
-LopHanhChinh (MaLopHC) -> ChuongTrinhDaoTao, GiangVien
-    |-- SinhVien.MaLopHC
-    |-- DotKienTap.MaLopHC
-
-CTDT_HocPhan (MaCTDT, MaHocPhan)                     [PK composite]
-    |-- LopHocPhan.(MaCTDT,MaHocPhan)
-    |-- DotThucTap.(MaCTDT,MaHocPhan)
-
-LopHocPhan (MaCTDT, MaHocPhan, MaHocKy, MaLopHocPhan) [PK composite]
-    |-- DanhSachSinhVienLopHocPhan.(MaCTDT,MaHocPhan,MaHocKy,MaLopHocPhan)
-
-DanhSachSinhVienLopHocPhan (MaSV,...5 cols)           [PK composite 5 cot]
-
-DotKienTap (MaDotKT AUTO_INCREMENT)
-    |-- DanhSachSinhVienKienTap.MaDotKT
-
-DanhSachSinhVienKienTap (MaDotKT, MaSV)               [PK composite]
-
-DotThucTap (MaDotTT AUTO_INCREMENT)
-    |-- DanhSachThucTap.MaDotTT
-
-DanhSachThucTap (MaThucTap AUTO_INCREMENT)
-    |-- KetQuaThucTap.MaThucTap
-
-VaiTroThucTap (MaVaiTro)
-    |-- KetQuaThucTap.MaVaiTro
-
-KetQuaThucTap (MaKetQua AUTO_INCREMENT)
-```
-
----
-
-## CHI TIET TUNG BANG
-
----
-
-### 1. HocKyNamHoc
-
-| Cot          | Kieu du lieu              | Rang buoc                        | Mo ta                  |
-|--------------|---------------------------|----------------------------------|------------------------|
-| MaHocKy      | VARCHAR(20)               | PK                               | VD: HK1-2024           |
-| TenHocKy     | VARCHAR(50)               | NOT NULL                         | VD: Hoc Ky 1 Nam 2024  |
-| NgayBatDau   | DATE                      | NOT NULL                         | Ngay bat dau hoc ky    |
-| NgayKetThuc  | DATE                      | NOT NULL                         | Ngay ket thuc hoc ky   |
-| TrangThai    | ENUM                      | SapDienRa/DangDienRa/DaKetThuc   | Trang thai hoc ky      |
-| created_at   | DATETIME                  | DEFAULT NOW()                    | Audit                  |
-| updated_at   | DATETIME                  | DEFAULT NOW() ON UPDATE          | Audit                  |
-
-**Java Enum:** `TrangThaiHocKy { SapDienRa, DangDienRa, DaKetThuc }`
-**Rang buoc nghiep vu:** Chi co 1 hoc ky o trang thai `DangDienRa` tai mot thoi diem.
-
----
-
-### 2. NguoiDung
-
-| Cot            | Kieu du lieu              | Rang buoc                              | Mo ta                            |
-|----------------|---------------------------|----------------------------------------|----------------------------------|
-| MaNguoiDung    | VARCHAR(20)               | PK                                     | AD001, GV001, SV001, DN001       |
-| TenDangNhap    | VARCHAR(50)               | NOT NULL, UNIQUE                       | Username dang nhap               |
-| MatKhauHash    | VARCHAR(255)              | NOT NULL                               | BCrypt hash                      |
-| Email          | VARCHAR(100)              | NOT NULL, UNIQUE                       | Email chinh thuc                 |
-| HoTen          | VARCHAR(100)              | NOT NULL                               | Ho ten day du                    |
-| SoDienThoai    | VARCHAR(15)               | NULL                                   | So dien thoai                    |
-| TrangThaiTK    | BIT                       | DEFAULT 1                              | 1=Hoat dong, 0=Bi khoa           |
-| LoaiNguoiDung  | ENUM                      | NOT NULL                               | Admin/GiangVien/SinhVien/DoanhNghiep |
-| created_at     | DATETIME                  | DEFAULT NOW()                          | Audit                            |
-| updated_at     | DATETIME                  | DEFAULT NOW() ON UPDATE                | Audit                            |
-
-**Java Enum:** `LoaiNguoiDung { Admin, GiangVien, SinhVien, DoanhNghiep }`
-**Quy tac MaNguoiDung:** AD001, GV001..GV999, SV2024001..., DN001...
-
----
-
-### 3. SinhVien
-
-| Cot          | Kieu du lieu  | Rang buoc                                   | Mo ta                   |
-|--------------|---------------|---------------------------------------------|-------------------------|
-| MaSV         | VARCHAR(20)   | PK                                          | = MaNguoiDung cua SV    |
-| MaNguoiDung  | VARCHAR(20)   | NOT NULL, UNIQUE, FK -> NguoiDung           | Lien ket tai khoan      |
-| MaLopHC      | VARCHAR(20)   | NOT NULL, FK -> LopHanhChinh (RESTRICT)     | Lop hanh chinh          |
-| TrangThaiSV  | ENUM          | DangHoc/BaoLuu/ThoiHoc/TotNghiep           | Trang thai hoc tap      |
-
-**Java Enum:** `TrangThaiSinhVien { DangHoc, BaoLuu, ThoiHoc, TotNghiep }`
-
----
-
-### 4. GiangVien
-
-| Cot           | Kieu du lieu  | Rang buoc                         | Mo ta                          |
-|---------------|---------------|-----------------------------------|--------------------------------|
-| MaGV          | VARCHAR(20)   | PK                                | = MaNguoiDung cua GV           |
-| MaNguoiDung   | VARCHAR(20)   | NOT NULL, UNIQUE, FK -> NguoiDung | Lien ket tai khoan             |
-| HocHam        | VARCHAR(50)   | NULL                              | Giao Su, Pho Giao Su           |
-| HocVi         | VARCHAR(50)   | NULL                              | Tien Si, Thac Si, Cu Nhan      |
-| ChuyenNganh   | VARCHAR(200)  | NULL                              | Chuyen nganh chuyen sau        |
-| LoaiGiangVien | ENUM          | DEFAULT GiangVienTruong           | GiangVienTruong/DoanhNghiep    |
-
-**Java Enum:** `LoaiGiangVien { GiangVienTruong, DoanhNghiep }`
-
----
-
-### 5. NhomNguoiDung
-
-| Cot          | Kieu du lieu  | Rang buoc                          | Mo ta                   |
-|--------------|---------------|------------------------------------|-------------------------|
-| MaNguoiDung  | VARCHAR(20)   | PK (composite), FK -> NguoiDung    | Nguoi dung co vai tro   |
-| VaiTro       | ENUM          | PK (composite), NOT NULL           | PDT/TTDTXS/CVHT/CNHP   |
-| created_at   | DATETIME      | DEFAULT NOW()                      | Thoi diem gan vai tro   |
-
-**PK Composite:** `(MaNguoiDung, VaiTro)` — 1 nguoi co the co nhieu vai tro.
-**Java Enum:** `VaiTro { PDT, TTDTXS, CVHT, CNHP }`
-
----
-
-### 6. ChuongTrinhDaoTao
-
-| Cot         | Kieu du lieu  | Rang buoc                          | Mo ta                             |
-|-------------|---------------|------------------------------------|-----------------------------------|
-| MaCTDT      | VARCHAR(20)   | PK                                 | VD: CTDT-CNTT-2022                |
-| TenCTDT     | VARCHAR(200)  | NOT NULL                           | Ten day du chuong trinh           |
-| Khoa        | VARCHAR(20)   | NULL                               | Nam khoa hoc (2022, 2023...)      |
-| FileWord    | VARCHAR(255)  | NULL                               | Duong dan file Word CTDT          |
-| TrangThai   | ENUM          | BanNhap/ChoDuyet/DaDuyet/DaHuy    | Trang thai duyet CTDT             |
-| NguoiTao    | VARCHAR(20)   | NOT NULL, FK -> NguoiDung          | Nguoi tao CTDT (BCN)              |
-| NguoiDuyet  | VARCHAR(20)   | NULL, FK -> NguoiDung              | TTDTXS phe duyet                  |
-| NgayDuyet   | DATETIME      | NULL                               | Thoi diem phe duyet               |
-| created_at  | DATETIME      | DEFAULT NOW()                      | Audit                             |
-| updated_at  | DATETIME      | DEFAULT NOW() ON UPDATE            | Audit                             |
-
-**Java Enum:** `TrangThaiCTDT { BanNhap, ChoDuyet, DaDuyet, DaHuy }`
-**Luong:** BanNhap -> ChoDuyet -> DaDuyet (hoac BanNhap neu tu choi), DaDuyet -> DaHuy
-
----
-
-### 7. BCN_ThanhVien
-
-| Cot          | Kieu du lieu  | Rang buoc                                    | Mo ta                    |
-|--------------|---------------|----------------------------------------------|--------------------------|
-| MaCTDT       | VARCHAR(20)   | PK (composite), FK -> ChuongTrinhDaoTao      | CTDT thuoc ve            |
-| MaGV         | VARCHAR(20)   | PK (composite), FK -> GiangVien              | Giang vien thanh vien    |
-| ChucDanh     | ENUM          | PK (composite), ChuNhiem/ThuKy/UyVien       | Chuc danh trong BCN      |
-| NgayBoNhiem  | DATE          | NULL                                         | Ngay bo nhiem chinh thuc |
-| GhiChu       | VARCHAR(255)  | NULL                                         | Ghi chu them             |
-| created_at   | DATETIME      | DEFAULT NOW()                                | Audit                    |
-
-**PK Composite:** `(MaCTDT, MaGV, ChucDanh)` — 1 GV co the la UyVien va ThuKy cua 2 CTDT khac nhau.
-**Java Enum:** `ChucDanhBCN { ChuNhiem, ThuKy, UyVien }`
-
----
-
-### 8. HocPhan
-
-| Cot          | Kieu du lieu  | Rang buoc                             | Mo ta                          |
-|--------------|---------------|---------------------------------------|--------------------------------|
-| MaHocPhan    | VARCHAR(20)   | PK                                    | VD: HP-LTW, HP-CSDL            |
-| TenHocPhan   | VARCHAR(200)  | NOT NULL                              | Ten mon hoc day du             |
-| SoTinChi     | INT           | NOT NULL                              | So tin chi (1-10)              |
-| LoaiHocPhan  | ENUM          | LyThuyet/ThucHanh/DoAn/ThucTap/KienTap | Loai hoc phan                |
-| ChuNhiemHP   | VARCHAR(20)   | NOT NULL, FK -> GiangVien             | GV chu nhiem hoc phan          |
-| FileDeCuong  | VARCHAR(255)  | NULL                                  | Duong dan file de cuong        |
-| TrangThai    | ENUM          | BanNhap/ChoDuyet/DaDuyet             | Trang thai phe duyet           |
-| created_at   | DATETIME      | DEFAULT NOW()                         | Audit                          |
-| updated_at   | DATETIME      | DEFAULT NOW() ON UPDATE               | Audit                          |
-
-**Java Enum:** `LoaiHocPhan { LyThuyet, ThucHanh, DoAn, ThucTap, KienTap }`
-**Java Enum:** `TrangThaiHocPhan { BanNhap, ChoDuyet, DaDuyet }`
-**Rang buoc:** Chi them vao CTDT khi TrangThai = DaDuyet.
-
----
-
-### 9. DoiNguGiangVienHP
-
-| Cot          | Kieu du lieu  | Rang buoc                        | Mo ta                              |
-|--------------|---------------|----------------------------------|------------------------------------|
-| MaHocPhan    | VARCHAR(20)   | PK (composite), FK -> HocPhan    | Hoc phan thuoc ve                  |
-| MaGiangVien  | VARCHAR(20)   | PK (composite), FK -> GiangVien  | GV co the giang day HP nay         |
-| TrangThai    | BIT           | DEFAULT 1                        | 1=Hoat dong, 0=Da ngung (soft del) |
-| created_at   | DATETIME      | DEFAULT NOW()                    | Audit                              |
-
-**PK Composite:** `(MaHocPhan, MaGiangVien)`
-**Quy tac:** ChuNhiemHP tu dong duoc them vao doi ngu khi tao HocPhan. Khong xoa CNHP.
-
----
-
-### 10. DoanhNghiep
-
-| Cot              | Kieu du lieu  | Rang buoc                | Mo ta                           |
-|------------------|---------------|--------------------------|---------------------------------|
-| MaDoanhNghiep    | VARCHAR(20)   | PK                       | VD: DN001                       |
-| TenDoanhNghiep   | VARCHAR(200)  | NOT NULL                 | Ten cong ty                     |
-| LinhVuc          | VARCHAR(200)  | NULL                     | Linh vuc hoat dong              |
-| NguoiDaiDien     | VARCHAR(100)  | NULL                     | Ten nguoi dai dien              |
-| Email            | VARCHAR(100)  | NULL                     | Email lien he                   |
-| SoDienThoai      | VARCHAR(15)   | NULL                     | So dien thoai                   |
-| DiaChiDN         | VARCHAR(255)  | NULL                     | Dia chi doanh nghiep            |
-| TrangThai        | ENUM          | DangHopTac/TamNgung     | Trang thai hop tac              |
-| created_at       | DATETIME      | DEFAULT NOW()            | Audit                           |
-| updated_at       | DATETIME      | DEFAULT NOW() ON UPDATE  | Audit                           |
-
-**Java Enum:** `TrangThaiDoanhNghiep { DangHopTac, TamNgung }`
-**Rang buoc:** Chi chon DoanhNghiep o trang thai `DangHopTac` khi tao DotKienTap/DotThucTap.
-
----
-
-### 11. LopHanhChinh
-
-| Cot       | Kieu du lieu  | Rang buoc                                    | Mo ta                        |
-|-----------|---------------|----------------------------------------------|------------------------------|
-| MaLopHC   | VARCHAR(20)   | PK                                           | VD: CNTT-K22A                |
-| TenLop    | VARCHAR(100)  | NOT NULL                                     | Ten lop hien thi             |
-| MaCTDT    | VARCHAR(20)   | NULL, FK -> ChuongTrinhDaoTao (SET NULL)     | CTDT cua lop nay             |
-| KhoaHoc   | VARCHAR(20)   | NULL                                         | Nam nhap hoc (2022, 2023...) |
-| MaCoVan   | VARCHAR(20)   | NULL, FK -> GiangVien (SET NULL)             | GV co van hoc tap            |
-| created_at| DATETIME      | DEFAULT NOW()                                | Audit                        |
-| updated_at| DATETIME      | DEFAULT NOW() ON UPDATE                      | Audit                        |
-
----
-
-### 12. CTDT_HocPhan
-
-| Cot           | Kieu du lieu  | Rang buoc                                   | Mo ta                              |
-|---------------|---------------|---------------------------------------------|------------------------------------|
-| MaCTDT        | VARCHAR(20)   | PK (composite), FK -> ChuongTrinhDaoTao     | CTDT chua HP                       |
-| MaHocPhan     | VARCHAR(20)   | PK (composite), FK -> HocPhan (RESTRICT)    | HP thuoc CTDT                      |
-| HocKyThu      | INT           | NOT NULL                                    | HP duoc day o hoc ky thu may (1-10)|
-| SoLopDuKien   | INT           | DEFAULT 1                                   | So lop HP du kien mo moi hoc ky    |
-| BatBuoc       | BIT           | DEFAULT 1                                   | 1=Bat buoc, 0=Tu chon              |
-| GhiChu        | VARCHAR(255)  | NULL                                        | Ghi chu them                       |
-| FileDeCuong   | VARCHAR(255)  | NULL                                        | File de cuong cua HP trong CTDT    |
-| created_at    | DATETIME      | DEFAULT NOW()                               | Audit                              |
-| updated_at    | DATETIME      | DEFAULT NOW() ON UPDATE                     | Audit                              |
-
-**PK Composite:** `(MaCTDT, MaHocPhan)`
-**Quan trong:** `SoLopDuKien` duoc dung khi CTDT duoc phe duyet -> tu dong tao LopHocPhan.
-
----
-
-### 13. LopHocPhan
-
-| Cot                  | Kieu du lieu  | Rang buoc                                           | Mo ta                        |
-|----------------------|---------------|-----------------------------------------------------|------------------------------|
-| MaCTDT               | VARCHAR(20)   | PK (composite), FK -> CTDT_HocPhan (RESTRICT)       | CTDT                         |
-| MaHocPhan            | VARCHAR(20)   | PK (composite), FK -> CTDT_HocPhan (RESTRICT)       | Hoc phan                     |
-| MaHocKy              | VARCHAR(20)   | PK (composite), FK -> HocKyNamHoc                   | Hoc ky mo lop                |
-| MaLopHocPhan         | INT           | PK (composite)                                      | So thu tu lop (1, 2, 3...)   |
-| MaGiangVien          | VARCHAR(20)   | NULL, FK -> GiangVien (SET NULL)                    | GV duoc phan cong            |
-| SiSoToiDa            | INT           | NOT NULL, CHECK 30-60                               | Si so toi da cho phep        |
-| SiSoThucTe           | INT           | DEFAULT 0                                           | So SV dang ky thuc te        |
-| FileDeCuongChiTiet   | VARCHAR(255)  | NULL                                                | File de cuong chi tiet       |
-| TrangThai            | ENUM          | DangMo/DaDong/DaHuy                                | Trang thai lop               |
-| created_at           | DATETIME      | DEFAULT NOW()                                       | Audit                        |
-| updated_at           | DATETIME      | DEFAULT NOW() ON UPDATE                             | Audit                        |
-
-**PK Composite:** `(MaCTDT, MaHocPhan, MaHocKy, MaLopHocPhan)`
-**Java Enum:** `TrangThaiLopHocPhan { DangMo, DaDong, DaHuy }`
-**Rang buoc:** `SiSoToiDa BETWEEN 30 AND 60` (MySQL CHECK constraint).
-
----
-
-### 14. DanhSachSinhVienLopHocPhan
-
-| Cot            | Kieu du lieu  | Rang buoc                                                     | Mo ta                     |
-|----------------|---------------|---------------------------------------------------------------|---------------------------|
-| MaSV           | VARCHAR(20)   | PK (composite), FK -> SinhVien                               | Sinh vien                 |
-| MaCTDT         | VARCHAR(20)   | PK (composite)                                               |                           |
-| MaHocPhan      | VARCHAR(20)   | PK (composite)                                               |                           |
-| MaHocKy        | VARCHAR(20)   | PK (composite), FK -> LopHocPhan (composite 4 cot)           |                           |
-| MaLopHocPhan   | INT           | PK (composite)                                               | Thu tu lop                |
-| NhanXet        | TEXT          | NULL                                                         | GV nhap nhan xet          |
-| DaCanhBao      | BIT           | DEFAULT 0                                                    | 1=Da phat sinh canh bao   |
-| KetQuaXuLy     | TEXT          | NULL                                                         | CVHT ghi ket qua xu ly    |
-| created_at     | DATETIME      | DEFAULT NOW()                                                | Audit                     |
-| updated_at     | DATETIME      | DEFAULT NOW() ON UPDATE                                      | Audit                     |
-
-**PK Composite 5 cot:** `(MaSV, MaCTDT, MaHocPhan, MaHocKy, MaLopHocPhan)`
-**Rang buoc:** DaCanhBao giu nguyen = 1 sau khi xu ly, chi cap nhat KetQuaXuLy.
-
----
-
-### 15. DotKienTap
-
-| Cot              | Kieu du lieu    | Rang buoc                              | Mo ta                           |
-|------------------|-----------------|----------------------------------------|---------------------------------|
-| MaDotKT          | INT             | PK AUTO_INCREMENT                      | ID tu tang                      |
-| TenDotKT         | VARCHAR(200)    | NOT NULL                               | Ten dot kien tap                |
-| MaLopHC          | VARCHAR(20)     | NOT NULL, FK -> LopHanhChinh           | Lop hanh chinh tham gia         |
-| MaHocKy          | VARCHAR(20)     | NOT NULL, FK -> HocKyNamHoc            | Hoc ky thuc hien                |
-| ThoiGian         | DATE            | NULL                                   | Ngay du kien thuc hien          |
-| MaGVPhuTrach     | VARCHAR(20)     | NULL, FK -> GiangVien                  | GV phu trach                    |
-| MaDoanhNghiep    | VARCHAR(20)     | NOT NULL, FK -> DoanhNghiep            | DN tiep nhan                    |
-| NhanXetGV        | TEXT            | NULL                                   | Nhan xet cua GV                 |
-| NhanXetDN        | TEXT            | NULL                                   | Nhan xet cua DN                 |
-| FileMinhChung    | VARCHAR(255)    | NULL                                   | File bien ban / ky ket          |
-| KinhPhiChung     | DECIMAL(15,2)   | NULL                                   | Kinh phi chung toan dot         |
-| KinhPhiTungSV    | DECIMAL(15,2)   | NULL                                   | Kinh phi phan bo moi SV         |
-| TrangThai        | ENUM            | ChuanBi/ChoDuyet/DaDuyet/DaThucHien/DaHuy | Trang thai dot               |
-| NguoiTao         | VARCHAR(20)     | NOT NULL, FK -> NguoiDung              | Nguoi tao dot                   |
-| NguoiDuyet       | VARCHAR(20)     | NULL, FK -> NguoiDung                  | TTDTXS phe duyet                |
-| NgayDuyet        | DATETIME        | NULL                                   | Thoi diem phe duyet             |
-| created_at       | DATETIME        | DEFAULT NOW()                          | Audit                           |
-| updated_at       | DATETIME        | DEFAULT NOW() ON UPDATE                | Audit                           |
-
-**Java Enum:** `TrangThaiDotKT { ChuanBi, ChoDuyet, DaDuyet, DaThucHien, DaHuy }`
-**Luong:** Khi tao -> tu dong lay SV tu LopHanhChinh vao DanhSachSinhVienKienTap.
-
----
-
-### 16. DanhSachSinhVienKienTap
-
-| Cot        | Kieu du lieu  | Rang buoc                           | Mo ta                    |
-|------------|---------------|-------------------------------------|--------------------------|
-| MaDotKT    | INT           | PK (composite), FK -> DotKienTap   | Dot kien tap             |
-| MaSV       | VARCHAR(20)   | PK (composite), FK -> SinhVien     | Sinh vien tham gia       |
-| DaThamGia  | BIT           | DEFAULT 1                           | 1=Da/se tham gia, 0=Vang |
-| created_at | DATETIME      | DEFAULT NOW()                       | Audit                    |
-| updated_at | DATETIME      | DEFAULT NOW() ON UPDATE             | Audit                    |
-
-**PK Composite:** `(MaDotKT, MaSV)`
-
----
-
-### 17. DotThucTap
-
-| Cot           | Kieu du lieu  | Rang buoc                                  | Mo ta                    |
-|---------------|---------------|--------------------------------------------|--------------------------|
-| MaDotTT       | INT           | PK AUTO_INCREMENT                          | ID tu tang               |
-| TenDotTT      | VARCHAR(200)  | NOT NULL                                   | Ten dot thuc tap         |
-| MaCTDT        | VARCHAR(20)   | NOT NULL                                   |                          |
-| MaHocPhan     | VARCHAR(20)   | NOT NULL, FK(composite) -> CTDT_HocPhan    | HP loai ThucTap/KienTap  |
-| MaHocKy       | VARCHAR(20)   | NOT NULL, FK -> HocKyNamHoc                | Hoc ky thuc hien         |
-| NgayBatDau    | DATE          | NULL                                       | Ngay bat dau thuc tap    |
-| NgayKetThuc   | DATE          | NULL                                       | Ngay ket thuc thuc tap   |
-| FileMinhChung | VARCHAR(255)  | NULL                                       | File bien ban ky ket      |
-| TrangThai     | ENUM          | ChuanBi/ChoDuyet/DaDuyet/DangThucHien/DaKetThuc | Trang thai dot      |
-| NguoiTao      | VARCHAR(20)   | NOT NULL, FK -> NguoiDung                  | PDT/TTDTXS tao dot       |
-| NguoiDuyet    | VARCHAR(20)   | NULL, FK -> NguoiDung                      | TTDTXS phe duyet         |
-| NgayDuyet     | DATETIME      | NULL                                       | Thoi diem phe duyet      |
-| created_at    | DATETIME      | DEFAULT NOW()                              | Audit                    |
-| updated_at    | DATETIME      | DEFAULT NOW() ON UPDATE                    | Audit                    |
-
-**Java Enum:** `TrangThaiDotTT { ChuanBi, ChoDuyet, DaDuyet, DangThucHien, DaKetThuc }`
-**Rang buoc:** `MaHocPhan.LoaiHocPhan IN (ThucTap, KienTap)` — kiem tra o service layer.
-
----
-
-### 18. DanhSachThucTap
-
-| Cot            | Kieu du lieu  | Rang buoc                             | Mo ta                           |
-|----------------|---------------|---------------------------------------|---------------------------------|
-| MaThucTap      | INT           | PK AUTO_INCREMENT                     | ID tu tang                      |
-| MaDotTT        | INT           | NOT NULL, FK -> DotThucTap            | Dot thuc tap                    |
-| MaSV           | VARCHAR(20)   | NOT NULL, FK -> SinhVien              | Sinh vien duoc phan cong        |
-| LoaiThucTap    | ENUM          | NOT NULL, Truong/DoanhNghiep         | Thuc tap tai truong hay DN      |
-| MaDoanhNghiep  | VARCHAR(20)   | NULL, FK -> DoanhNghiep (SET NULL)    | DN tiep nhan (neu co)           |
-| TrangThai      | ENUM          | DaPhanCong/DangThucTap/DaKetThuc/DaHuy | Trang thai phan cong           |
-| created_at     | DATETIME      | DEFAULT NOW()                         | Audit                           |
-| updated_at     | DATETIME      | DEFAULT NOW() ON UPDATE               | Audit                           |
-
-**Java Enum:** `LoaiThucTap { Truong, DoanhNghiep }`, `TrangThaiThucTap { DaPhanCong, DangThucTap, DaKetThuc, DaHuy }`
-**Rang buoc UNIQUE nghiep vu:** `(MaDotTT, MaSV)` — 1 SV chi duoc phan cong 1 lan trong 1 dot.
-
----
-
-### 19. VaiTroThucTap
-
-| Cot       | Kieu du lieu  | Rang buoc  | Mo ta                      |
-|-----------|---------------|------------|----------------------------|
-| MaVaiTro  | VARCHAR(10)   | PK         | GV, DN, CVHT, SV           |
-| TenVaiTro | VARCHAR(100)  | NOT NULL   | Ten day du                  |
-| MoTa      | VARCHAR(255)  | NULL       | Mo ta chuc nang danh gia   |
-
-**Du lieu co dinh (seed):** GV, DN, CVHT, SV
-
----
-
-### 20. KetQuaThucTap
-
-| Cot               | Kieu du lieu   | Rang buoc                           | Mo ta                           |
-|-------------------|----------------|-------------------------------------|---------------------------------|
-| MaKetQua          | INT            | PK AUTO_INCREMENT                   | ID tu tang                      |
-| MaThucTap         | INT            | NOT NULL, FK -> DanhSachThucTap     | Phan cong thuc tap tuong ung    |
-| MaVaiTro          | VARCHAR(10)    | NOT NULL, FK -> VaiTroThucTap       | Vai tro nguoi danh gia          |
-| MaNguoiDanhGia    | VARCHAR(20)    | NOT NULL, FK -> GiangVien           | GV/CVHT nhap ket qua            |
-| Diem              | DECIMAL(4,2)   | NULL                                | Diem (0.00 - 10.00)             |
-| NhanXet           | TEXT           | NULL                                | Nhan xet chi tiet               |
-| created_at        | DATETIME       | DEFAULT NOW()                       | Audit                           |
-| updated_at        | DATETIME       | DEFAULT NOW() ON UPDATE             | Audit                           |
-
-**Rang buoc nghiep vu:** 1 (MaThucTap, MaVaiTro) chi co 1 ban ghi -> kiem tra truoc khi INSERT, neu co thi UPDATE.
-
----
-
-## BANG TOM TAT ENTITY -> JAVA CLASS
-
-| Bang SQL                        | Java Entity Class           | PK Type                              |
-|---------------------------------|-----------------------------|--------------------------------------|
-| HocKyNamHoc                     | HocKyNamHoc                 | String (MaHocKy)                     |
-| NguoiDung                       | NguoiDung                   | String (MaNguoiDung)                 |
-| SinhVien                        | SinhVien                    | String (MaSV)                        |
-| GiangVien                       | GiangVien                   | String (MaGV)                        |
-| NhomNguoiDung                   | NhomNguoiDung               | @EmbeddedId NhomNguoiDungId          |
-| ChuongTrinhDaoTao               | ChuongTrinhDaoTao           | String (MaCTDT)                      |
-| BCN_ThanhVien                   | BcnThanhVien                | @EmbeddedId BcnThanhVienId           |
-| HocPhan                         | HocPhan                     | String (MaHocPhan)                   |
-| DoiNguGiangVienHP               | DoiNguGiangVienHp           | @EmbeddedId DoiNguGiangVienHpId      |
-| DoanhNghiep                     | DoanhNghiep                 | String (MaDoanhNghiep)               |
-| LopHanhChinh                    | LopHanhChinh                | String (MaLopHC)                     |
-| CTDT_HocPhan                    | CtdtHocPhan                 | @EmbeddedId CtdtHocPhanId            |
-| LopHocPhan                      | LopHocPhan                  | @EmbeddedId LopHocPhanId             |
-| DanhSachSinhVienLopHocPhan      | DanhSachSvLopHocPhan        | @EmbeddedId DanhSachSvLopHocPhanId   |
-| DotKienTap                      | DotKienTap                  | Integer (MaDotKT)                    |
-| DanhSachSinhVienKienTap         | DanhSachSvKienTap           | @EmbeddedId DanhSachSvKienTapId      |
-| DotThucTap                      | DotThucTap                  | Integer (MaDotTT)                    |
-| DanhSachThucTap                 | DanhSachThucTap             | Integer (MaThucTap)                  |
-| VaiTroThucTap                   | VaiTroThucTap               | String (MaVaiTro)                    |
-| KetQuaThucTap                   | KetQuaThucTap               | Integer (MaKetQua)                   |
+@startuml
+!theme plain
+left to right direction
+skinparam linetype ortho
+hide circle
+
+' ===== NHÓM NGƯỜI DÙNG =====
+entity NguoiDung {
+  MaNguoiDung: VARCHAR(20) <<PK>>
+  TenDangNhap: VARCHAR(50) <<U>>
+  MatKhauHash: VARCHAR(255)
+  Email: VARCHAR(100) <<U>>
+  HoTen: VARCHAR(100)
+  SoDienThoai: VARCHAR(15)
+  TrangThaiTK: BIT
+  LoaiNguoiDung: ENUM
+  created_at: DATETIME
+  updated_at: DATETIME
+}
+
+entity SinhVien {
+  MaSV: VARCHAR(20) <<PK>>
+  MaNguoiDung: VARCHAR(20) <<FK>> <<U>>
+  MaLopHC: VARCHAR(20) <<FK>>
+  TrangThaiSV: ENUM
+}
+
+entity GiangVien {
+  MaGV: VARCHAR(20) <<PK>>
+  MaNguoiDung: VARCHAR(20) <<FK>> <<U>>
+  HocHam: VARCHAR(50)
+  HocVi: VARCHAR(50)
+  ChuyenNganh: VARCHAR(200)
+  LoaiGiangVien: ENUM
+}
+
+entity NhomNguoiDung {
+  MaNguoiDung: VARCHAR(20) <<FK>>
+  VaiTro: ENUM <<PK>>
+  created_at: DATETIME
+}
+
+' ===== NHÓM CHƯƠNG TRÌNH ĐÀO TẠO =====
+entity ChuongTrinhDaoTao {
+  MaCTDT: VARCHAR(20) <<PK>>
+  TenCTDT: VARCHAR(200)
+  Khoa: VARCHAR(20)
+  FileWord: VARCHAR(255)
+  TrangThai: ENUM
+  NguoiTao: VARCHAR(20) <<FK>>
+  created_at: DATETIME
+  NguoiDuyet: VARCHAR(20) <<FK>>
+  NgayDuyet: DATETIME
+  updated_at: DATETIME
+}
+
+entity BCN_ThanhVien {
+  MaCTDT: VARCHAR(20) <<FK>>
+  MaGV: VARCHAR(20) <<FK>>
+  ChucDanh: ENUM <<PK>>
+  NgayBoNhiem: DATE
+  GhiChu: VARCHAR(255)
+  created_at: DATETIME
+}
+
+' ===== NHÓM HỌC PHẦN =====
+entity HocPhan {
+  MaHocPhan: VARCHAR(20) <<PK>>
+  TenHocPhan: VARCHAR(200)
+  SoTinChi: INT
+  LoaiHocPhan: ENUM
+  ChuNhiemHP: VARCHAR(20) <<FK>>
+  FileDeCuong: VARCHAR(255)
+  TrangThai: ENUM
+  created_at: DATETIME
+  updated_at: DATETIME
+}
+
+entity DoiNguGiangVienHP {
+  MaHocPhan: VARCHAR(20) <<FK>>
+  MaGiangVien: VARCHAR(20) <<FK>>
+  TrangThai: BIT
+  created_at: DATETIME
+  <<PK>> (MaHocPhan, MaGiangVien)
+}
+
+entity CTDT_HocPhan {
+  MaCTDT: VARCHAR(20) <<FK>>
+  MaHocPhan: VARCHAR(20) <<FK>>
+  HocKyThu: INT
+  SoLopDuKien: INT
+  BatBuoc: BIT
+  GhiChu: VARCHAR(255)
+  FileDeCuong: VARCHAR(255)
+  created_at: DATETIME
+  updated_at: DATETIME
+  <<PK>> (MaCTDT, MaHocPhan)
+}
+
+' ===== NHÓM LỚP HỌC PHẦN =====
+entity LopHocPhan {
+  MaCTDT: VARCHAR(20) <<FK>>
+  MaHocPhan: VARCHAR(20) <<FK>>
+  MaHocKy: VARCHAR(20) <<FK>>
+  MaLopHocPhan: INT <<PK>>
+  MaGiangVien: VARCHAR(20) <<FK>>
+  SiSoToiDa: INT
+  SiSoThucTe: INT
+  FileDeCuongChiTiet: VARCHAR(255)
+  TrangThai: ENUM
+  created_at: DATETIME
+  updated_at: DATETIME
+  <<PK>> (MaCTDT, MaHocPhan, MaHocKy, MaLopHocPhan)
+}
+
+entity DanhSachSinhVienLopHocPhan {
+  MaSV: VARCHAR(20) <<FK>>
+  MaCTDT: VARCHAR(20) <<FK>>
+  MaHocPhan: VARCHAR(20) <<FK>>
+  MaHocKy: VARCHAR(20) <<FK>>
+  MaLopHocPhan: INT <<FK>>
+  NhanXet: TEXT
+  DaCanhBao: BIT
+  KetQuaXuLy: TEXT
+  created_at: DATETIME
+  updated_at: DATETIME
+  <<PK>> (MaSV, MaCTDT, MaHocPhan, MaHocKy, MaLopHocPhan)
+}
+
+' ===== NHÓM HỌC KỲ =====
+entity HocKyNamHoc {
+  MaHocKy: VARCHAR(20) <<PK>>
+  TenHocKy: VARCHAR(50)
+  NgayBatDau: DATE
+  NgayKetThuc: DATE
+  TrangThai: ENUM
+  created_at: DATETIME
+  updated_at: DATETIME
+}
+
+' ===== NHÓM DOANH NGHIỆP =====
+entity DoanhNghiep {
+  MaDoanhNghiep: VARCHAR(20) <<PK>>
+  TenDoanhNghiep: VARCHAR(200)
+  LinhVuc: VARCHAR(200)
+  NguoiDaiDien: VARCHAR(100)
+  Email: VARCHAR(100)
+  SoDienThoai: VARCHAR(15)
+  DiaChiDN: VARCHAR(255)
+  TrangThai: ENUM
+  created_at: DATETIME
+  updated_at: DATETIME
+}
+
+' ===== NHÓM LỚP HÀNH CHÍNH =====
+entity LopHanhChinh {
+  MaLopHC: VARCHAR(20) <<PK>>
+  TenLop: VARCHAR(100)
+  MaCTDT: VARCHAR(20) <<FK>>
+  KhoaHoc: VARCHAR(20)
+  MaCoVan: VARCHAR(20) <<FK>>
+  created_at: DATETIME
+  updated_at: DATETIME
+}
+
+' ===== NHÓM KIẾN TẬP =====
+entity DotKienTap {
+  MaDotKT: INT <<PK>>
+  TenDotKT: VARCHAR(200)
+  MaLopHC: VARCHAR(20) <<FK>>
+  MaHocKy: VARCHAR(20) <<FK>>
+  ThoiGian: DATE
+  MaGVPhuTrach: VARCHAR(20) <<FK>>
+  MaDoanhNghiep: VARCHAR(20) <<FK>>
+  NhanXetGV: TEXT
+  NhanXetDN: TEXT
+  FileMinhChung: VARCHAR(255)
+  KinhPhiChung: DECIMAL(15,2)
+  KinhPhiTungSV: DECIMAL(15,2)
+  TrangThai: ENUM
+  NguoiTao: VARCHAR(20) <<FK>>
+  NguoiDuyet: VARCHAR(20) <<FK>>
+  NgayDuyet: DATETIME
+  created_at: DATETIME
+  updated_at: DATETIME
+}
+
+entity DanhSachSinhVienKienTap {
+  MaDotKT: INT <<FK>>
+  MaSV: VARCHAR(20) <<FK>>
+  DaThamGia: BIT
+  created_at: DATETIME
+  updated_at: DATETIME
+  <<PK>> (MaDotKT, MaSV)
+}
+
+' ===== NHÓM THỰC TẬP =====
+entity DotThucTap {
+  MaDotTT: INT <<PK>>
+  TenDotTT: VARCHAR(200)
+  MaCTDT: VARCHAR(20) <<FK>>
+  MaHocPhan: VARCHAR(20) <<FK>>
+  MaHocKy: VARCHAR(20) <<FK>>
+  NgayBatDau: DATE
+  NgayKetThuc: DATE
+  FileMinhChung: VARCHAR(255)
+  TrangThai: ENUM
+  NguoiTao: VARCHAR(20) <<FK>>
+  NguoiDuyet: VARCHAR(20) <<FK>>
+  NgayDuyet: DATETIME
+  created_at: DATETIME
+  updated_at: DATETIME
+}
+
+entity DanhSachThucTap {
+  MaThucTap: INT <<PK>>
+  MaDotTT: INT <<FK>>
+  MaSV: VARCHAR(20) <<FK>>
+  LoaiThucTap: ENUM
+  MaDoanhNghiep: VARCHAR(20) <<FK>> <<NULL>>
+  TrangThai: ENUM
+  created_at: DATETIME
+  updated_at: DATETIME
+}
+
+entity VaiTroThucTap {
+  MaVaiTro: VARCHAR(10) <<PK>>
+  TenVaiTro: VARCHAR(100)
+  MoTa: VARCHAR(255)
+}
+
+entity KetQuaThucTap {
+  MaKetQua: INT <<PK>>
+  MaThucTap: INT <<FK>>
+  MaVaiTro: VARCHAR(10) <<FK>>
+  MaNguoiDanhGia: VARCHAR(20) <<FK>>
+  Diem: DECIMAL(4,2)
+  NhanXet: TEXT
+  created_at: DATETIME
+  updated_at: DATETIME
+}
+
+' ===== QUAN HỆ =====
+NguoiDung ||--|| SinhVien : "1-1"
+NguoiDung ||--|| GiangVien : "1-1"
+NguoiDung ||--o{ NhomNguoiDung : "có"
+NguoiDung ||--o{ ChuongTrinhDaoTao : "tạo (NguoiTao)"
+NguoiDung ||--o{ ChuongTrinhDaoTao : "duyệt (NguoiDuyet)"
+NguoiDung ||--o{ DotKienTap : "tạo (NguoiTao)"
+NguoiDung ||--o{ DotKienTap : "duyệt (NguoiDuyet)"
+NguoiDung ||--o{ DotThucTap : "tạo (NguoiTao)"
+NguoiDung ||--o{ DotThucTap : "duyệt (NguoiDuyet)"
+
+SinhVien }o--|| LopHanhChinh : "thuộc"
+SinhVien ||--o{ DanhSachSinhVienLopHocPhan : "tham gia"
+SinhVien ||--o{ DanhSachSinhVienKienTap : "tham gia"
+SinhVien ||--o{ DanhSachThucTap : "được phân công"
+
+GiangVien ||--o{ BCN_ThanhVien : "tham gia"
+GiangVien ||--o{ DoiNguGiangVienHP : "tham gia"
+GiangVien ||--o{ LopHocPhan : "giảng dạy"
+GiangVien ||--o{ LopHanhChinh : "cố vấn (MaCoVan)"
+GiangVien ||--o{ DotKienTap : "phụ trách"
+GiangVien ||--o{ KetQuaThucTap : "đánh giá"
+
+ChuongTrinhDaoTao ||--o{ BCN_ThanhVien : "có ban chủ nhiệm"
+ChuongTrinhDaoTao ||--o{ LopHanhChinh : "áp dụng"
+ChuongTrinhDaoTao ||--o{ CTDT_HocPhan : "chi tiết"
+
+HocPhan ||--o{ DoiNguGiangVienHP : "có"
+HocPhan ||--o{ CTDT_HocPhan : "thuộc"
+HocPhan }o--|| GiangVien : "chủ nhiệm (ChuNhiemHP)"
+
+CTDT_HocPhan ||--o{ LopHocPhan : "mở lớp"
+CTDT_HocPhan ||--o{ DotThucTap : "thuộc học phần"
+
+HocKyNamHoc ||--o{ LopHocPhan : "chứa"
+HocKyNamHoc ||--o{ DotKienTap : "tổ chức"
+HocKyNamHoc ||--o{ DotThucTap : "tổ chức"
+
+DoanhNghiep ||--o{ DotKienTap : "tiếp đón"
+DoanhNghiep ||--o{ DanhSachThucTap : "tiếp nhận"
+
+LopHocPhan ||--o{ DanhSachSinhVienLopHocPhan : "có"
+
+DotKienTap ||--o{ DanhSachSinhVienKienTap : "có"
+
+DotThucTap ||--o{ DanhSachThucTap : "có"
+DanhSachThucTap ||--o{ KetQuaThucTap : "có kết quả"
+VaiTroThucTap ||--o{ KetQuaThucTap : "vai trò"
+
+LopHanhChinh ||--o{ DotKienTap : "tham gia"
+
+@enduml
