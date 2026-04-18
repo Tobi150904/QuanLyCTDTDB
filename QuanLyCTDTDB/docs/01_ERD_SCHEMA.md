@@ -1,335 +1,294 @@
-# ERD & Database Schema - Hệ Thống Quản Lý Đào Tạo Xuất Sắc
+@startuml
+!theme plain
+left to right direction
+skinparam linetype ortho
+hide circle
 
-## 1. ENTITY RELATIONSHIP DIAGRAM (ERD) - Text-based
+' ===== NHÓM NGƯỜI DÙNG =====
+entity NguoiDung {
+  MaNguoiDung: VARCHAR(20) <<PK>>
+  TenDangNhap: VARCHAR(50) <<U>>
+  MatKhauHash: VARCHAR(255)
+  Email: VARCHAR(100) <<U>>
+  HoTen: VARCHAR(100)
+  SoDienThoai: VARCHAR(15)
+  TrangThaiTK: BIT
+  LoaiNguoiDung: ENUM
+  created_at: DATETIME
+  updated_at: DATETIME
+}
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                        AUTHENTICATION & AUTHORIZATION LAYER                 │
-├─────────────────────────────────────────────────────────────────────────────┤
+entity SinhVien {
+  MaSV: VARCHAR(20) <<PK>>
+  MaNguoiDung: VARCHAR(20) <<FK>> <<U>>
+  MaLopHC: VARCHAR(20) <<FK>>
+  TrangThaiSV: ENUM
+}
 
-                    ┌──────────────────────┐
-                    │    NguoiDung         │
-                    │  (Users/Accounts)    │
-                    ├──────────────────────┤
-                    │ MaNguoiDung (PK)     │
-                    │ TenDangNhap (UQ)     │
-                    │ MatKhauHash          │
-                    │ Email (UQ)           │
-                    │ HoTen                │
-                    │ SoDienThoai          │
-                    │ MaLopHC (FK) ─┐      │
-                    │ TrangThaiSV  │      │
-                    │ HocHam       │      │
-                    │ HocVi        │      │
-                    │ ChuyenNganh  │      │
-                    │ TrangThaiTK  │      │
-                    │ created_at   │      │
-                    │ updated_at   │      │
-                    └──────┬───────┘      │
-                           │              │
-                  ┌────────┴─────────────┘
-                  │ 1:N
-                  ▼
-         ┌─────────────────────────┐
-         │ NguoiDung_VaiTro        │ ◄─── Composite PK: (MaNguoiDung, VaiTro)
-         │ (Role Assignments)      │      Enum: SV,GV,CVHT,BCN,CNHP,PDT,TTDTXS,DN
-         ├─────────────────────────┤
-         │ MaNguoiDung (FK, PK)    │
-         │ VaiTro (PK)             │
-         │ created_at              │
-         └─────────────────────────┘
+entity GiangVien {
+  MaGV: VARCHAR(20) <<PK>>
+  MaNguoiDung: VARCHAR(20) <<FK>> <<U>>
+  HocHam: VARCHAR(50)
+  HocVi: VARCHAR(50)
+  ChuyenNganh: VARCHAR(200)
+  LoaiGiangVien: ENUM
+}
 
-└─────────────────────────────────────────────────────────────────────────────┘
+entity NhomNguoiDung {
+  MaNguoiDung: VARCHAR(20) <<FK>>
+  VaiTro: ENUM <<PK>>
+  created_at: DATETIME
+}
 
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                            CATALOG/MASTER DATA LAYER                        │
-├─────────────────────────────────────────────────────────────────────────────┤
+' ===== NHÓM CHƯƠNG TRÌNH ĐÀO TẠO =====
+entity ChuongTrinhDaoTao {
+  MaCTDT: VARCHAR(20) <<PK>>
+  TenCTDT: VARCHAR(200)
+  Khoa: VARCHAR(20)
+  FileWord: VARCHAR(255)
+  TrangThai: ENUM
+  NguoiTao: VARCHAR(20) <<FK>>
+  created_at: DATETIME
+  NguoiDuyet: VARCHAR(20) <<FK>>
+  NgayDuyet: DATETIME
+  updated_at: DATETIME
+}
 
-┌──────────────────────┐         ┌──────────────────────┐
-│  HocKyNamHoc         │         │  DoanhNghiep         │
-│  (Semesters)         │         │  (Partner Companies) │
-├──────────────────────┤         ├──────────────────────┤
-│ MaHocKy (PK)         │         │ MaDoanhNghiep (PK)   │
-│ TenHocKy             │         │ TenDoanhNghiep       │
-│ NgayBatDau           │         │ LinhVuc              │
-│ NgayKetThuc          │         │ NguoiDaiDien         │
-│ TrangThai            │         │ Email                │
-│ created_at           │         │ SoDienThoai          │
-│ updated_at           │         │ TrangThai            │
-└──────────────────────┘         │ created_at           │
-                                 │ updated_at           │
-                                 └──────────────────────┘
+entity BCN_ThanhVien {
+  MaCTDT: VARCHAR(20) <<FK>>
+  MaGV: VARCHAR(20) <<FK>>
+  ChucDanh: ENUM <<PK>>
+  NgayBoNhiem: DATE
+  GhiChu: VARCHAR(255)
+  created_at: DATETIME
+}
 
-┌──────────────────────┐
-│ ChuongTrinhDaoTao    │
-│ (CTDT Programs)      │
-├──────────────────────┤
-│ MaCTDT (PK)          │
-│ TenCTDT              │
-│ Khoa                 │
-│ FileWord             │
-│ TrangThai            │
-│ NguoiTao (FK) ─┐     │
-│ NguoiDuyet (FK)      │
-│ NgayDuyet            │
-│ created_at           │
-│ updated_at           │
-└──────────────────────┘
-         │
-         │ 1:N
-         ▼
-┌──────────────────────┐
-│ HocPhan              │
-│ (Course/Subject)     │
-├──────────────────────┤
-│ MaHocPhan (PK)       │
-│ TenHocPhan           │
-│ SoTinChi             │
-│ ChuNhiemHP (FK)──┐   │
-│ FileDeCuong      │   │
-│ TrangThai        │   │
-│ created_at       │   │
-│ updated_at       │   │
-└──────────────────────┘
-         │
-         │ 1:N
-         ▼
-┌──────────────────────────────────┐
-│ DoiNguGiangVienHP                │ ◄─── Composite PK: (MaHocPhan, MaGiangVien)
-│ (Lecturer Team per Course)       │      Only GV in this team can teach
-├──────────────────────────────────┤
-│ MaHocPhan (FK, PK)               │
-│ MaGiangVien (FK, PK)             │
-│ TrangThai                        │
-│ created_at                       │
-└──────────────────────────────────┘
+' ===== NHÓM HỌC PHẦN =====
+entity HocPhan {
+  MaHocPhan: VARCHAR(20) <<PK>>
+  TenHocPhan: VARCHAR(200)
+  SoTinChi: INT
+  LoaiHocPhan: ENUM
+  ChuNhiemHP: VARCHAR(20) <<FK>>
+  FileDeCuong: VARCHAR(255)
+  TrangThai: ENUM
+  created_at: DATETIME
+  updated_at: DATETIME
+}
 
-└─────────────────────────────────────────────────────────────────────────────┘
+entity DoiNguGiangVienHP {
+  MaHocPhan: VARCHAR(20) <<FK>>
+  MaGiangVien: VARCHAR(20) <<FK>>
+  TrangThai: BIT
+  created_at: DATETIME
+  <<PK>> (MaHocPhan, MaGiangVien)
+}
 
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                        TRAINING & CLASSES LAYER                             │
-├─────────────────────────────────────────────────────────────────────────────┤
+entity CTDT_HocPhan {
+  MaCTDT: VARCHAR(20) <<FK>>
+  MaHocPhan: VARCHAR(20) <<FK>>
+  HocKyThu: INT
+  SoLopDuKien: INT
+  BatBuoc: BIT
+  GhiChu: VARCHAR(255)
+  FileDeCuong: VARCHAR(255)
+  created_at: DATETIME
+  updated_at: DATETIME
+  <<PK>> (MaCTDT, MaHocPhan)
+}
 
-┌──────────────────────┐
-│ LopHanhChinh         │
-│ (Admin Classes)      │
-├──────────────────────┤
-│ MaLopHC (PK)         │
-│ TenLop               │
-│ MaCTDT (FK)          │
-│ KhoaHoc              │
-│ MaCoVan (FK)         │
-│ created_at           │
-│ updated_at           │
-└──────────────────────┘
-         │
-         │ N:1 ◄── One CVHT per Admin Class
-         │
-    ◄─── Referenced by NguoiDung.MaLopHC (Many SV per Admin Class)
-         │
-         │ 1:N ◄─── Kiến Tập by Admin Class
-         ▼
-    DotKienTap
+' ===== NHÓM LỚP HỌC PHẦN =====
+entity LopHocPhan {
+  MaCTDT: VARCHAR(20) <<FK>>
+  MaHocPhan: VARCHAR(20) <<FK>>
+  MaHocKy: VARCHAR(20) <<FK>>
+  MaLopHocPhan: INT <<PK>>
+  MaGiangVien: VARCHAR(20) <<FK>>
+  SiSoToiDa: INT
+  SiSoThucTe: INT
+  FileDeCuongChiTiet: VARCHAR(255)
+  TrangThai: ENUM
+  created_at: DATETIME
+  updated_at: DATETIME
+  <<PK>> (MaCTDT, MaHocPhan, MaHocKy, MaLopHocPhan)
+}
 
-┌──────────────────────┐
-│ LopHocPhan           │
-│ (Course Classes)     │
-├──────────────────────┤
-│ MaLopHP (PK)         │
-│ MaHocPhan (FK)───┐   │
-│ MaHocKy (FK)──┐  │   │
-│ MaGiangVien(FK)  │   │
-│ NhomLop          │   │
-│ SiSoToiDa        │   │
-│ SiSoThucTe       │   │
-│ TrangThai        │   │
-│ created_at       │   │
-│ updated_at       │   │
-└──────────────────────┘
-         │
-         │ 1:N
-         ├─────────────────────────────┐
-         ▼                             ▼
-   TaiLieuMonHoc          DanhGiaVaCanhBao
-   (Documents)            (Evaluations & Alerts)
-   - DeCuongChiTiet       - GV assessment of SV
-   - DeThiGiuaKy          - Auto-create warning if negative
-   - DeThiCuoiKy          - CVHT processes warning
+entity DanhSachSinhVienLopHocPhan {
+  MaSV: VARCHAR(20) <<FK>>
+  MaCTDT: VARCHAR(20) <<FK>>
+  MaHocPhan: VARCHAR(20) <<FK>>
+  MaHocKy: VARCHAR(20) <<FK>>
+  MaLopHocPhan: INT <<FK>>
+  NhanXet: TEXT
+  DaCanhBao: BIT
+  KetQuaXuLy: TEXT
+  created_at: DATETIME
+  updated_at: DATETIME
+  <<PK>> (MaSV, MaCTDT, MaHocPhan, MaHocKy, MaLopHocPhan)
+}
 
-└─────────────────────────────────────────────────────────────────────────────┘
+' ===== NHÓM HỌC KỲ =====
+entity HocKyNamHoc {
+  MaHocKy: VARCHAR(20) <<PK>>
+  TenHocKy: VARCHAR(50)
+  NgayBatDau: DATE
+  NgayKetThuc: DATE
+  TrangThai: ENUM
+  created_at: DATETIME
+  updated_at: DATETIME
+}
 
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                    INTERNSHIP & PRACTICUM LAYER                             │
-├─────────────────────────────────────────────────────────────────────────────┤
+' ===== NHÓM DOANH NGHIỆP =====
+entity DoanhNghiep {
+  MaDoanhNghiep: VARCHAR(20) <<PK>>
+  TenDoanhNghiep: VARCHAR(200)
+  LinhVuc: VARCHAR(200)
+  NguoiDaiDien: VARCHAR(100)
+  Email: VARCHAR(100)
+  SoDienThoai: VARCHAR(15)
+  DiaChiDN: VARCHAR(255)
+  TrangThai: ENUM
+  created_at: DATETIME
+  updated_at: DATETIME
+}
 
-┌──────────────────────┐
-│ DotKienTap           │
-│ (Field Trip Batches) │
-├──────────────────────┤
-│ MaDotKT (PK)         │
-│ TenDotKT             │
-│ MaLopHC (FK)──┐      │
-│ MaHocKy (FK)  │      │
-│ ThoiGian      │      │
-│ MaGVPhuTrach  │      │
-│ MaDoanhNghiep │      │
-│ NhanXetGV     │      │
-│ NhanXetDN     │      │
-│ TrangThai     │      │
-│ NguoiDuyet    │      │
-│ NgayDuyet     │      │
-│ created_at    │      │
-│ updated_at    │      │
-└──────────────────────┘
+' ===== NHÓM LỚP HÀNH CHÍNH =====
+entity LopHanhChinh {
+  MaLopHC: VARCHAR(20) <<PK>>
+  TenLop: VARCHAR(100)
+  MaCTDT: VARCHAR(20) <<FK>>
+  KhoaHoc: VARCHAR(20)
+  MaCoVan: VARCHAR(20) <<FK>>
+  created_at: DATETIME
+  updated_at: DATETIME
+}
 
-┌──────────────────────┐         ┌──────────────────────┐
-│ DotThucTap           │         │ PhanCongThucTap      │
-│ (Internship Batches) │────────▶│ (Practicum Assign)   │
-├──────────────────────┤ 1:N     ├──────────────────────┤
-│ MaDotTT (PK)         │         │ MaThucTap (PK)       │
-│ TenDotTT             │         │ MaDotTT (FK)         │
-│ MaHocKy (FK)         │         │ MaSV (FK)            │
-│ NgayBatDau           │         │ MaDoanhNghiep (FK)   │
-│ NgayKetThuc          │         │ MaGiangVienGiamSat   │
-│ TrangThai            │         │ DiemDN               │
-│ NguoiDuyet           │         │ NhanXetDN            │
-│ NgayDuyet            │         │ DiemGV               │
-│ created_at           │         │ NhanXetGV            │
-│ updated_at           │         │ NhanXetSV            │
-└──────────────────────┘         │ TrangThai            │
-                                 │ created_at           │
-                                 │ updated_at           │
-                                 └──────────────────────┘
-                                   UQ: (MaDotTT, MaSV)
+' ===== NHÓM KIẾN TẬP =====
+entity DotKienTap {
+  MaDotKT: INT <<PK>>
+  TenDotKT: VARCHAR(200)
+  MaLopHC: VARCHAR(20) <<FK>>
+  MaHocKy: VARCHAR(20) <<FK>>
+  ThoiGian: DATE
+  MaGVPhuTrach: VARCHAR(20) <<FK>>
+  MaDoanhNghiep: VARCHAR(20) <<FK>>
+  NhanXetGV: TEXT
+  NhanXetDN: TEXT
+  FileMinhChung: VARCHAR(255)
+  KinhPhiChung: DECIMAL(15,2)
+  KinhPhiTungSV: DECIMAL(15,2)
+  TrangThai: ENUM
+  NguoiTao: VARCHAR(20) <<FK>>
+  NguoiDuyet: VARCHAR(20) <<FK>>
+  NgayDuyet: DATETIME
+  created_at: DATETIME
+  updated_at: DATETIME
+}
 
-└─────────────────────────────────────────────────────────────────────────────┘
+entity DanhSachSinhVienKienTap {
+  MaDotKT: INT <<FK>>
+  MaSV: VARCHAR(20) <<FK>>
+  DaThamGia: BIT
+  created_at: DATETIME
+  updated_at: DATETIME
+  <<PK>> (MaDotKT, MaSV)
+}
 
-## 2. KEY RELATIONSHIPS SUMMARY
+' ===== NHÓM THỰC TẬP =====
+entity DotThucTap {
+  MaDotTT: INT <<PK>>
+  TenDotTT: VARCHAR(200)
+  MaCTDT: VARCHAR(20) <<FK>>
+  MaHocPhan: VARCHAR(20) <<FK>>
+  MaHocKy: VARCHAR(20) <<FK>>
+  NgayBatDau: DATE
+  NgayKetThuc: DATE
+  FileMinhChung: VARCHAR(255)
+  TrangThai: ENUM
+  NguoiTao: VARCHAR(20) <<FK>>
+  NguoiDuyet: VARCHAR(20) <<FK>>
+  NgayDuyet: DATETIME
+  created_at: DATETIME
+  updated_at: DATETIME
+}
 
-| Parent → Child | Cardinality | Description |
-|---|---|---|
-| NguoiDung → NguoiDung_VaiTro | 1:N | One person, many roles |
-| NguoiDung → LopHanhChinh (MaCoVan) | 1:N | One CVHT, many admin classes |
-| NguoiDung → DanhGiaVaCanhBao (NguoiNhanXet) | 1:N | One GV/CVHT, many evaluations |
-| NguoiDung → LopHocPhan (MaGiangVien) | 1:N | One GV, many course classes |
-| HocKyNamHoc → LopHocPhan | 1:N | One semester, many course classes |
-| HocKyNamHoc → DotKienTap | 1:N | One semester, many field trips |
-| HocKyNamHoc → DotThucTap | 1:N | One semester, many internships |
-| HocPhan → DoiNguGiangVienHP | 1:N | One course, many lecturers in team |
-| HocPhan → LopHocPhan | 1:N | One course, many course instances |
-| HocPhan → TaiLieuMonHoc | 1:N | One course, many documents |
-| LopHocPhan → TaiLieuMonHoc | 1:N | One course class, many documents |
-| LopHocPhan → DanhGiaVaCanhBao | 1:N | One course class, many evaluations |
-| LopHanhChinh → DotKienTap | 1:N | One admin class, many field trips |
-| DoanhNghiep → DotKienTap | 1:N | One company, many field trips |
-| DoanhNghiep → PhanCongThucTap | 1:N | One company, many practicum assignments |
-| DotThucTap → PhanCongThucTap | 1:N | One internship batch, many assignments |
+entity DanhSachThucTap {
+  MaThucTap: INT <<PK>>
+  MaDotTT: INT <<FK>>
+  MaSV: VARCHAR(20) <<FK>>
+  LoaiThucTap: ENUM
+  MaDoanhNghiep: VARCHAR(20) <<FK>> <<NULL>>
+  TrangThai: ENUM
+  created_at: DATETIME
+  updated_at: DATETIME
+}
 
-## 3. CONSTRAINT RULES
+entity VaiTroThucTap {
+  MaVaiTro: VARCHAR(10) <<PK>>
+  TenVaiTro: VARCHAR(100)
+  MoTa: VARCHAR(255)
+}
 
-### Primary Keys (PK)
-- All entity tables have exactly 1 PK
-- Composite PKs: NguoiDung_VaiTro (MaNguoiDung + VaiTro), DoiNguGiangVienHP (MaHocPhan + MaGiangVien)
+entity KetQuaThucTap {
+  MaKetQua: INT <<PK>>
+  MaThucTap: INT <<FK>>
+  MaVaiTro: VARCHAR(10) <<FK>>
+  MaNguoiDanhGia: VARCHAR(20) <<FK>>
+  Diem: DECIMAL(4,2)
+  NhanXet: TEXT
+  created_at: DATETIME
+  updated_at: DATETIME
+}
 
-### Unique Keys (UQ)
-- `NguoiDung.TenDangNhap` - Must be unique
-- `NguoiDung.Email` - Must be unique
-- `TaiLieuMonHoc(MaLopHP, Loai)` - Only 1 document per type per class
-- `PhanCongThucTap(MaDotTT, MaSV)` - Only 1 assignment per student per batch
+' ===== QUAN HỆ =====
+NguoiDung ||--|| SinhVien : "1-1"
+NguoiDung ||--|| GiangVien : "1-1"
+NguoiDung ||--o{ NhomNguoiDung : "có"
+NguoiDung ||--o{ ChuongTrinhDaoTao : "tạo (NguoiTao)"
+NguoiDung ||--o{ ChuongTrinhDaoTao : "duyệt (NguoiDuyet)"
+NguoiDung ||--o{ DotKienTap : "tạo (NguoiTao)"
+NguoiDung ||--o{ DotKienTap : "duyệt (NguoiDuyet)"
+NguoiDung ||--o{ DotThucTap : "tạo (NguoiTao)"
+NguoiDung ||--o{ DotThucTap : "duyệt (NguoiDuyet)"
 
-### Foreign Keys (FK)
-- All FKs reference PK of parent table
-- Cascade rules: Most are RESTRICT (prevent delete if child exists)
-- Exception: Soft delete where possible (use TrangThai instead)
+SinhVien }o--|| LopHanhChinh : "thuộc"
+SinhVien ||--o{ DanhSachSinhVienLopHocPhan : "tham gia"
+SinhVien ||--o{ DanhSachSinhVienKienTap : "tham gia"
+SinhVien ||--o{ DanhSachThucTap : "được phân công"
 
-### Enums (Standard Values)
-```
-NguoiDung_VaiTro.VaiTro:
-  - 'SV' (Sinh Viên / Student)
-  - 'GV' (Giảng Viên / Lecturer)
-  - 'CVHT' (Cố Vấn Học Tập / Academic Advisor)
-  - 'BCN' (Ban Chủ Nhiệm / Program Chair)
-  - 'CNHP' (Chủ Nhiệm Học Phần / Course Chair)
-  - 'PDT' (Phòng Đào Tạo / Dean of Training)
-  - 'TTDTXS' (Trung Tâm Đào Tạo Xuất Sắc / Center for Excellence)
-  - 'DN' (Doanh Nghiệp / Company)
+GiangVien ||--o{ BCN_ThanhVien : "tham gia"
+GiangVien ||--o{ DoiNguGiangVienHP : "tham gia"
+GiangVien ||--o{ LopHocPhan : "giảng dạy"
+GiangVien ||--o{ LopHanhChinh : "cố vấn (MaCoVan)"
+GiangVien ||--o{ DotKienTap : "phụ trách"
+GiangVien ||--o{ KetQuaThucTap : "đánh giá"
 
-HocKyNamHoc.TrangThai:
-  - 'SapDienRa' (Upcoming)
-  - 'DangDienRa' (Ongoing)
-  - 'DaKetThuc' (Finished)
+ChuongTrinhDaoTao ||--o{ BCN_ThanhVien : "có ban chủ nhiệm"
+ChuongTrinhDaoTao ||--o{ LopHanhChinh : "áp dụng"
+ChuongTrinhDaoTao ||--o{ CTDT_HocPhan : "chi tiết"
 
-ChuongTrinhDaoTao.TrangThai:
-  - 'BanNhap' (Draft)
-  - 'ChoDuyet' (Pending Approval)
-  - 'DaDuyet' (Approved) → Auto-creates LopHocPhan
-  - 'DaHuy' (Cancelled)
+HocPhan ||--o{ DoiNguGiangVienHP : "có"
+HocPhan ||--o{ CTDT_HocPhan : "thuộc"
+HocPhan }o--|| GiangVien : "chủ nhiệm (ChuNhiemHP)"
 
-HocPhan.TrangThai:
-  - 'BanNhap' (Draft)
-  - 'ChoDuyet' (Pending)
-  - 'DaDuyet' (Approved)
+CTDT_HocPhan ||--o{ LopHocPhan : "mở lớp"
+CTDT_HocPhan ||--o{ DotThucTap : "thuộc học phần"
 
-LopHocPhan.TrangThai:
-  - 'DangMo' (Open, accepting students)
-  - 'DaDong' (Closed)
-  - 'DaHuy' (Cancelled)
+HocKyNamHoc ||--o{ LopHocPhan : "chứa"
+HocKyNamHoc ||--o{ DotKienTap : "tổ chức"
+HocKyNamHoc ||--o{ DotThucTap : "tổ chức"
 
-TaiLieuMonHoc.Loai:
-  - 'DeCuongChiTiet' (Detailed Syllabus) → Deadline: 14 days from semester start
-  - 'DeThiGiuaKy' (Midterm Exam)
-  - 'DeThiCuoiKy' (Final Exam)
+DoanhNghiep ||--o{ DotKienTap : "tiếp đón"
+DoanhNghiep ||--o{ DanhSachThucTap : "tiếp nhận"
 
-TaiLieuMonHoc.TrangThai:
-  - 'ChoDuyet' (Pending Review)
-  - 'DaDuyet' (Approved)
-  - 'TuChoi' (Rejected)
+LopHocPhan ||--o{ DanhSachSinhVienLopHocPhan : "có"
 
-DanhGiaVaCanhBao.LoaiNhanXet:
-  - 'TichCuc' (Positive)
-  - 'TieuCuc' (Negative) → Auto-creates alert, sends email to CVHT & SV
+DotKienTap ||--o{ DanhSachSinhVienKienTap : "có"
 
-DotKienTap.TrangThai:
-  - 'ChuanBi' (Preparing)
-  - 'ChoDuyet' (Pending Approval)
-  - 'DaDuyet' (Approved)
-  - 'DaThucHien' (Executed)
-  - 'DaHuy' (Cancelled)
+DotThucTap ||--o{ DanhSachThucTap : "có"
+DanhSachThucTap ||--o{ KetQuaThucTap : "có kết quả"
+VaiTroThucTap ||--o{ KetQuaThucTap : "vai trò"
 
-DotThucTap.TrangThai:
-  - 'ChuanBi' (Preparing)
-  - 'ChoDuyet' (Pending)
-  - 'DaDuyet' (Approved)
-  - 'DangThucHien' (Ongoing)
-  - 'DaKetThuc' (Finished)
+LopHanhChinh ||--o{ DotKienTap : "tham gia"
 
-PhanCongThucTap.TrangThai:
-  - 'DaPhanCong' (Assigned)
-  - 'DangThucTap' (In Progress)
-  - 'DaKetThuc' (Completed)
-  - 'DaHuy' (Cancelled)
-
-DoanhNghiep.TrangThai:
-  - 'DangHopTac' (Active)
-  - 'TamNgung' (Paused)
-
-NguoiDung.TrangThaiSV:
-  - 'DangHoc' (Currently Studying)
-  - 'BaoLuu' (Deferred)
-  - 'ThoiHoc' (Dropped Out)
-  - 'TotNghiep' (Graduated)
-
-NguoiDung.TrangThaiTK:
-  - 1 (Active)
-  - 0 (Locked/Inactive)
-```
-
-## 4. CRITICAL WORKFLOW TRIGGERS
-
-| Trigger | Condition | Action |
-|---|---|---|
-| Auto-create LopHocPhan | ChuongTrinhDaoTao.TrangThai = 'DaDuyet' | System reads HocPhan list, creates ~60 LopHocPhan for current semester |
-| Create Alert | DanhGiaVaCanhBao.LoaiNhanXet = 'TieuCuc' | Auto-create alert, email CVHT & SV |
-| Validate Assignment | GV assigned to LopHocPhan | Check: GV must be in DoiNguGiangVienHP (warn if not) |
-| Check Deadline | TaiLieuMonHoc.Loai = 'DeCuongChiTiet' | Deadline = HocKy.NgayBatDau + 14 days |
-
+@enduml
