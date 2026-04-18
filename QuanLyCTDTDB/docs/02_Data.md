@@ -1,3 +1,98 @@
+I. PHÂN TÍCH VÀ ĐẶC TẢ YÊU CẦU
+Hệ thống được xây dựng nhằm hỗ trợ Trung tâm Đào tạo Xuất sắc quản lý và điều hành các hoạt động liên quan đến đào tạo cho các chương trình đào tạo đặc biệt. Phạm vi hệ thống tập trung vào các nghiệp vụ cốt lõi: quản lý chương trình đào tạo, học phần, đội ngũ giảng viên, cố vấn học tập, doanh nghiệp đối tác, quy trình tổ chức kiến tập (theo đơn vị lớp) và thực tập, theo dõi và cảnh báo học vụ.
+
+Các tác nhân chính tham gia hệ thống:
+Phòng Đào tạo (PDT): Quản lý chung, phê duyệt chương trình đào tạo, quản lý học kỳ, người dùng và báo cáo thống kê.
+
+Trung tâm Đào tạo Xuất sắc (TTĐTSX): Đầu mối xét duyệt chương trình đào tạo, kế hoạch thực tập, kiến tập và các hoạt động liên quan.
+
+Ban chủ nhiệm chương trình (BCN): Xây dựng và quản lý chương trình đào tạo, mở lớp học phần, phân công giảng viên, lập danh sách sinh viên kiến tập và thực tập. BCN của mỗi CTĐT gồm các thành viên với các chức danh: Chủ nhiệm, Thư ký, Ủy viên.
+
+Chủ nhiệm học phần (CNHP): Biên soạn và cập nhật đề cương học phần; quản lý đội ngũ giảng viên có thể giảng dạy học phần.
+
+Giảng viên (GV): Giảng dạy lớp học phần, tải lên đề cương chi tiết, nhập nhận xét đánh giá sinh viên trong quá trình học; tham gia giám sát và đánh giá thực tập. Giảng viên có thể là giảng viên cơ hữu của trường hoặc chuyên gia từ doanh nghiệp được mời tham gia giảng dạy.
+
+Cố vấn học tập (CVHT): Theo dõi cảnh báo học vụ, liên hệ hỗ trợ sinh viên và cập nhật kết quả xử lý.
+
+Doanh nghiệp (DN): Tiếp nhận sinh viên kiến tập, thực tập; đăng nhập hệ thống để nhập nhận xét kiến tập; nhân viên doanh nghiệp có thể được phân công làm người hướng dẫn thực tập và tham gia đánh giá kết quả thực tập.
+
+Sinh viên (SV): Tra cứu chương trình đào tạo, đề cương học phần, kế hoạch kiến tập, thực tập; nhận phản hồi từ giảng viên và doanh nghiệp.
+
+1. Quy trình quản lý chương trình đào tạo đặc biệt
+CTĐT đặc biệt là các chương trình tiên tiến, chương trình đặt hàng của doanh nghiệp, chương trình liên kết với nước ngoài.
+
+Tác nhân tham gia: Ban chủ nhiệm chương trình (BCN), Trung tâm Đào tạo Xuất sắc (TTĐTSX), Phòng Đào tạo (PĐT), Chủ nhiệm học phần.
+
+Mô tả chi tiết:
+
+Quy trình bắt đầu khi Ban chủ nhiệm chương trình có nhu cầu xây dựng một chương trình đào tạo đặc biệt mới hoặc điều chỉnh chương trình hiện có. Dựa trên định hướng phát triển của nhà trường, nhu cầu thị trường lao động và tham khảo ý kiến các bên liên quan, BCN tiến hành xây dựng khung chương trình tổng thể. Các thông tin cần được xác định bao gồm: (I) Thông tin chung, (II) Mục tiêu chương trình đào tạo, (III) Chuẩn đầu ra chương trình đào tạo, (IV) Vị trí việc làm, (V) Quy định tuyển sinh và tốt nghiệp, (VI) Cấu trúc chương trình đào tạo, (VII) Nội dung chương trình đào tạo, (VIII) Hướng dẫn thực hiện và tổ chức chương trình, (IX) Hoạt động hỗ trợ sinh viên.
+
+Sau khi hoàn thiện, BCN tải file mô tả CTĐT lên hệ thống và tiến hành cấu hình chi tiết chương trình trong bảng CTDT_HocPhan: với mỗi học phần thuộc CTĐT, xác định học kỳ thứ mấy (HocKyThu), số lớp dự kiến mở (SoLopDuKien), tính bắt buộc/tự chọn, và có thể tải lên file đề cương riêng của học phần cho CTĐT này (FileDeCuong). Đồng thời, BCN phân công các thành viên trong ban chủ nhiệm (BCN_ThanhVien) với các chức danh Chủ nhiệm, Thư ký, Ủy viên.
+
+Toàn bộ CTĐT sau đó được trình lên TTĐTSX và PĐT xem xét, phê duyệt. Khi CTĐT được duyệt (trạng thái DaDuyet), hệ thống sẽ tự động tạo các lớp học phần (LopHocPhan) tương ứng với số lượng lớp dự kiến đã cấu hình, sẵn sàng cho việc phân công giảng viên ở học kỳ tương ứng.
+
+2. Quy trình xây dựng đội ngũ giảng viên cho học phần và phân công giảng dạy
+Mục đích: Xác định đội ngũ giảng viên có đủ năng lực tham gia giảng dạy cho từng học phần và phân công giảng dạy cụ thể cho từng học kỳ, đảm bảo giảng viên được phân công phải thuộc đội ngũ của học phần đó.
+
+Tác nhân tham gia: Chủ nhiệm học phần, Ban chủ nhiệm chương trình, Trung tâm Đào tạo Xuất sắc (TTĐTSX), Phòng Đào tạo (PĐT).
+
+Mô tả chi tiết:
+
+Chủ nhiệm học phần (CNHP) có trách nhiệm xây dựng và quản lý đội ngũ giảng viên cho học phần – những giảng viên có đủ năng lực và chuyên môn để giảng dạy học phần đó. Đội ngũ này được lưu trong bảng DoiNguGiangVienHP. Việc xác định đội ngũ dựa trên các tiêu chí về trình độ chuyên môn: giảng viên có trình độ tiến sĩ được ưu tiên; giảng viên có trình độ thạc sĩ phải được đánh giá tốt về năng lực giảng dạy. Đối với các trường hợp đặc thù như mời chuyên gia từ doanh nghiệp tham gia giảng dạy (được lưu trong bảng GiangVien với LoaiGiangVien = 'DoanhNghiep'), BCN cần đề xuất lên TTĐTSX và PĐT phê duyệt.
+
+Một giảng viên chỉ được gán giảng dạy một lớp học phần nếu họ nằm trong đội ngũ giảng viên của học phần đó.
+
+Vào đầu mỗi học kỳ, căn cứ vào danh sách các lớp học phần đã được tạo tự động từ CTĐT, BCN thực hiện phân công giảng viên (LopHocPhan.MaGiangVien) từ đội ngũ hiện có cho từng lớp. Thông tin phân công được gửi lên TTĐTSX và PĐT để xét duyệt trước khi có hiệu lực chính thức.
+
+3. Quy trình xây dựng đề cương học phần chi tiết
+Mục đích: Đảm bảo chất lượng chuyên môn của từng lớp học phần thông qua việc xây dựng đề cương chi tiết.
+
+Tác nhân tham gia: Chủ nhiệm học phần, Giảng viên giảng dạy.
+
+Mô tả chi tiết:
+
+Vào đầu mỗi học kỳ, giảng viên được phân công giảng dạy một lớp học phần có trách nhiệm xây dựng đề cương chi tiết cho lớp đó. Đề cương chi tiết bao gồm các nội dung: thông tin về giảng viên, lớp giảng dạy, mục tiêu, chuẩn đầu ra (CLOs), cấu trúc điểm thành phần, tài liệu dạy học, kế hoạch dạy học chi tiết theo từng chủ đề và yêu cầu đối với người học.
+
+Trong 2 tuần đầu học kỳ, giảng viên tải file đề cương chi tiết (PDF) lên hệ thống (LopHocPhan.FileDeCuongChiTiet). Hệ thống ghi nhận thời hạn nộp và ngày thực tế nộp. Chủ nhiệm học phần có trách nhiệm xem xét, đánh giá đề cương. Nếu đạt yêu cầu, CNHP phê duyệt và đề cương chính thức được công bố cho sinh viên. Nếu cần điều chỉnh, CNHP gửi lại yêu cầu chỉnh sửa kèm góp ý cụ thể.
+
+4. Quy trình theo dõi, đánh giá và cảnh báo học vụ
+Mục đích: Theo dõi, đánh giá và cảnh báo kịp thời tình hình học tập của sinh viên dựa trên nhận xét của giảng viên, nhằm hỗ trợ sinh viên cải thiện kết quả học tập.
+
+Tác nhân tham gia: Giảng viên giảng dạy, Sinh viên, Cố vấn học tập, Ban chủ nhiệm chương trình.
+
+Mô tả chi tiết:
+
+Trong suốt học kỳ, giảng viên có trách nhiệm nhập nhận xét cho từng sinh viên trong lớp học phần của mình. Nhận xét được lưu vào bảng DanhSachSinhVienLopHocPhan (là bảng liên kết giữa sinh viên và lớp học phần), bao gồm nội dung nhận xét và trạng thái cảnh báo (DaCanhBao).
+
+Khi giảng viên nhập nhận xét mang tính cảnh báo (đặt DaCanhBao = 1), hệ thống tự động gửi thông báo ngay lập tức đến CVHT của lớp hành chính mà sinh viên đó thuộc về và tới chính sinh viên đó.
+
+CVHT có trách nhiệm theo dõi các cảnh báo (DaCanhBao = 1), liên hệ với sinh viên để tư vấn, hỗ trợ, và cập nhật kết quả xử lý vào trường KetQuaXuLy trong cùng bảng DanhSachSinhVienLopHocPhan. BCN có thể xem tổng hợp các cảnh báo và mức độ xử lý của CVHT để đánh giá chất lượng học tập chung.
+
+5. Quy trình tổ chức và quản lý kiến tập (theo đơn vị lớp)
+Mục đích: Tổ chức các đợt kiến tập cho sinh viên theo đơn vị lớp hành chính, giúp họ quan sát, tìm hiểu thực tế tại doanh nghiệp. Kiến tập không có đánh giá điểm số mà chỉ có nhận xét từ các bên liên quan.
+
+Tác nhân tham gia: Ban chủ nhiệm chương trình, Doanh nghiệp, Giảng viên phụ trách, Sinh viên, Trung tâm Đào tạo Xuất sắc (TTĐTSX).
+
+Mô tả chi tiết:
+
+BCN lên kế hoạch tổ chức các đợt kiến tập cho sinh viên, xác định lớp hành chính tham gia, doanh nghiệp sẽ đến thăm, thời gian dự kiến, giảng viên phụ trách đoàn. Các thông tin này được lưu vào bảng DotKienTap. Đồng thời, BCN nhập danh sách sinh viên tham gia (qua file Excel) vào bảng DanhSachSinhVienKienTap. Chi phí tổ chức được ghi nhận qua hai trường KinhPhiChung và KinhPhiTungSV. File minh chứng (kế hoạch, công văn) được tải lên hệ thống.
+
+Đợt kiến tập được trình lên TTĐTSX phê duyệt chính thức trên hệ thống. Sau khi kết thúc đợt kiến tập, giảng viên phụ trách và doanh nghiệp sẽ nhập nhận xét chung vào các trường NhanXetGV và NhanXetDN của bảng DotKienTap.
+
+6. Quy trình tổ chức và quản lý thực tập
+Mục đích: Quản lý phân công và đánh giá kết quả thực tập của sinh viên. Thực tập được coi là một học phần chính thức trong chương trình đào tạo (có LoaiHocPhan = 'ThucTap').
+
+Tác nhân tham gia: Ban chủ nhiệm chương trình (BCN), Trung tâm Đào tạo Xuất sắc (TTĐTSX), Doanh nghiệp, Giảng viên, Sinh viên.
+
+Mô tả chi tiết:
+
+BCN tạo đợt thực tập (DotThucTap) dựa trên học phần thực tập đã được cấu hình trong CTDT_HocPhan. Đợt thực tập được gắn với một học kỳ cụ thể và có thời gian bắt đầu, kết thúc.
+
+Sau khi đợt thực tập được TTĐTSX phê duyệt, BCN tiến hành phân công sinh viên vào bảng DanhSachThucTap. Mỗi phân công xác định loại hình thực tập (LoaiThucTap): tại trường ('Truong') hoặc tại doanh nghiệp ('DoanhNghiep'). Nếu thực tập tại doanh nghiệp, cần chỉ định doanh nghiệp tiếp nhận (MaDoanhNghiep).
+
+Sau khi kết thúc đợt thực tập, việc đánh giá được thực hiện bởi nhiều người với các vai trò khác nhau. Hệ thống cho phép định nghĩa danh mục các vai trò đánh giá (VaiTroThucTap) như: Hướng dẫn, Phản biện, Giám sát, Ủy viên hội đồng... Mỗi người đánh giá (là giảng viên hoặc nhân viên doanh nghiệp được lưu trong bảng GiangVien) sẽ nhập điểm và nhận xét của mình cho từng sinh viên vào bảng KetQuaThucTap. Mỗi bản ghi trong bảng này tương ứng với một đánh giá của một người với một vai trò cụ thể. Điểm tổng kết của sinh viên có thể được tổng hợp từ các điểm thành phần này theo quy chế đào tạo.
+
+Sinh viên có thể tra cứu thông tin phân công và kết quả đánh giá của mình trên hệ thống.
 II. THIẾT KẾ CƠ SỞ DỮ LIỆU
 2.1. Mô hình thực thể - kết hợp (ERD)
 (Sử dụng sơ đồ PlantUML như đã thống nhất)
