@@ -18,16 +18,9 @@ public class LopHocPhan {
     @EmbeddedId
     private LopHocPhanId id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumns({
-        @JoinColumn(name = "MaCTDT",    insertable = false, updatable = false),
-        @JoinColumn(name = "MaHocPhan", insertable = false, updatable = false)
-    })
-    private CtdtHocPhan ctdtHocPhan;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "MaHocKy", insertable = false, updatable = false)
-    private HocKyNamHoc hocKy;
+    // ctdtHocPhan va hocKy duoc lay qua Repository bang ID trong EmbeddedId
+    // Khong map truc tiep de tranh Hibernate 7 duplicate column error
+    // (MaCTDT, MaHocPhan, MaHocKy da co trong LopHocPhanId @EmbeddedId)
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "MaGiangVien")

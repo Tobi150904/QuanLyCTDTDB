@@ -41,9 +41,8 @@ public class LopHocPhanServiceImpl implements LopHocPhanService {
                 if (!lopHocPhanRepo.existsById(id)) {
                     LopHocPhan lhp = LopHocPhan.builder()
                             .id(id)
-                            .ctdtHocPhan(ctdtHP)
                             .trangThai(TrangThaiLopHocPhan.DangMo)
-                            .siSoToiDa(ctdtHP.getSoLopDuKien() != null ? 50 : 50)
+                            .siSoToiDa(50)
                             .siSoThucTe(0)
                             .build();
                     lopHocPhanRepo.save(lhp);
@@ -61,10 +60,13 @@ public class LopHocPhanServiceImpl implements LopHocPhanService {
         lhp.setGiangVien(gv);
         LopHocPhan saved = lopHocPhanRepo.save(lhp);
 
-        // Gui email thong bao GV
+        // Gui email thong bao GV - lay ten HP va ten HocKy qua repository
         try {
-            String tenHP = lhp.getCtdtHocPhan().getHocPhan().getTenHocPhan();
-            String tenHocKy = lhp.getHocKy() != null ? lhp.getHocKy().getTenHocKy() : "";
+            CtdtHocPhanId ctdtHpId = new CtdtHocPhanId(id.getMaCTDT(), id.getMaHocPhan());
+            String tenHP = ctdtHocPhanRepo.findById(ctdtHpId)
+                    .map(c -> c.getHocPhan().getTenHocPhan()).orElse(id.getMaHocPhan());
+            String tenHocKy = hocKyRepo.findById(id.getMaHocKy())
+                    .map(HocKyNamHoc::getTenHocKy).orElse(id.getMaHocKy());
             emailService.guiThongBaoPhanCongLop(gv.getNguoiDung().getEmail(), tenHP,
                     id.getMaLopHocPhan().toString(), tenHocKy);
         } catch (Exception e) {
@@ -129,10 +131,13 @@ public class LopHocPhanServiceImpl implements LopHocPhanService {
         ds.setNhanXet(nhanXet);
         dsSvRepo.save(ds);
 
-        // Gui email CVHT
+        // Gui email CVHT - lay ten HP qua repository (LopHocPhan khong con navigation ctdtHocPhan)
         try {
             String hoTenSV = ds.getSinhVien().getNguoiDung().getHoTen();
-            String tenHP = ds.getLopHocPhan().getCtdtHocPhan().getHocPhan().getTenHocPhan();
+            LopHocPhanId lopId2 = ds.getLopHocPhan().getId();
+            CtdtHocPhanId ctdtHpId = new CtdtHocPhanId(lopId2.getMaCTDT(), lopId2.getMaHocPhan());
+            String tenHP = ctdtHocPhanRepo.findById(ctdtHpId)
+                    .map(c -> c.getHocPhan().getTenHocPhan()).orElse(lopId2.getMaHocPhan());
             emailService.guiCanhBaoSinhVien(emailCVHT, hoTenSV, tenHP, nhanXet);
         } catch (Exception e) {
             log.warn("Khong gui duoc email canh bao SV: {}", e.getMessage());
