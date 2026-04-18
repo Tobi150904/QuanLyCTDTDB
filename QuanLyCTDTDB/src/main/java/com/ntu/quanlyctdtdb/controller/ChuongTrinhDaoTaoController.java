@@ -1,0 +1,146 @@
+package com.ntu.quanlyctdtdb.controller;
+
+import com.ntu.quanlyctdtdb.dto.ChuongTrinhDaoTaoDTO;
+import com.ntu.quanlyctdtdb.dto.CtdtHocPhanDTO;
+import com.ntu.quanlyctdtdb.entity.ChuongTrinhDaoTao;
+import com.ntu.quanlyctdtdb.security.CustomUserDetails;
+import com.ntu.quanlyctdtdb.service.ChuongTrinhDaoTaoService;
+import com.ntu.quanlyctdtdb.util.FileStorageUtil;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+@Controller
+@RequestMapping("/ctdt")
+@RequiredArgsConstructor
+public class ChuongTrinhDaoTaoController {
+
+    private final ChuongTrinhDaoTaoService ctdtService;
+    private final FileStorageUtil fileStorageUtil;
+
+    @GetMapping
+    public String danhSach(Model model) {
+        model.addAttribute("danhSach", ctdtService.findAll());
+        return "ctdt/danh-sach";
+    }
+
+    @GetMapping("/them")
+    public String themForm(Model model) {
+        model.addAttribute("ctdtDTO", new ChuongTrinhDaoTaoDTO());
+        model.addAttribute("isEdit", false);
+        return "ctdt/form";
+    }
+
+    @PostMapping("/them")
+    public String them(@Valid @ModelAttribute("ctdtDTO") ChuongTrinhDaoTaoDTO dto,
+                        BindingResult br,
+                        @RequestParam(value = "fileWord", required = false) MultipartFile file,
+                        @AuthenticationPrincipal CustomUserDetails ud,
+                        Model model, RedirectAttributes ra) {
+        if (br.hasErrors()) {
+            model.addAttribute("isEdit", false);
+            return "ctdt/form";
+        }
+        try {
+            ChuongTrinhDaoTao ctdt = ctdtService.create(dto, ud.getMaNguoiDung());
+            if (file != null && !file.isEmpty()) {
+                String path = fileStorageUtil.saveFile(file, "ctdt", ctdt.getMaCTDT());
+                // fileWord luu de tham chieu
+                ctdt.setFileWord(path);
+            }
+            ra.addFlashAttribute("successMsg", "Tao CTDT thanh cong!");
+        } catch (Exception e) {
+            ra.addFlashAttribute("errorMsg", e.getMessage());
+        }
+        return "redirect:/ctdt";
+    }
+
+    @GetMapping("/sua/{ma}")
+    public String suaForm(@PathVariable String ma, Model model) {
+        ChuongTrinhDaoTao ctdt = ctdtService.findById(ma);
+        ChuongTrinhDaoTaoDTO dto = new ChuongTrinhDaoTaoDTO();
+        dto.setMaCTDT(ctdt.getMaCTDT());
+        dto.setTenCTDT(ctdt.getTenCTDT());
+        dto.setKhoa(ctdt.getKhoa());
+        model.addAttribute("ctdtDTO", dto);
+        model.addAttribute("isEdit", true);
+        return "ctdt/form";
+    }
+
+    @PostMapping("/sua/{ma}")
+    public String sua(@PathVariable String ma,
+                       @Valid @ModelAttribute("ctdtDTO") ChuongTrinhDaoTaoDTO dto,
+                       BindingResult br,
+                       @RequestParam(value = "fileWord", required = false) MultipartFile file,
+                       Model model, RedirectAttributes ra) {
+        if (br.hasErrors()) {
+            model.addAttribute("isEdit", true);
+            return "ctdt/form";
+        }
+        try {
+            ctdtService.update(ma, dto);
+            ra.addFlashAttribute("successMsg", "Cap nhat CTDT thanh cong!");
+        } catch (Exception e) {
+            ra.addFlashAttribute("errorMsg", e.getMessage());
+        }
+        return "redirect:/ctdt";
+    }
+
+    @PostMapping("/phe-duyet/{ma}")
+    public String pheduyet(@PathVariable String ma,
+                            @AuthenticationPrincipal CustomUserDetails ud,
+                            RedirectAttributes ra) {
+        try {
+            ctdtService.pheduyet(ma, ud.getMaNguoiDung());
+            ra.addFlashAttribute("successMsg", "Phe duyet CTDT thanh cong!");
+        } catch (Exception e) {
+            ra.addFlashAttribute("errorMsg", e.getMessage());
+        }
+        return "redirect:/ctdt";
+    }
+
+    /* ====================== QUAN LY HOC PHAN TRONG CTDT ====================== */
+    @GetMapping("/chi-tiet/{ma}")
+    public String chiTiet(@PathVariable String ma, Model model) {
+        model.addAttribute("ctdt", ctdtService.findById(ma));
+        model.addAttribute("hocPhanChuaThuoc", ctdtService.findHocPhanChuaThuoc(ma));
+        model.addAttribute("ctdtHocPhanDTO", new CtdtHocPhanDTO());
+        return "ctdt/chi-tiet";
+    }
+
+    @PostMapping("/chi-tiet/{ma}/them-hp")
+    public String themHocPhan(@PathVariable String ma,
+                               @Valid @ModelAttribute CtdtHocPhanDTO dto,
+                               BindingResult br,
+                               RedirectAttributes ra) {
+        if (br.hasErrors()) {
+            ra.addFlashAttribute("errorMsg", "Du lieu khong hop le");
+            return "redirect:/ctdt/chi-tiet/" + ma;
+        }
+        try {
+            ctdtService.themHocPhan(ma, dto);
+            ra.addFlashAttribute("successMsg", "Them hoc phan vao CTDT thanh cong!");
+        } catch (Exception e) {
+            ra.addFlashAttribute("errorMsg", e.getMessage());
+        }
+        return "redirect:/ctdt/chi-tiet/" + ma;
+    }
+
+    @PostMapping("/chi-tiet/{ma}/xoa-hp/{maHP}")
+    public String xoaHocPhan(@PathVariable String ma, @PathVariable String maHP,
+                              RedirectAttributes ra) {
+        try {
+            ctdtService.xoaHocPhan(ma, maHP);
+            ra.addFlashAttribute("successMsg", "Da xoa hoc phan khoi CTDT!");
+        } catch (Exception e) {
+            ra.addFlashAttribute("errorMsg", e.getMessage());
+        }
+        return "redirect:/ctdt/chi-tiet/" + ma;
+    }
+}

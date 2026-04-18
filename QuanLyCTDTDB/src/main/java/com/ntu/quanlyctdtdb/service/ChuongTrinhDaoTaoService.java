@@ -1,0 +1,33 @@
+package com.ntu.quanlyctdtdb.service;
+
+import com.ntu.quanlyctdtdb.dto.CtdtHocPhanDTO;
+import com.ntu.quanlyctdtdb.dto.ChuongTrinhDaoTaoDTO;
+import com.ntu.quanlyctdtdb.entity.ChuongTrinhDaoTao;
+import com.ntu.quanlyctdtdb.entity.CtdtHocPhan;
+
+import java.util.List;
+
+public interface ChuongTrinhDaoTaoService {
+
+    List<ChuongTrinhDaoTao> findAll();
+
+    ChuongTrinhDaoTao findById(String ma);
+
+    /** PDT tao moi CTDT → trang thai ChuaDuyet */
+    ChuongTrinhDaoTao create(ChuongTrinhDaoTaoDTO dto, String maNguoiDungTao);
+
+    /** PDT cap nhat thong tin CTDT */
+    ChuongTrinhDaoTao update(String ma, ChuongTrinhDaoTaoDTO dto);
+
+    /** BGH/TTDTXS phe duyet CTDT */
+    ChuongTrinhDaoTao pheduyet(String ma, String maNguoiDungDuyet);
+
+    /** Them hoc phan vao CTDT */
+    CtdtHocPhan themHocPhan(String maCTDT, CtdtHocPhanDTO dto);
+
+    /** Xoa hoc phan khoi CTDT */
+    void xoaHocPhan(String maCTDT, String maHocPhan);
+
+    /** Lay danh sach HP chua co trong CTDT */
+    List<com.ntu.quanlyctdtdb.entity.HocPhan> findHocPhanChuaThuoc(String maCTDT);
+}

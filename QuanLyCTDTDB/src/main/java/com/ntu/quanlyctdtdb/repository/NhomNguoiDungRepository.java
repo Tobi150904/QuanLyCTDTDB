@@ -13,4 +13,6 @@ public interface NhomNguoiDungRepository extends JpaRepository<NhomNguoiDung, Nh
     List<NhomNguoiDung> findByNguoiDung_MaNguoiDung(String maNguoiDung);
     List<NhomNguoiDung> findByVaiTro(VaiTro vaiTro);
     boolean existsByNguoiDung_MaNguoiDungAndVaiTro(String maNguoiDung, VaiTro vaiTro);
+
+    void deleteByNguoiDung_MaNguoiDung(String maNguoiDung);
 }
