@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head><title>500 - Loi He Thong</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="text-center py-5">
+        <div style="font-size:5rem; color:#dee2e6;">
+            <i class="bi bi-exclamation-triangle"></i>
+        </div>
+        <h3 class="fw-bold mt-3" style="color:#1e3a5f;">500 — Loi He Thong</h3>
+        <p class="text-muted mb-2">
+            Da xay ra loi he thong. Vui long thu lai sau.
+        </p>
+        <p th:if="${errorMsg}" class="text-danger small" th:text="${errorMsg}"></p>
+        <p th:if="${detail}" class="text-secondary small mb-4" th:text="${detail}"></p>
+        <a th:href="@{/dashboard}" class="btn btn-primary">
+            <i class="bi bi-house-door me-2"></i>Quay Ve Trang Chu
+        </a>
+    </div>
+</div>
+</body>
+</html>

@@ -15,6 +15,8 @@ public interface DotKienTapRepository extends JpaRepository<DotKienTap, Integer>
     List<DotKienTap> findByTrangThai(TrangThaiDotKT trangThai);
     List<DotKienTap> findByDoanhNghiep_MaDoanhNghiep(String maDoanhNghiep);
 
+    long countByTrangThaiIn(java.util.List<TrangThaiDotKT> trangThais);
+
     @Query("SELECT d FROM DotKienTap d WHERE d.trangThai IN ('ChuanBi','ChoDuyet') ORDER BY d.createdAt DESC")
     List<DotKienTap> findPendingDots();
 }

@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/base}">
+<head><title>Trang Chu</title></head>
+<body>
+<div layout:fragment="content">
+
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <p class="page-subtitle">Tong Quan</p>
+            <h4 class="page-title">Trang Chu — He Thong QLDTXS</h4>
+        </div>
+        <div>
+            <span th:if="${hocKyHienTai}"
+                  class="badge"
+                  style="background-color:#1e3a5f; font-size:0.8rem; padding:7px 14px;">
+                <i class="bi bi-calendar3 me-1"></i>
+                <span th:text="${hocKyHienTai.tenHocKy}"></span>
+            </span>
+        </div>
+    </div>
+
+    <!-- Welcome card -->
+    <div class="card border-0 mb-4" style="background:linear-gradient(135deg,#1e3a5f 0%,#2d5f9e 100%); color:#fff; border-radius:12px;">
+        <div class="card-body py-4 px-4">
+            <div class="d-flex align-items-center gap-3">
+                <div style="font-size:2.5rem; opacity:0.85;">
+                    <i class="bi bi-person-circle"></i>
+                </div>
+                <div>
+                    <h5 class="mb-1 fw-semibold">
+                        Xin chao, <span sec:authentication="principal.hoTen">Nguoi Dung</span>!
+                    </h5>
+                    <p class="mb-0 small" style="opacity:0.85;">
+                        <i class="bi bi-clock me-1"></i>
+                        <span id="currentDateTime"></span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== STAT CARDS (Admin / PDT / TTDTXS) ===================== -->
+    <div sec:authorize="hasAnyRole('ADMIN','PDT','TTDTXS')">
+        <p class="page-subtitle mb-3">Thong Ke Toan He Thong</p>
+        <div class="row g-3 mb-4">
+            <!-- Tong Nguoi Dung -->
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-card-icon"><i class="bi bi-people"></i></div>
+                    <div>
+                        <div class="stat-card-value"
+                             th:text="${thongKe['tongNguoiDung'] ?: 0}">0</div>
+                        <div class="stat-card-label">Tong Nguoi Dung</div>
+                    </div>
+                </div>
+            </div>
+            <!-- Giang Vien -->
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-card-icon"><i class="bi bi-person-workspace"></i></div>
+                    <div>
+                        <div class="stat-card-value"
+                             th:text="${thongKe['giangVien'] ?: 0}">0</div>
+                        <div class="stat-card-label">Giang Vien</div>
+                    </div>
+                </div>
+            </div>
+            <!-- Sinh Vien -->
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-card-icon"><i class="bi bi-person-badge"></i></div>
+                    <div>
+                        <div class="stat-card-value"
+                             th:text="${thongKe['sinhVien'] ?: 0}">0</div>
+                        <div class="stat-card-label">Sinh Vien</div>
+                    </div>
+                </div>
+            </div>
+            <!-- Doanh Nghiep -->
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-card-icon"><i class="bi bi-building"></i></div>
+                    <div>
+                        <div class="stat-card-value"
+                             th:text="${thongKe['doanhNghiep'] ?: 0}">0</div>
+                        <div class="stat-card-label">Doanh Nghiep</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <!-- Hoc Phan Da Duyet -->
+            <div class="col-6 col-md-3">
+                <div class="stat-card" style="border-left-color:#198754;">
+                    <div class="stat-card-icon" style="color:#198754;"><i class="bi bi-book-half"></i></div>
+                    <div>
+                        <div class="stat-card-value" style="color:#198754;"
+                             th:text="${thongKe['hocPhanDaDuyet'] ?: 0}">0</div>
+                        <div class="stat-card-label">Hoc Phan Da Duyet</div>
+                    </div>
+                </div>
+            </div>
+            <!-- Hoc Phan Cho Duyet -->
+            <div class="col-6 col-md-3">
+                <div class="stat-card" style="border-left-color:#ffc107;">
+                    <div class="stat-card-icon" style="color:#ffc107;"><i class="bi bi-hourglass-split"></i></div>
+                    <div>
+                        <div class="stat-card-value" style="color:#856404;"
+                             th:text="${thongKe['hocPhanChoDuyet'] ?: 0}">0</div>
+                        <div class="stat-card-label">Cho Duyet</div>
+                    </div>
+                </div>
+            </div>
+            <!-- CTDT Da Duyet -->
+            <div class="col-6 col-md-3">
+                <div class="stat-card" style="border-left-color:#0d6efd;">
+                    <div class="stat-card-icon" style="color:#0d6efd;"><i class="bi bi-journal-bookmark"></i></div>
+                    <div>
+                        <div class="stat-card-value" style="color:#0d6efd;"
+                             th:text="${thongKe['ctdtDaDuyet'] ?: 0}">0</div>
+                        <div class="stat-card-label">CTDT Da Duyet</div>
+                    </div>
+                </div>
+            </div>
+            <!-- Lop Hoc Phan Dang Mo -->
+            <div class="col-6 col-md-3">
+                <div class="stat-card" style="border-left-color:#20c997;">
+                    <div class="stat-card-icon" style="color:#20c997;"><i class="bi bi-collection"></i></div>
+                    <div>
+                        <div class="stat-card-value" style="color:#20c997;"
+                             th:text="${thongKe['lopHocPhanDangMo'] ?: 0}">0</div>
+                        <div class="stat-card-label">Lop HP Dang Mo</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <!-- Dot Kien Tap -->
+            <div class="col-6 col-md-3">
+                <div class="stat-card" style="border-left-color:#6f42c1;">
+                    <div class="stat-card-icon" style="color:#6f42c1;"><i class="bi bi-briefcase"></i></div>
+                    <div>
+                        <div class="stat-card-value" style="color:#6f42c1;"
+                             th:text="${thongKe['dotKienTapDangHoatDong'] ?: 0}">0</div>
+                        <div class="stat-card-label">Dot Kien Tap HD</div>
+                    </div>
+                </div>
+            </div>
+            <!-- Dot Thuc Tap -->
+            <div class="col-6 col-md-3">
+                <div class="stat-card" style="border-left-color:#fd7e14;">
+                    <div class="stat-card-icon" style="color:#fd7e14;"><i class="bi bi-building-check"></i></div>
+                    <div>
+                        <div class="stat-card-value" style="color:#fd7e14;"
+                             th:text="${thongKe['dotThucTapDangDienRa'] ?: 0}">0</div>
+                        <div class="stat-card-label">Dot Thuc Tap</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== GIANG VIEN dashboard ===================== -->
+    <div sec:authorize="hasRole('GIANG_VIEN') and !hasAnyRole('PDT','TTDTXS','ADMIN')">
+        <p class="page-subtitle mb-3">Chuyen Trang Nhanh</p>
+        <div class="row g-3">
+            <div class="col-sm-6 col-md-4">
+                <a th:href="@{/lop-hoc-phan}" class="text-decoration-none">
+                    <div class="stat-card h-100">
+                        <div class="stat-card-icon"><i class="bi bi-collection"></i></div>
+                        <div>
+                            <div class="fw-semibold" style="color:#1e3a5f;">Lop Hoc Phan Cua Toi</div>
+                            <div class="stat-card-label">Xem va quan ly lop HP</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-sm-6 col-md-4">
+                <a th:href="@{/danh-gia}" class="text-decoration-none">
+                    <div class="stat-card h-100">
+                        <div class="stat-card-icon"><i class="bi bi-clipboard-check"></i></div>
+                        <div>
+                            <div class="fw-semibold" style="color:#1e3a5f;">Danh Gia Sinh Vien</div>
+                            <div class="stat-card-label">Nhan xet va canh bao</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-sm-6 col-md-4">
+                <a th:href="@{/kien-tap}" class="text-decoration-none">
+                    <div class="stat-card h-100">
+                        <div class="stat-card-icon"><i class="bi bi-briefcase"></i></div>
+                        <div>
+                            <div class="fw-semibold" style="color:#1e3a5f;">Kien Tap</div>
+                            <div class="stat-card-label">Quan ly dot kien tap</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== SINH VIEN dashboard ===================== -->
+    <div sec:authorize="hasRole('SINH_VIEN') and !hasAnyRole('PDT','TTDTXS','ADMIN','GIANG_VIEN')">
+        <p class="page-subtitle mb-3">Chuyen Trang Nhanh</p>
+        <div class="row g-3">
+            <div class="col-sm-6 col-md-4">
+                <a th:href="@{/thuc-tap}" class="text-decoration-none">
+                    <div class="stat-card h-100">
+                        <div class="stat-card-icon"><i class="bi bi-building-check"></i></div>
+                        <div>
+                            <div class="fw-semibold" style="color:#1e3a5f;">Thuc Tap Cua Toi</div>
+                            <div class="stat-card-label">Xem ket qua thuc tap</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== DOANH NGHIEP dashboard ===================== -->
+    <div sec:authorize="hasRole('DOANH_NGHIEP') and !hasAnyRole('PDT','TTDTXS','ADMIN')">
+        <p class="page-subtitle mb-3">Chuyen Trang Nhanh</p>
+        <div class="row g-3">
+            <div class="col-sm-6 col-md-4">
+                <a th:href="@{/kien-tap}" class="text-decoration-none">
+                    <div class="stat-card h-100">
+                        <div class="stat-card-icon"><i class="bi bi-briefcase"></i></div>
+                        <div>
+                            <div class="fw-semibold" style="color:#1e3a5f;">Kien Tap</div>
+                            <div class="stat-card-label">Quan ly sinh vien kien tap</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-sm-6 col-md-4">
+                <a th:href="@{/thuc-tap}" class="text-decoration-none">
+                    <div class="stat-card h-100">
+                        <div class="stat-card-icon"><i class="bi bi-building-check"></i></div>
+                        <div>
+                            <div class="fw-semibold" style="color:#1e3a5f;">Thuc Tap</div>
+                            <div class="stat-card-label">Danh gia sinh vien thuc tap</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== Quick Actions ===================== -->
+    <div class="mt-4" sec:authorize="hasAnyRole('ADMIN','PDT','TTDTXS','CNHP')">
+        <p class="page-subtitle mb-3">Thao Tac Nhanh</p>
+        <div class="d-flex flex-wrap gap-2">
+            <a sec:authorize="hasAnyRole('PDT','ADMIN')"
+               th:href="@{/nguoi-dung/them}"
+               class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-person-plus me-1"></i>Them Nguoi Dung
+            </a>
+            <a sec:authorize="hasAnyRole('CNHP','TTDTXS','ADMIN')"
+               th:href="@{/hoc-phan/them}"
+               class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-plus-circle me-1"></i>Them Hoc Phan
+            </a>
+            <a sec:authorize="hasAnyRole('PDT','TTDTXS','CNHP','ADMIN')"
+               th:href="@{/ctdt/them}"
+               class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-journal-plus me-1"></i>Tao CTDT
+            </a>
+            <a sec:authorize="hasAnyRole('TTDTXS','CNHP','ADMIN')"
+               th:href="@{/kien-tap/them}"
+               class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-briefcase me-1"></i>Tao Dot Kien Tap
+            </a>
+            <a sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')"
+               th:href="@{/bao-cao}"
+               class="btn btn-sm btn-outline-success">
+                <i class="bi bi-bar-chart-line me-1"></i>Xem Bao Cao
+            </a>
+        </div>
+    </div>
+
+</div>
+
+<th:block layout:fragment="scripts">
+<script>
+    // Hien thi ngay gio hien tai
+    function updateDateTime() {
+        var now = new Date();
+        var options = {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+        };
+        document.getElementById('currentDateTime').textContent =
+            now.toLocaleDateString('vi-VN', options);
+    }
+    updateDateTime();
+    setInterval(updateDateTime, 60000);
+</script>
+</th:block>
+</body>
+</html>

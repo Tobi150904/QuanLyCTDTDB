@@ -14,6 +14,8 @@ public interface DotThucTapRepository extends JpaRepository<DotThucTap, Integer>
     List<DotThucTap> findByHocKyNamHoc_MaHocKy(String maHocKy);
     List<DotThucTap> findByTrangThai(TrangThaiDotTT trangThai);
 
+    long countByTrangThai(TrangThaiDotTT trangThai);
+
     @Query("SELECT d FROM DotThucTap d WHERE d.trangThai IN ('ChuanBi','ChoDuyet') ORDER BY d.createdAt DESC")
     List<DotThucTap> findPendingDots();
 }

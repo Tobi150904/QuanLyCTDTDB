@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head><title>Chi Tiet Nguoi Dung</title></head>
+<body>
+<div layout:fragment="content">
+
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a th:href="@{/dashboard}" class="text-decoration-none">
+                    <i class="bi bi-house-door me-1"></i>Trang Chu
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a th:href="@{/nguoi-dung}" class="text-decoration-none">Nguoi Dung</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page"
+                th:text="${nguoiDung.hoTen}">Chi Tiet</li>
+        </ol>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <p class="page-subtitle">Quan Tri / Nguoi Dung</p>
+            <h4 class="page-title" th:text="${nguoiDung.hoTen}">Chi Tiet</h4>
+        </div>
+        <div class="d-flex gap-2">
+            <a th:href="@{/nguoi-dung/sua/{ma}(ma=${nguoiDung.maNguoiDung})}"
+               class="btn btn-primary btn-sm">
+                <i class="bi bi-pencil me-1"></i>Chinh Sua
+            </a>
+            <a th:href="@{/nguoi-dung}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i>Quay Lai
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Left: Thong tin nguoi dung -->
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    <i class="bi bi-person-fill me-2"></i>
+                    <span class="fw-semibold">Thong Tin Tai Khoan</span>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless mb-0" style="font-size:0.875rem;">
+                        <tbody>
+                            <tr>
+                                <td class="fw-medium text-muted" style="width:40%;">Ma:</td>
+                                <td><code th:text="${nguoiDung.maNguoiDung}"></code></td>
+                            </tr>
+                            <tr>
+                                <td class="fw-medium text-muted">Ten Dang Nhap:</td>
+                                <td th:text="${nguoiDung.tenDangNhap}"></td>
+                            </tr>
+                            <tr>
+                                <td class="fw-medium text-muted">Ho Ten:</td>
+                                <td class="fw-medium" th:text="${nguoiDung.hoTen}"></td>
+                            </tr>
+                            <tr>
+                                <td class="fw-medium text-muted">Email:</td>
+                                <td>
+                                    <a th:href="'mailto:' + ${nguoiDung.email}"
+                                       th:text="${nguoiDung.email}"
+                                       class="text-decoration-none">
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="fw-medium text-muted">So Dien Thoai:</td>
+                                <td th:text="${nguoiDung.soDienThoai ?: '--'}"></td>
+                            </tr>
+                            <tr>
+                                <td class="fw-medium text-muted">Loai:</td>
+                                <td>
+                                    <span class="badge"
+                                          th:classappend="${nguoiDung.loaiNguoiDung.name() == 'Admin'} ? 'bg-dark' :
+                                                         (${nguoiDung.loaiNguoiDung.name() == 'GiangVien'} ? 'bg-primary' :
+                                                         (${nguoiDung.loaiNguoiDung.name() == 'SinhVien'} ? 'bg-info text-dark' : 'bg-success'))"
+                                          th:text="${nguoiDung.loaiNguoiDung.name()}">
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="fw-medium text-muted">Trang Thai:</td>
+                                <td>
+                                    <span th:if="${nguoiDung.trangThaiTK}"
+                                          class="badge bg-success">Hoat Dong</span>
+                                    <span th:unless="${nguoiDung.trangThaiTK}"
+                                          class="badge bg-danger">Da Khoa</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="fw-medium text-muted">Tao Luc:</td>
+                                <td th:text="${nguoiDung.createdAt != null ?
+                                    #temporals.format(nguoiDung.createdAt, 'dd/MM/yyyy HH:mm') : '--'}">
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Vai tro + Thao tac -->
+        <div class="col-md-6">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <i class="bi bi-shield-check me-2"></i>
+                    <span class="fw-semibold">Vai Tro Nghiep Vu</span>
+                </div>
+                <div class="card-body">
+                    <div th:if="${nguoiDung.nhomNguoiDungs != null and !nguoiDung.nhomNguoiDungs.isEmpty()}"
+                         class="d-flex flex-wrap gap-2">
+                        <span th:each="nhom : ${nguoiDung.nhomNguoiDungs}"
+                              class="badge bg-primary"
+                              style="font-size:0.85rem; padding:8px 14px;"
+                              th:text="${nhom.id.vaiTro.name()}">
+                        </span>
+                    </div>
+                    <p th:if="${nguoiDung.nhomNguoiDungs == null or nguoiDung.nhomNguoiDungs.isEmpty()}"
+                       class="text-muted mb-0">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Nguoi dung nay chua co vai tro nghiep vu.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Thao tac nhanh -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-lightning me-2"></i>
+                    <span class="fw-semibold">Thao Tac</span>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-column gap-2">
+                        <a th:href="@{/nguoi-dung/sua/{ma}(ma=${nguoiDung.maNguoiDung})}"
+                           class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-pencil me-2"></i>Chinh Sua Thong Tin
+                        </a>
+                        <form th:action="@{/nguoi-dung/toggle/{ma}(ma=${nguoiDung.maNguoiDung})}"
+                              method="post">
+                            <input type="hidden"
+                                   th:name="${_csrf.parameterName}"
+                                   th:value="${_csrf.token}">
+                            <button type="submit"
+                                    class="btn btn-sm w-100"
+                                    th:classappend="${nguoiDung.trangThaiTK} ? 'btn-outline-warning' : 'btn-outline-success'">
+                                <i class="bi me-2"
+                                   th:classappend="${nguoiDung.trangThaiTK} ? 'bi-lock' : 'bi-unlock'"></i>
+                                <span th:text="${nguoiDung.trangThaiTK} ? 'Khoa Tai Khoan' : 'Mo Khoa Tai Khoan'"></span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

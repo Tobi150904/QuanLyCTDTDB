@@ -1,0 +1,369 @@
+/* =============================================================================
+   main.css — He Thong Quan Ly Dao Tao Xuat Sac
+   Design System: 05_UI_DESIGN_SYSTEM.md
+   ============================================================================= */
+
+/* --- CSS Variables --- */
+:root {
+    --primary:       #1e3a5f;
+    --primary-lt:    #2d5f9e;
+    --accent:        #e8a020;
+    --surface:       #f4f6f9;
+    --surface-card:  #ffffff;
+    --sidebar-width: 240px;
+    --navbar-height: 56px;
+}
+
+/* --- Base --- */
+* { box-sizing: border-box; }
+
+html, body {
+    height: 100%;
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    font-size: 0.9rem;
+    color: #212529;
+    background-color: var(--surface);
+}
+
+/* --- Navbar --- */
+#mainNavbar {
+    height: var(--navbar-height);
+    background-color: var(--primary) !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    z-index: 1040;
+}
+#mainNavbar .navbar-brand {
+    font-size: 1rem;
+    letter-spacing: 0.3px;
+}
+
+/* --- Sidebar --- */
+#sidebar {
+    position: fixed;
+    top: var(--navbar-height);
+    left: 0;
+    width: var(--sidebar-width);
+    height: calc(100vh - var(--navbar-height));
+    background-color: var(--surface-card);
+    border-right: 1px solid #dee2e6;
+    overflow-y: auto;
+    overflow-x: hidden;
+    z-index: 1030;
+    transition: transform 0.25s ease;
+}
+
+.sidebar-body {
+    padding: 12px 0 24px;
+}
+
+/* Sidebar section headers */
+.sidebar-section-header {
+    list-style: none;
+    padding: 16px 16px 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #adb5bd;
+}
+
+/* Sidebar nav links */
+#sidebar .nav-link {
+    padding: 9px 16px;
+    color: #495057;
+    border-radius: 0;
+    font-size: 0.875rem;
+    font-weight: 400;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    transition: background-color 0.15s, color 0.15s, border-left-color 0.15s;
+    border-left: 3px solid transparent;
+}
+#sidebar .nav-link:hover {
+    background-color: #f0f4fa;
+    color: var(--primary-lt);
+    border-left-color: var(--primary-lt);
+}
+#sidebar .nav-link.active {
+    background-color: #e8eef7;
+    color: var(--primary);
+    font-weight: 600;
+    border-left-color: var(--primary);
+}
+#sidebar .nav-link i {
+    width: 20px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+/* Sidebar scrollbar */
+#sidebar::-webkit-scrollbar { width: 4px; }
+#sidebar::-webkit-scrollbar-track { background: transparent; }
+#sidebar::-webkit-scrollbar-thumb { background-color: #dee2e6; border-radius: 2px; }
+
+/* --- Sidebar overlay (mobile) --- */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 1025;
+}
+.sidebar-overlay.show { display: block; }
+
+/* --- Main Content --- */
+.main-content {
+    margin-left: var(--sidebar-width);
+    margin-top: var(--navbar-height);
+    min-height: calc(100vh - var(--navbar-height));
+    background-color: var(--surface);
+}
+
+/* --- Mobile: sidebar hidden off-screen --- */
+@media (max-width: 991.98px) {
+    #sidebar {
+        transform: translateX(-100%);
+    }
+    #sidebar.sidebar-open {
+        transform: translateX(0);
+        box-shadow: 4px 0 16px rgba(0,0,0,0.15);
+    }
+    .main-content {
+        margin-left: 0;
+    }
+}
+
+/* =============================================================================
+   PAGE HEADER
+   ============================================================================= */
+.page-title {
+    color: var(--primary);
+    border-left: 3px solid var(--accent);
+    padding-left: 12px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 0;
+}
+.page-subtitle {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6c757d;
+    margin-bottom: 4px;
+}
+
+/* =============================================================================
+   CARDS
+   ============================================================================= */
+.card {
+    border: none;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    border-radius: 10px;
+}
+.card-header {
+    background: var(--primary);
+    color: #fff;
+    border-radius: 10px 10px 0 0;
+    padding: 12px 16px;
+    border-bottom: none;
+}
+.card-header .fw-semibold { font-size: 0.9rem; }
+
+/* Dashboard stat cards */
+.stat-card {
+    border-radius: 10px;
+    background: var(--surface-card);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    border-left: 4px solid var(--accent);
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.stat-card-icon {
+    font-size: 2rem;
+    color: var(--primary-lt);
+    flex-shrink: 0;
+}
+.stat-card-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--primary);
+    line-height: 1;
+}
+.stat-card-label {
+    font-size: 0.78rem;
+    color: #6c757d;
+    margin-top: 2px;
+}
+
+/* =============================================================================
+   TABLES
+   ============================================================================= */
+.table thead th {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    color: #6c757d;
+    font-weight: 500;
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    white-space: nowrap;
+    padding: 10px 12px;
+}
+.table tbody td {
+    padding: 9px 12px;
+    vertical-align: middle;
+    font-size: 0.875rem;
+}
+.table-hover tbody tr:hover {
+    background-color: #f0f4fa;
+}
+
+/* =============================================================================
+   BUTTONS — override Bootstrap primary
+   ============================================================================= */
+.btn-primary {
+    background-color: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+}
+.btn-primary:hover,
+.btn-primary:focus {
+    background-color: var(--primary-lt);
+    border-color: var(--primary-lt);
+    color: #fff;
+}
+.btn-primary:disabled {
+    background-color: var(--primary);
+    border-color: var(--primary);
+    opacity: 0.65;
+}
+.btn-outline-primary {
+    color: var(--primary);
+    border-color: var(--primary);
+}
+.btn-outline-primary:hover {
+    background-color: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+}
+
+/* =============================================================================
+   BADGES
+   ============================================================================= */
+.badge { font-size: 0.75rem; font-weight: 500; }
+
+/* =============================================================================
+   FORMS
+   ============================================================================= */
+.form-label { font-weight: 500; font-size: 0.875rem; }
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--primary-lt);
+    box-shadow: 0 0 0 0.2rem rgba(45, 95, 158, 0.15);
+}
+.form-floating > .form-control:focus ~ label,
+.form-floating > .form-control:not(:placeholder-shown) ~ label {
+    color: var(--primary-lt);
+}
+
+/* =============================================================================
+   BREADCRUMB
+   ============================================================================= */
+.breadcrumb {
+    font-size: 0.82rem;
+    background: transparent;
+    padding: 0;
+    margin-bottom: 12px;
+}
+.breadcrumb-item a {
+    color: var(--primary-lt);
+    text-decoration: none;
+}
+.breadcrumb-item a:hover { text-decoration: underline; }
+.breadcrumb-item.active { color: #6c757d; }
+
+/* =============================================================================
+   PAGINATION
+   ============================================================================= */
+.pagination .page-link {
+    color: var(--primary);
+    border-color: #dee2e6;
+}
+.pagination .page-item.active .page-link {
+    background-color: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+}
+.pagination .page-link:hover {
+    color: var(--primary-lt);
+    background-color: #f0f4fa;
+}
+
+/* =============================================================================
+   EMPTY STATE
+   ============================================================================= */
+.empty-state {
+    padding: 60px 20px;
+    text-align: center;
+    color: #adb5bd;
+}
+.empty-state i { font-size: 3rem; display: block; margin-bottom: 12px; }
+.empty-state p { font-size: 0.9rem; margin-bottom: 16px; }
+
+/* =============================================================================
+   ALERTS — auto-dismiss
+   ============================================================================= */
+.alert { font-size: 0.875rem; }
+
+/* =============================================================================
+   SEARCH BAR
+   ============================================================================= */
+.search-bar .input-group-text {
+    background-color: var(--surface-card);
+    border-right: none;
+    color: #6c757d;
+}
+.search-bar .form-control {
+    border-left: none;
+}
+.search-bar .form-control:focus {
+    border-color: #ced4da;
+    box-shadow: none;
+}
+
+/* =============================================================================
+   TOOLTIP
+   ============================================================================= */
+[data-bs-toggle="tooltip"] { cursor: pointer; }
+
+/* =============================================================================
+   MODAL
+   ============================================================================= */
+.modal-header {
+    background-color: var(--primary);
+    color: #fff;
+}
+.modal-header .btn-close { filter: invert(1); }
+
+/* =============================================================================
+   LOADING SPINNER in button
+   ============================================================================= */
+.btn .spinner-border-sm { width: 0.85rem; height: 0.85rem; }
+
+/* =============================================================================
+   SCROLLBAR GLOBAL
+   ============================================================================= */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #f1f1f1; }
+::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #a1a1a1; }
+
+/* =============================================================================
+   UTILITY
+   ============================================================================= */
+.text-primary { color: var(--primary) !important; }
+.bg-primary   { background-color: var(--primary) !important; }
+.border-accent { border-color: var(--accent) !important; }
+.cursor-pointer { cursor: pointer; }

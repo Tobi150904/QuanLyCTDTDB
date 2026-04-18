@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head><title>Ho So Ca Nhan</title></head>
+<body>
+<div layout:fragment="content">
+
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a th:href="@{/dashboard}" class="text-decoration-none">
+                    <i class="bi bi-house-door me-1"></i>Trang Chu
+                </a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">Ho So Ca Nhan</li>
+        </ol>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="mb-4">
+        <p class="page-subtitle">Tai Khoan</p>
+        <h4 class="page-title">Ho So Ca Nhan</h4>
+    </div>
+
+    <div class="row g-4">
+        <!-- Left: Thong tin ca nhan -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-person-fill me-2"></i>
+                    <span class="fw-semibold">Thong Tin Ca Nhan</span>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/profile/cap-nhat}" method="post" novalidate>
+                        <input type="hidden"
+                               th:name="${_csrf.parameterName}"
+                               th:value="${_csrf.token}">
+
+                        <div class="mb-3">
+                            <label class="form-label fw-medium">Ma Nguoi Dung</label>
+                            <input type="text" class="form-control"
+                                   th:value="${nguoiDung.maNguoiDung}" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-medium">Ten Dang Nhap</label>
+                            <input type="text" class="form-control"
+                                   th:value="${nguoiDung.tenDangNhap}" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-medium">Email</label>
+                            <input type="email" class="form-control"
+                                   th:value="${nguoiDung.email}" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label for="hoTen" class="form-label fw-medium">
+                                Ho Ten <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control"
+                                   id="hoTen" name="hoTen"
+                                   th:value="${nguoiDung.hoTen}"
+                                   required>
+                        </div>
+                        <div class="mb-4">
+                            <label for="soDienThoai" class="form-label fw-medium">
+                                So Dien Thoai
+                            </label>
+                            <input type="tel" class="form-control"
+                                   id="soDienThoai" name="soDienThoai"
+                                   th:value="${nguoiDung.soDienThoai}"
+                                   maxlength="15">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm"
+                                onclick="showLoading(this)">
+                            <span class="spinner-border spinner-border-sm d-none me-1"
+                                  role="status"></span>
+                            <i class="bi bi-save me-1"></i>Luu Thay Doi
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Doi mat khau -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-key me-2"></i>
+                    <span class="fw-semibold">Doi Mat Khau</span>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/profile/doi-mat-khau}" method="post" novalidate>
+                        <input type="hidden"
+                               th:name="${_csrf.parameterName}"
+                               th:value="${_csrf.token}">
+
+                        <div class="mb-3">
+                            <label for="matKhauCu" class="form-label fw-medium">
+                                Mat Khau Hien Tai <span class="text-danger">*</span>
+                            </label>
+                            <input type="password" class="form-control"
+                                   id="matKhauCu" name="matKhauCu"
+                                   placeholder="Nhap mat khau hien tai"
+                                   required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="matKhauMoi" class="form-label fw-medium">
+                                Mat Khau Moi <span class="text-danger">*</span>
+                            </label>
+                            <input type="password" class="form-control"
+                                   id="matKhauMoi" name="matKhauMoi"
+                                   placeholder="Toi thieu 8 ky tu"
+                                   minlength="8"
+                                   required>
+                        </div>
+                        <div class="mb-4">
+                            <label for="xacNhanMatKhau" class="form-label fw-medium">
+                                Xac Nhan Mat Khau Moi <span class="text-danger">*</span>
+                            </label>
+                            <input type="password" class="form-control"
+                                   id="xacNhanMatKhau" name="xacNhanMatKhau"
+                                   placeholder="Nhap lai mat khau moi"
+                                   required>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm"
+                                onclick="showLoading(this)">
+                            <span class="spinner-border spinner-border-sm d-none me-1"
+                                  role="status"></span>
+                            <i class="bi bi-lock me-1"></i>Doi Mat Khau
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

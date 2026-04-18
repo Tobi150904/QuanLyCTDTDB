@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head><title>403 - Khong Co Quyen Truy Cap</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="text-center py-5">
+        <div style="font-size:5rem; color:#dee2e6;">
+            <i class="bi bi-shield-x"></i>
+        </div>
+        <h3 class="fw-bold mt-3" style="color:#1e3a5f;">403 — Khong Co Quyen Truy Cap</h3>
+        <p class="text-muted mb-4">
+            Ban khong co quyen thuc hien hanh dong nay.<br>
+            Vui long lien he quan tri vien neu can ho tro.
+        </p>
+        <a th:href="@{/dashboard}" class="btn btn-primary">
+            <i class="bi bi-house-door me-2"></i>Quay Ve Trang Chu
+        </a>
+    </div>
+</div>
+</body>
+</html>

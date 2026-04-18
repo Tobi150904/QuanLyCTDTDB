@@ -26,21 +26,21 @@
 ## PHASE 1: FOUNDATION (KHONG CODE BUSINESS TRUOC KHI XONG)
 
 ### Enums (10 enum types — khop voi 01_create_tables.sql)
-- [ ] `LoaiNguoiDung.java`  -> Admin, GiangVien, SinhVien, DoanhNghiep
-- [ ] `VaiTro.java`          -> PDT, TTDTXS, CVHT, CNHP
-- [ ] `TrangThaiHocKy.java` -> SapDienRa, DangDienRa, DaKetThuc
-- [ ] `TrangThaiCTDT.java`  -> BanNhap, ChoDuyet, DaDuyet, DaHuy
-- [ ] `ChucDanhBCN.java`    -> ChuNhiem, ThuKy, UyVien
-- [ ] `LoaiHocPhan.java`    -> LyThuyet, ThucHanh, DoAn, ThucTap, KienTap
-- [ ] `TrangThaiHocPhan.java` -> BanNhap, ChoDuyet, DaDuyet
-- [ ] `LoaiGiangVien.java`  -> GiangVienTruong, DoanhNghiep
-- [ ] `TrangThaiDoanhNghiep.java` -> DangHopTac, TamNgung
-- [ ] `TrangThaiLopHocPhan.java`  -> DangMo, DaDong, DaHuy
-- [ ] `TrangThaiSinhVien.java`    -> DangHoc, BaoLuu, ThoiHoc, TotNghiep
-- [ ] `TrangThaiDotKT.java`       -> ChuanBi, ChoDuyet, DaDuyet, DaThucHien, DaHuy
-- [ ] `TrangThaiDotTT.java`       -> ChuanBi, ChoDuyet, DaDuyet, DangThucHien, DaKetThuc
-- [ ] `TrangThaiThucTap.java`     -> DaPhanCong, DangThucTap, DaKetThuc, DaHuy
-- [ ] `LoaiThucTap.java`          -> Truong, DoanhNghiep
+- [x] `LoaiNguoiDung.java`  -> Admin, GiangVien, SinhVien, DoanhNghiep
+- [x] `VaiTro.java`          -> PDT, TTDTXS, CVHT, CNHP
+- [x] `TrangThaiHocKy.java` -> SapDienRa, DangDienRa, DaKetThuc
+- [x] `TrangThaiCTDT.java`  -> BanNhap, ChoDuyet, DaDuyet, DaHuy
+- [x] `ChucDanhBCN.java`    -> ChuNhiem, ThuKy, UyVien
+- [x] `LoaiHocPhan.java`    -> LyThuyet, ThucHanh, DoAn, ThucTap, KienTap
+- [x] `TrangThaiHocPhan.java` -> BanNhap, ChoDuyet, DaDuyet
+- [x] `LoaiGiangVien.java`  -> GiangVienTruong, DoanhNghiep
+- [x] `TrangThaiDoanhNghiep.java` -> DangHopTac, TamNgung
+- [x] `TrangThaiLopHocPhan.java`  -> DangMo, DaDong, DaHuy
+- [x] `TrangThaiSinhVien.java`    -> DangHoc, BaoLuu, ThoiHoc, TotNghiep
+- [x] `TrangThaiDotKT.java`       -> ChuanBi, ChoDuyet, DaDuyet, DaThucHien, DaHuy
+- [x] `TrangThaiDotTT.java`       -> ChuanBi, ChoDuyet, DaDuyet, DangThucHien, DaKetThuc
+- [x] `TrangThaiThucTap.java`     -> DaPhanCong, DangThucTap, DaKetThuc, DaHuy
+- [x] `LoaiThucTap.java`          -> Truong, DoanhNghiep
 
 ### Entities (20 bang -> toi thieu 20 entity/id class)
 

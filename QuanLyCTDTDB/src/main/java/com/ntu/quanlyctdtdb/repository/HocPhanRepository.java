@@ -16,6 +16,8 @@ public interface HocPhanRepository extends JpaRepository<HocPhan, String> {
     List<HocPhan> findByChuNhiemHP_MaGV(String maGV);
     List<HocPhan> findByTenHocPhanContainingIgnoreCase(String keyword);
 
+    long countByTrangThai(TrangThaiHocPhan trangThai);
+
     @Query("SELECT hp FROM HocPhan hp WHERE hp.trangThai = 'DaDuyet' ORDER BY hp.tenHocPhan")
     List<HocPhan> findAllDaDuyet();
 

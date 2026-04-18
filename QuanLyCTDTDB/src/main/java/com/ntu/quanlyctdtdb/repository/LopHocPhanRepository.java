@@ -16,6 +16,8 @@ public interface LopHocPhanRepository extends JpaRepository<LopHocPhan, LopHocPh
     List<LopHocPhan> findByTrangThai(TrangThaiLopHocPhan trangThai);
     List<LopHocPhan> findByGiangVien_MaGV(String maGV);
 
+    long countByTrangThai(TrangThaiLopHocPhan trangThai);
+
     @Query("""
         SELECT lhp FROM LopHocPhan lhp
         WHERE lhp.id.maCTDT = :maCTDT

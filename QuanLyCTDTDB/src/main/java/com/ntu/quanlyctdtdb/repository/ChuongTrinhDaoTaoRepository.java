@@ -13,6 +13,8 @@ public interface ChuongTrinhDaoTaoRepository extends JpaRepository<ChuongTrinhDa
     List<ChuongTrinhDaoTao> findByTrangThai(TrangThaiCTDT trangThai);
     List<ChuongTrinhDaoTao> findByNguoiTao_MaNguoiDung(String maNguoiDung);
 
+    long countByTrangThai(TrangThaiCTDT trangThai);
+
     @Query("SELECT c FROM ChuongTrinhDaoTao c WHERE c.trangThai = 'DaDuyet' ORDER BY c.khoa DESC")
     List<ChuongTrinhDaoTao> findAllDaDuyet();
 
