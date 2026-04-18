@@ -51,7 +51,7 @@ public class ChuongTrinhDaoTaoServiceImpl implements ChuongTrinhDaoTaoService {
                 .maCTDT(dto.getMaCTDT())
                 .tenCTDT(dto.getTenCTDT().trim())
                 .khoa(dto.getKhoa())
-                .trangThai(TrangThaiCTDT.ChuaDuyet)
+                .trangThai(TrangThaiCTDT.BanNhap)
                 .nguoiTao(nguoiTao)
                 .build();
         return ctdtRepo.save(ctdt);
@@ -69,10 +69,20 @@ public class ChuongTrinhDaoTaoServiceImpl implements ChuongTrinhDaoTaoService {
     }
 
     @Override
+    public ChuongTrinhDaoTao guiChoDuyet(String ma) {
+        ChuongTrinhDaoTao ctdt = findById(ma);
+        if (ctdt.getTrangThai() != TrangThaiCTDT.BanNhap) {
+            throw new BusinessException("Chi co the gui cho duyet CTDT o trang thai BanNhap");
+        }
+        ctdt.setTrangThai(TrangThaiCTDT.ChoDuyet);
+        return ctdtRepo.save(ctdt);
+    }
+
+    @Override
     public ChuongTrinhDaoTao pheduyet(String ma, String maNguoiDungDuyet) {
         ChuongTrinhDaoTao ctdt = findById(ma);
-        if (ctdt.getTrangThai() != TrangThaiCTDT.ChuaDuyet) {
-            throw new BusinessException("Chi phe duyet CTDT o trang thai ChuaDuyet");
+        if (ctdt.getTrangThai() != TrangThaiCTDT.ChoDuyet) {
+            throw new BusinessException("Chi phe duyet CTDT o trang thai ChoDuyet");
         }
         ctdt.setTrangThai(TrangThaiCTDT.DaDuyet);
         return ctdtRepo.save(ctdt);

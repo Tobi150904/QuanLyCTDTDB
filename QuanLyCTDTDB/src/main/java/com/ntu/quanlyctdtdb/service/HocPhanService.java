@@ -17,6 +17,9 @@ public interface HocPhanService {
     /** CNHP chinh sua truoc khi gui duyet */
     HocPhan update(String ma, HocPhanDTO dto);
 
+    /** CNHP gui cho duyet BanNhap → ChoDuyet */
+    HocPhan guiChoDuyet(String ma);
+
     /** TTDTXS phe duyet → trang thai DaDuyet + gui email CNHP */
     HocPhan pheduyet(String ma, String maNguoiDungDuyet);
 

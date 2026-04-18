@@ -11,7 +11,7 @@ import java.util.List;
 @Repository
 public interface DotThucTapRepository extends JpaRepository<DotThucTap, Integer> {
     List<DotThucTap> findByCtdtHocPhan_Id_MaCTDT(String maCTDT);
-    List<DotThucTap> findByHocKyNamHoc_MaHocKy(String maHocKy);
+    List<DotThucTap> findByHocKy_MaHocKy(String maHocKy);
     List<DotThucTap> findByTrangThai(TrangThaiDotTT trangThai);
 
     long countByTrangThai(TrangThaiDotTT trangThai);

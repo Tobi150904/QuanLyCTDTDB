@@ -59,9 +59,9 @@ public class DotKienTapServiceImpl implements DotKienTapService {
         DotKienTap dot = DotKienTap.builder()
                 .tenDotKT(dto.getTenDotKT())
                 .lopHanhChinh(lhc)
-                .hocKyNamHoc(hocKy)
+                .hocKy(hocKy)
                 .thoiGian(dto.getThoiGian())
-                .giangVienPhuTrach(gvPhuTrach)
+                .gvPhuTrach(gvPhuTrach)
                 .doanhNghiep(dn)
                 .kinhPhiChung(dto.getKinhPhiChung())
                 .kinhPhiTungSV(dto.getKinhPhiTungSV())
@@ -83,7 +83,7 @@ public class DotKienTapServiceImpl implements DotKienTapService {
 
         if (dto.getMaGVPhuTrach() != null && !dto.getMaGVPhuTrach().isBlank()) {
             GiangVien gv = giangVienRepo.findById(dto.getMaGVPhuTrach()).orElse(null);
-            dot.setGiangVienPhuTrach(gv);
+            dot.setGvPhuTrach(gv);
         }
         return dotKTRepo.save(dot);
     }

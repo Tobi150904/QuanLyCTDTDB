@@ -11,7 +11,7 @@ import java.util.List;
 @Repository
 public interface DotKienTapRepository extends JpaRepository<DotKienTap, Integer> {
     List<DotKienTap> findByLopHanhChinh_MaLopHC(String maLopHC);
-    List<DotKienTap> findByHocKyNamHoc_MaHocKy(String maHocKy);
+    List<DotKienTap> findByHocKy_MaHocKy(String maHocKy);
     List<DotKienTap> findByTrangThai(TrangThaiDotKT trangThai);
     List<DotKienTap> findByDoanhNghiep_MaDoanhNghiep(String maDoanhNghiep);
 

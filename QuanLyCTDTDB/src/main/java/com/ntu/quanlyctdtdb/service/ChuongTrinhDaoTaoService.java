@@ -19,6 +19,9 @@ public interface ChuongTrinhDaoTaoService {
     /** PDT cap nhat thong tin CTDT */
     ChuongTrinhDaoTao update(String ma, ChuongTrinhDaoTaoDTO dto);
 
+    /** PDT gui cho duyet BanNhap → ChoDuyet */
+    ChuongTrinhDaoTao guiChoDuyet(String ma);
+
     /** BGH/TTDTXS phe duyet CTDT */
     ChuongTrinhDaoTao pheduyet(String ma, String maNguoiDungDuyet);
 

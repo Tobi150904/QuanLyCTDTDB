@@ -59,7 +59,7 @@ public class HocPhanServiceImpl implements HocPhanService {
                 .soTinChi(dto.getSoTinChi())
                 .loaiHocPhan(dto.getLoaiHocPhan())
                 .chuNhiemHP(chuNhiem)
-                .trangThai(TrangThaiHocPhan.ChuaDuyet)
+                .trangThai(TrangThaiHocPhan.BanNhap)
                 .build();
         return hocPhanRepo.save(hp);
     }
@@ -80,15 +80,25 @@ public class HocPhanServiceImpl implements HocPhanService {
             hp.setChuNhiemHP(chuNhiem);
         }
 
-        hp.setTrangThai(TrangThaiHocPhan.ChuaDuyet); // reset neu da bi tu choi
+        hp.setTrangThai(TrangThaiHocPhan.BanNhap); // reset ve BanNhap de trinh duyet lai
+        return hocPhanRepo.save(hp);
+    }
+
+    @Override
+    public HocPhan guiChoDuyet(String ma) {
+        HocPhan hp = findById(ma);
+        if (hp.getTrangThai() != TrangThaiHocPhan.BanNhap) {
+            throw new BusinessException("Chi co the gui cho duyet hoc phan o trang thai BanNhap");
+        }
+        hp.setTrangThai(TrangThaiHocPhan.ChoDuyet);
         return hocPhanRepo.save(hp);
     }
 
     @Override
     public HocPhan pheduyet(String ma, String maNguoiDungDuyet) {
         HocPhan hp = findById(ma);
-        if (hp.getTrangThai() != TrangThaiHocPhan.ChuaDuyet) {
-            throw new BusinessException("Chi co the phe duyet hoc phan o trang thai ChuaDuyet");
+        if (hp.getTrangThai() != TrangThaiHocPhan.ChoDuyet) {
+            throw new BusinessException("Chi co the phe duyet hoc phan o trang thai ChoDuyet");
         }
         hp.setTrangThai(TrangThaiHocPhan.DaDuyet);
         hocPhanRepo.save(hp);
@@ -107,10 +117,10 @@ public class HocPhanServiceImpl implements HocPhanService {
     @Override
     public HocPhan tuChoi(String ma, String lyDo, String maNguoiDungTuChoi) {
         HocPhan hp = findById(ma);
-        if (hp.getTrangThai() != TrangThaiHocPhan.ChuaDuyet) {
-            throw new BusinessException("Chi co the tu choi hoc phan o trang thai ChuaDuyet");
+        if (hp.getTrangThai() != TrangThaiHocPhan.ChoDuyet) {
+            throw new BusinessException("Chi co the tu choi hoc phan o trang thai ChoDuyet");
         }
-        hp.setTrangThai(TrangThaiHocPhan.TuChoi);
+        hp.setTrangThai(TrangThaiHocPhan.BanNhap); // tra ve BanNhap de CNHP chinh sua lai
         hocPhanRepo.save(hp);
 
         // Gui email thong bao CNHP
@@ -126,9 +136,10 @@ public class HocPhanServiceImpl implements HocPhanService {
     @Override
     public HocPhan toggleTrangThai(String ma) {
         HocPhan hp = findById(ma);
-        hp.setTrangThai(hp.getTrangThai() == TrangThaiHocPhan.HetHieuLuc
-                ? TrangThaiHocPhan.DaDuyet
-                : TrangThaiHocPhan.HetHieuLuc);
+        // Toggle giua DaDuyet va BanNhap (vo hieu hoa / kich hoat lai)
+        hp.setTrangThai(hp.getTrangThai() == TrangThaiHocPhan.DaDuyet
+                ? TrangThaiHocPhan.BanNhap
+                : TrangThaiHocPhan.DaDuyet);
         return hocPhanRepo.save(hp);
     }
 

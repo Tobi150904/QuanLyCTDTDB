@@ -66,7 +66,7 @@ public class DotThucTapController {
         dto.setTenDotTT(dot.getTenDotTT());
         dto.setMaCTDT(dot.getCtdtHocPhan() != null ? dot.getCtdtHocPhan().getId().getMaCTDT() : null);
         dto.setMaHocPhan(dot.getCtdtHocPhan() != null ? dot.getCtdtHocPhan().getId().getMaHocPhan() : null);
-        dto.setMaHocKy(dot.getHocKyNamHoc() != null ? dot.getHocKyNamHoc().getMaHocKy() : null);
+        dto.setMaHocKy(dot.getHocKy() != null ? dot.getHocKy().getMaHocKy() : null);
         dto.setNgayBatDau(dot.getNgayBatDau());
         dto.setNgayKetThuc(dot.getNgayKetThuc());
         model.addAttribute("dotTTDTO", dto);

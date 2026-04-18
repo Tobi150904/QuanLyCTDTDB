@@ -111,6 +111,18 @@ public class HocPhanController {
         return "redirect:/hoc-phan";
     }
 
+    /* ====================== GUI CHO DUYET ====================== */
+    @PostMapping("/gui-cho-duyet/{ma}")
+    public String guiChoDuyet(@PathVariable String ma, RedirectAttributes ra) {
+        try {
+            hocPhanService.guiChoDuyet(ma);
+            ra.addFlashAttribute("successMsg", "Da gui hoc phan cho phe duyet!");
+        } catch (Exception e) {
+            ra.addFlashAttribute("errorMsg", e.getMessage());
+        }
+        return "redirect:/hoc-phan";
+    }
+
     /* ====================== PHE DUYET ====================== */
     @PostMapping("/phe-duyet/{ma}")
     public String pheduyet(@PathVariable String ma,

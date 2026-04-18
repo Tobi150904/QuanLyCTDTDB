@@ -53,7 +53,7 @@ public class DotThucTapServiceImpl implements DotThucTapService {
         DotThucTap dot = DotThucTap.builder()
                 .tenDotTT(dto.getTenDotTT())
                 .ctdtHocPhan(ctdtHP)
-                .hocKyNamHoc(hocKy)
+                .hocKy(hocKy)
                 .ngayBatDau(dto.getNgayBatDau())
                 .ngayKetThuc(dto.getNgayKetThuc())
                 .trangThai(TrangThaiDotTT.ChuanBi)
@@ -114,7 +114,7 @@ public class DotThucTapServiceImpl implements DotThucTapService {
                 DanhSachThucTap ds = DanhSachThucTap.builder()
                         .dotThucTap(dot)
                         .sinhVien(sv)
-                        .trangThai(TrangThaiThucTap.ChuaXacNhan)
+                        .trangThai(TrangThaiThucTap.DaPhanCong)
                         .build();
                 dsTTRepo.save(ds);
                 success++;
@@ -140,7 +140,7 @@ public class DotThucTapServiceImpl implements DotThucTapService {
                                           String maDoanhNghiep, String nhanXet) {
         DanhSachThucTap ds = dsTTRepo.findById(maDanhSach)
                 .orElseThrow(() -> new ResourceNotFoundException("DanhSachThucTap", "MaThucTap", maDanhSach.toString()));
-        ds.setTrangThai(TrangThaiThucTap.DaXacNhan);
+        ds.setTrangThai(TrangThaiThucTap.DangThucTap);
 
         if (maDoanhNghiep != null && !maDoanhNghiep.isBlank()) {
             DoanhNghiep dn = doanhNghiepRepo.findById(maDoanhNghiep).orElse(null);

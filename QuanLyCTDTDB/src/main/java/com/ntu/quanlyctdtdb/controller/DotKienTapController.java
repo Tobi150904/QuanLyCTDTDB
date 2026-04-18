@@ -67,9 +67,9 @@ public class DotKienTapController {
         DotKienTapDTO dto = new DotKienTapDTO();
         dto.setTenDotKT(dot.getTenDotKT());
         dto.setMaLopHC(dot.getLopHanhChinh() != null ? dot.getLopHanhChinh().getMaLopHC() : null);
-        dto.setMaHocKy(dot.getHocKyNamHoc() != null ? dot.getHocKyNamHoc().getMaHocKy() : null);
+        dto.setMaHocKy(dot.getHocKy() != null ? dot.getHocKy().getMaHocKy() : null);
         dto.setThoiGian(dot.getThoiGian());
-        dto.setMaGVPhuTrach(dot.getGiangVienPhuTrach() != null ? dot.getGiangVienPhuTrach().getMaGV() : null);
+        dto.setMaGVPhuTrach(dot.getGvPhuTrach() != null ? dot.getGvPhuTrach().getMaGV() : null);
         dto.setMaDoanhNghiep(dot.getDoanhNghiep() != null ? dot.getDoanhNghiep().getMaDoanhNghiep() : null);
         dto.setKinhPhiChung(dot.getKinhPhiChung());
         dto.setKinhPhiTungSV(dot.getKinhPhiTungSV());

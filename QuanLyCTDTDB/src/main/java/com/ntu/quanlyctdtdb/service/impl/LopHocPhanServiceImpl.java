@@ -42,8 +42,9 @@ public class LopHocPhanServiceImpl implements LopHocPhanService {
                     LopHocPhan lhp = LopHocPhan.builder()
                             .id(id)
                             .ctdtHocPhan(ctdtHP)
-                            .hocKyNamHoc(hocKy)
-                            .trangThai(TrangThaiLopHocPhan.ChuaMo)
+                            .trangThai(TrangThaiLopHocPhan.DangMo)
+                            .siSoToiDa(ctdtHP.getSoLopDuKien() != null ? 50 : 50)
+                            .siSoThucTe(0)
                             .build();
                     lopHocPhanRepo.save(lhp);
                 }
@@ -58,15 +59,12 @@ public class LopHocPhanServiceImpl implements LopHocPhanService {
         GiangVien gv = giangVienRepo.findById(maGV)
                 .orElseThrow(() -> new ResourceNotFoundException("GiangVien", "MaGV", maGV));
         lhp.setGiangVien(gv);
-        if (lhp.getTrangThai() == TrangThaiLopHocPhan.ChuaMo) {
-            lhp.setTrangThai(TrangThaiLopHocPhan.DangMo);
-        }
         LopHocPhan saved = lopHocPhanRepo.save(lhp);
 
         // Gui email thong bao GV
         try {
             String tenHP = lhp.getCtdtHocPhan().getHocPhan().getTenHocPhan();
-            String tenHocKy = lhp.getHocKyNamHoc().getTenHocKy();
+            String tenHocKy = lhp.getHocKy() != null ? lhp.getHocKy().getTenHocKy() : "";
             emailService.guiThongBaoPhanCongLop(gv.getNguoiDung().getEmail(), tenHP,
                     id.getMaLopHocPhan().toString(), tenHocKy);
         } catch (Exception e) {
