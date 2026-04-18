@@ -20,8 +20,8 @@ public class LopHocPhan {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumns({
-        @JoinColumn(name = "MaCTDT",    referencedColumnName = "maCTDT",    insertable = false, updatable = false),
-        @JoinColumn(name = "MaHocPhan", referencedColumnName = "maHocPhan", insertable = false, updatable = false)
+        @JoinColumn(name = "MaCTDT",    insertable = false, updatable = false),
+        @JoinColumn(name = "MaHocPhan", insertable = false, updatable = false)
     })
     private CtdtHocPhan ctdtHocPhan;
 
