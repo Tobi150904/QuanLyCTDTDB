@@ -83,7 +83,13 @@
 	        <artifactId>thymeleaf-extras-springsecurity6</artifactId>
 	    </dependency>
 	
-	    <!-- Apache POI for Excel -->
+	    <!-- Spring Mail (dung MockEmailServiceImpl trong dev, bat khi deploy) -->
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-mail</artifactId>
+    </dependency>
+
+    <!-- Apache POI for Excel -->
 	    <dependency>
 	        <groupId>org.apache.poi</groupId>
 	        <artifactId>poi-ooxml</artifactId>
