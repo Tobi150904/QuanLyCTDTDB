@@ -131,13 +131,13 @@ public class LopHocPhanServiceImpl implements LopHocPhanService {
         ds.setNhanXet(nhanXet);
         dsSvRepo.save(ds);
 
-        // Gui email CVHT - lay ten HP qua repository (LopHocPhan khong con navigation ctdtHocPhan)
+        // Gui email CVHT - lay ten HP qua repository (dung ds.getId() de tranh navigation ngam)
         try {
             String hoTenSV = ds.getSinhVien().getNguoiDung().getHoTen();
-            LopHocPhanId lopId2 = ds.getLopHocPhan().getId();
-            CtdtHocPhanId ctdtHpId = new CtdtHocPhanId(lopId2.getMaCTDT(), lopId2.getMaHocPhan());
+            CtdtHocPhanId ctdtHpId = new CtdtHocPhanId(
+                    ds.getId().getMaCTDT(), ds.getId().getMaHocPhan());
             String tenHP = ctdtHocPhanRepo.findById(ctdtHpId)
-                    .map(c -> c.getHocPhan().getTenHocPhan()).orElse(lopId2.getMaHocPhan());
+                    .map(c -> c.getHocPhan().getTenHocPhan()).orElse(ds.getId().getMaHocPhan());
             emailService.guiCanhBaoSinhVien(emailCVHT, hoTenSV, tenHP, nhanXet);
         } catch (Exception e) {
             log.warn("Khong gui duoc email canh bao SV: {}", e.getMessage());

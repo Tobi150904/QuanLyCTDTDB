@@ -20,14 +20,9 @@ public class DanhSachSvLopHocPhan {
     @JoinColumn(name = "MaSV")
     private SinhVien sinhVien;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumns({
-        @JoinColumn(name = "MaCTDT",       referencedColumnName = "MaCTDT",       insertable = false, updatable = false),
-        @JoinColumn(name = "MaHocPhan",    referencedColumnName = "MaHocPhan",    insertable = false, updatable = false),
-        @JoinColumn(name = "MaHocKy",      referencedColumnName = "MaHocKy",      insertable = false, updatable = false),
-        @JoinColumn(name = "MaLopHocPhan", referencedColumnName = "MaLopHocPhan", insertable = false, updatable = false)
-    })
-    private LopHocPhan lopHocPhan;
+    // LopHocPhan association bi bo de tranh Hibernate 7 duplicate column error:
+    // maCTDT, maHocPhan, maHocKy, maLopHocPhan da co trong DanhSachSvLopHocPhanId (@EmbeddedId).
+    // Muon lay LopHocPhan -> lookup qua LopHocPhanRepository bang ID.
 
     @Column(name = "NhanXet", columnDefinition = "TEXT")
     private String nhanXet;
