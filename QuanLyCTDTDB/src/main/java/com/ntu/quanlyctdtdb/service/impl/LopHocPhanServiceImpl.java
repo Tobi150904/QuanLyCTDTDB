@@ -114,8 +114,10 @@ public class LopHocPhanServiceImpl implements LopHocPhanService {
             throw new BusinessException("Sinh vien da dang ky lop nay");
         }
 
+        // lopHocPhan association da bi bo khoi DanhSachSvLopHocPhan de tranh duplicate column;
+        // quan he voi LopHocPhan duoc suy ra tu @EmbeddedId (maCTDT + maHocPhan + maHocKy + maLopHocPhan).
         DanhSachSvLopHocPhan ds = DanhSachSvLopHocPhan.builder()
-                .id(dsId).sinhVien(sv).lopHocPhan(lhp).daCanhBao(false).build();
+                .id(dsId).sinhVien(sv).daCanhBao(false).build();
         return dsSvRepo.save(ds);
     }
 
