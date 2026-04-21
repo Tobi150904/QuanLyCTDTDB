@@ -141,23 +141,41 @@
 - [x] `ExcelImportUtil.java`, `FileStorageUtil.java`
 - [x] TEST: Import Excel (hop le + loi trung TenDangNhap), list hien thi day du vai tro
 
-### Quan ly Doanh Nghiep [PDT, TTDTXS] — CHUA LAM (Phase 2.2)
+### Quan ly Doanh Nghiep [PDT, TTDTXS] — DA XONG (Phase 2.2)
 - [x] Repository va Entity da co (Phase 1)
-- [ ] `DoanhNghiepDTO.java`
-- [ ] `DoanhNghiepService.java` + `DoanhNghiepServiceImpl.java`
-  - CRUD, toggleTrangThai, search(Pageable, keyword)
-- [ ] `DoanhNghiepController.java`
-  - GET  /doanh-nghiep                  - list + filter + search
-  - GET  /doanh-nghiep/them              - form tao
-  - POST /doanh-nghiep/them
-  - GET  /doanh-nghiep/sua/{ma}
-  - POST /doanh-nghiep/sua/{ma}
-  - POST /doanh-nghiep/doi-trang-thai/{ma}
-  - GET  /doanh-nghiep/chi-tiet/{ma}
-- [ ] `templates/doanh-nghiep/danh-sach.html`, `form.html`, `chi-tiet.html`
-- [ ] Them menu sidebar trong `layout/base.html`
-- [ ] Them URL rule `hasAnyRole('PDT','TTDTXS','ADMIN')` trong `SecurityConfig.java`
-- [ ] TEST: Tao DN moi, doi trang thai, xem list voi filter
+- [x] `DoanhNghiepDTO.java` (validate @NotBlank, @Email, @Pattern phone)
+- [x] `DoanhNghiepService.java` + `DoanhNghiepServiceImpl.java`
+  - [x] search(Pageable, keyword, trangThai)
+  - [x] CRUD (create voi sinh ma tu dong neu bo trong)
+  - [x] toggleTrangThai (DangHopTac <-> TamNgung)
+  - [x] delete voi guard: chan khi con DotKienTap / DanhSachThucTap tham chieu
+  - [x] sinhMaDoanhNghiep (DN001, DN002, ...)
+  - [x] getThongKe
+- [x] `DoanhNghiepController.java`
+  - [x] GET  /doanh-nghiep                  - list + filter + search + thongKe
+  - [x] GET  /doanh-nghiep/them              - form tao
+  - [x] POST /doanh-nghiep/them
+  - [x] GET  /doanh-nghiep/sua/{ma}
+  - [x] POST /doanh-nghiep/sua/{ma}
+  - [x] POST /doanh-nghiep/doi-trang-thai/{ma}
+  - [x] POST /doanh-nghiep/xoa/{ma}         - kem guard khi con tham chieu
+  - [x] GET  /doanh-nghiep/chi-tiet/{ma}
+- [x] `templates/doanh-nghiep/danh-sach.html`, `form.html`, `chi-tiet.html`
+- [x] Them menu sidebar trong `layout/base.html`
+- [x] Them URL rule `hasAnyRole('PDT','TTDTXS','ADMIN')` trong `SecurityConfig.java`
+- [x] TEST: Tao DN moi, doi trang thai, xem list voi filter
+
+### UI Refactor Phase 1+2 (2026-Q2) — DA XONG
+- [x] Refactor `static/css/main.css` theo design system v2 (shadows, transitions, focus ring, stat-card variant)
+- [x] Refactor `layout/base.html` navbar gradient + active sidebar accent bar
+- [x] Refactor `auth/login.html` split-panel brand + form layout
+- [x] Refactor `dashboard/dashboard.html` — bo inline style, group stat theo nghiep vu
+- [x] Refactor detail pages (Nguoi Dung + Doanh Nghiep) dung `.info-row` pattern
+- [x] Fix bug nghiem trong: `nguoi-dung/form.html` truong `loaiNguoiDung` bi disabled khi edit
+      lam form khong submit duoc gia tri (gay `@NotNull` validation) — thay bang readonly text + hidden input
+- [x] Fix `NguoiDungController.suaForm`: populate hocHam/hocVi/chuyenNganh (GV) va maLopHC (SV)
+- [x] Fix `NguoiDungServiceImpl.update`: ho tro doi maLopHC cho SinhVien, khong ghi de null cho GV
+- [x] Bo sung `activeMenu="nguoi-dung"` trong moi handler cua `NguoiDungController`
 
 ---
 

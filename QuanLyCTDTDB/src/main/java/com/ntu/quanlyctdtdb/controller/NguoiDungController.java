@@ -5,7 +5,9 @@ import com.ntu.quanlyctdtdb.dto.NguoiDungExcelDTO;
 import com.ntu.quanlyctdtdb.entity.NguoiDung;
 import com.ntu.quanlyctdtdb.enums.LoaiNguoiDung;
 import com.ntu.quanlyctdtdb.enums.VaiTro;
+import com.ntu.quanlyctdtdb.repository.GiangVienRepository;
 import com.ntu.quanlyctdtdb.repository.LopHanhChinhRepository;
+import com.ntu.quanlyctdtdb.repository.SinhVienRepository;
 import com.ntu.quanlyctdtdb.service.NguoiDungService;
 import com.ntu.quanlyctdtdb.util.ExcelImportUtil;
 import jakarta.validation.Valid;
@@ -28,8 +30,12 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class NguoiDungController {
 
+    private static final String ACTIVE_MENU = "nguoi-dung";
+
     private final NguoiDungService nguoiDungService;
     private final LopHanhChinhRepository lopHCRepo;
+    private final GiangVienRepository giangVienRepo;
+    private final SinhVienRepository sinhVienRepo;
 
     /* ====================== DANH SACH ====================== */
     @GetMapping
@@ -44,6 +50,7 @@ public class NguoiDungController {
         model.addAttribute("loaiFilter", loai);
         model.addAttribute("loaiList", LoaiNguoiDung.values());
         model.addAttribute("thongKe", nguoiDungService.getThongKe());
+        model.addAttribute("activeMenu", ACTIVE_MENU);
         return "nguoi-dung/danh-sach";
     }
 
@@ -55,6 +62,7 @@ public class NguoiDungController {
         model.addAttribute("vaiTroList", VaiTro.values());
         model.addAttribute("lopHCList", lopHCRepo.findAll());
         model.addAttribute("isEdit", false);
+        model.addAttribute("activeMenu", ACTIVE_MENU);
         return "nguoi-dung/form";
     }
 
@@ -68,6 +76,7 @@ public class NguoiDungController {
             model.addAttribute("vaiTroList", VaiTro.values());
             model.addAttribute("lopHCList", lopHCRepo.findAll());
             model.addAttribute("isEdit", false);
+            model.addAttribute("activeMenu", ACTIVE_MENU);
             return "nguoi-dung/form";
         }
         try {
@@ -90,6 +99,20 @@ public class NguoiDungController {
         dto.setHoTen(nd.getHoTen());
         dto.setSoDienThoai(nd.getSoDienThoai());
         dto.setLoaiNguoiDung(nd.getLoaiNguoiDung());
+        // Populate cac field mo rong theo loai nguoi dung
+        if (nd.getLoaiNguoiDung() == LoaiNguoiDung.GiangVien) {
+            giangVienRepo.findById(ma).ifPresent(gv -> {
+                dto.setHocHam(gv.getHocHam());
+                dto.setHocVi(gv.getHocVi());
+                dto.setChuyenNganh(gv.getChuyenNganh());
+            });
+        } else if (nd.getLoaiNguoiDung() == LoaiNguoiDung.SinhVien) {
+            sinhVienRepo.findById(ma).ifPresent(sv -> {
+                if (sv.getLopHanhChinh() != null) {
+                    dto.setMaLopHC(sv.getLopHanhChinh().getMaLopHC());
+                }
+            });
+        }
         // Lay vai tro hien co
         List<VaiTro> dsVT = nd.getNhomNguoiDungs().stream()
                 .map(n -> n.getId().getVaiTro()).toList();
@@ -100,6 +123,7 @@ public class NguoiDungController {
         model.addAttribute("vaiTroList", VaiTro.values());
         model.addAttribute("lopHCList", lopHCRepo.findAll());
         model.addAttribute("isEdit", true);
+        model.addAttribute("activeMenu", ACTIVE_MENU);
         return "nguoi-dung/form";
     }
 
@@ -114,6 +138,7 @@ public class NguoiDungController {
             model.addAttribute("vaiTroList", VaiTro.values());
             model.addAttribute("lopHCList", lopHCRepo.findAll());
             model.addAttribute("isEdit", true);
+            model.addAttribute("activeMenu", ACTIVE_MENU);
             return "nguoi-dung/form";
         }
         try {
@@ -139,7 +164,8 @@ public class NguoiDungController {
 
     /* ====================== IMPORT EXCEL ====================== */
     @GetMapping("/import")
-    public String importForm() {
+    public String importForm(Model model) {
+        model.addAttribute("activeMenu", ACTIVE_MENU);
         return "nguoi-dung/import";
     }
 
@@ -160,6 +186,7 @@ public class NguoiDungController {
     @GetMapping("/chi-tiet/{ma}")
     public String chiTiet(@PathVariable String ma, Model model) {
         model.addAttribute("nguoiDung", nguoiDungService.findByIdWithRoles(ma));
+        model.addAttribute("activeMenu", ACTIVE_MENU);
         return "nguoi-dung/chi-tiet";
     }
 }

@@ -49,58 +49,57 @@
                     <span class="fw-semibold">Thong Tin Tai Khoan</span>
                 </div>
                 <div class="card-body">
-                    <table class="table table-borderless mb-0" style="font-size:0.875rem;">
+                    <table class="table table-borderless mb-0">
                         <tbody>
-                            <tr>
-                                <td class="fw-medium text-muted" style="width:40%;">Ma:</td>
+                            <tr class="info-row">
+                                <td class="info-label">Ma Nguoi Dung</td>
                                 <td><code th:text="${nguoiDung.maNguoiDung}"></code></td>
                             </tr>
-                            <tr>
-                                <td class="fw-medium text-muted">Ten Dang Nhap:</td>
+                            <tr class="info-row">
+                                <td class="info-label">Ten Dang Nhap</td>
                                 <td th:text="${nguoiDung.tenDangNhap}"></td>
                             </tr>
-                            <tr>
-                                <td class="fw-medium text-muted">Ho Ten:</td>
-                                <td class="fw-medium" th:text="${nguoiDung.hoTen}"></td>
+                            <tr class="info-row">
+                                <td class="info-label">Ho Ten</td>
+                                <td class="fw-semibold" th:text="${nguoiDung.hoTen}"></td>
                             </tr>
-                            <tr>
-                                <td class="fw-medium text-muted">Email:</td>
+                            <tr class="info-row">
+                                <td class="info-label">Email</td>
                                 <td>
                                     <a th:href="'mailto:' + ${nguoiDung.email}"
                                        th:text="${nguoiDung.email}"
-                                       class="text-decoration-none">
-                                    </a>
+                                       class="text-decoration-none"></a>
                                 </td>
                             </tr>
-                            <tr>
-                                <td class="fw-medium text-muted">So Dien Thoai:</td>
+                            <tr class="info-row">
+                                <td class="info-label">So Dien Thoai</td>
                                 <td th:text="${nguoiDung.soDienThoai ?: '--'}"></td>
                             </tr>
-                            <tr>
-                                <td class="fw-medium text-muted">Loai:</td>
+                            <tr class="info-row">
+                                <td class="info-label">Loai Nguoi Dung</td>
                                 <td>
                                     <span class="badge"
                                           th:classappend="${nguoiDung.loaiNguoiDung.name() == 'Admin'} ? 'bg-dark' :
                                                          (${nguoiDung.loaiNguoiDung.name() == 'GiangVien'} ? 'bg-primary' :
                                                          (${nguoiDung.loaiNguoiDung.name() == 'SinhVien'} ? 'bg-info text-dark' : 'bg-success'))"
-                                          th:text="${nguoiDung.loaiNguoiDung.name()}">
+                                          th:text="${nguoiDung.loaiNguoiDung.name()}"></span>
+                                </td>
+                            </tr>
+                            <tr class="info-row">
+                                <td class="info-label">Trang Thai</td>
+                                <td>
+                                    <span th:if="${nguoiDung.trangThaiTK}" class="badge bg-success">
+                                        <i class="bi bi-check-circle-fill me-1"></i>Hoat Dong
+                                    </span>
+                                    <span th:unless="${nguoiDung.trangThaiTK}" class="badge bg-danger">
+                                        <i class="bi bi-lock-fill me-1"></i>Da Khoa
                                     </span>
                                 </td>
                             </tr>
-                            <tr>
-                                <td class="fw-medium text-muted">Trang Thai:</td>
-                                <td>
-                                    <span th:if="${nguoiDung.trangThaiTK}"
-                                          class="badge bg-success">Hoat Dong</span>
-                                    <span th:unless="${nguoiDung.trangThaiTK}"
-                                          class="badge bg-danger">Da Khoa</span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="fw-medium text-muted">Tao Luc:</td>
-                                <td th:text="${nguoiDung.createdAt != null ?
-                                    #temporals.format(nguoiDung.createdAt, 'dd/MM/yyyy HH:mm') : '--'}">
-                                </td>
+                            <tr class="info-row">
+                                <td class="info-label">Tao Luc</td>
+                                <td class="text-muted" th:text="${nguoiDung.createdAt != null ?
+                                    #temporals.format(nguoiDung.createdAt, 'dd/MM/yyyy HH:mm') : '--'}"></td>
                             </tr>
                         </tbody>
                     </table>

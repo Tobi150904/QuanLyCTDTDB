@@ -84,13 +84,15 @@
                         </div>
                     </div>
 
-                    <!-- Loai Nguoi Dung -->
+                    <!-- Loai Nguoi Dung
+                         Edit mode: hien text readonly + hidden field de van POST duoc gia tri.
+                         (HTML <select disabled> khong submit, gay loi @NotNull khi save.) -->
                     <div class="col-md-6">
-                        <div class="form-floating">
+                        <!-- Khi tao moi: select thuong -->
+                        <div class="form-floating" th:unless="${isEdit}">
                             <select class="form-select"
                                     id="loaiNguoiDung"
                                     th:field="*{loaiNguoiDung}"
-                                    th:disabled="${isEdit}"
                                     onchange="toggleExtraFields()"
                                     required>
                                 <option value="">-- Chon Loai --</option>
@@ -105,6 +107,19 @@
                             <div class="invalid-feedback"
                                  th:if="${#fields.hasErrors('loaiNguoiDung')}"
                                  th:errors="*{loaiNguoiDung}"></div>
+                        </div>
+                        <!-- Khi sua: input readonly + hidden field -->
+                        <div class="form-floating" th:if="${isEdit}">
+                            <input type="text"
+                                   class="form-control"
+                                   id="loaiNguoiDungDisplay"
+                                   th:value="${nguoiDungDTO.loaiNguoiDung != null ? nguoiDungDTO.loaiNguoiDung.name() : ''}"
+                                   readonly>
+                            <label for="loaiNguoiDungDisplay">
+                                Loai Nguoi Dung (khong the doi)
+                            </label>
+                            <input type="hidden"
+                                   th:field="*{loaiNguoiDung}">
                         </div>
                     </div>
                 </div>

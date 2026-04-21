@@ -49,64 +49,63 @@
                     <span class="fw-semibold">Thong Tin Doanh Nghiep</span>
                 </div>
                 <div class="card-body">
-                    <table class="table table-borderless mb-0" style="font-size:0.875rem;">
+                    <table class="table table-borderless mb-0">
                         <tbody>
-                            <tr>
-                                <td class="fw-medium text-muted" style="width:35%;">Ma DN:</td>
+                            <tr class="info-row">
+                                <td class="info-label">Ma Doanh Nghiep</td>
                                 <td><code th:text="${doanhNghiep.maDoanhNghiep}"></code></td>
                             </tr>
-                            <tr>
-                                <td class="fw-medium text-muted">Ten Doanh Nghiep:</td>
-                                <td class="fw-medium" th:text="${doanhNghiep.tenDoanhNghiep}"></td>
+                            <tr class="info-row">
+                                <td class="info-label">Ten Doanh Nghiep</td>
+                                <td class="fw-semibold" th:text="${doanhNghiep.tenDoanhNghiep}"></td>
                             </tr>
-                            <tr>
-                                <td class="fw-medium text-muted">Linh Vuc:</td>
+                            <tr class="info-row">
+                                <td class="info-label">Linh Vuc</td>
                                 <td th:text="${doanhNghiep.linhVuc ?: '--'}"></td>
                             </tr>
-                            <tr>
-                                <td class="fw-medium text-muted">Nguoi Dai Dien:</td>
+                            <tr class="info-row">
+                                <td class="info-label">Nguoi Dai Dien</td>
                                 <td th:text="${doanhNghiep.nguoiDaiDien ?: '--'}"></td>
                             </tr>
-                            <tr>
-                                <td class="fw-medium text-muted">Email:</td>
+                            <tr class="info-row">
+                                <td class="info-label">Email</td>
                                 <td>
                                     <span th:if="${doanhNghiep.email == null or doanhNghiep.email.isEmpty()}"
                                           class="text-muted">--</span>
                                     <a th:if="${doanhNghiep.email != null and !doanhNghiep.email.isEmpty()}"
                                        th:href="'mailto:' + ${doanhNghiep.email}"
                                        th:text="${doanhNghiep.email}"
-                                       class="text-decoration-none">
-                                    </a>
+                                       class="text-decoration-none"></a>
                                 </td>
                             </tr>
-                            <tr>
-                                <td class="fw-medium text-muted">So Dien Thoai:</td>
+                            <tr class="info-row">
+                                <td class="info-label">So Dien Thoai</td>
                                 <td th:text="${doanhNghiep.soDienThoai ?: '--'}"></td>
                             </tr>
-                            <tr>
-                                <td class="fw-medium text-muted">Dia Chi:</td>
+                            <tr class="info-row">
+                                <td class="info-label">Dia Chi</td>
                                 <td th:text="${doanhNghiep.diaChiDN ?: '--'}"></td>
                             </tr>
-                            <tr>
-                                <td class="fw-medium text-muted">Trang Thai:</td>
+                            <tr class="info-row">
+                                <td class="info-label">Trang Thai</td>
                                 <td>
                                     <span class="badge"
-                                          th:classappend="${doanhNghiep.trangThai.name() == 'DangHopTac'} ? 'bg-success' : 'bg-secondary'"
-                                          th:text="${doanhNghiep.trangThai.name() == 'DangHopTac'} ? 'Dang Hop Tac' : 'Tam Ngung'">
+                                          th:classappend="${doanhNghiep.trangThai.name() == 'DangHopTac'} ? 'bg-success' : 'bg-secondary'">
+                                        <i class="bi me-1"
+                                           th:classappend="${doanhNghiep.trangThai.name() == 'DangHopTac'} ? 'bi-check-circle-fill' : 'bi-pause-fill'"></i>
+                                        <span th:text="${doanhNghiep.trangThai.name() == 'DangHopTac'} ? 'Dang Hop Tac' : 'Tam Ngung'"></span>
                                     </span>
                                 </td>
                             </tr>
-                            <tr>
-                                <td class="fw-medium text-muted">Tao Luc:</td>
-                                <td th:text="${doanhNghiep.createdAt != null ?
-                                    #temporals.format(doanhNghiep.createdAt, 'dd/MM/yyyy HH:mm') : '--'}">
-                                </td>
+                            <tr class="info-row">
+                                <td class="info-label">Tao Luc</td>
+                                <td class="text-muted" th:text="${doanhNghiep.createdAt != null ?
+                                    #temporals.format(doanhNghiep.createdAt, 'dd/MM/yyyy HH:mm') : '--'}"></td>
                             </tr>
-                            <tr>
-                                <td class="fw-medium text-muted">Cap Nhat Gan Nhat:</td>
-                                <td th:text="${doanhNghiep.updatedAt != null ?
-                                    #temporals.format(doanhNghiep.updatedAt, 'dd/MM/yyyy HH:mm') : '--'}">
-                                </td>
+                            <tr class="info-row">
+                                <td class="info-label">Cap Nhat Gan Nhat</td>
+                                <td class="text-muted" th:text="${doanhNghiep.updatedAt != null ?
+                                    #temporals.format(doanhNghiep.updatedAt, 'dd/MM/yyyy HH:mm') : '--'}"></td>
                             </tr>
                         </tbody>
                     </table>

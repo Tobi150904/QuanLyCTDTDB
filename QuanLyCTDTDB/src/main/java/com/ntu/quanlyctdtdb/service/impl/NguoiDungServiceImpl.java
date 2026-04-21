@@ -142,13 +142,28 @@ public class NguoiDungServiceImpl implements NguoiDungService {
             nd.setMatKhauHash(passwordEncoder.encode(dto.getMatKhau()));
         }
 
-        // Cap nhat GiangVien fields
+        // Cap nhat GiangVien fields (chi set neu co gia tri gui len; tranh ghi de null)
         if (nd.getLoaiNguoiDung() == LoaiNguoiDung.GiangVien) {
             giangVienRepo.findById(ma).ifPresent(gv -> {
-                gv.setHocHam(dto.getHocHam());
-                gv.setHocVi(dto.getHocVi());
-                gv.setChuyenNganh(dto.getChuyenNganh());
+                if (dto.getHocHam() != null)     gv.setHocHam(dto.getHocHam().trim());
+                if (dto.getHocVi() != null)      gv.setHocVi(dto.getHocVi().trim());
+                if (dto.getChuyenNganh() != null)gv.setChuyenNganh(dto.getChuyenNganh().trim());
                 giangVienRepo.save(gv);
+            });
+        }
+
+        // Cap nhat SinhVien.LopHanhChinh neu doi lop
+        if (nd.getLoaiNguoiDung() == LoaiNguoiDung.SinhVien
+                && dto.getMaLopHC() != null && !dto.getMaLopHC().isBlank()) {
+            sinhVienRepo.findById(ma).ifPresent(sv -> {
+                if (sv.getLopHanhChinh() == null
+                        || !dto.getMaLopHC().equals(sv.getLopHanhChinh().getMaLopHC())) {
+                    LopHanhChinh newLop = lopHanhChinhRepo.findById(dto.getMaLopHC())
+                            .orElseThrow(() -> new ResourceNotFoundException(
+                                    "LopHanhChinh", "MaLopHC", dto.getMaLopHC()));
+                    sv.setLopHanhChinh(newLop);
+                    sinhVienRepo.save(sv);
+                }
             });
         }
 
