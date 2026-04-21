@@ -26,6 +26,9 @@ public class HocPhanController {
     private final GiangVienRepository giangVienRepo;
     private final FileStorageUtil fileStorageUtil;
 
+    @ModelAttribute("activeMenu")
+    public String activeMenu() { return "hoc-phan"; }
+
     /* ====================== DANH SACH ====================== */
     @GetMapping
     public String danhSach(@RequestParam(defaultValue = "") String keyword, Model model) {

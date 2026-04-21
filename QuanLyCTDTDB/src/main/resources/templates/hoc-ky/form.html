@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head><title th:text="${isEdit} ? 'Sua Hoc Ky' : 'Tao Hoc Ky'">Hoc Ky</title></head>
+<body>
+<div layout:fragment="content">
+
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a th:href="@{/dashboard}">Trang Chu</a></li>
+            <li class="breadcrumb-item"><a th:href="@{/hoc-ky}">Hoc Ky</a></li>
+            <li class="breadcrumb-item active"
+                th:text="${isEdit} ? 'Chinh Sua' : 'Them Moi'">--</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <p class="page-subtitle">Hoc Vu</p>
+            <h4 class="page-title"
+                th:text="${isEdit} ? 'Chinh Sua Hoc Ky' : 'Tao Hoc Ky Moi'">--</h4>
+        </div>
+        <a th:href="@{/hoc-ky}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>Quay Lai
+        </a>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-calendar-event me-2"></i>Thong Tin Hoc Ky
+                </div>
+                <div class="card-body">
+
+                    <form th:action="${isEdit} ? @{/hoc-ky/sua/{ma}(ma=${hocKyDTO.maHocKy})} : @{/hoc-ky/them}"
+                          th:object="${hocKyDTO}"
+                          method="post"
+                          novalidate>
+
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    <select class="form-select" id="hocKyThu"
+                                            th:field="*{hocKyThu}"
+                                            th:disabled="${isEdit}">
+                                        <option value="1">Hoc Ky 1</option>
+                                        <option value="2">Hoc Ky 2</option>
+                                        <option value="3">Hoc Ky He</option>
+                                    </select>
+                                    <label for="hocKyThu">Ky <span class="text-danger">*</span></label>
+                                </div>
+                                <input th:if="${isEdit}" type="hidden" th:field="*{hocKyThu}">
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    <input type="number" class="form-control" id="namBatDau"
+                                           th:field="*{namBatDau}" min="2020" max="2099"
+                                           th:readonly="${isEdit}">
+                                    <label for="namBatDau">Nam Bat Dau <span class="text-danger">*</span></label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    <input type="number" class="form-control" id="namKetThuc"
+                                           th:field="*{namKetThuc}" min="2020" max="2099"
+                                           th:readonly="${isEdit}">
+                                    <label for="namKetThuc">Nam Ket Thuc <span class="text-danger">*</span></label>
+                                </div>
+                                <small class="text-muted">Phai = Nam Bat Dau + 1</small>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="date" class="form-control" id="ngayBatDau"
+                                           th:field="*{ngayBatDau}">
+                                    <label for="ngayBatDau">Ngay Bat Dau</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="date" class="form-control" id="ngayKetThuc"
+                                           th:field="*{ngayKetThuc}">
+                                    <label for="ngayKetThuc">Ngay Ket Thuc</label>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="form-floating">
+                                    <select class="form-select" id="trangThai" th:field="*{trangThai}">
+                                        <option th:each="tt : ${trangThaiList}"
+                                                th:value="${tt.name()}"
+                                                th:text="${tt.name()}"></option>
+                                    </select>
+                                    <label for="trangThai">Trang Thai</label>
+                                </div>
+                                <small class="text-muted">Chi 1 hoc ky duoc DangDienRa tai mot thoi diem.</small>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+                        <div class="d-flex justify-content-end gap-2">
+                            <a th:href="@{/hoc-ky}" class="btn btn-outline-secondary">Huy</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save me-1"></i>
+                                <span th:text="${isEdit} ? 'Cap Nhat' : 'Tao Moi'">--</span>
+                            </button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

@@ -5,6 +5,7 @@ import com.ntu.quanlyctdtdb.entity.HocKyNamHoc;
 import com.ntu.quanlyctdtdb.enums.TrangThaiHocKy;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public interface HocKyNamHocService {
@@ -21,10 +22,13 @@ public interface HocKyNamHocService {
     HocKyNamHoc update(String maHocKy, HocKyNamHocDTO dto);
 
     /**
-     * Doi trang thai hoc ky. Neu set sang {@link TrangThaiHocKy#DangDienRa},
-     * hoc ky khac dang {@code DangDienRa} se tu dong chuyen sang {@code DaKetThuc}.
+     * Doi trang thai hoc ky. Chi cho phep 1 hoc ky `DangDienRa` tai moi thoi diem.
+     * Khong cho phep rollback tu `DaKetThuc` ve `ChuanBi` / `DangDienRa`.
      */
-    HocKyNamHoc setTrangThai(String maHocKy, TrangThaiHocKy trangThai);
+    HocKyNamHoc doiTrangThai(String maHocKy, TrangThaiHocKy trangThai);
 
     void delete(String maHocKy);
+
+    /** Thong ke so luong HocKy theo tung trang thai. */
+    Map<String, Object> getThongKe();
 }

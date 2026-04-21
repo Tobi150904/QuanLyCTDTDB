@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head><title>Chi Tiet Lop</title></head>
+<body>
+<div layout:fragment="content">
+
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a th:href="@{/dashboard}">Trang Chu</a></li>
+            <li class="breadcrumb-item"><a th:href="@{/lop-hanh-chinh}">Lop Hanh Chinh</a></li>
+            <li class="breadcrumb-item active" th:text="${lop.maLopHC}">--</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <p class="page-subtitle">Lop Hanh Chinh</p>
+            <h4 class="page-title" th:text="${lop.maLopHC} + ' — ' + ${lop.tenLop}">--</h4>
+        </div>
+        <div class="d-flex gap-2">
+            <a th:href="@{/lop-hanh-chinh/sua/{ma}(ma=${lop.maLopHC})}"
+               class="btn btn-primary btn-sm">
+                <i class="bi bi-pencil me-1"></i>Chinh Sua
+            </a>
+            <a th:href="@{/lop-hanh-chinh}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i>Quay Lai
+            </a>
+        </div>
+    </div>
+
+    <div th:if="${successMsg}" class="alert alert-success alert-dismissible fade show">
+        <span th:text="${successMsg}"></span>
+        <button class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${errorMsg}" class="alert alert-danger alert-dismissible fade show">
+        <span th:text="${errorMsg}"></span>
+        <button class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-5">
+            <div class="card">
+                <div class="card-header"><i class="bi bi-info-circle me-2"></i>Thong Tin Chung</div>
+                <div class="card-body">
+                    <table class="table table-borderless mb-0">
+                        <tbody>
+                            <tr class="info-row">
+                                <td class="info-label">Ma Lop</td>
+                                <td><code th:text="${lop.maLopHC}"></code></td>
+                            </tr>
+                            <tr class="info-row">
+                                <td class="info-label">Ten Lop</td>
+                                <td class="fw-semibold" th:text="${lop.tenLop}"></td>
+                            </tr>
+                            <tr class="info-row">
+                                <td class="info-label">Khoa Hoc</td>
+                                <td>
+                                    <span class="badge bg-info text-dark"
+                                          th:text="'K' + ${lop.khoaHoc}"></span>
+                                </td>
+                            </tr>
+                            <tr class="info-row">
+                                <td class="info-label">CTDT</td>
+                                <td>
+                                    <span th:if="${lop.chuongTrinhDaoTao != null}"
+                                          th:text="${lop.chuongTrinhDaoTao.maCTDT + ' - ' + lop.chuongTrinhDaoTao.tenCTDT}"></span>
+                                    <span th:unless="${lop.chuongTrinhDaoTao != null}" class="text-muted">--</span>
+                                </td>
+                            </tr>
+                            <tr class="info-row">
+                                <td class="info-label">Co Van HT</td>
+                                <td>
+                                    <span th:if="${lop.coVan != null}"
+                                          th:text="${lop.coVan.nguoiDung != null ? lop.coVan.nguoiDung.hoTen : lop.coVan.maGV}"></span>
+                                    <span th:unless="${lop.coVan != null}" class="text-muted fst-italic">Chua phan cong</span>
+                                </td>
+                            </tr>
+                            <tr class="info-row">
+                                <td class="info-label">So Sinh Vien</td>
+                                <td>
+                                    <span class="badge bg-primary"
+                                          th:text="${#lists.size(sinhVienList)}">0</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-7">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-people me-2"></i>Danh Sach Sinh Vien</span>
+                    <span class="badge bg-secondary"
+                          th:text="'Tong: ' + ${#lists.size(sinhVienList)}">0</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th style="width:50px;">STT</th>
+                                    <th>Ma SV</th>
+                                    <th>Ho Ten</th>
+                                    <th>Trang Thai</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:if="${#lists.isEmpty(sinhVienList)}">
+                                    <td colspan="4" class="text-center text-muted py-4">
+                                        <i class="bi bi-person-x me-1"></i>Chua co sinh vien.
+                                    </td>
+                                </tr>
+                                <tr th:each="sv, stat : ${sinhVienList}">
+                                    <td class="text-muted small" th:text="${stat.index + 1}">1</td>
+                                    <td><code class="small" th:text="${sv.maSV}"></code></td>
+                                    <td th:text="${sv.nguoiDung != null ? sv.nguoiDung.hoTen : '--'}">--</td>
+                                    <td>
+                                        <span class="badge"
+                                              th:classappend="${sv.trangThaiSV != null and sv.trangThaiSV.name() == 'DangHoc'} ? 'bg-success' : 'bg-secondary'"
+                                              th:text="${sv.trangThaiSV != null ? sv.trangThaiSV.name() : '--'}">--</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

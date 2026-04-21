@@ -21,6 +21,9 @@ public class LopHocPhanController {
     private final HocKyNamHocRepository hocKyRepo;
     private final GiangVienRepository giangVienRepo;
 
+    @ModelAttribute("activeMenu")
+    public String activeMenu() { return "lop-hoc-phan"; }
+
     @GetMapping
     public String danhSach(@RequestParam(required = false) String maCTDT,
                             @RequestParam(required = false) String maHocKy,

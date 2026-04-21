@@ -24,6 +24,9 @@ public class ChuongTrinhDaoTaoController {
     private final ChuongTrinhDaoTaoService ctdtService;
     private final FileStorageUtil fileStorageUtil;
 
+    @ModelAttribute("activeMenu")
+    public String activeMenu() { return "ctdt"; }
+
     @GetMapping
     public String danhSach(Model model) {
         model.addAttribute("danhSach", ctdtService.findAll());

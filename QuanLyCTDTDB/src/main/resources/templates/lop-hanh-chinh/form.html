@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head><title th:text="${isEdit} ? 'Sua Lop' : 'Tao Lop'">Lop</title></head>
+<body>
+<div layout:fragment="content">
+
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a th:href="@{/dashboard}">Trang Chu</a></li>
+            <li class="breadcrumb-item"><a th:href="@{/lop-hanh-chinh}">Lop Hanh Chinh</a></li>
+            <li class="breadcrumb-item active"
+                th:text="${isEdit} ? 'Chinh Sua' : 'Them Moi'">--</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <p class="page-subtitle">Hoc Vu</p>
+            <h4 class="page-title"
+                th:text="${isEdit} ? 'Chinh Sua Lop' : 'Tao Lop Hanh Chinh Moi'">--</h4>
+        </div>
+        <a th:href="@{/lop-hanh-chinh}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>Quay Lai
+        </a>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+            <form th:action="${isEdit} ? @{/lop-hanh-chinh/sua/{ma}(ma=${lopDTO.maLopHC})} : @{/lop-hanh-chinh/them}"
+                  th:object="${lopDTO}" method="post" novalidate>
+
+                <div class="card mb-3">
+                    <div class="card-header"><i class="bi bi-info-circle me-2"></i>Thong Tin Lop</div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control" id="maLopHC"
+                                           th:field="*{maLopHC}"
+                                           th:readonly="${isEdit}" placeholder="62KMT">
+                                    <label for="maLopHC">Ma Lop <span class="text-danger">*</span></label>
+                                    <div class="invalid-feedback d-block"
+                                         th:if="${#fields.hasErrors('maLopHC')}"
+                                         th:errors="*{maLopHC}"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control" id="tenLop"
+                                           th:field="*{tenLop}" placeholder="62 - Ky Thuat May Tinh">
+                                    <label for="tenLop">Ten Lop <span class="text-danger">*</span></label>
+                                    <div class="invalid-feedback d-block"
+                                         th:if="${#fields.hasErrors('tenLop')}"
+                                         th:errors="*{tenLop}"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control" id="khoaHoc"
+                                           th:field="*{khoaHoc}" placeholder="62">
+                                    <label for="khoaHoc">Khoa <span class="text-danger">*</span></label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <select class="form-select" id="maCTDT" th:field="*{maCTDT}">
+                                        <option value="">-- Chon CTDT --</option>
+                                        <option th:each="c : ${ctdtList}"
+                                                th:value="${c.maCTDT}"
+                                                th:text="${c.maCTDT + ' - ' + c.tenCTDT}"></option>
+                                    </select>
+                                    <label for="maCTDT">Chuong Trinh Dao Tao <span class="text-danger">*</span></label>
+                                    <div class="invalid-feedback d-block"
+                                         th:if="${#fields.hasErrors('maCTDT')}"
+                                         th:errors="*{maCTDT}"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <select class="form-select" id="maCoVan" th:field="*{maCoVan}">
+                                        <option value="">-- Khong / Chua phan cong --</option>
+                                        <option th:each="gv : ${giangVienList}"
+                                                th:value="${gv.maGV}"
+                                                th:text="${gv.maGV + ' - ' + (gv.nguoiDung != null ? gv.nguoiDung.hoTen : '')}"></option>
+                                    </select>
+                                    <label for="maCoVan">Co Van Hoc Tap (CVHT)</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a th:href="@{/lop-hanh-chinh}" class="btn btn-outline-secondary">Huy</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save me-1"></i>
+                        <span th:text="${isEdit} ? 'Cap Nhat' : 'Tao Moi'">--</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>
