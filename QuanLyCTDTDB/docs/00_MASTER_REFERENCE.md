@@ -10,11 +10,11 @@
 |----------------|------------------------------------------------------|
 | Ten he thong   | He Thong Quan Ly Dao Tao Xuat Sac                   |
 | Package goc    | com.ntu.quanlyctdtdb                                 |
-| Spring Boot    | 4.0.5                                                |
+| Spring Boot    | 3.5.6 (da ha tu 4.0.5 do layout-dialect khong tuong thich Groovy 5) |
 | Java           | 17                                                   |
 | Database       | MySQL 8+ (XAMPP), schema: QuanLyCTDTDB               |
-| Frontend       | Thymeleaf + Bootstrap 5 + Bootstrap Icons            |
-| Build tool     | Maven (mvnw)                                         |
+| Frontend       | Thymeleaf 3.1 + Layout Dialect 3.3 + Bootstrap 5 + Bootstrap Icons |
+| Build tool     | Maven Wrapper (`./mvnw`)                             |
 | Port           | 8080                                                 |
 
 ### Muc dich
@@ -53,21 +53,24 @@ Quan ly toan bo quy trinh dao tao xuat sac cua truong dai hoc, bao gom:
 [MySQL 8+ Database]        <- QuanLyCTDTDB
 ```
 
-### Package structure
+### Package structure (thuc te)
 ```
 com.ntu.quanlyctdtdb/
   config/          SecurityConfig, WebMvcConfig
-  controller/      1 controller per module
+  controller/      1 controller per module (Auth, Dashboard, NguoiDung, Profile, HocPhan, CTDT, LopHocPhan, DotKienTap, DotThucTap)
   dto/             Data Transfer Objects (form binding + Excel import)
-  entity/          JPA Entities + EmbeddedId classes
-  enums/           All enum types (13 enums)
+  entity/          20 JPA Entities + 7 @Embeddable Id classes
+  enums/           15 enum types (state machines + kinds)
   exception/       BusinessException, ResourceNotFoundException, GlobalExceptionHandler
-  repository/      Spring Data JPA repositories
-  security/        UserDetailsServiceImpl, CustomUserDetails, CustomAuthenticationProvider
-  service/         Service interfaces
-  service/impl/    Service implementations
+  repository/      20 Spring Data JPA repositories
+  security/        UserDetailsServiceImpl, CustomUserDetails
+                   (KHONG co CustomAuthenticationProvider — dung DaoAuthenticationProvider qua AuthenticationManagerBuilder)
+  service/         Service interfaces (bao gom EmailService)
+  service/impl/    Service implementations (bao gom MockEmailServiceImpl cho dev)
   util/            ExcelImportUtil, FileStorageUtil
 ```
+
+> Chi tiet coverage module + gap analysis: `06_PROJECT_SCAFFOLD.md`.
 
 ---
 
@@ -127,7 +130,7 @@ com.ntu.quanlyctdtdb/
 
 ---
 
-## 5. ENUMS — 10 ENUM TYPES
+## 5. ENUMS — 15 ENUM TYPES
 
 | Enum class            | Values                                                      | Dung trong bang              |
 |-----------------------|-------------------------------------------------------------|------------------------------|
@@ -240,11 +243,13 @@ PDT xuat bao cao Excel
 | spring.datasource.username            | root                                    |
 | spring.datasource.password            | (trong)                                 |
 | spring.jpa.hibernate.ddl-auto         | validate                                |
+| spring.jpa.open-in-view               | false (BAT BUOC — xem § 9)              |
 | spring.thymeleaf.cache                | false (dev), true (prod)                |
 | file.upload-dir                       | uploads/                                |
 | server.servlet.session.timeout        | 30m                                     |
 
-> Tat ca config chi tiet o: src/main/resources/application.properties
+> Tat ca config chi tiet o: `src/main/resources/application.properties`
+> Huong dan setup moi truong: `README.md` (root)
 
 ---
 
@@ -272,16 +277,24 @@ PDT xuat bao cao Excel
 - Dung RedirectAttributes: `addFlashAttribute("successMsg", "...")` hoac `"errorMsg"`
 - Template tu dong hien thi qua layout base.html
 
+### Lazy loading & open-in-view
+- `spring.jpa.open-in-view=false` — KHONG duoc doc collection LAZY ngoai transaction.
+- Neu template (Thymeleaf) can iterate `@OneToMany` / `@ManyToMany` LAZY, repository PHAI dung `@EntityGraph(attributePaths = "...")` hoac `JOIN FETCH` trong `@Query`.
+- Truong hop muon giu LAZY nhung can iterate mot lan: bo sung method `findXxxWithAssoc(...)` tra entity da fetch sang, KHONG bat `open-in-view` lai.
+
 ---
 
 ## 10. TAI LIEU LIEN QUAN
 
 | File                        | Noi dung                                           |
 |-----------------------------|----------------------------------------------------|
-| 01_ERD_SCHEMA.md            | So do ERD day du, mo ta tung bang va cot           |
-| 02_Data.md                  | Quy uoc du lieu, format, rang buoc nghiep vu       |
-| 03_WORKFLOW.md              | Workflow chi tiet A-Z tung module (co flowchart)   |
-| 04_DEV_CHECKLIST.md         | Checklist phat trien theo phase, kiem tra truoc demo|
-| 05_UI_DESIGN_SYSTEM.md      | Design tokens, component rules, Thymeleaf helpers  |
-| scripts/01_create_tables.sql| DDL tao 20 bang                                    |
-| scripts/02_seed_data.sql    | DML du lieu mau test day du                        |
+| 01_ERD_SCHEMA.md                      | So do ERD day du, mo ta tung bang va cot           |
+| 02_Mô Tả & Thiết kế dữ liệu.md        | Quy uoc du lieu, format, rang buoc nghiep vu       |
+| 03_WORKFLOW.md                        | Workflow chi tiet A-Z tung module (co flowchart)   |
+| 04_DEV_CHECKLIST.md                   | Checklist phat trien theo phase, kiem tra truoc demo|
+| 05_UI_DESIGN_SYSTEM.md                | Design tokens, component rules, Thymeleaf helpers  |
+| 06_PROJECT_SCAFFOLD.md                | Cau truc thuc te + ma tran coverage + tech debt    |
+| 07_ROADMAP.md                         | Ke hoach lam viec chi tiet theo phase              |
+| scripts/README.md                     | Huong dan chay SQL + quy tac migration             |
+| scripts/01_create_tables.sql          | DDL tao database + 20 bang                         |
+| scripts/02_seed_data.sql              | DML du lieu mau test day du (16 user, 3 CTDT, ...)|

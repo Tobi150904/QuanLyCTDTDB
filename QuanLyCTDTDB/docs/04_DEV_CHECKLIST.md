@@ -5,21 +5,21 @@
 
 ---
 
-## PHASE 0: SETUP MOI TRUONG
+## PHASE 0: SETUP MOI TRUONG (DA XONG)
 
 ### Database (MySQL XAMPP)
-- [ ] Chay `scripts/01_create_tables.sql` -> 20 bang duoc tao thanh cong
-- [ ] Chay `scripts/02_seed_data.sql` -> du lieu mau sac thuc te
-- [ ] Kiem tra 20 bang ton tai: `SHOW TABLES IN QuanLyCTDTDB;`
-- [ ] Kiem tra FK dung: `SELECT * FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA='QuanLyCTDTDB';`
-- [ ] Kiem tra encoding: `SHOW CREATE DATABASE QuanLyCTDTDB;` -> utf8mb4_unicode_ci
+- [x] Chay `scripts/01_create_tables.sql` -> 20 bang duoc tao thanh cong
+- [x] Chay `scripts/02_seed_data.sql` -> du lieu mau sac thuc te
+- [x] Kiem tra 20 bang ton tai: `SHOW TABLES IN QuanLyCTDTDB;`
+- [x] Kiem tra FK dung: `SELECT * FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA='QuanLyCTDTDB';`
+- [x] Kiem tra encoding: `SHOW CREATE DATABASE QuanLyCTDTDB;` -> utf8mb4_unicode_ci
 
 ### Spring Boot Project
-- [ ] Chay `./mvnw spring-boot:run` -> khong co compile error
-- [ ] Truy cap `localhost:8080` -> redirect den `/login`
-- [ ] Kiem tra `application.properties`: DB URL, username, password dung XAMPP
-- [ ] `spring.jpa.hibernate.ddl-auto=validate` -> Hibernate validate schema khop voi entity
-- [ ] Thu muc `uploads/` duoc tao sau khi khoi dong (hoac tao tay)
+- [x] Chay `./mvnw spring-boot:run` -> khong co compile error
+- [x] Truy cap `localhost:8080` -> redirect den `/login`
+- [x] Kiem tra `application.properties`: DB URL, username, password dung XAMPP
+- [x] `spring.jpa.hibernate.ddl-auto=validate` -> Hibernate validate schema khop voi entity
+- [x] Thu muc `uploads/` duoc tao sau khi khoi dong (hoac tao tay)
 
 ---
 
@@ -45,130 +45,118 @@
 ### Entities (20 bang -> toi thieu 20 entity/id class)
 
 #### Simple PK entities
-- [ ] `HocKyNamHoc.java`          - @Id MaHocKy VARCHAR(20)
-- [ ] `NguoiDung.java`            - @Id MaNguoiDung, LoaiNguoiDung enum, TrangThaiTK BIT
-- [ ] `SinhVien.java`             - @Id MaSV, @OneToOne NguoiDung, @ManyToOne LopHanhChinh
-- [ ] `GiangVien.java`            - @Id MaGV, @OneToOne NguoiDung, LoaiGiangVien enum
-- [ ] `DoanhNghiep.java`          - @Id MaDoanhNghiep
-- [ ] `LopHanhChinh.java`         - @Id MaLopHC, @ManyToOne CTDT (nullable), @ManyToOne GiangVien (coVan)
-- [ ] `ChuongTrinhDaoTao.java`    - @Id MaCTDT, @ManyToOne NguoiTao, @ManyToOne NguoiDuyet
-- [ ] `HocPhan.java`              - @Id MaHocPhan, @ManyToOne GiangVien (chuNhiemHP)
-- [ ] `VaiTroThucTap.java`        - @Id MaVaiTro
-- [ ] `DotKienTap.java`           - @Id MaDotKT (AUTO), @ManyToOne LopHanhChinh, DoanhNghiep, GiangVien
-- [ ] `DotThucTap.java`           - @Id MaDotTT (AUTO), @ManyToOne CTDT_HocPhan (composite FK)
+- [x] `HocKyNamHoc.java`
+- [x] `NguoiDung.java`
+- [x] `SinhVien.java`
+- [x] `GiangVien.java`
+- [x] `DoanhNghiep.java`
+- [x] `LopHanhChinh.java`
+- [x] `ChuongTrinhDaoTao.java`
+- [x] `HocPhan.java`
+- [x] `VaiTroThucTap.java`
+- [x] `DotKienTap.java`
+- [x] `DotThucTap.java`
 
 #### Composite PK entities (can EmbeddedId class)
-- [ ] `NhomNguoiDungId.java`      - @Embeddable: MaNguoiDung, VaiTro
-- [ ] `NhomNguoiDung.java`        - @EmbeddedId NhomNguoiDungId, @ManyToOne NguoiDung
-- [ ] `BCN_ThanhVienId.java`      - @Embeddable: MaCTDT, MaGV, ChucDanh
-- [ ] `BCN_ThanhVien.java`        - @EmbeddedId BCN_ThanhVienId, @ManyToOne CTDT, GiangVien
-- [ ] `DoiNguGiangVienHPId.java`  - @Embeddable: MaHocPhan, MaGiangVien
-- [ ] `DoiNguGiangVienHP.java`    - @EmbeddedId DoiNguGiangVienHPId
-- [ ] `CTDT_HocPhanId.java`       - @Embeddable: MaCTDT, MaHocPhan
-- [ ] `CTDT_HocPhan.java`         - @EmbeddedId CTDT_HocPhanId, @ManyToOne CTDT, HocPhan
-- [ ] `LopHocPhanId.java`         - @Embeddable: MaCTDT, MaHocPhan, MaHocKy, MaLopHocPhan
-- [ ] `LopHocPhan.java`           - @EmbeddedId LopHocPhanId, @ManyToOne GiangVien (nullable)
-- [ ] `DanhSachSVLopHPId.java`    - @Embeddable: MaSV, MaCTDT, MaHocPhan, MaHocKy, MaLopHocPhan
-- [ ] `DanhSachSinhVienLopHocPhan.java` - @EmbeddedId, @ManyToOne SinhVien, LopHocPhan
-- [ ] `DanhSachSinhVienKienTapId.java`  - @Embeddable: MaDotKT, MaSV
-- [ ] `DanhSachSinhVienKienTap.java`    - @EmbeddedId
-- [ ] `DanhSachThucTap.java`      - @Id MaThucTap (AUTO), @ManyToOne DotThucTap, SinhVien
-- [ ] `KetQuaThucTap.java`        - @Id MaKetQua (AUTO), @ManyToOne DanhSachThucTap, VaiTroThucTap
+- [x] `NhomNguoiDungId.java` + `NhomNguoiDung.java`
+- [x] `BcnThanhVienId.java` + `BcnThanhVien.java`
+- [x] `DoiNguGiangVienHpId.java` + `DoiNguGiangVienHp.java`
+- [x] `CtdtHocPhanId.java` + `CtdtHocPhan.java`
+- [x] `LopHocPhanId.java` + `LopHocPhan.java`
+- [x] `DanhSachSvLopHocPhanId.java` + `DanhSachSvLopHocPhan.java`
+- [x] `DanhSachSvKienTapId.java` + `DanhSachSvKienTap.java`
+- [x] `DanhSachThucTap.java` (@Id MaThucTap AUTO)
+- [x] `KetQuaThucTap.java`   (@Id MaKetQua  AUTO)
 
-#### BaseAuditEntity (nen co)
-- [ ] `BaseAuditEntity.java`      - created_at, updated_at (@CreationTimestamp, @UpdateTimestamp)
+#### BaseAuditEntity (khong hien thuc — bo qua, created_at/updated_at dat truc tiep o tung entity)
+- [ ] `BaseAuditEntity.java`      - chua can thiet, deferred
 
-### Repositories (1 interface moi entity co nghiep vu)
-- [ ] `HocKyNamHocRepository`     - findByTrangThai, findFirstByTrangThaiOrderByNgayBatDauAsc
-- [ ] `NguoiDungRepository`       - findByTenDangNhap, findByEmail, findByLoaiNguoiDung
-- [ ] `SinhVienRepository`        - findByMaLopHC, findByNguoiDung_MaNguoiDung
-- [ ] `GiangVienRepository`       - findByNguoiDung_MaNguoiDung
-- [ ] `NhomNguoiDungRepository`   - findById_MaNguoiDung, deleteById_MaNguoiDungAndId_VaiTro
-- [ ] `DoanhNghiepRepository`     - findByTrangThai, findByTenDoanhNghiepContaining(Pageable)
-- [ ] `LopHanhChinhRepository`    - findByMaCoVan, findByMaCTDT
-- [ ] `ChuongTrinhDaoTaoRepository` - findByTrangThai, findByNguoiTao_MaNguoiDung
-- [ ] `BCN_ThanhVienRepository`   - findById_MaCTDT, existsById_MaCTDTAndId_MaGV
-- [ ] `HocPhanRepository`         - findByTrangThai, findByChuNhiemHP_MaGV
-- [ ] `DoiNguGiangVienHPRepository` - findById_MaHocPhan, existsById_MaHocPhanAndId_MaGiangVien
-- [ ] `CTDT_HocPhanRepository`    - findById_MaCTDT, existsById_MaCTDTAndId_MaHocPhan
-- [ ] `LopHocPhanRepository`      - findById_MaCTDTAndId_MaHocPhan, findByMaGiangVienIsNull, findByMaGiangVien
-- [ ] `DanhSachSVLopHPRepository` - findById_MaCTDTAndId_MaHocPhanAndId_MaHocKyAndId_MaLopHocPhan
-- [ ] `DotKienTapRepository`      - findByMaLopHC, findByMaHocKy_MaHocKy, findByTrangThai
-- [ ] `DanhSachSVKienTapRepository` - findById_MaDotKT, existsById
-- [ ] `DotThucTapRepository`      - findByMaHocKy_MaHocKy, findByTrangThai
-- [ ] `DanhSachThucTapRepository` - findByMaDotTT_MaDotTT, findByMaSV_MaSV, existsByMaDotTT_MaDotTTAndMaSV_MaSV
-- [ ] `VaiTroThucTapRepository`   - findAll (dung cho select option)
-- [ ] `KetQuaThucTapRepository`   - findByMaThucTap_MaThucTap
+> Ten file thuc te dung CamelCase nhe (Bcn thay vi BCN, Ctdt thay vi CTDT, Sv thay vi SV)
+> de phu hop convention Java class naming. Ten BANG MySQL van giu nguyen dung
+> `BCN_ThanhVien`, `CTDT_HocPhan` qua `@Table(name="...")`.
+
+### Repositories (1 interface moi entity co nghiep vu) — DA XONG 20/20
+- [x] `HocKyNamHocRepository`, `NguoiDungRepository` (+ `@EntityGraph` cho nhomNguoiDungs)
+- [x] `SinhVienRepository`, `GiangVienRepository`, `NhomNguoiDungRepository`
+- [x] `DoanhNghiepRepository`, `LopHanhChinhRepository`
+- [x] `ChuongTrinhDaoTaoRepository`, `BcnThanhVienRepository`
+- [x] `HocPhanRepository`, `DoiNguGiangVienHpRepository`, `CtdtHocPhanRepository`
+- [x] `LopHocPhanRepository`, `DanhSachSvLopHocPhanRepository`
+- [x] `DotKienTapRepository`, `DanhSachSvKienTapRepository`
+- [x] `DotThucTapRepository`, `DanhSachThucTapRepository`
+- [x] `VaiTroThucTapRepository`, `KetQuaThucTapRepository`
 
 ### Security
-- [ ] `CustomUserDetails.java`    - implement UserDetails, wrap NguoiDung
-- [ ] `UserDetailsServiceImpl.java` - loadUserByUsername (tim theo TenDangNhap hoac Email)
+- [x] `CustomUserDetails.java`    - wrap NguoiDung, tra roles cho Spring Security
+- [x] `UserDetailsServiceImpl.java` - loadUserByUsername (tim theo TenDangNhap)
   - Map LoaiNguoiDung -> ROLE_ADMIN, ROLE_GIANG_VIEN, ROLE_SINH_VIEN, ROLE_DOANH_NGHIEP
   - Map VaiTro trong NhomNguoiDung -> ROLE_PDT, ROLE_TTDTXS, ROLE_CVHT, ROLE_CNHP
   - Kiem tra TrangThaiTK = 1
-- [ ] `CustomAuthenticationProvider.java` - dung BCrypt verify password
-- [ ] `SecurityConfig.java`
-  - BCryptPasswordEncoder bean
-  - Cau hinh permitAll: /login, /css/**, /js/**, /webjars/**
-  - Cau hinh hasRole: /nguoi-dung/** (PDT), /doanh-nghiep/** (PDT), /hoc-phan/** (CNHP, BCN)...
-  - formLogin: /login, defaultSuccessUrl: /dashboard, failureUrl: /login?error
-  - logout: /logout -> /login?logout
-  - sessionManagement: maximumSessions(1)
+- [x] `SecurityConfig.java`
+  - [x] BCryptPasswordEncoder bean
+  - [x] DaoAuthenticationProvider qua `AuthenticationManagerBuilder` (khong tao `CustomAuthenticationProvider` rieng)
+  - [x] Cau hinh permitAll: /login, /css/**, /js/**, /webjars/**, /uploads/**
+  - [ ] Cau hinh hasRole theo URL pattern — xem `02_Mô Tả & Thiết kế dữ liệu.md` § 7 (Phase 2.3)
+  - [x] formLogin: /login, defaultSuccessUrl: /dashboard, failureUrl: /login?error
+  - [x] logout: /logout -> /login?logout
+  - [ ] sessionManagement: maximumSessions(1) — deferred
 
 ### Config
-- [ ] `WebMvcConfig.java` - addResourceHandlers cho /uploads/** -> file.upload-dir
-- [ ] Tao thu muc `src/main/resources/static/uploads/.gitkeep`
+- [x] `WebMvcConfig.java` - addResourceHandlers cho /uploads/** -> file.upload-dir
+- [ ] Tao thu muc `src/main/resources/static/uploads/.gitkeep` — deferred, dung `uploads/` o root
 
 ---
 
 ## PHASE 2: MODULE P0 — CORE
 
 ### Auth + Dashboard
-- [ ] `AuthController.java`
-  - GET /login -> templates/auth/login.html
-  - GET / -> redirect /dashboard
-- [ ] `DashboardController.java`
-  - GET /dashboard -> lay thong ke theo role, truyen model
-  - activeMenu = "dashboard"
-- [ ] `templates/auth/login.html`         - form login, khong extend base
-- [ ] `templates/dashboard/dashboard.html` - thong ke tong quan theo role
-- [ ] `templates/layout/base.html`         - sidebar theo role + flash message + navbar
-- [ ] TEST: Dang nhap 4 LoaiNguoiDung + 4 VaiTro trong NhomNguoiDung
+- [x] `AuthController.java`               - GET /login, GET /
+- [x] `DashboardController.java`          - GET /dashboard (thong ke theo role)
+- [x] `ProfileController.java`            - GET /profile (khong co trong checklist goc, da them)
+- [x] `templates/auth/login.html`
+- [x] `templates/dashboard/dashboard.html`
+- [x] `templates/layout/base.html`         - sidebar theo role + flash message + navbar
+- [x] `templates/profile/profile.html`
+- [x] `templates/error/{403,404,500}.html`
+- [x] TEST: Dang nhap admin, tran.van.an, le.thi.bich -> redirect /dashboard OK
 
-### Quan ly Nguoi Dung [PDT, TTDTXS]
-- [ ] `NguoiDungDTO.java`               - form binding (tao/sua GV, SV, Admin)
-- [ ] `NguoiDungExcelDTO.java`          - Excel import mapping
-- [ ] `NguoiDungService.java` interface
-- [ ] `NguoiDungServiceImpl.java`
-  - getAll(Pageable, filter), getById, create, update, toggleStatus
-  - createWithRole (tao NguoiDung + NhomNguoiDung + SinhVien/GiangVien)
-  - importFromExcel(MultipartFile)
-- [ ] `NguoiDungController.java`
-  - GET  /nguoi-dung                  - list + filter + search
-  - GET  /nguoi-dung/them             - form tao moi
-  - POST /nguoi-dung/them
-  - GET  /nguoi-dung/{ma}/sua
-  - POST /nguoi-dung/{ma}/sua
-  - POST /nguoi-dung/{ma}/khoa        - toggle TrangThaiTK
-  - POST /nguoi-dung/import           - Excel import
-- [ ] `templates/nguoidung/list.html`
-- [ ] `templates/nguoidung/form.html`
-- [ ] `ExcelImportUtil.java`            - doc .xlsx, map sang NguoiDungExcelDTO
-- [ ] TEST: Import Excel (hop le + loi trung TenDangNhap)
+### Quan ly Nguoi Dung [PDT, TTDTXS] — DA XONG
+- [x] `NguoiDungDTO.java`, `NguoiDungExcelDTO.java`
+- [x] `NguoiDungService.java` + `NguoiDungServiceImpl.java`
+  - [x] search(Pageable, keyword, loai), findById, create, update, toggleStatus
+  - [x] createWithRole (tao NguoiDung + NhomNguoiDung + SinhVien/GiangVien)
+  - [x] importFromExcel(MultipartFile)
+  - [x] findByIdWithRoles (them 2025-Q2 batch 2 — fix LazyInit)
+- [x] `NguoiDungController.java`
+  - [x] GET  /nguoi-dung                  - list + filter + search
+  - [x] GET  /nguoi-dung/them             - form tao moi
+  - [x] POST /nguoi-dung/them
+  - [x] GET  /nguoi-dung/sua/{ma}
+  - [x] POST /nguoi-dung/sua/{ma}
+  - [x] POST /nguoi-dung/doi-trang-thai/{ma}
+  - [x] POST /nguoi-dung/import           - Excel import
+  - [x] GET  /nguoi-dung/chi-tiet/{ma}
+- [x] `templates/nguoi-dung/danh-sach.html`, `form.html`, `chi-tiet.html`, `import.html`
+  > Template path dung kebab-case tieng Viet khong dau (thay vi `nguoidung/list.html`)
+- [x] `ExcelImportUtil.java`, `FileStorageUtil.java`
+- [x] TEST: Import Excel (hop le + loi trung TenDangNhap), list hien thi day du vai tro
 
-### Quan ly Doanh Nghiep [PDT, TTDTXS]
+### Quan ly Doanh Nghiep [PDT, TTDTXS] — CHUA LAM (Phase 2.2)
+- [x] Repository va Entity da co (Phase 1)
 - [ ] `DoanhNghiepDTO.java`
-- [ ] `DoanhNghiepService.java` interface + `DoanhNghiepServiceImpl.java`
-  - CRUD, toggleTrangThai
+- [ ] `DoanhNghiepService.java` + `DoanhNghiepServiceImpl.java`
+  - CRUD, toggleTrangThai, search(Pageable, keyword)
 - [ ] `DoanhNghiepController.java`
-  - GET  /doanh-nghiep
-  - GET  /doanh-nghiep/them
+  - GET  /doanh-nghiep                  - list + filter + search
+  - GET  /doanh-nghiep/them              - form tao
   - POST /doanh-nghiep/them
-  - GET  /doanh-nghiep/{ma}/sua
-  - POST /doanh-nghiep/{ma}/sua
-  - POST /doanh-nghiep/{ma}/doi-trang-thai
-- [ ] `templates/doanhnghiep/list.html`
-- [ ] `templates/doanhnghiep/form.html`
+  - GET  /doanh-nghiep/sua/{ma}
+  - POST /doanh-nghiep/sua/{ma}
+  - POST /doanh-nghiep/doi-trang-thai/{ma}
+  - GET  /doanh-nghiep/chi-tiet/{ma}
+- [ ] `templates/doanh-nghiep/danh-sach.html`, `form.html`, `chi-tiet.html`
+- [ ] Them menu sidebar trong `layout/base.html`
+- [ ] Them URL rule `hasAnyRole('PDT','TTDTXS','ADMIN')` trong `SecurityConfig.java`
 - [ ] TEST: Tao DN moi, doi trang thai, xem list voi filter
 
 ---
