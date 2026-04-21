@@ -18,17 +18,31 @@
 
 ```css
 :root {
-    --primary:      #1e3a5f;  /* Navy Blue — navbar, sidebar header, card header chinh */
-    --primary-lt:   #2d5f9e;  /* Blue nhat hon — hover state, active sidebar link      */
-    --accent:       #e8a020;  /* Amber — badge canh bao, highlight, border-left title  */
-    --surface:      #f4f6f9;  /* Background body, page chinh                           */
-    --surface-card: #ffffff;  /* Card, modal, sidebar body                             */
+    --primary:         #1e3a5f;  /* Navy Blue — navbar, sidebar header, card header chinh */
+    --primary-600:     #25466f;  /* Hover cho button/link primary                         */
+    --primary-lt:      #2d5f9e;  /* Blue nhat hon — active sidebar link                   */
+    --accent:          #e8a020;  /* Amber — badge canh bao, border-left title, stat-card  */
+    --surface:         #f4f6f9;  /* Background body, page chinh                           */
+    --surface-card:    #ffffff;  /* Card, modal, sidebar body                             */
+    --text-primary:    #111827;  /* Text chinh (hard black dju cho contrast tren surface) */
+    --text-muted:      #6b7280;  /* Text phu                                              */
+    --border-subtle:   #e5e7eb;  /* Border default                                        */
+    --shadow-sm:       0 1px 2px 0 rgba(17,24,39,.05);
+    --shadow-md:       0 4px 6px -1px rgba(17,24,39,.08), 0 2px 4px -2px rgba(17,24,39,.04);
+    --radius-card:     10px;
+    --radius-input:    8px;
+    --transition:      .18s ease;
 }
 
-/* Neutral tu Bootstrap (khong override): */
-/* Text chinh: #212529   Text phu: #6c757d   Border: #dee2e6 */
-/* Danger:     #dc3545   Success:  #198754   Warning: #ffc107 */
+/* Neutral tu Bootstrap (khong override truc tiep, chi dung tokens tren): */
+/* Danger: #dc3545   Success: #198754   Warning: #ffc107   Info: #0dcaf0 */
 ```
+
+**Tokens v2 them trong `main.css`:**
+- `--primary-600` (hover primary), `--text-primary`/`--text-muted` (thay dung truc tiep `#212529`/`#6c757d`)
+- `--border-subtle`, `--shadow-sm`, `--shadow-md` (thay `shadow-sm` inline Bootstrap de dong nhat)
+- `--radius-card` va `--radius-input` (thay inline `border-radius: 10px`)
+- `--transition` (hover/focus nhat quan 180ms)
 
 **Quy tac bat buoc:**
 - Navbar + sidebar header background: `--primary`
@@ -235,6 +249,35 @@ Font stack: `'Inter', 'Segoe UI', system-ui, sans-serif`
 ```
 - `showLoading()` trong `main.js`: disable button, hien spinner, an icon
 - Tranh nguoi dung bam 2 lan
+
+### 5.11 Utility Classes CHUNG (bat buoc dung thay vi inline style)
+
+Da dang ky trong `src/main/resources/static/css/main.css`. Cac template muon dung lai style chung PHAI
+reuse cac class sau thay vi dat inline `style="..."`:
+
+| Class                    | Tac dung                                                              |
+|--------------------------|-----------------------------------------------------------------------|
+| `.page-title`            | H4 primary color + border-left accent + padding-left 14px             |
+| `.page-subtitle`         | Kicker/label nho phia tren title (`Module / Phan`)                    |
+| `.stat-card`             | Stat card base (card + shadow + border-left accent + hover translateY)|
+| `.stat-card-icon`        | Icon tron 44x44 tren trai, mac dinh mau `var(--primary-lt)`           |
+| `.stat-card-value`       | So lieu lon (1.75rem 700 primary)                                     |
+| `.stat-card-label`       | Label nho duoi so (uppercase muted 0.75rem)                           |
+| `.info-row` + `.info-label` | Row trong table chi-tiet: label trai 38% muted, value phai         |
+| `.empty-state`           | Container empty state (icon + text + CTA)                             |
+| `.sidebar-section-header`| Ke section trong sidebar (uppercase, muted)                           |
+| `.search-bar`            | Wrapper input-group cho o tim kiem co focus border unified            |
+| `.soft-divider`          | 1px divider mau subtle                                                |
+
+**Variant tai cho (scoped trong trang):**
+Cac variant mau cho stat-card (success/warning/danger/info/teal/purple/orange) hien dang khai
+bao local trong `<style>` cua `dashboard.html` dang `.stat-card.variant-success .stat-card-icon {...}`.
+Khi reuse sang module khac, copy khoi `<style>` nay vao trang danh sach cua module do, HOAC nang
+len `main.css` neu dung o >= 3 trang.
+
+**Login page:** Login co layout rieng, su dung `<style>` scoped trong `auth/login.html` voi class
+`login-shell`, `brand-panel`, `form-panel`, `brand-feature-list`, `btn-login` — khong anh huong toi
+cac trang co layout khac.
 
 ### 5.10 Modals
 - Dung cho: confirm xoa, xem nhanh chi tiet, form nho (1-3 field)

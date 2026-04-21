@@ -70,7 +70,7 @@ profile/profile.html         (DONE)
 | Auth + Dashboard  | -      | -          | -       | DONE       | DONE      | Hoat dong         |
 | Nguoi Dung        | DONE   | DONE       | DONE    | DONE       | DONE      | Da fix LazyInit   |
 | Profile           | -      | -          | -       | DONE       | DONE      | Hoat dong         |
-| Doanh Nghiep      | DONE   | DONE       | THIEU   | THIEU      | THIEU     | Gap — Phase 2     |
+| Doanh Nghiep      | DONE   | DONE       | DONE    | DONE       | DONE      | Hoat dong         |
 | Hoc Ky Nam Hoc    | DONE   | DONE       | THIEU   | THIEU      | THIEU     | Gap — Phase 3     |
 | Lop Hanh Chinh    | DONE   | DONE       | THIEU   | THIEU      | THIEU     | Gap — Phase 3     |
 | Hoc Phan          | DONE   | DONE       | DONE    | DONE       | THIEU     | Controller 500    |
@@ -141,6 +141,16 @@ Chinh sach phan quyen nghiep vu (hasRole / hasAnyRole) hien tai KHONG duoc khai 
 2. `NguoiDungService` / `NguoiDungServiceImpl`: Them `findByIdWithRoles(ma)`.
 3. `NguoiDungController`: Chuyen `chiTiet()` va `suaForm()` sang dung `findByIdWithRoles` (tranh LazyInit khi Thymeleaf render collection vai tro).
 4. `application.properties`: Bo `spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect` (Hibernate 6 auto-detect).
+
+### Fix 2026-Q2 batch 1 — UI Refactor Phase 1+2 + Nguoi Dung edit bug
+1. Refactor toan bo `src/main/resources/static/css/main.css` theo design system v2 (tokenized, shadow/transition nhat quan, `.page-header`, `.stat-card`, `.stat-card-primary/accent/success/warning`, `.info-row/.info-label`, `.login-split`, sidebar active accent, focus-visible ring).
+2. Refactor `templates/dashboard/dashboard.html`: group thong ke theo tung role/nghiep vu, xoa toan bo inline `style="..."`, dung variant `stat-card-*`.
+3. Refactor `templates/auth/login.html`: split-panel brand (trai) + form (phai), bo inline styles, dua sang class `.login-split/.login-brand/.login-form-panel` o CSS.
+4. Refactor detail pages (`nguoi-dung/chi-tiet.html`, `doanh-nghiep/chi-tiet.html`): dung chung pattern `.info-row/.info-label`.
+5. **Fix bug nghiem trong** `templates/nguoi-dung/form.html`: `loaiNguoiDung` bi `disabled` khi edit khien HTML khong submit field -> `@NotNull` validation fail -> form khong save duoc. Thay bang input readonly + hidden field giu value.
+6. `NguoiDungController.suaForm()`: populate them `hocHam/hocVi/chuyenNganh` (GV) va `maLopHC` (SV) khi dung cho template edit.
+7. `NguoiDungServiceImpl.update()`: bo sung nhanh doi `maLopHC` cho SinhVien; tranh ghi de null cho GiangVien khi form khong gui field.
+8. Bo sung `model.addAttribute("activeMenu", "nguoi-dung")` trong moi GET handler cua `NguoiDungController` de sidebar highlight dung.
 
 ---
 
