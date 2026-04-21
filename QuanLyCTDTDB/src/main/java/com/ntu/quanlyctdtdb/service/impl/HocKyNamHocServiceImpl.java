@@ -60,17 +60,30 @@ public class HocKyNamHocServiceImpl implements HocKyNamHocService {
     @Override
     public HocKyNamHoc create(HocKyNamHocDTO dto) {
         validateDates(dto.getNgayBatDau(), dto.getNgayKetThuc());
-        if (hocKyRepo.existsById(dto.getMaHocKy())) {
-            throw new BusinessException("Hoc ky voi ma " + dto.getMaHocKy() + " da ton tai.");
+        validateNamHoc(dto);
+
+        // Suy MaHocKy neu user chua cung cap (form chi nhap hocKyThu + namBatDau)
+        String maHocKy = dto.getMaHocKy();
+        if (maHocKy == null || maHocKy.isBlank()) {
+            maHocKy = buildMaHocKy(dto.getHocKyThu(), dto.getNamBatDau());
         }
+        if (hocKyRepo.existsById(maHocKy)) {
+            throw new BusinessException("Hoc ky voi ma " + maHocKy + " da ton tai.");
+        }
+
+        String tenHocKy = dto.getTenHocKy();
+        if (tenHocKy == null || tenHocKy.isBlank()) {
+            tenHocKy = buildTenHocKy(dto.getHocKyThu(), dto.getNamBatDau(), dto.getNamKetThuc());
+        }
+
         TrangThaiHocKy trangThai = dto.getTrangThai() != null
                 ? dto.getTrangThai() : TrangThaiHocKy.SapDienRa;
         if (trangThai == TrangThaiHocKy.DangDienRa) {
             ensureNoOtherActiveExcept(null);
         }
         HocKyNamHoc e = HocKyNamHoc.builder()
-                .maHocKy(dto.getMaHocKy())
-                .tenHocKy(dto.getTenHocKy())
+                .maHocKy(maHocKy)
+                .tenHocKy(tenHocKy)
                 .ngayBatDau(dto.getNgayBatDau())
                 .ngayKetThuc(dto.getNgayKetThuc())
                 .trangThai(trangThai)
@@ -82,9 +95,18 @@ public class HocKyNamHocServiceImpl implements HocKyNamHocService {
     public HocKyNamHoc update(String maHocKy, HocKyNamHocDTO dto) {
         HocKyNamHoc e = findById(maHocKy);
         validateDates(dto.getNgayBatDau(), dto.getNgayKetThuc());
+        validateNamHoc(dto);
 
-        // Khong duoc doi primary key
-        if (!maHocKy.equals(dto.getMaHocKy())) {
+        // Khong duoc doi primary key: neu form submit khac, tu chi nhan gia tri URL.
+        // Dong thoi hocKyThu/namBatDau khi sua se readonly o template; neu bi doi
+        // du lieu POST -> bao loi ro rang.
+        String derived = buildMaHocKy(dto.getHocKyThu(), dto.getNamBatDau());
+        if (!maHocKy.equals(derived)) {
+            throw new BusinessException(
+                    "Khong duoc doi Ky / Nam Bat Dau cua Hoc Ky. Neu can, hay xoa va tao moi.");
+        }
+        if (dto.getMaHocKy() != null && !dto.getMaHocKy().isBlank()
+                && !maHocKy.equals(dto.getMaHocKy())) {
             throw new BusinessException(
                     "Khong duoc doi Ma Hoc Ky. Neu can, hay xoa va tao moi.");
         }
@@ -100,7 +122,11 @@ public class HocKyNamHocServiceImpl implements HocKyNamHocService {
             ensureNoOtherActiveExcept(maHocKy);
         }
 
-        e.setTenHocKy(dto.getTenHocKy());
+        String tenHocKy = dto.getTenHocKy();
+        if (tenHocKy == null || tenHocKy.isBlank()) {
+            tenHocKy = buildTenHocKy(dto.getHocKyThu(), dto.getNamBatDau(), dto.getNamKetThuc());
+        }
+        e.setTenHocKy(tenHocKy);
         e.setNgayBatDau(dto.getNgayBatDau());
         e.setNgayKetThuc(dto.getNgayKetThuc());
         e.setTrangThai(moi);
@@ -168,5 +194,27 @@ public class HocKyNamHocServiceImpl implements HocKyNamHocService {
         if (!start.isBefore(end)) {
             throw new BusinessException("Ngay bat dau phai truoc ngay ket thuc.");
         }
+    }
+
+    private void validateNamHoc(HocKyNamHocDTO dto) {
+        if (dto.getHocKyThu() == null || dto.getNamBatDau() == null || dto.getNamKetThuc() == null) {
+            throw new BusinessException("Ky, Nam Bat Dau va Nam Ket Thuc khong duoc de trong.");
+        }
+        if (dto.getHocKyThu() < 1 || dto.getHocKyThu() > 3) {
+            throw new BusinessException("Ky phai tu 1 den 3 (1, 2 hoac 3 - Hoc Ky He).");
+        }
+        if (dto.getNamKetThuc() != dto.getNamBatDau() + 1) {
+            throw new BusinessException("Nam Ket Thuc phai bang Nam Bat Dau + 1.");
+        }
+    }
+
+    /** Format PK theo quy uoc {@code HKn-YYYY} — xem {@code docs/02_Data § 1}. */
+    private String buildMaHocKy(Integer hocKyThu, Integer namBatDau) {
+        return "HK" + hocKyThu + "-" + namBatDau;
+    }
+
+    private String buildTenHocKy(Integer hocKyThu, Integer namBatDau, Integer namKetThuc) {
+        String kyLabel = hocKyThu == 3 ? "He" : String.valueOf(hocKyThu);
+        return "Hoc Ky " + kyLabel + " Nam " + namBatDau + "-" + namKetThuc;
     }
 }

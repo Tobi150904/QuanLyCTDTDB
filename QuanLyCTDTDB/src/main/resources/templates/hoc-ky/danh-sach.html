@@ -52,8 +52,8 @@
             <div class="stat-card">
                 <div class="stat-card-icon" style="background:#0dcaf0;"><i class="bi bi-hourglass-split"></i></div>
                 <div>
-                    <div class="stat-card-value" th:text="${thongKe['chuanBi'] ?: 0}">0</div>
-                    <div class="stat-card-label">Chuan Bi</div>
+                    <div class="stat-card-value" th:text="${thongKe['sapDienRa'] ?: 0}">0</div>
+                    <div class="stat-card-label">Sap Dien Ra</div>
                 </div>
             </div>
         </div>
@@ -124,7 +124,7 @@
                             <td>
                                 <span class="badge"
                                       th:classappend="${hk.trangThai.name() == 'DangDienRa'} ? 'bg-success' :
-                                                     (${hk.trangThai.name() == 'ChuanBi'} ? 'bg-info text-dark' : 'bg-secondary')"
+                                                     (${hk.trangThai.name() == 'SapDienRa'} ? 'bg-info text-dark' : 'bg-secondary')"
                                       th:text="${hk.trangThai.name()}">--</span>
                             </td>
                             <td class="text-center">
@@ -135,7 +135,7 @@
                                         <i class="bi bi-pencil"></i>
                                     </a>
                                     <!-- Doi trang thai -->
-                                    <form th:if="${hk.trangThai.name() == 'ChuanBi'}"
+                                    <form th:if="${hk.trangThai.name() == 'SapDienRa'}"
                                           th:action="@{/hoc-ky/doi-trang-thai/{ma}(ma=${hk.maHocKy})}"
                                           method="post" class="d-inline">
                                         <input type="hidden" name="moi" value="DangDienRa">

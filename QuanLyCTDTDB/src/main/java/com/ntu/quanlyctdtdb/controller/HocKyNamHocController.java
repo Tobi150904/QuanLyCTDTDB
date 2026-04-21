@@ -49,7 +49,7 @@ public class HocKyNamHocController {
         int nam = java.time.Year.now().getValue();
         dto.setNamBatDau(nam);
         dto.setNamKetThuc(nam + 1);
-        dto.setTrangThai(TrangThaiHocKy.ChuanBi);
+        dto.setTrangThai(TrangThaiHocKy.SapDienRa);
         model.addAttribute("hocKyDTO", dto);
         model.addAttribute("trangThaiList", TrangThaiHocKy.values());
         model.addAttribute("isEdit", false);
@@ -85,6 +85,7 @@ public class HocKyNamHocController {
         HocKyNamHoc e = service.findById(ma);
         HocKyNamHocDTO dto = new HocKyNamHocDTO();
         dto.setMaHocKy(e.getMaHocKy());
+        dto.setTenHocKy(e.getTenHocKy());
         dto.setHocKyThu(e.getHocKyThu());
         dto.setNamBatDau(e.getNamBatDau());
         dto.setNamKetThuc(e.getNamKetThuc());

@@ -23,7 +23,7 @@ public interface HocKyNamHocService {
 
     /**
      * Doi trang thai hoc ky. Chi cho phep 1 hoc ky `DangDienRa` tai moi thoi diem.
-     * Khong cho phep rollback tu `DaKetThuc` ve `ChuanBi` / `DangDienRa`.
+     * Khong cho phep rollback tu `DaKetThuc` ve `SapDienRa` / `DangDienRa`.
      */
     HocKyNamHoc doiTrangThai(String maHocKy, TrangThaiHocKy trangThai);
 
