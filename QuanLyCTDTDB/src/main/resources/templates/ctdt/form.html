@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head th:replace="~{layout/base :: head('CTDT - ' + (${isEdit} ? 'Chinh Sua' : 'Them Moi'))}"></head>
+<body>
+<div th:replace="~{layout/base :: navbar}"></div>
+
+<div class="layout">
+    <aside th:replace="~{layout/base :: sidebar('ctdt')}"></aside>
+
+    <main class="main-content">
+
+        <!-- HEADER -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <div class="page-subtitle">
+                    Module / Dao tao / <span th:text="${isEdit ? 'Chinh sua' : 'Them moi'}"></span>
+                </div>
+                <h4 class="page-title mb-0">
+                    <span th:text="${isEdit ? 'Chinh Sua CTDT' : 'Tao CTDT Moi'}"></span>
+                </h4>
+            </div>
+            <a th:href="@{/ctdt}" class="btn btn-light">
+                <i class="bi bi-arrow-left me-1"></i> Quay lai
+            </a>
+        </div>
+
+        <!-- FORM -->
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom">
+                        <h6 class="mb-0 fw-semibold">
+                            <i class="bi bi-journal-text me-2"></i>Thong Tin Chuong Trinh Dao Tao
+                        </h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <form th:action="${isEdit} ? @{'/ctdt/sua/' + ${ctdtDTO.maCTDT}} : @{/ctdt/them}"
+                              method="post" enctype="multipart/form-data" th:object="${ctdtDTO}"
+                              class="needs-validation" novalidate>
+
+                            <div class="row g-3">
+                                <!-- Ma CTDT -->
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" id="maCTDT"
+                                               th:field="*{maCTDT}"
+                                               th:readonly="${isEdit}"
+                                               placeholder="CTDT001" maxlength="20" required>
+                                        <label for="maCTDT">Ma CTDT <span class="text-danger">*</span></label>
+                                        <div class="invalid-feedback"
+                                             th:if="${#fields.hasErrors('maCTDT')}"
+                                             th:errors="*{maCTDT}"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Khoa -->
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" id="khoa"
+                                               th:field="*{khoa}" placeholder="K65"
+                                               maxlength="10" required>
+                                        <label for="khoa">Khoa <span class="text-danger">*</span></label>
+                                        <div class="invalid-feedback"
+                                             th:if="${#fields.hasErrors('khoa')}"
+                                             th:errors="*{khoa}"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Ten CTDT -->
+                                <div class="col-12">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" id="tenCTDT"
+                                               th:field="*{tenCTDT}"
+                                               placeholder="Ten chuong trinh" maxlength="200" required>
+                                        <label for="tenCTDT">Ten Chuong Trinh Dao Tao <span class="text-danger">*</span></label>
+                                        <div class="invalid-feedback"
+                                             th:if="${#fields.hasErrors('tenCTDT')}"
+                                             th:errors="*{tenCTDT}"></div>
+                                    </div>
+                                </div>
+
+                                <!-- File Word (chi khi tao moi) -->
+                                <div class="col-12" th:unless="${isEdit}">
+                                    <label for="fileWord" class="form-label fw-medium">
+                                        File Word CTDT (tuy chon)
+                                    </label>
+                                    <input type="file" class="form-control" id="fileWord"
+                                           name="fileWord" accept=".doc,.docx,.pdf">
+                                    <div class="form-text">
+                                        Ho tro file .doc, .docx, .pdf. Max 10MB.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr class="my-4">
+                            <div class="d-flex justify-content-end gap-2">
+                                <a th:href="@{/ctdt}" class="btn btn-light">Huy</a>
+                                <button type="submit" class="btn btn-primary-brand">
+                                    <i class="bi bi-check2-circle me-1"></i>
+                                    <span th:text="${isEdit ? 'Luu Thay Doi' : 'Tao Moi'}"></span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<div th:replace="~{layout/base :: scripts}"></div>
+</body>
+</html>

@@ -17,18 +17,17 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 
 /**
  * Service quan ly HocKyNamHoc.
  *
  * Business rules:
- *  - Ma HocKy theo format pattern HK{N}_{nam1}_{nam2}, vi du HK1_2024_2025.
- *  - Ngay bat dau phai truoc ngay ket thuc.
- *  - Khong duoc sua TrangThai "DaKetThuc" nguoc tro lai "DangDienRa".
- *  - Khong duoc xoa HocKy neu dang co DotKienTap/DotThucTap tham chieu.
- *  - Chi co toi da 1 HocKy dang `DangDienRa` tai moi thoi diem (business validation soft).
+ *  - MaHocKy format: HK[1-3]-YYYY (YYYY la nam bat dau nam hoc) — enforced o DTO via @Pattern.
+ *  - NgayBatDau phai truoc NgayKetThuc.
+ *  - Khong duoc chuyen TrangThai tu `DaKetThuc` nguoc tro lai `DangDienRa` / `SapDienRa`.
+ *  - Toi da 1 HocKy `DangDienRa` tai moi thoi diem.
+ *  - Khong xoa duoc HocKy neu dang co DotKienTap / DotThucTap tham chieu.
  */
 @Service
 @RequiredArgsConstructor
@@ -42,8 +41,7 @@ public class HocKyNamHocServiceImpl implements HocKyNamHocService {
     @Override
     @Transactional(readOnly = true)
     public List<HocKyNamHoc> findAll() {
-        return hocKyRepo.findAll(org.springframework.data.domain.Sort.by(
-                org.springframework.data.domain.Sort.Direction.DESC, "namBatDau", "hocKyThu"));
+        return hocKyRepo.findAllByOrderByNgayBatDauDesc();
     }
 
     @Override
@@ -56,81 +54,75 @@ public class HocKyNamHocServiceImpl implements HocKyNamHocService {
     @Override
     @Transactional(readOnly = true)
     public Optional<HocKyNamHoc> findDangDienRa() {
-        return hocKyRepo.findAll().stream()
-                .filter(h -> h.getTrangThai() == TrangThaiHocKy.DangDienRa)
-                .findFirst();
+        return hocKyRepo.findByTrangThai(TrangThaiHocKy.DangDienRa);
     }
 
     @Override
     public HocKyNamHoc create(HocKyNamHocDTO dto) {
-        validateDto(dto);
-        String ma = buildMaHocKy(dto.getHocKyThu(), dto.getNamBatDau(), dto.getNamKetThuc());
-        if (hocKyRepo.existsById(ma)) {
-            throw new BusinessException("HocKyNamHoc voi ma " + ma + " da ton tai.");
+        validateDates(dto.getNgayBatDau(), dto.getNgayKetThuc());
+        if (hocKyRepo.existsById(dto.getMaHocKy())) {
+            throw new BusinessException("Hoc ky voi ma " + dto.getMaHocKy() + " da ton tai.");
         }
-        // Chi cho phep 1 hoc ky `DangDienRa`
-        if (dto.getTrangThai() == TrangThaiHocKy.DangDienRa) {
-            long active = hocKyRepo.findAll().stream()
-                    .filter(h -> h.getTrangThai() == TrangThaiHocKy.DangDienRa).count();
-            if (active >= 1) {
-                throw new BusinessException(
-                        "Da co HocKy dang DangDienRa. Chi 1 hoc ky duoc active tai moi thoi diem.");
-            }
+        TrangThaiHocKy trangThai = dto.getTrangThai() != null
+                ? dto.getTrangThai() : TrangThaiHocKy.SapDienRa;
+        if (trangThai == TrangThaiHocKy.DangDienRa) {
+            ensureNoOtherActiveExcept(null);
         }
-        HocKyNamHoc e = new HocKyNamHoc();
-        e.setMaHocKy(ma);
-        e.setHocKyThu(dto.getHocKyThu());
-        e.setNamBatDau(dto.getNamBatDau());
-        e.setNamKetThuc(dto.getNamKetThuc());
-        e.setNgayBatDau(dto.getNgayBatDau());
-        e.setNgayKetThuc(dto.getNgayKetThuc());
-        e.setTrangThai(dto.getTrangThai() != null ? dto.getTrangThai() : TrangThaiHocKy.ChuanBi);
+        HocKyNamHoc e = HocKyNamHoc.builder()
+                .maHocKy(dto.getMaHocKy())
+                .tenHocKy(dto.getTenHocKy())
+                .ngayBatDau(dto.getNgayBatDau())
+                .ngayKetThuc(dto.getNgayKetThuc())
+                .trangThai(trangThai)
+                .build();
         return hocKyRepo.save(e);
     }
 
     @Override
     public HocKyNamHoc update(String maHocKy, HocKyNamHocDTO dto) {
         HocKyNamHoc e = findById(maHocKy);
-        validateDto(dto);
+        validateDates(dto.getNgayBatDau(), dto.getNgayKetThuc());
 
-        // Block chuyen nguoc DaKetThuc -> DangDienRa / ChuanBi
-        if (e.getTrangThai() == TrangThaiHocKy.DaKetThuc
-                && dto.getTrangThai() != TrangThaiHocKy.DaKetThuc) {
+        // Khong duoc doi primary key
+        if (!maHocKy.equals(dto.getMaHocKy())) {
+            throw new BusinessException(
+                    "Khong duoc doi Ma Hoc Ky. Neu can, hay xoa va tao moi.");
+        }
+
+        TrangThaiHocKy moi = dto.getTrangThai();
+        TrangThaiHocKy cu = e.getTrangThai();
+
+        if (cu == TrangThaiHocKy.DaKetThuc && moi != TrangThaiHocKy.DaKetThuc) {
             throw new BusinessException(
                     "Hoc ky da ket thuc, khong the chuyen lai trang thai truoc do.");
         }
-
-        // Neu update dto tinh toan lai ma, phai dong bo (vi ma la primary key - khong duoc doi)
-        String expectedMa = buildMaHocKy(dto.getHocKyThu(), dto.getNamBatDau(), dto.getNamKetThuc());
-        if (!Objects.equals(expectedMa, maHocKy)) {
-            throw new BusinessException(
-                    "Khong duoc doi ky (HocKyThu / NamBatDau / NamKetThuc) sau khi tao. "
-                  + "Hay xoa roi tao moi voi ma " + expectedMa + ".");
+        if (moi == TrangThaiHocKy.DangDienRa && cu != TrangThaiHocKy.DangDienRa) {
+            ensureNoOtherActiveExcept(maHocKy);
         }
 
-        // Chi cho phep 1 active
-        if (dto.getTrangThai() == TrangThaiHocKy.DangDienRa
-                && e.getTrangThai() != TrangThaiHocKy.DangDienRa) {
-            long active = hocKyRepo.findAll().stream()
-                    .filter(h -> h.getTrangThai() == TrangThaiHocKy.DangDienRa
-                                 && !h.getMaHocKy().equals(maHocKy))
-                    .count();
-            if (active >= 1) {
-                throw new BusinessException(
-                        "Da co HocKy khac dang DangDienRa. Hay ket thuc no truoc khi kich hoat ky moi.");
-            }
-        }
-
+        e.setTenHocKy(dto.getTenHocKy());
         e.setNgayBatDau(dto.getNgayBatDau());
         e.setNgayKetThuc(dto.getNgayKetThuc());
-        e.setTrangThai(dto.getTrangThai());
+        e.setTrangThai(moi);
+        return hocKyRepo.save(e);
+    }
+
+    @Override
+    public HocKyNamHoc doiTrangThai(String maHocKy, TrangThaiHocKy moi) {
+        HocKyNamHoc e = findById(maHocKy);
+        if (e.getTrangThai() == TrangThaiHocKy.DaKetThuc && moi != TrangThaiHocKy.DaKetThuc) {
+            throw new BusinessException("Hoc ky da ket thuc, khong the chuyen trang thai.");
+        }
+        if (moi == TrangThaiHocKy.DangDienRa && e.getTrangThai() != TrangThaiHocKy.DangDienRa) {
+            ensureNoOtherActiveExcept(maHocKy);
+        }
+        e.setTrangThai(moi);
         return hocKyRepo.save(e);
     }
 
     @Override
     public void delete(String maHocKy) {
         HocKyNamHoc e = findById(maHocKy);
-        // Guard: khong xoa khi dang co DotKienTap / DotThucTap tham chieu
         long dotKT = dotKienTapRepo.findByHocKy_MaHocKy(maHocKy).size();
         long dotTT = dotThucTapRepo.findByHocKy_MaHocKy(maHocKy).size();
         if (dotKT > 0 || dotTT > 0) {
@@ -142,26 +134,6 @@ public class HocKyNamHocServiceImpl implements HocKyNamHocService {
     }
 
     @Override
-    public HocKyNamHoc doiTrangThai(String maHocKy, TrangThaiHocKy moi) {
-        HocKyNamHoc e = findById(maHocKy);
-        if (e.getTrangThai() == TrangThaiHocKy.DaKetThuc && moi != TrangThaiHocKy.DaKetThuc) {
-            throw new BusinessException("Hoc ky da ket thuc, khong the chuyen trang thai.");
-        }
-        if (moi == TrangThaiHocKy.DangDienRa) {
-            long active = hocKyRepo.findAll().stream()
-                    .filter(h -> h.getTrangThai() == TrangThaiHocKy.DangDienRa
-                                 && !h.getMaHocKy().equals(maHocKy))
-                    .count();
-            if (active >= 1) {
-                throw new BusinessException(
-                        "Da co HocKy khac dang DangDienRa. Hay ket thuc no truoc.");
-            }
-        }
-        e.setTrangThai(moi);
-        return hocKyRepo.save(e);
-    }
-
-    @Override
     @Transactional(readOnly = true)
     public Map<String, Object> getThongKe() {
         List<HocKyNamHoc> all = hocKyRepo.findAll();
@@ -169,8 +141,8 @@ public class HocKyNamHocServiceImpl implements HocKyNamHocService {
         m.put("tong", all.size());
         m.put("dangDienRa", all.stream()
                 .filter(h -> h.getTrangThai() == TrangThaiHocKy.DangDienRa).count());
-        m.put("chuanBi", all.stream()
-                .filter(h -> h.getTrangThai() == TrangThaiHocKy.ChuanBi).count());
+        m.put("sapDienRa", all.stream()
+                .filter(h -> h.getTrangThai() == TrangThaiHocKy.SapDienRa).count());
         m.put("daKetThuc", all.stream()
                 .filter(h -> h.getTrangThai() == TrangThaiHocKy.DaKetThuc).count());
         return m;
@@ -178,24 +150,23 @@ public class HocKyNamHocServiceImpl implements HocKyNamHocService {
 
     /* ================ Helpers ================ */
 
-    /**
-     * Build ma HocKy theo pattern chuan cua du an: HK{N}_{nam1}_{nam2}
-     * (Vi du HK1_2024_2025 cho ky 1 nam hoc 2024-2025).
-     */
-    static String buildMaHocKy(int hocKyThu, int namBatDau, int namKetThuc) {
-        return "HK" + hocKyThu + "_" + namBatDau + "_" + namKetThuc;
+    private void ensureNoOtherActiveExcept(String excludeMaHocKy) {
+        long active = hocKyRepo.findAll().stream()
+                .filter(h -> h.getTrangThai() == TrangThaiHocKy.DangDienRa)
+                .filter(h -> excludeMaHocKy == null || !excludeMaHocKy.equals(h.getMaHocKy()))
+                .count();
+        if (active >= 1) {
+            throw new BusinessException(
+                    "Da co hoc ky khac dang DangDienRa. Hay ket thuc no truoc khi kich hoat hoc ky moi.");
+        }
     }
 
-    private void validateDto(HocKyNamHocDTO dto) {
-        if (dto.getNamKetThuc() != dto.getNamBatDau() + 1) {
-            throw new BusinessException(
-                    "Nam ket thuc phai lien ke nam bat dau (namKetThuc = namBatDau + 1).");
+    private void validateDates(LocalDate start, LocalDate end) {
+        if (start == null || end == null) {
+            throw new BusinessException("Ngay bat dau va ngay ket thuc khong duoc de trong.");
         }
-        LocalDate start = dto.getNgayBatDau();
-        LocalDate end = dto.getNgayKetThuc();
-        if (start != null && end != null && !start.isBefore(end)) {
-            throw new BusinessException(
-                    "Ngay bat dau phai truoc ngay ket thuc.");
+        if (!start.isBefore(end)) {
+            throw new BusinessException("Ngay bat dau phai truoc ngay ket thuc.");
         }
     }
 }

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="vi">
+<head th:replace="~{layout/base :: head('Chi Tiet CTDT')}"></head>
+<body>
+<div th:replace="~{layout/base :: navbar}"></div>
+
+<div class="layout">
+    <aside th:replace="~{layout/base :: sidebar('ctdt')}"></aside>
+
+    <main class="main-content">
+
+        <!-- HEADER -->
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <div>
+                <div class="page-subtitle">Module / Dao tao / Chi tiet</div>
+                <h4 class="page-title mb-0" th:text="${ctdt.tenCTDT}"></h4>
+                <div class="text-muted small mt-1">
+                    Ma: <code th:text="${ctdt.maCTDT}"></code>
+                    &bull; Khoa: <span th:text="${ctdt.khoa}"></span>
+                    &bull; Trang thai:
+                    <span class="badge"
+                          th:classappend="${ctdt.trangThai.name() == 'DaDuyet'} ? 'bg-success' :
+                                         (${ctdt.trangThai.name() == 'ChoDuyet'} ? 'bg-warning text-dark' :
+                                         (${ctdt.trangThai.name() == 'BanNhap'} ? 'bg-secondary' : 'bg-danger'))"
+                          th:text="${ctdt.trangThai.name() == 'DaDuyet' ? 'Da Duyet' :
+                                   (ctdt.trangThai.name() == 'ChoDuyet' ? 'Cho Duyet' :
+                                   (ctdt.trangThai.name() == 'BanNhap' ? 'Ban Nhap' : 'Da Huy'))}"></span>
+                </div>
+            </div>
+            <a th:href="@{/ctdt}" class="btn btn-light">
+                <i class="bi bi-arrow-left me-1"></i> Quay lai
+            </a>
+        </div>
+
+        <!-- FLASH -->
+        <div th:if="${successMsg}" class="alert alert-success alert-dismissible fade show">
+            <span th:text="${successMsg}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${errorMsg}" class="alert alert-danger alert-dismissible fade show">
+            <span th:text="${errorMsg}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <div class="row g-4">
+            <!-- DS HOC PHAN TRONG CTDT -->
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0 fw-semibold">
+                            <i class="bi bi-list-check me-2"></i>Danh Sach Hoc Phan
+                            <span class="badge bg-light text-dark ms-1"
+                                  th:text="${#lists.size(ctdt.ctdtHocPhans)}">0</span>
+                        </h6>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th style="width:100px;">Ma HP</th>
+                                    <th>Ten HP</th>
+                                    <th class="text-center">TC</th>
+                                    <th class="text-center">HK</th>
+                                    <th class="text-center">So Lop DK</th>
+                                    <th>Loai</th>
+                                    <th class="text-end" style="width:80px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="item : ${ctdt.ctdtHocPhans}">
+                                    <td><code th:text="${item.hocPhan.maHocPhan}"></code></td>
+                                    <td th:text="${item.hocPhan.tenHocPhan}"></td>
+                                    <td class="text-center" th:text="${item.hocPhan.soTinChi}"></td>
+                                    <td class="text-center">
+                                        <span class="badge bg-light text-dark"
+                                              th:text="${item.hocKyThu}"></span>
+                                    </td>
+                                    <td class="text-center" th:text="${item.soLopDuKien}"></td>
+                                    <td>
+                                        <span class="badge"
+                                              th:classappend="${item.batBuoc} ? 'bg-primary' : 'bg-info text-dark'"
+                                              th:text="${item.batBuoc ? 'Bat Buoc' : 'Tu Chon'}"></span>
+                                    </td>
+                                    <td class="text-end">
+                                        <form sec:authorize="hasAnyRole('PDT','ADMIN')"
+                                              th:if="${ctdt.trangThai.name() != 'DaDuyet'}"
+                                              th:action="@{'/ctdt/chi-tiet/' + ${ctdt.maCTDT} + '/xoa-hp/' + ${item.hocPhan.maHocPhan}}"
+                                              method="post"
+                                              onsubmit="return confirm('Xoa hoc phan nay khoi CTDT?')">
+                                            <button class="btn btn-sm btn-outline-danger"
+                                                    title="Xoa" data-bs-toggle="tooltip">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(ctdt.ctdtHocPhans)}">
+                                    <td colspan="7" class="text-center text-muted py-4">
+                                        Chua co hoc phan trong CTDT nay
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FORM THEM HOC PHAN -->
+            <div class="col-lg-4" sec:authorize="hasAnyRole('PDT','ADMIN')"
+                 th:if="${ctdt.trangThai.name() != 'DaDuyet'}">
+                <div class="card border-0 shadow-sm sticky-top" style="top: 1rem;">
+                    <div class="card-header bg-white border-bottom">
+                        <h6 class="mb-0 fw-semibold">
+                            <i class="bi bi-plus-circle me-2"></i>Them Hoc Phan
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{'/ctdt/chi-tiet/' + ${ctdt.maCTDT} + '/them-hp'}"
+                              method="post" th:object="${ctdtHocPhanDTO}">
+
+                            <div class="mb-3">
+                                <label class="form-label fw-medium small">
+                                    Hoc Phan <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select" th:field="*{maHocPhan}" required>
+                                    <option value="">-- Chon --</option>
+                                    <option th:each="hp : ${hocPhanChuaThuoc}"
+                                            th:value="${hp.maHocPhan}"
+                                            th:text="${hp.maHocPhan + ' - ' + hp.tenHocPhan + ' (' + hp.soTinChi + 'TC)'}">
+                                    </option>
+                                </select>
+                                <div th:if="${#lists.isEmpty(hocPhanChuaThuoc)}"
+                                     class="form-text text-warning">
+                                    Khong con hoc phan de them
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-medium small">
+                                    Hoc Ky Thu <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select" th:field="*{hocKyThu}" required>
+                                    <option value="">-- Chon --</option>
+                                    <option th:each="i : ${#numbers.sequence(1,10)}"
+                                            th:value="${i}" th:text="'Hoc ky ' + ${i}"></option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-medium small">
+                                    So Lop Du Kien <span class="text-danger">*</span>
+                                </label>
+                                <input type="number" class="form-control"
+                                       th:field="*{soLopDuKien}" min="1" required>
+                            </div>
+
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input"
+                                       id="batBuoc" th:field="*{batBuoc}">
+                                <label class="form-check-label" for="batBuoc">
+                                    Bat buoc (bo check = Tu chon)
+                                </label>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-medium small">Ghi chu</label>
+                                <input type="text" class="form-control"
+                                       th:field="*{ghiChu}" maxlength="255">
+                            </div>
+
+                            <button type="submit" class="btn btn-primary-brand w-100"
+                                    th:disabled="${#lists.isEmpty(hocPhanChuaThuoc)}">
+                                <i class="bi bi-plus-lg me-1"></i> Them Vao CTDT
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<div th:replace="~{layout/base :: scripts}"></div>
+</body>
+</html>
