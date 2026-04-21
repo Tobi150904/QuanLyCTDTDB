@@ -4,6 +4,7 @@ import com.ntu.quanlyctdtdb.security.UserDetailsServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -29,9 +30,10 @@ public class SecurityConfig {
     }
 
     /**
-     * Dang ky UserDetailsService + PasswordEncoder voi Spring Security 7
-     * thong qua AuthenticationManagerBuilder (thay the DaoAuthenticationProvider manual).
-     * @Primary de Spring biet dung bean nay khi co nhieu AuthenticationManager.
+     * Dang ky UserDetailsService + PasswordEncoder voi Spring Security 6 (Boot 3.5)
+     * thong qua AuthenticationManagerBuilder.
+     * @Primary de Spring biet dung bean nay thay vi AuthenticationManager auto-config
+     * cua Spring Boot (tranh NoUniqueBeanDefinitionException).
      */
     @Bean
     @Primary

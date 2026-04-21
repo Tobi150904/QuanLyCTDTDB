@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>4.0.5</version>
+		<version>3.5.6</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.ntu</groupId>
@@ -77,7 +77,7 @@
 	        <groupId>nz.net.ultraq.thymeleaf</groupId>
 	        <artifactId>thymeleaf-layout-dialect</artifactId>
 	    </dependency>
-	    <!-- Boot 4 dung Spring Security 7 -->
+	    <!-- Boot 3.5 dung Spring Security 6 -->
 	    <dependency>
 	        <groupId>org.thymeleaf.extras</groupId>
 	        <artifactId>thymeleaf-extras-springsecurity6</artifactId>
