@@ -46,7 +46,12 @@
                             </tr>
                             <tr class="info-row">
                                 <td class="info-label">Loại HP</td>
-                                <td th:text="${hocPhan.loaiHocPhan?.name() ?: '--'}">--</td>
+                                <td th:with="l=${hocPhan.loaiHocPhan?.name()}"
+                                    th:text="${l == 'LyThuyet'  ? 'Lý Thuyết'  :
+                                              (l == 'ThucHanh' ? 'Thực Hành' :
+                                              (l == 'DoAn'     ? 'Đồ Án'     :
+                                              (l == 'ThucTap'  ? 'Thực Tập'  :
+                                              (l == 'KienTap'  ? 'Kiến Tập'  : '--'))))}">--</td>
                             </tr>
                         </tbody>
                     </table>

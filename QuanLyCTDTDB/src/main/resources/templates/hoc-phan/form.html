@@ -74,7 +74,11 @@
                                         <option value="">-- Chọn --</option>
                                         <option th:each="l : ${loaiHPList}"
                                                 th:value="${l.name()}"
-                                                th:text="${l.name()}"></option>
+                                                th:text="${l.name() == 'LyThuyet' ? 'Lý Thuyết' :
+                                                          (l.name() == 'ThucHanh' ? 'Thực Hành' :
+                                                          (l.name() == 'DoAn'     ? 'Đồ Án'     :
+                                                          (l.name() == 'ThucTap'  ? 'Thực Tập'  :
+                                                          (l.name() == 'KienTap'  ? 'Kiến Tập'  : l.name()))))}"></option>
                                     </select>
                                     <label for="loaiHocPhan">Loại HP <span class="text-danger">*</span></label>
                                 </div>

@@ -99,7 +99,12 @@
                                 <span class="badge bg-primary" th:text="${hp.soTinChi}">0</span>
                             </td>
                             <td class="small text-muted"
-                                th:text="${hp.loaiHocPhan?.name() ?: '--'}">--</td>
+                                th:with="l=${hp.loaiHocPhan?.name()}"
+                                th:text="${l == 'LyThuyet'  ? 'Lý Thuyết'  :
+                                          (l == 'ThucHanh' ? 'Thực Hành' :
+                                          (l == 'DoAn'     ? 'Đồ Án'     :
+                                          (l == 'ThucTap'  ? 'Thực Tập'  :
+                                          (l == 'KienTap'  ? 'Kiến Tập'  : '--'))))}">--</td>
                             <td class="small"
                                 th:text="${hp.chuNhiemHP != null ? hp.chuNhiemHP.hoTen : '--'}">--</td>
                             <td>

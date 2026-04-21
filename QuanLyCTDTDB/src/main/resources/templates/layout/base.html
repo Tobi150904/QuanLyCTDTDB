@@ -6,7 +6,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title layout:title-pattern="$CONTENT_TITLE - He Thong QLDTXS">He Thong QLDTXS</title>
+    <title layout:title-pattern="$CONTENT_TITLE - Hệ Thống QLĐTXS">Hệ Thống QLĐTXS</title>
 
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -35,23 +35,26 @@
         <!-- Brand -->
         <a class="navbar-brand fw-bold d-flex align-items-center gap-2" th:href="@{/dashboard}">
             <i class="bi bi-mortarboard-fill" style="font-size:1.3rem;"></i>
-            <span class="d-none d-sm-inline">He Thong QLDTXS</span>
-            <span class="d-inline d-sm-none">QLDTXS</span>
+            <span class="d-none d-sm-inline">Hệ Thống QLĐTXS</span>
+            <span class="d-inline d-sm-none">QLĐTXS</span>
         </a>
 
         <!-- Mobile sidebar toggle -->
         <button class="btn btn-sm btn-outline-light d-lg-none me-2"
-                id="sidebarToggleMobile" type="button">
+                id="sidebarToggleMobile" type="button"
+                aria-label="Mở / đóng sidebar">
             <i class="bi bi-list"></i>
         </button>
 
         <!-- Right: User + Logout -->
         <div class="ms-auto d-flex align-items-center gap-2">
-            <!-- Canh bao badge (CVHT) -->
+            <!-- Cảnh báo badge (CVHT) -->
             <div sec:authorize="hasRole('CVHT')" class="d-none d-sm-block">
-                <a th:href="@{/danh-gia/canh-bao}" class="btn btn-sm btn-warning text-dark position-relative">
+                <a th:href="@{/danh-gia/canh-bao}"
+                   class="btn btn-sm btn-warning text-dark position-relative"
+                   aria-label="Cảnh báo sinh viên">
                     <i class="bi bi-bell-fill"></i>
-                    <span class="visually-hidden">Canh bao</span>
+                    <span class="visually-hidden">Cảnh báo</span>
                 </a>
             </div>
 
@@ -61,7 +64,7 @@
                         type="button" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="bi bi-person-circle"></i>
                     <span class="d-none d-md-inline"
-                          sec:authentication="principal.hoTen">Nguoi Dung</span>
+                          sec:authentication="principal.hoTen">Người Dùng</span>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end shadow">
                     <li>
@@ -75,7 +78,7 @@
                     <li><hr class="dropdown-divider"></li>
                     <li>
                         <a class="dropdown-item" th:href="@{/profile}">
-                            <i class="bi bi-person me-2"></i>Ho So Ca Nhan
+                            <i class="bi bi-person me-2"></i>Hồ Sơ Cá Nhân
                         </a>
                     </li>
                     <li>
@@ -84,7 +87,7 @@
                                    th:name="${_csrf.parameterName}"
                                    th:value="${_csrf.token}">
                             <button type="submit" class="dropdown-item text-danger">
-                                <i class="bi bi-box-arrow-right me-2"></i>Dang Xuat
+                                <i class="bi bi-box-arrow-right me-2"></i>Đăng Xuất
                             </button>
                         </form>
                     </li>
@@ -98,7 +101,7 @@
 <!-- Desktop sidebar overlay on mobile -->
 <div class="sidebar-overlay d-lg-none" id="sidebarOverlay"></div>
 
-<nav id="sidebar" class="sidebar">
+<nav id="sidebar" class="sidebar" aria-label="Điều hướng chính">
     <div class="sidebar-body">
         <ul class="nav flex-column">
 
@@ -108,98 +111,98 @@
                    th:href="@{/dashboard}"
                    th:classappend="${activeMenu == 'dashboard'} ? ' active' : ''">
                     <i class="bi bi-speedometer2 me-2"></i>
-                    <span>Trang Chu</span>
+                    <span>Trang Chủ</span>
                 </a>
             </li>
 
-            <!-- ---- QUAN TRI ---- -->
+            <!-- ---- QUẢN TRỊ ---- -->
             <li class="sidebar-section-header">
-                <span sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">Quan Tri</span>
+                <span sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">Quản Trị</span>
             </li>
 
-            <!-- Nguoi Dung -->
+            <!-- Người Dùng -->
             <li class="nav-item" sec:authorize="hasAnyRole('PDT','ADMIN')">
                 <a class="nav-link"
                    th:href="@{/nguoi-dung}"
                    th:classappend="${activeMenu == 'nguoi-dung'} ? ' active' : ''">
                     <i class="bi bi-people me-2"></i>
-                    <span>Nguoi Dung</span>
+                    <span>Người Dùng</span>
                 </a>
             </li>
 
-            <!-- Doanh Nghiep -->
+            <!-- Doanh Nghiệp -->
             <li class="nav-item" sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
                 <a class="nav-link"
                    th:href="@{/doanh-nghiep}"
                    th:classappend="${activeMenu == 'doanh-nghiep'} ? ' active' : ''">
                     <i class="bi bi-building me-2"></i>
-                    <span>Doanh Nghiep</span>
+                    <span>Doanh Nghiệp</span>
                 </a>
             </li>
 
-            <!-- Hoc Ky -->
+            <!-- Học Kỳ -->
             <li class="nav-item" sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
                 <a class="nav-link"
                    th:href="@{/hoc-ky}"
                    th:classappend="${activeMenu == 'hoc-ky'} ? ' active' : ''">
                     <i class="bi bi-calendar3 me-2"></i>
-                    <span>Hoc Ky - Nam Hoc</span>
+                    <span>Học Kỳ - Năm Học</span>
                 </a>
             </li>
 
-            <!-- Lop Hanh Chinh -->
+            <!-- Lớp Hành Chính -->
             <li class="nav-item" sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
                 <a class="nav-link"
                    th:href="@{/lop-hanh-chinh}"
                    th:classappend="${activeMenu == 'lop-hanh-chinh'} ? ' active' : ''">
                     <i class="bi bi-diagram-3 me-2"></i>
-                    <span>Lop Hanh Chinh</span>
+                    <span>Lớp Hành Chính</span>
                 </a>
             </li>
 
-            <!-- ---- DAO TAO ---- -->
+            <!-- ---- ĐÀO TẠO ---- -->
             <li class="sidebar-section-header"
                 sec:authorize="hasAnyRole('PDT','TTDTXS','CNHP','ADMIN','GIANG_VIEN')">
-                <span>Dao Tao</span>
+                <span>Đào Tạo</span>
             </li>
 
-            <!-- Hoc Phan -->
+            <!-- Học Phần -->
             <li class="nav-item"
                 sec:authorize="hasAnyRole('CNHP','TTDTXS','ADMIN')">
                 <a class="nav-link"
                    th:href="@{/hoc-phan}"
                    th:classappend="${activeMenu == 'hoc-phan'} ? ' active' : ''">
                     <i class="bi bi-book me-2"></i>
-                    <span>Hoc Phan</span>
+                    <span>Học Phần</span>
                 </a>
             </li>
 
-            <!-- CTDT -->
+            <!-- CTĐT -->
             <li class="nav-item"
                 sec:authorize="hasAnyRole('PDT','TTDTXS','CNHP','ADMIN')">
                 <a class="nav-link"
                    th:href="@{/ctdt}"
                    th:classappend="${activeMenu == 'ctdt'} ? ' active' : ''">
                     <i class="bi bi-journal-bookmark me-2"></i>
-                    <span>Chuong Trinh DAO Tao</span>
+                    <span>Chương Trình Đào Tạo</span>
                 </a>
             </li>
 
-            <!-- Lop Hoc Phan -->
+            <!-- Lớp Học Phần -->
             <li class="nav-item"
                 sec:authorize="hasAnyRole('PDT','TTDTXS','CNHP','ADMIN','GIANG_VIEN')">
                 <a class="nav-link"
                    th:href="@{/lop-hoc-phan}"
                    th:classappend="${activeMenu == 'lop-hoc-phan'} ? ' active' : ''">
                     <i class="bi bi-collection me-2"></i>
-                    <span>Lop Hoc Phan</span>
+                    <span>Lớp Học Phần</span>
                 </a>
             </li>
 
-            <!-- ---- DANH GIA ---- -->
+            <!-- ---- ĐÁNH GIÁ ---- -->
             <li class="sidebar-section-header"
                 sec:authorize="hasAnyRole('GIANG_VIEN','CVHT','ADMIN')">
-                <span>Danh Gia</span>
+                <span>Đánh Giá</span>
             </li>
 
             <li class="nav-item"
@@ -208,7 +211,7 @@
                    th:href="@{/danh-gia}"
                    th:classappend="${activeMenu == 'danh-gia'} ? ' active' : ''">
                     <i class="bi bi-clipboard-check me-2"></i>
-                    <span>Danh Gia Sinh Vien</span>
+                    <span>Đánh Giá Sinh Viên</span>
                 </a>
             </li>
 
@@ -217,14 +220,14 @@
                    th:href="@{/danh-gia/canh-bao}"
                    th:classappend="${activeMenu == 'canh-bao'} ? ' active' : ''">
                     <i class="bi bi-exclamation-triangle me-2"></i>
-                    <span>Canh Bao Sinh Vien</span>
+                    <span>Cảnh Báo Sinh Viên</span>
                 </a>
             </li>
 
-            <!-- ---- KIEN TAP / THUC TAP ---- -->
+            <!-- ---- KIẾN TẬP / THỰC TẬP ---- -->
             <li class="sidebar-section-header"
                 sec:authorize="hasAnyRole('PDT','TTDTXS','CNHP','ADMIN','GIANG_VIEN','DOANH_NGHIEP')">
-                <span>Kien Tap &amp; Thuc Tap</span>
+                <span>Kiến Tập &amp; Thực Tập</span>
             </li>
 
             <li class="nav-item"
@@ -233,7 +236,7 @@
                    th:href="@{/kien-tap}"
                    th:classappend="${activeMenu == 'kien-tap'} ? ' active' : ''">
                     <i class="bi bi-briefcase me-2"></i>
-                    <span>Kien Tap</span>
+                    <span>Kiến Tập</span>
                 </a>
             </li>
 
@@ -243,14 +246,14 @@
                    th:href="@{/thuc-tap}"
                    th:classappend="${activeMenu == 'thuc-tap'} ? ' active' : ''">
                     <i class="bi bi-building-check me-2"></i>
-                    <span>Thuc Tap</span>
+                    <span>Thực Tập</span>
                 </a>
             </li>
 
-            <!-- ---- BAO CAO ---- -->
+            <!-- ---- BÁO CÁO ---- -->
             <li class="sidebar-section-header"
                 sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
-                <span>Bao Cao</span>
+                <span>Báo Cáo</span>
             </li>
 
             <li class="nav-item" sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
@@ -258,7 +261,7 @@
                    th:href="@{/bao-cao}"
                    th:classappend="${activeMenu == 'bao-cao'} ? ' active' : ''">
                     <i class="bi bi-bar-chart-line me-2"></i>
-                    <span>Bao Cao &amp; Thong Ke</span>
+                    <span>Báo Cáo &amp; Thống Kê</span>
                 </a>
             </li>
 
@@ -276,28 +279,32 @@
              role="alert">
             <i class="bi bi-check-circle-fill me-2"></i>
             <span th:text="${successMsg}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"
+                    aria-label="Đóng"></button>
         </div>
         <div th:if="${errorMsg}"
              class="alert alert-danger alert-dismissible fade show auto-dismiss"
              role="alert">
             <i class="bi bi-exclamation-triangle-fill me-2"></i>
             <span th:text="${errorMsg}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"
+                    aria-label="Đóng"></button>
         </div>
         <div th:if="${warningMsg}"
              class="alert alert-warning alert-dismissible fade show auto-dismiss"
              role="alert">
             <i class="bi bi-exclamation-circle-fill me-2"></i>
             <span th:text="${warningMsg}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"
+                    aria-label="Đóng"></button>
         </div>
         <div th:if="${infoMsg}"
              class="alert alert-info alert-dismissible fade show auto-dismiss"
              role="alert">
             <i class="bi bi-info-circle-fill me-2"></i>
             <span th:text="${infoMsg}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"
+                    aria-label="Đóng"></button>
         </div>
 
         <!-- Page Content -->
@@ -309,19 +316,23 @@
 </main>
 
 <!-- Global Confirm Delete Modal -->
-<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1"
+     aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-sm modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h6 class="modal-title" id="confirmDeleteModalLabel">Xac Nhan Xoa</h6>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <h6 class="modal-title" id="confirmDeleteModalLabel">Xác Nhận Xoá</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                        aria-label="Đóng"></button>
             </div>
             <div class="modal-body" id="confirmDeleteModalBody">
-                Ban co chac muon xoa muc nay?
+                Bạn có chắc muốn xoá mục này?
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Huy</button>
-                <button type="button" class="btn btn-sm btn-danger" id="confirmDeleteBtn">Xoa</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary"
+                        data-bs-dismiss="modal">Huỷ</button>
+                <button type="button" class="btn btn-sm btn-danger"
+                        id="confirmDeleteBtn">Xoá</button>
             </div>
         </div>
     </div>
