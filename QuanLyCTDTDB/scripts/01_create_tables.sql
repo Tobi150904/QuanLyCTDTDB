@@ -13,6 +13,11 @@
 -- CANH BAO: Script nay se XOA toan bo du lieu hien co. Backup truoc khi chay.
 -- =============================================================================
 
+-- Tao database neu chua co (idempotent). Charset utf8mb4 cho tieng Viet co dau.
+CREATE DATABASE IF NOT EXISTS QuanLyCTDTDB
+    CHARACTER SET utf8mb4
+    COLLATE utf8mb4_unicode_ci;
+
 USE QuanLyCTDTDB;
 SET FOREIGN_KEY_CHECKS = 0;
 

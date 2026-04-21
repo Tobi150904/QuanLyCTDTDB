@@ -21,17 +21,23 @@ Script `01_create_tables.sql` da co `CREATE DATABASE IF NOT EXISTS QuanLyCTDTDB`
 - Tat ca ENUM trong DDL khop 100% voi enum Java (`@Enumerated(EnumType.STRING)`)
 - CHECK constraint cho `SiSoToiDa BETWEEN 30 AND 60`, `Diem BETWEEN 0 AND 10`
 
-### 02_seed_data.sql
-- 16 NguoiDung (1 Admin, 5 GV, 7 SV, 2 DN) — tat ca mat khau `Password@123` (BCrypt hash da san)
-- 6 Hoc Ky (HK1-2022 .. HK2-2024)
-- 4 Doanh Nghiep (3 DangHopTac, 1 TamNgung)
-- 3 CTDT (2022, 2023 `DaDuyet`; 2024 `ChoDuyet`)
-- 10 Hoc Phan, 18 entries `DoiNguGiangVienHP`, 18 entries `CTDT_HocPhan`
-- 9 Lop Hoc Phan + 6 record `DanhSachSinhVienLopHocPhan` (co 2 canh bao)
-- 3 Dot Kien Tap, 4 SV tham gia
-- 2 Dot Thuc Tap, 2 phan cong thuc tap, 3 diem danh gia
+### 02_seed_data.sql  (v2 — Phase 3)
+Script idempotent (TRUNCATE truoc khi INSERT, chay lai an toan bao nhieu lan cung duoc).
 
-Chi tiet so ban ghi + tai khoan test: xem phan cuoi cua `02_seed_data.sql` (khoi `KIEM TRA NHANH SAU KHI CHAY`) hoac `docs/02_Mô Tả & Thiết kế dữ liệu.md` § 4.
+- **18 NguoiDung** (1 Admin, 6 GV, 10 SV, 2 DN) — tat ca mat khau `Password@123` (BCrypt da hash san).
+  MaSV theo quy uoc `SV + nam + 3 so` (vd `SV2024001`) — khop `docs/02 §1`.
+- **4 Hoc Ky**: HK1-2023, HK2-2023 (DaKetThuc); HK1-2024 (DangDienRa); HK2-2024 (SapDienRa).
+- **4 Doanh Nghiep** (3 DangHopTac, 1 TamNgung).
+- **3 CTDT** (2022, 2023 `DaDuyet`; 2024 `ChoDuyet`). Moi CTDT co du 3 vi tri BCN: ChuNhiem/ThuKy/UyVien.
+- **10 Hoc Phan** (9 DaDuyet, 1 ChoDuyet HP-AI), **25 record `DoiNguGiangVienHP`** (10 CNHP auto + 15 GV bo sung), **18 record `CTDT_HocPhan`**.
+- **4 Lop Hanh Chinh** (K22A, K22B, K23A, K24A), moi lop co CVHT + thuoc CTDT khac nhau.
+- **10 Sinh Vien** trai deu 4 lop.
+- **12 Lop Hoc Phan**: 5 DaDong (HK1-2023, HK2-2023) + 7 DangMo (HK1-2024, co 2 lop chua phan cong GV de test).
+- **15 record `DanhSachSinhVienLopHocPhan`** trong do co 2 `DaCanhBao=1`: 1 da xu ly, 1 CHUA xu ly (de dashboard CVHT nhin thay).
+- **3 Dot Kien Tap** (DaThucHien, DaDuyet, ChoDuyet), **7 SV tham gia** (auto add het SV DangHoc cua lop theo `docs/02 §3.7`).
+- **2 Dot Thuc Tap**, **4 phan cong thuc tap** (3 DN + 1 tai Truong), **4 ket qua danh gia** (1 SV co danh gia tu ca GV lan DN).
+
+Chi tiet so ban ghi + tai khoan test: xem phan cuoi `02_seed_data.sql` (khoi `KIEM TRA NHANH SAU KHI CHAY` + `TAI KHOAN TEST`) hoac `docs/02_Mô Tả & Thiết kế dữ liệu.md` § 4.
 
 ## 3. Quy tac khi sua schema
 
@@ -56,8 +62,24 @@ mysql -u root -p QuanLyCTDTDB < scripts/02_seed_data.sql
 ```sql
 USE QuanLyCTDTDB;
 SHOW TABLES;                    -- Phai tra ve 20 bang
-SELECT COUNT(*) FROM NguoiDung; -- Phai ra 16
+SELECT COUNT(*) FROM NguoiDung; -- Phai ra 18
 SELECT COUNT(*) FROM HocPhan;   -- Phai ra 10
+SELECT COUNT(*) FROM SinhVien;  -- Phai ra 10
+SELECT COUNT(*) FROM LopHocPhan;                  -- Phai ra 12
+SELECT COUNT(*) FROM DanhSachSinhVienKienTap;     -- Phai ra 7
+
 -- Kiem tra login: hash Password@123 co tai user 'admin'
 SELECT MaNguoiDung, TenDangNhap, LoaiNguoiDung FROM NguoiDung WHERE TenDangNhap='admin';
+
+-- Kiem tra canh bao hoc vu chua xu ly (dashboard CVHT)
+SELECT MaSV, MaHocPhan, NhanXet
+FROM DanhSachSinhVienLopHocPhan
+WHERE DaCanhBao = 1 AND (KetQuaXuLy IS NULL OR KetQuaXuLy = '');
+
+-- Kiem tra CNHP auto-add vao DoiNguGiangVienHP (bat buoc ton tai)
+SELECT hp.MaHocPhan, hp.ChuNhiemHP
+FROM HocPhan hp
+LEFT JOIN DoiNguGiangVienHP dn
+  ON dn.MaHocPhan = hp.MaHocPhan AND dn.MaGiangVien = hp.ChuNhiemHP
+WHERE dn.MaHocPhan IS NULL;   -- Phai rong
 ```

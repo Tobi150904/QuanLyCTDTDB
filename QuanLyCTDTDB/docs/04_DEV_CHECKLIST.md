@@ -179,13 +179,40 @@
 
 ---
 
-## PHASE 3: MODULE P1 — NGHIEP VU CHINH
+## PHASE 3: MODULE P1 — NGHIEP VU CHINH  (DANG THUC HIEN)
+
+### Tien do Phase 3 (cap nhat 2026-Q2)
+- [x] **Fix compile error** `HocKyNamHocController`: loai bo enum sai `ChuanBi`,
+      bo sung derived getter `getHocKyThu/getNamBatDau/getNamKetThuc` tren entity,
+      them field tuong ung vao DTO, tu sinh `MaHocKy` + `TenHocKy` o service.
+- [x] **Fix LazyInitializationException** 4 endpoint (`hoc-phan/form`, `ctdt/*`,
+      `lop-hanh-chinh/*`, `lop-hoc-phan/*`): them JOIN FETCH o tat ca repository
+      chinh + doi `giangVienRepo.findAll()` -> `findAllFetchNguoiDung()` trong
+      cac controller dropdown GV.
+- [x] **Tao templates lop-hoc-phan** (chua co) gom `danh-sach.html` + `chi-tiet.html`
+      + truyen `hocPhanMap` tu controller de hien thi tenHocPhan cho EmbeddedId LHP.
+- [x] **Viet hoa co dau toan bo UI** 4 module (`ctdt`, `hoc-phan`, `lop-hanh-chinh`,
+      `lop-hoc-phan`) + module `nguoi-dung` + layout `base.html` (menu sidebar,
+      navbar, modal). Map enum `LoaiHocPhan`, `LoaiNguoiDung`, `VaiTro` sang nhan
+      tieng Viet truc tiep trong Thymeleaf.
+- [x] **Fix nut "Chinh Sua" nguoi dung**: doi tu icon-only sang nut co label
+      "Sua" + `bi-pencil-square`, mo rong cot Thao Tac `110px -> 170px`.
+- [x] **Fix field sai o `nguoi-dung/form.html`**: `lhc.tenLopHC` -> `lhc.tenLop`
+      (khop entity `LopHanhChinh`).
+- [x] **Refresh seed v2** `scripts/02_seed_data.sql`:
+      - Doi format `MaSV` tu `SV001` sang `SV2024001` theo docs/02 §1.
+      - Them `CREATE DATABASE IF NOT EXISTS` vao `01_create_tables.sql` (khop README).
+      - Mo rong thanh 18 NguoiDung, 6 GV, 10 SV, 12 LopHocPhan; auto-add all SV
+        DangHoc vao DanhSachSinhVienKienTap (docs/02 §3.7).
+      - Bao gom 2 ban ghi `DaCanhBao=1` minh hoa 2 trang thai: da xu ly + chua xu ly.
+      - Cap nhat `docs/02 §4` dong bo so ban ghi moi.
+- [ ] **Controller + Service Phase 3 con lai** (duoi day) — dang trien khai
 
 ### Quan ly Hoc Ky Nam Hoc [PDT, TTDTXS]
-- [ ] `HocKyNamHocService.java` interface + impl
+- [x] `HocKyNamHocService.java` interface + impl
   - CRUD, setTrangThai (chi 1 HK o trang thai DangDienRa)
-- [ ] `HocKyNamHocController.java` (CRUD + toggle trang thai)
-- [ ] `templates/hocky/list.html`, `form.html`
+- [x] `HocKyNamHocController.java` (CRUD + toggle trang thai)
+- [x] `templates/hoc-ky/danh-sach.html`, `form.html`
 
 ### Quan ly Lop Hanh Chinh [PDT, TTDTXS]
 - [ ] `LopHanhChinhService.java` interface + impl

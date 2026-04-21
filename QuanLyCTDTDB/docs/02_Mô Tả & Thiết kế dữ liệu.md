@@ -209,48 +209,48 @@ Sinh viên có thể tra cứu thông tin phân công và kết quả đánh gi�
 
 ## 4. DU LIEU MAU (SEED DATA — TOM TAT)
 
-Sau khi chay `02_seed_data.sql`:
+Sau khi chay `02_seed_data.sql` (v2, Phase 3):
 
-| Bang                           | So ban ghi | Ghi chu quan trong                           |
-|--------------------------------|------------|----------------------------------------------|
-| HocKyNamHoc                    | 4          | HK1-2024 = DangDienRa                       |
-| NguoiDung                      | 15         | 1 Admin, 5 GV, 7 SV, 2 DN                   |
-| GiangVien                      | 5          | GV001..GV005                                |
-| SinhVien                       | 7          | SV001..SV007                                |
-| NhomNguoiDung                  | 6          | GV001: PDT+TTDTXS; GV002: TTDTXS; GV003: CVHT; GV004,GV005: CNHP |
-| DoanhNghiep                    | 4          | DN001..DN003 DangHopTac, DN004 TamNgung     |
-| LopHanhChinh                   | 4          | CNTT-K22A, K22B, K23A, K24A                 |
-| ChuongTrinhDaoTao              | 3          | 2022+2023 DaDuyet, 2024 ChoDuyet            |
-| BCN_ThanhVien                  | 7          |                                              |
-| HocPhan                        | 10         | 9 DaDuyet, 1 ChoDuyet (HP-AI)               |
-| DoiNguGiangVienHP              | 17         |                                              |
-| CTDT_HocPhan                   | 17         |                                              |
-| LopHocPhan                     | 8          | 6 DangMo (HK1-2024), 2 DaDong (HK1-2023)   |
-| DanhSachSinhVienLopHocPhan     | 7          | 1 ban ghi DaCanhBao=1 chua xu ly (SV003)    |
-| DotKienTap                     | 3          | 1 DaThucHien, 1 DaDuyet, 1 ChoDuyet         |
-| DanhSachSinhVienKienTap        | 4          |                                              |
-| DotThucTap                     | 2          | 1 DangThucHien, 1 ChuanBi                   |
-| DanhSachThucTap                | 2          | SV006, SV007 DangThucTap                    |
-| VaiTroThucTap                  | 4          | GV, DN, CVHT, SV                            |
-| KetQuaThucTap                  | 3          | 2 cho SV006, 1 cho SV007                    |
+| Bang                           | So ban ghi | Ghi chu quan trong                                          |
+|--------------------------------|------------|-------------------------------------------------------------|
+| HocKyNamHoc                    | 4          | HK1-2024 = DangDienRa, HK2-2024 = SapDienRa                |
+| NguoiDung                      | 18         | 1 Admin, 6 GV, 10 SV, 2 DN                                 |
+| GiangVien                      | 6          | GV001..GV006                                                |
+| SinhVien                       | 10         | SV2024001..003 (K24A), SV2023001..003 (K23A), SV2022001..002 (K22A), SV2022003..004 (K22B) |
+| NhomNguoiDung                  | 10         | GV001: PDT+TTDTXS; GV002: TTDTXS; GV003,GV004,GV005,GV006: CVHT; GV004,GV005,GV006: CNHP |
+| DoanhNghiep                    | 4          | DN001,DN002,DN003 DangHopTac; DN004 TamNgung                |
+| LopHanhChinh                   | 4          | CNTT-K22A, K22B, K23A, K24A                                 |
+| ChuongTrinhDaoTao              | 3          | 2022+2023 DaDuyet, 2024 ChoDuyet                            |
+| BCN_ThanhVien                  | 9          | 3 CTDT × (ChuNhiem, ThuKy, UyVien)                         |
+| HocPhan                        | 10         | 9 DaDuyet, 1 ChoDuyet (HP-AI)                              |
+| DoiNguGiangVienHP              | 25         | 10 CNHP auto + 15 GV bo sung                                |
+| CTDT_HocPhan                   | 18         |                                                              |
+| LopHocPhan                     | 12         | 5 DaDong (HK1-2023, HK2-2023), 7 DangMo (HK1-2024)         |
+| DanhSachSinhVienLopHocPhan     | 15         | 2 ban ghi DaCanhBao=1: 1 da xu ly (SV2022003), 1 chua xu ly (SV2022003 HP-LTW HK1-2024) |
+| DotKienTap                     | 3          | 1 DaThucHien, 1 DaDuyet, 1 ChoDuyet                         |
+| DanhSachSinhVienKienTap        | 7          | Auto tao tu SV DangHoc cua lop (2+2+3)                      |
+| DotThucTap                     | 2          | 1 DangThucHien, 1 ChuanBi                                   |
+| DanhSachThucTap                | 4          | SV2022001..004, trong do 1 thuc tap tai truong              |
+| VaiTroThucTap                  | 4          | GV, DN, CVHT, SV                                            |
+| KetQuaThucTap                  | 4          | SV2022001: GV+DN; SV2022002,003: GV                         |
 
 ### Tai khoan test (MatKhau: Password@123)
 
-| TenDangNhap | LoaiNguoiDung | VaiTro          | Ghi chu                              |
-|-------------|---------------|-----------------|--------------------------------------|
-| admin       | Admin         | —               | Toan quyen he thong                  |
-| tran.van.a  | GiangVien     | PDT, TTDTXS     | Truong phong dao tao + kiem TT DTXS  |
-| le.thi.b    | GiangVien     | TTDTXS          | Thanh vien TT dao tao xuat sac        |
-| nguyen.c    | GiangVien     | CVHT            | Co van hoc tap CNTT-K22A             |
-| pham.d      | GiangVien     | CNHP            | Chu nhiem HP-LTW                     |
-| hoang.e     | GiangVien     | CNHP            | Chu nhiem HP-KLTN                    |
-| sv.2024001  | SinhVien      | —               | CNTT-K24A, DangHoc                   |
-| sv.2024002  | SinhVien      | —               | CNTT-K24A, DangHoc                   |
-| sv.2024003  | SinhVien      | —               | CNTT-K24A, DangHoc, DaCanhBao=1      |
-| sv.2022001  | SinhVien      | —               | CNTT-K22A, DangThucTap               |
-| sv.2022002  | SinhVien      | —               | CNTT-K22B, DangThucTap               |
-| dn.fpt      | DoanhNghiep   | —               | FPT Software, DangHopTac             |
-| dn.vng      | DoanhNghiep   | —               | VNG Corporation, DangHopTac          |
+| TenDangNhap    | LoaiNguoiDung | VaiTro NhomNguoiDung | Ghi chu                                           |
+|----------------|---------------|----------------------|---------------------------------------------------|
+| admin          | Admin         | —                    | Toan quyen he thong                               |
+| tran.van.an    | GiangVien     | PDT + TTDTXS         | Truong Phong Dao Tao + TTDTXS                    |
+| le.thi.binh    | GiangVien     | TTDTXS               | Thanh vien TT Dao Tao Xuat Sac                   |
+| nguyen.cuong   | GiangVien     | CVHT                 | CVHT CNTT-K22A                                    |
+| pham.dung      | GiangVien     | CVHT + CNHP          | CVHT CNTT-K22B, CNHP HP-LTW                      |
+| hoang.em       | GiangVien     | CVHT + CNHP          | CVHT CNTT-K23A, CNHP HP-CSDL + HP-TTDL           |
+| vu.thi.giang   | GiangVien     | CVHT + CNHP          | CVHT CNTT-K24A, CNHP HP-OOP + HP-AI              |
+| sv.2024001..3  | SinhVien      | —                    | CNTT-K24A, DangHoc                                |
+| sv.2023001..3  | SinhVien      | —                    | CNTT-K23A, DangHoc                                |
+| sv.2022001..2  | SinhVien      | —                    | CNTT-K22A, DangThucTap Dot 1                      |
+| sv.2022003..4  | SinhVien      | —                    | CNTT-K22B, DangThucTap Dot 1                      |
+| dn.fpt         | DoanhNghiep   | —                    | FPT Software, DangHopTac                          |
+| dn.vng         | DoanhNghiep   | —                    | VNG Corporation, DangHopTac                       |
 
 ---
 
