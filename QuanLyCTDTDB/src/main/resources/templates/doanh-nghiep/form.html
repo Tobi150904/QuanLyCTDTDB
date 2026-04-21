@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title th:text="${isEdit} ? 'Chinh Sua Doanh Nghiep' : 'Them Doanh Nghiep'">Form Doanh Nghiep</title>
+</head>
+<body>
+<div layout:fragment="content">
+
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a th:href="@{/dashboard}" class="text-decoration-none">
+                    <i class="bi bi-house-door me-1"></i>Trang Chu
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a th:href="@{/doanh-nghiep}" class="text-decoration-none">Doanh Nghiep</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page"
+                th:text="${isEdit} ? 'Chinh Sua' : 'Them Moi'">Form</li>
+        </ol>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <p class="page-subtitle">Quan Tri / Doanh Nghiep</p>
+            <h4 class="page-title"
+                th:text="${isEdit} ? 'Chinh Sua Doanh Nghiep' : 'Them Doanh Nghiep Moi'">
+                Form Doanh Nghiep
+            </h4>
+        </div>
+        <a th:href="@{/doanh-nghiep}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>Quay Lai
+        </a>
+    </div>
+
+    <!-- Form Card -->
+    <div class="card" style="max-width:820px;">
+        <div class="card-header">
+            <i class="bi bi-building me-2"></i>
+            <span class="fw-semibold"
+                  th:text="${isEdit} ? 'Thong Tin Doanh Nghiep' : 'Tao Doanh Nghiep Moi'">
+                Thong Tin
+            </span>
+        </div>
+        <div class="card-body">
+
+            <form th:action="${isEdit} ? @{/doanh-nghiep/sua/{ma}(ma=${doanhNghiepDTO.maDoanhNghiep})} : @{/doanh-nghiep/them}"
+                  th:object="${doanhNghiepDTO}"
+                  method="post"
+                  novalidate>
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+
+                <!-- Section: Thong tin co ban -->
+                <h6 class="text-uppercase text-muted mb-3"
+                    style="font-size:0.75rem; letter-spacing:0.5px;">
+                    Thong Tin Co Ban
+                </h6>
+
+                <div class="row g-3 mb-3">
+                    <!-- Ma DN -->
+                    <div class="col-md-4">
+                        <div class="form-floating">
+                            <input type="text"
+                                   class="form-control"
+                                   th:classappend="${#fields.hasErrors('maDoanhNghiep')} ? 'is-invalid'"
+                                   id="maDoanhNghiep"
+                                   th:field="*{maDoanhNghiep}"
+                                   placeholder="Ma DN"
+                                   maxlength="20"
+                                   th:readonly="${isEdit}">
+                            <label for="maDoanhNghiep">
+                                Ma DN
+                                <span class="text-muted small" th:unless="${isEdit}">(de trong de tu sinh)</span>
+                            </label>
+                            <div class="invalid-feedback"
+                                 th:if="${#fields.hasErrors('maDoanhNghiep')}"
+                                 th:errors="*{maDoanhNghiep}"></div>
+                        </div>
+                    </div>
+
+                    <!-- Ten DN -->
+                    <div class="col-md-8">
+                        <div class="form-floating">
+                            <input type="text"
+                                   class="form-control"
+                                   th:classappend="${#fields.hasErrors('tenDoanhNghiep')} ? 'is-invalid'"
+                                   id="tenDoanhNghiep"
+                                   th:field="*{tenDoanhNghiep}"
+                                   placeholder="Ten Doanh Nghiep"
+                                   maxlength="200"
+                                   required>
+                            <label for="tenDoanhNghiep">
+                                Ten Doanh Nghiep <span class="text-danger">*</span>
+                            </label>
+                            <div class="invalid-feedback"
+                                 th:if="${#fields.hasErrors('tenDoanhNghiep')}"
+                                 th:errors="*{tenDoanhNghiep}"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-8">
+                        <div class="form-floating">
+                            <input type="text"
+                                   class="form-control"
+                                   th:classappend="${#fields.hasErrors('linhVuc')} ? 'is-invalid'"
+                                   id="linhVuc"
+                                   th:field="*{linhVuc}"
+                                   placeholder="Linh Vuc"
+                                   maxlength="200">
+                            <label for="linhVuc">Linh Vuc Hoat Dong</label>
+                            <div class="invalid-feedback"
+                                 th:if="${#fields.hasErrors('linhVuc')}"
+                                 th:errors="*{linhVuc}"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-floating">
+                            <select class="form-select" id="trangThai" th:field="*{trangThai}">
+                                <option th:each="tt : ${trangThaiList}"
+                                        th:value="${tt.name()}"
+                                        th:text="${tt.name() == 'DangHopTac'} ? 'Dang Hop Tac' : 'Tam Ngung'">
+                                </option>
+                            </select>
+                            <label for="trangThai">Trang Thai</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section: Lien he -->
+                <h6 class="text-uppercase text-muted mb-3 mt-2"
+                    style="font-size:0.75rem; letter-spacing:0.5px;">
+                    Thong Tin Lien He
+                </h6>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input type="text"
+                                   class="form-control"
+                                   th:classappend="${#fields.hasErrors('nguoiDaiDien')} ? 'is-invalid'"
+                                   id="nguoiDaiDien"
+                                   th:field="*{nguoiDaiDien}"
+                                   placeholder="Nguoi Dai Dien"
+                                   maxlength="100">
+                            <label for="nguoiDaiDien">Nguoi Dai Dien</label>
+                            <div class="invalid-feedback"
+                                 th:if="${#fields.hasErrors('nguoiDaiDien')}"
+                                 th:errors="*{nguoiDaiDien}"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input type="tel"
+                                   class="form-control"
+                                   th:classappend="${#fields.hasErrors('soDienThoai')} ? 'is-invalid'"
+                                   id="soDienThoai"
+                                   th:field="*{soDienThoai}"
+                                   placeholder="So Dien Thoai"
+                                   maxlength="15">
+                            <label for="soDienThoai">So Dien Thoai</label>
+                            <div class="invalid-feedback"
+                                 th:if="${#fields.hasErrors('soDienThoai')}"
+                                 th:errors="*{soDienThoai}"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input type="email"
+                                   class="form-control"
+                                   th:classappend="${#fields.hasErrors('email')} ? 'is-invalid'"
+                                   id="email"
+                                   th:field="*{email}"
+                                   placeholder="Email"
+                                   maxlength="100">
+                            <label for="email">Email</label>
+                            <div class="invalid-feedback"
+                                 th:if="${#fields.hasErrors('email')}"
+                                 th:errors="*{email}"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-12">
+                        <div class="form-floating">
+                            <textarea class="form-control"
+                                      th:classappend="${#fields.hasErrors('diaChiDN')} ? 'is-invalid'"
+                                      id="diaChiDN"
+                                      th:field="*{diaChiDN}"
+                                      placeholder="Dia Chi"
+                                      maxlength="255"
+                                      style="height: 80px;"></textarea>
+                            <label for="diaChiDN">Dia Chi</label>
+                            <div class="invalid-feedback"
+                                 th:if="${#fields.hasErrors('diaChiDN')}"
+                                 th:errors="*{diaChiDN}"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save me-1"></i>
+                        <span th:text="${isEdit} ? 'Cap Nhat' : 'Tao Moi'">Luu</span>
+                    </button>
+                    <a th:href="@{/doanh-nghiep}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-lg me-1"></i>Huy
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

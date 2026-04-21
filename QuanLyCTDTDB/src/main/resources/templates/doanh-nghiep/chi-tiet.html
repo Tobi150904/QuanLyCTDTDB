@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head><title>Chi Tiet Doanh Nghiep</title></head>
+<body>
+<div layout:fragment="content">
+
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a th:href="@{/dashboard}" class="text-decoration-none">
+                    <i class="bi bi-house-door me-1"></i>Trang Chu
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a th:href="@{/doanh-nghiep}" class="text-decoration-none">Doanh Nghiep</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page"
+                th:text="${doanhNghiep.tenDoanhNghiep}">Chi Tiet</li>
+        </ol>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <p class="page-subtitle">Quan Tri / Doanh Nghiep</p>
+            <h4 class="page-title" th:text="${doanhNghiep.tenDoanhNghiep}">Chi Tiet</h4>
+        </div>
+        <div class="d-flex gap-2">
+            <a th:href="@{/doanh-nghiep/sua/{ma}(ma=${doanhNghiep.maDoanhNghiep})}"
+               class="btn btn-primary btn-sm">
+                <i class="bi bi-pencil me-1"></i>Chinh Sua
+            </a>
+            <a th:href="@{/doanh-nghiep}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i>Quay Lai
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Left: Thong tin DN -->
+        <div class="col-md-7">
+            <div class="card h-100">
+                <div class="card-header">
+                    <i class="bi bi-building me-2"></i>
+                    <span class="fw-semibold">Thong Tin Doanh Nghiep</span>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless mb-0" style="font-size:0.875rem;">
+                        <tbody>
+                            <tr>
+                                <td class="fw-medium text-muted" style="width:35%;">Ma DN:</td>
+                                <td><code th:text="${doanhNghiep.maDoanhNghiep}"></code></td>
+                            </tr>
+                            <tr>
+                                <td class="fw-medium text-muted">Ten Doanh Nghiep:</td>
+                                <td class="fw-medium" th:text="${doanhNghiep.tenDoanhNghiep}"></td>
+                            </tr>
+                            <tr>
+                                <td class="fw-medium text-muted">Linh Vuc:</td>
+                                <td th:text="${doanhNghiep.linhVuc ?: '--'}"></td>
+                            </tr>
+                            <tr>
+                                <td class="fw-medium text-muted">Nguoi Dai Dien:</td>
+                                <td th:text="${doanhNghiep.nguoiDaiDien ?: '--'}"></td>
+                            </tr>
+                            <tr>
+                                <td class="fw-medium text-muted">Email:</td>
+                                <td>
+                                    <span th:if="${doanhNghiep.email == null or doanhNghiep.email.isEmpty()}"
+                                          class="text-muted">--</span>
+                                    <a th:if="${doanhNghiep.email != null and !doanhNghiep.email.isEmpty()}"
+                                       th:href="'mailto:' + ${doanhNghiep.email}"
+                                       th:text="${doanhNghiep.email}"
+                                       class="text-decoration-none">
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="fw-medium text-muted">So Dien Thoai:</td>
+                                <td th:text="${doanhNghiep.soDienThoai ?: '--'}"></td>
+                            </tr>
+                            <tr>
+                                <td class="fw-medium text-muted">Dia Chi:</td>
+                                <td th:text="${doanhNghiep.diaChiDN ?: '--'}"></td>
+                            </tr>
+                            <tr>
+                                <td class="fw-medium text-muted">Trang Thai:</td>
+                                <td>
+                                    <span class="badge"
+                                          th:classappend="${doanhNghiep.trangThai.name() == 'DangHopTac'} ? 'bg-success' : 'bg-secondary'"
+                                          th:text="${doanhNghiep.trangThai.name() == 'DangHopTac'} ? 'Dang Hop Tac' : 'Tam Ngung'">
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="fw-medium text-muted">Tao Luc:</td>
+                                <td th:text="${doanhNghiep.createdAt != null ?
+                                    #temporals.format(doanhNghiep.createdAt, 'dd/MM/yyyy HH:mm') : '--'}">
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="fw-medium text-muted">Cap Nhat Gan Nhat:</td>
+                                <td th:text="${doanhNghiep.updatedAt != null ?
+                                    #temporals.format(doanhNghiep.updatedAt, 'dd/MM/yyyy HH:mm') : '--'}">
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Thao tac -->
+        <div class="col-md-5">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-lightning me-2"></i>
+                    <span class="fw-semibold">Thao Tac</span>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-column gap-2">
+                        <a th:href="@{/doanh-nghiep/sua/{ma}(ma=${doanhNghiep.maDoanhNghiep})}"
+                           class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-pencil me-2"></i>Chinh Sua Thong Tin
+                        </a>
+                        <form th:action="@{/doanh-nghiep/doi-trang-thai/{ma}(ma=${doanhNghiep.maDoanhNghiep})}"
+                              method="post">
+                            <input type="hidden"
+                                   th:name="${_csrf.parameterName}"
+                                   th:value="${_csrf.token}">
+                            <button type="submit"
+                                    class="btn btn-sm w-100"
+                                    th:classappend="${doanhNghiep.trangThai.name() == 'DangHopTac'} ? 'btn-outline-warning' : 'btn-outline-success'">
+                                <i class="bi me-2"
+                                   th:classappend="${doanhNghiep.trangThai.name() == 'DangHopTac'} ? 'bi-pause' : 'bi-play'"></i>
+                                <span th:text="${doanhNghiep.trangThai.name() == 'DangHopTac'} ? 'Tam Ngung Hop Tac' : 'Kich Hoat Hop Tac'"></span>
+                            </button>
+                        </form>
+                        <form th:action="@{/doanh-nghiep/xoa/{ma}(ma=${doanhNghiep.maDoanhNghiep})}"
+                              method="post"
+                              onsubmit="return confirm('Ban co chac muon xoa doanh nghiep nay? Hanh dong khong the hoan tac.');">
+                            <input type="hidden"
+                                   th:name="${_csrf.parameterName}"
+                                   th:value="${_csrf.token}">
+                            <button type="submit" class="btn btn-sm btn-outline-danger w-100">
+                                <i class="bi bi-trash me-2"></i>Xoa Doanh Nghiep
+                            </button>
+                        </form>
+                    </div>
+                    <hr>
+                    <p class="text-muted small mb-0">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Doanh nghiep dang duoc tham chieu boi cac Dot Kien Tap / Thuc Tap
+                        se khong the xoa truc tiep. Hay chuyen sang <strong>Tam Ngung</strong>.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>
