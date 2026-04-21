@@ -14,11 +14,13 @@ public interface DanhSachSvLopHocPhanRepository extends JpaRepository<DanhSachSv
 
     @Query("""
         SELECT d FROM DanhSachSvLopHocPhan d
+        LEFT JOIN FETCH d.sinhVien sv
+        LEFT JOIN FETCH sv.nguoiDung
         WHERE d.id.maCTDT = :maCTDT
         AND d.id.maHocPhan = :maHocPhan
         AND d.id.maHocKy = :maHocKy
         AND d.id.maLopHocPhan = :maLop
-        ORDER BY d.sinhVien.nguoiDung.hoTen
+        ORDER BY sv.nguoiDung.hoTen
         """)
     List<DanhSachSvLopHocPhan> findDanhSachSinhVienLop(String maCTDT, String maHocPhan, String maHocKy, Integer maLop);
 

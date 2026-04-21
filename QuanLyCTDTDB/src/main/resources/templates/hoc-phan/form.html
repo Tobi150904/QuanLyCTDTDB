@@ -3,27 +3,29 @@
       xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/base}">
-<head><title th:text="${isEdit} ? 'Sua Hoc Phan' : 'Tao Hoc Phan'">Hoc Phan</title></head>
+<head>
+    <title th:text="${isEdit} ? 'Chỉnh Sửa Học Phần' : 'Tạo Học Phần'">Học Phần</title>
+</head>
 <body>
 <div layout:fragment="content">
 
     <nav aria-label="breadcrumb" class="mb-3">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a th:href="@{/dashboard}">Trang Chu</a></li>
-            <li class="breadcrumb-item"><a th:href="@{/hoc-phan}">Hoc Phan</a></li>
+            <li class="breadcrumb-item"><a th:href="@{/dashboard}">Trang Chủ</a></li>
+            <li class="breadcrumb-item"><a th:href="@{/hoc-phan}">Học Phần</a></li>
             <li class="breadcrumb-item active"
-                th:text="${isEdit} ? 'Chinh Sua' : 'Them Moi'">--</li>
+                th:text="${isEdit} ? 'Chỉnh sửa' : 'Thêm mới'">Thêm mới</li>
         </ol>
     </nav>
 
     <div class="d-flex justify-content-between align-items-start mb-4">
         <div>
-            <p class="page-subtitle">Hoc Vu</p>
+            <p class="page-subtitle">Đào Tạo</p>
             <h4 class="page-title"
-                th:text="${isEdit} ? 'Chinh Sua Hoc Phan' : 'Tao Hoc Phan Moi'">--</h4>
+                th:text="${isEdit} ? 'Chỉnh Sửa Học Phần' : 'Tạo Học Phần Mới'">Tạo Học Phần Mới</h4>
         </div>
         <a th:href="@{/hoc-phan}" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-arrow-left me-1"></i>Quay Lai
+            <i class="bi bi-arrow-left me-1"></i>Quay lại
         </a>
     </div>
 
@@ -34,7 +36,9 @@
                   method="post" enctype="multipart/form-data" novalidate>
 
                 <div class="card mb-3">
-                    <div class="card-header"><i class="bi bi-journal-text me-2"></i>Thong Tin Hoc Phan</div>
+                    <div class="card-header">
+                        <i class="bi bi-journal-text me-2"></i>Thông Tin Học Phần
+                    </div>
                     <div class="card-body">
                         <div class="row g-3">
                             <div class="col-md-4">
@@ -42,15 +46,15 @@
                                     <input type="text" class="form-control"
                                            id="maHocPhan" th:field="*{maHocPhan}"
                                            th:readonly="${isEdit}" placeholder="CS101">
-                                    <label for="maHocPhan">Ma HP <span class="text-danger">*</span></label>
+                                    <label for="maHocPhan">Mã HP <span class="text-danger">*</span></label>
                                 </div>
                             </div>
                             <div class="col-md-8">
                                 <div class="form-floating">
                                     <input type="text" class="form-control"
                                            id="tenHocPhan" th:field="*{tenHocPhan}"
-                                           placeholder="Nhap nghanh lap trinh...">
-                                    <label for="tenHocPhan">Ten Hoc Phan <span class="text-danger">*</span></label>
+                                           placeholder="Nhập tên học phần...">
+                                    <label for="tenHocPhan">Tên Học Phần <span class="text-danger">*</span></label>
                                     <div class="invalid-feedback d-block"
                                          th:if="${#fields.hasErrors('tenHocPhan')}"
                                          th:errors="*{tenHocPhan}"></div>
@@ -60,51 +64,51 @@
                                 <div class="form-floating">
                                     <input type="number" class="form-control"
                                            id="soTinChi" th:field="*{soTinChi}" min="1" max="15">
-                                    <label for="soTinChi">So Tin Chi <span class="text-danger">*</span></label>
+                                    <label for="soTinChi">Số Tín Chỉ <span class="text-danger">*</span></label>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-floating">
                                     <select class="form-select" id="loaiHocPhan"
                                             th:field="*{loaiHocPhan}">
-                                        <option value="">-- Chon --</option>
+                                        <option value="">-- Chọn --</option>
                                         <option th:each="l : ${loaiHPList}"
                                                 th:value="${l.name()}"
                                                 th:text="${l.name()}"></option>
                                     </select>
-                                    <label for="loaiHocPhan">Loai HP <span class="text-danger">*</span></label>
+                                    <label for="loaiHocPhan">Loại HP <span class="text-danger">*</span></label>
                                 </div>
                             </div>
                             <div class="col-md-5">
                                 <div class="form-floating">
                                     <select class="form-select" id="maChuNhiemHP"
                                             th:field="*{maChuNhiemHP}">
-                                        <option value="">-- Chon Chu Nhiem HP --</option>
+                                        <option value="">-- Chọn Chủ Nhiệm HP --</option>
                                         <option th:each="gv : ${giangVienList}"
                                                 th:value="${gv.maGV}"
-                                                th:text="${gv.maGV + ' - ' + (gv.nguoiDung != null ? gv.nguoiDung.hoTen : '')}"></option>
+                                                th:text="${gv.maGV + ' - ' + gv.hoTen}"></option>
                                     </select>
-                                    <label for="maChuNhiemHP">Chu Nhiem HP <span class="text-danger">*</span></label>
+                                    <label for="maChuNhiemHP">Chủ Nhiệm HP <span class="text-danger">*</span></label>
                                 </div>
                             </div>
 
                             <div class="col-12">
                                 <label for="fileDeCuong" class="form-label">
-                                    <i class="bi bi-file-earmark-arrow-up me-1"></i>File De Cuong (PDF/Word)
+                                    <i class="bi bi-file-earmark-arrow-up me-1"></i>File Đề Cương (PDF/Word)
                                 </label>
                                 <input type="file" class="form-control" id="fileDeCuong"
                                        name="fileDeCuong" accept=".pdf,.doc,.docx">
-                                <small class="text-muted">De trong neu khong doi file hien tai.</small>
+                                <small class="text-muted">Để trống nếu không đổi file hiện tại.</small>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="d-flex justify-content-end gap-2">
-                    <a th:href="@{/hoc-phan}" class="btn btn-outline-secondary">Huy</a>
+                    <a th:href="@{/hoc-phan}" class="btn btn-outline-secondary">Huỷ</a>
                     <button type="submit" class="btn btn-primary">
                         <i class="bi bi-save me-1"></i>
-                        <span th:text="${isEdit} ? 'Cap Nhat' : 'Tao Moi'">--</span>
+                        <span th:text="${isEdit} ? 'Cập Nhật' : 'Tạo Mới'">Tạo Mới</span>
                     </button>
                 </div>
             </form>

@@ -42,15 +42,16 @@ public class LopHanhChinhServiceImpl implements LopHanhChinhService {
     @Override
     @Transactional(readOnly = true)
     public List<LopHanhChinh> findAll() {
-        return lopHCRepo.findAll();
+        return lopHCRepo.findAllFetch();
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<LopHanhChinh> search(String keyword, String maCTDT, String khoaHoc) {
-        // In-memory filter dua tren findAll() - phu hop quy mo nho cua module nay.
-        // Khi can scale, them custom @Query Pageable o Repository.
-        return lopHCRepo.findAll().stream()
+        // In-memory filter dua tren findAllFetch() - phu hop quy mo nho.
+        // Dung fetch query de tranh LazyInitializationException khi template
+        // truy cap l.coVan.nguoiDung.hoTen (open-in-view=false).
+        return lopHCRepo.findAllFetch().stream()
                 .filter(l -> keyword == null || keyword.isBlank()
                         || l.getMaLopHC().toLowerCase().contains(keyword.toLowerCase())
                         || (l.getTenLop() != null
@@ -66,7 +67,7 @@ public class LopHanhChinhServiceImpl implements LopHanhChinhService {
     @Override
     @Transactional(readOnly = true)
     public LopHanhChinh findById(String maLopHC) {
-        return lopHCRepo.findById(maLopHC)
+        return lopHCRepo.findByIdFetch(maLopHC)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "LopHanhChinh", "MaLopHC", maLopHC));
     }

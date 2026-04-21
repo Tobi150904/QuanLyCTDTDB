@@ -89,7 +89,9 @@ public class LopHocPhanServiceImpl implements LopHocPhanService {
     @Override
     @Transactional(readOnly = true)
     public List<LopHocPhan> findByCTDTAndHocKy(String maCTDT, String maHocKy) {
-        return lopHocPhanRepo.findById_MaCTDTAndId_MaHocKy(maCTDT, maHocKy);
+        // Dung query JOIN FETCH de template hien thi giangVien.hoTen
+        // ma khong bi LazyInitializationException (open-in-view=false).
+        return lopHocPhanRepo.findByCtdtAndHocKyFetch(maCTDT, maHocKy);
     }
 
     @Override

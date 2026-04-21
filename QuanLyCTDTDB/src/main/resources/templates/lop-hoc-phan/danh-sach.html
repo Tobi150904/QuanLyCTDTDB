@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/base}">
+<head><title>Quản Lý Lớp Học Phần</title></head>
+<body>
+<div layout:fragment="content">
+
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a th:href="@{/dashboard}"><i class="bi bi-house-door me-1"></i>Trang Chủ</a>
+            </li>
+            <li class="breadcrumb-item active">Lớp Học Phần</li>
+        </ol>
+    </nav>
+
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
+        <div>
+            <p class="page-subtitle">Đào Tạo</p>
+            <h4 class="page-title mb-0">Quản Lý Lớp Học Phần</h4>
+        </div>
+    </div>
+
+    <!-- FLASH MSG -->
+    <div th:if="${successMsg}" class="alert alert-success alert-dismissible fade show">
+        <span th:text="${successMsg}"></span>
+        <button class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${errorMsg}" class="alert alert-danger alert-dismissible fade show">
+        <span th:text="${errorMsg}"></span>
+        <button class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- FILTER + TẠO HÀNG LOẠT -->
+    <div class="card mb-4">
+        <div class="card-header bg-white">
+            <span class="fw-semibold">
+                <i class="bi bi-funnel me-2"></i>Chọn CTĐT &amp; Học Kỳ
+            </span>
+        </div>
+        <div class="card-body">
+            <form th:action="@{/lop-hoc-phan}" method="get" class="row g-2 align-items-end mb-3">
+                <div class="col-md-5">
+                    <label class="form-label fw-medium small">Chương Trình Đào Tạo</label>
+                    <select class="form-select" name="maCTDT" required>
+                        <option value="">-- Chọn CTĐT --</option>
+                        <option th:each="c : ${ctdtList}"
+                                th:value="${c.maCTDT}"
+                                th:text="${c.maCTDT + ' - ' + c.tenCTDT}"
+                                th:selected="${maCTDT != null and maCTDT == c.maCTDT}"></option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-medium small">Học Kỳ</label>
+                    <select class="form-select" name="maHocKy" required>
+                        <option value="">-- Chọn Học Kỳ --</option>
+                        <option th:each="hk : ${hocKyList}"
+                                th:value="${hk.maHocKy}"
+                                th:text="${hk.maHocKy + ' - ' + hk.tenHocKy}"
+                                th:selected="${maHocKy != null and maHocKy == hk.maHocKy}"></option>
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <button class="btn btn-primary">
+                        <i class="bi bi-search me-1"></i>Tra Cứu
+                    </button>
+                </div>
+                <div class="col-auto"
+                     th:if="${maCTDT != null and !maCTDT.isBlank() and maHocKy != null and !maHocKy.isBlank()}">
+                    <form th:action="@{/lop-hoc-phan/tao-hang-loat}" method="post" class="d-inline"
+                          onsubmit="return confirm('Tạo hàng loạt lớp học phần cho CTĐT này trong học kỳ đã chọn?')"
+                          sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
+                        <input type="hidden" th:name="${_csrf.parameterName}"
+                                              th:value="${_csrf.token}">
+                        <input type="hidden" name="maCTDT" th:value="${maCTDT}">
+                        <input type="hidden" name="maHocKy" th:value="${maHocKy}">
+                        <button class="btn btn-success">
+                            <i class="bi bi-magic me-1"></i>Tạo Hàng Loạt
+                        </button>
+                    </form>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- BẢNG DS LỚP HP CỦA CTĐT + HỌC KỲ -->
+    <div class="card mb-4" th:if="${danhSach != null}">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span class="fw-semibold">
+                <i class="bi bi-collection me-2"></i>Danh Sách Lớp Học Phần
+            </span>
+            <span class="badge bg-secondary" th:text="'Tổng: ' + ${#lists.size(danhSach)}">0</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width:50px;">STT</th>
+                            <th>Mã HP</th>
+                            <th>Tên Học Phần</th>
+                            <th class="text-center">Nhóm</th>
+                            <th>Giảng Viên</th>
+                            <th class="text-center">Sĩ Số (HT/TĐ)</th>
+                            <th>Trạng Thái</th>
+                            <th class="text-center" style="width:220px;">Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(danhSach)}">
+                            <td colspan="8" class="text-center py-5">
+                                <i class="bi bi-inbox display-4 text-muted d-block mb-3"></i>
+                                <p class="text-muted mb-0">
+                                    Chưa có lớp học phần. Bấm &quot;Tạo Hàng Loạt&quot; để sinh lớp từ CTĐT.
+                                </p>
+                            </td>
+                        </tr>
+                        <tr th:each="lhp, stat : ${danhSach}">
+                            <td class="text-muted" th:text="${stat.index + 1}">1</td>
+                            <td><code th:text="${lhp.id.maHocPhan}"></code></td>
+                            <td class="fw-medium"
+                                th:text="${hocPhanMap[lhp.id.maHocPhan] != null
+                                    ? hocPhanMap[lhp.id.maHocPhan].tenHocPhan
+                                    : '--'}">--</td>
+                            <td class="text-center">
+                                <span class="badge bg-light text-dark"
+                                      th:text="'N' + ${lhp.id.maLopHocPhan}">N1</span>
+                            </td>
+                            <td class="small">
+                                <span th:if="${lhp.giangVien != null}"
+                                      th:text="${lhp.giangVien.hoTen}">--</span>
+                                <span th:unless="${lhp.giangVien != null}"
+                                      class="text-danger fst-italic">Chưa phân công</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-info text-dark"
+                                      th:text="${(lhp.siSoThucTe ?: 0) + '/' + lhp.siSoToiDa}">0/0</span>
+                            </td>
+                            <td>
+                                <span class="badge"
+                                      th:classappend="${lhp.trangThai?.name() == 'DangMo'} ? 'bg-success' : 'bg-secondary'"
+                                      th:text="${lhp.trangThai?.name() == 'DangMo' ? 'Đang Mở' : 'Đã Đóng'}">--</span>
+                            </td>
+                            <td class="text-center">
+                                <div class="d-flex gap-1 justify-content-center flex-wrap">
+                                    <a th:href="@{/lop-hoc-phan/chi-tiet(maCTDT=${lhp.id.maCTDT},maHocPhan=${lhp.id.maHocPhan},maHocKy=${lhp.id.maHocKy},maLop=${lhp.id.maLopHocPhan})}"
+                                       class="btn btn-sm btn-outline-secondary"
+                                       data-bs-toggle="tooltip" data-bs-title="Chi tiết">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <button class="btn btn-sm btn-outline-primary"
+                                            data-bs-toggle="modal"
+                                            th:data-bs-target="'#modalPC-' + ${lhp.id.maHocPhan} + '-' + ${lhp.id.maLopHocPhan}"
+                                            sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')"
+                                            data-bs-title="Phân công GV">
+                                        <i class="bi bi-person-plus"></i>
+                                    </button>
+                                </div>
+
+                                <!-- Modal phân công GV -->
+                                <div class="modal fade"
+                                     th:id="'modalPC-' + ${lhp.id.maHocPhan} + '-' + ${lhp.id.maLopHocPhan}"
+                                     tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <form th:action="@{/lop-hoc-phan/phan-cong}" method="post"
+                                              class="modal-content text-start">
+                                            <input type="hidden" th:name="${_csrf.parameterName}"
+                                                                  th:value="${_csrf.token}">
+                                            <input type="hidden" name="maCTDT"    th:value="${lhp.id.maCTDT}">
+                                            <input type="hidden" name="maHocPhan" th:value="${lhp.id.maHocPhan}">
+                                            <input type="hidden" name="maHocKy"   th:value="${lhp.id.maHocKy}">
+                                            <input type="hidden" name="maLop"     th:value="${lhp.id.maLopHocPhan}">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Phân Công Giảng Viên</h5>
+                                                <button class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="mb-3 small text-muted">
+                                                    <span th:text="${lhp.id.maHocPhan}"></span> -
+                                                    <span th:text="${hocPhanMap[lhp.id.maHocPhan] != null
+                                                        ? hocPhanMap[lhp.id.maHocPhan].tenHocPhan : ''}"></span>
+                                                    <br>Nhóm N<span th:text="${lhp.id.maLopHocPhan}"></span>
+                                                </div>
+                                                <label class="form-label">Giảng Viên <span class="text-danger">*</span></label>
+                                                <select class="form-select" name="maGV" required>
+                                                    <option value="">-- Chọn Giảng Viên --</option>
+                                                    <option th:each="gv : ${giangVienList}"
+                                                            th:value="${gv.maGV}"
+                                                            th:text="${gv.maGV + ' - ' + gv.hoTen}"></option>
+                                                </select>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-outline-secondary"
+                                                        data-bs-dismiss="modal">Huỷ</button>
+                                                <button type="submit" class="btn btn-primary">
+                                                    <i class="bi bi-check-lg me-1"></i>Phân Công
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- KHOẢNG TRỐNG NẾU CHƯA FILTER -->
+    <div class="card mb-4" th:unless="${danhSach != null}">
+        <div class="card-body text-center py-5 text-muted">
+            <i class="bi bi-arrow-up-circle display-5 d-block mb-3 opacity-50"></i>
+            Vui lòng chọn CTĐT và Học Kỳ để xem danh sách lớp học phần.
+        </div>
+    </div>
+
+    <!-- DS LỚP CHƯA CÓ GV -->
+    <div class="card" th:if="${chuaPhanCong != null and !#lists.isEmpty(chuaPhanCong)}">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <span class="fw-semibold text-danger">
+                <i class="bi bi-exclamation-triangle me-2"></i>Lớp Chưa Phân Công Giảng Viên
+            </span>
+            <span class="badge bg-danger" th:text="${#lists.size(chuaPhanCong)}">0</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Mã CTĐT</th>
+                            <th>Mã HP</th>
+                            <th>Tên HP</th>
+                            <th>Học Kỳ</th>
+                            <th class="text-center">Nhóm</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="lhp : ${chuaPhanCong}">
+                            <td><code th:text="${lhp.id.maCTDT}"></code></td>
+                            <td><code th:text="${lhp.id.maHocPhan}"></code></td>
+                            <td th:text="${hocPhanMap[lhp.id.maHocPhan] != null
+                                ? hocPhanMap[lhp.id.maHocPhan].tenHocPhan : '--'}">--</td>
+                            <td th:text="${lhp.id.maHocKy}">--</td>
+                            <td class="text-center">
+                                <span class="badge bg-light text-dark"
+                                      th:text="'N' + ${lhp.id.maLopHocPhan}">N1</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

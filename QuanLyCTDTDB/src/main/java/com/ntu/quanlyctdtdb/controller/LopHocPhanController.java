@@ -1,15 +1,21 @@
 package com.ntu.quanlyctdtdb.controller;
 
+import com.ntu.quanlyctdtdb.entity.HocPhan;
 import com.ntu.quanlyctdtdb.entity.LopHocPhanId;
 import com.ntu.quanlyctdtdb.repository.ChuongTrinhDaoTaoRepository;
 import com.ntu.quanlyctdtdb.repository.GiangVienRepository;
 import com.ntu.quanlyctdtdb.repository.HocKyNamHocRepository;
+import com.ntu.quanlyctdtdb.repository.HocPhanRepository;
 import com.ntu.quanlyctdtdb.service.LopHocPhanService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/lop-hoc-phan")
@@ -20,6 +26,7 @@ public class LopHocPhanController {
     private final ChuongTrinhDaoTaoRepository ctdtRepo;
     private final HocKyNamHocRepository hocKyRepo;
     private final GiangVienRepository giangVienRepo;
+    private final HocPhanRepository hocPhanRepo;
 
     @ModelAttribute("activeMenu")
     public String activeMenu() { return "lop-hoc-phan"; }
@@ -33,10 +40,18 @@ public class LopHocPhanController {
         model.addAttribute("maCTDT", maCTDT);
         model.addAttribute("maHocKy", maHocKy);
 
-        if (maCTDT != null && maHocKy != null) {
+        if (maCTDT != null && !maCTDT.isBlank() && maHocKy != null && !maHocKy.isBlank()) {
             model.addAttribute("danhSach", lopHPService.findByCTDTAndHocKy(maCTDT, maHocKy));
         }
         model.addAttribute("chuaPhanCong", lopHPService.findChuaPhanCongGV());
+
+        // Map maHocPhan -> HocPhan de template hien thi tenHocPhan
+        // (LopHocPhan khong map truc tiep sang HocPhan qua @EmbeddedId).
+        Map<String, HocPhan> hocPhanMap = hocPhanRepo.findAll().stream()
+                .collect(Collectors.toMap(HocPhan::getMaHocPhan, Function.identity()));
+        model.addAttribute("hocPhanMap", hocPhanMap);
+
+        model.addAttribute("giangVienList", giangVienRepo.findAll());
         return "lop-hoc-phan/danh-sach";
     }
 

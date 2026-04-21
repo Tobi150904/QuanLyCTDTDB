@@ -3,49 +3,49 @@
       xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/base}">
-<head><title>Chi Tiet Hoc Phan</title></head>
+<head><title>Chi Tiết Học Phần</title></head>
 <body>
 <div layout:fragment="content">
 
     <nav aria-label="breadcrumb" class="mb-3">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a th:href="@{/dashboard}">Trang Chu</a></li>
-            <li class="breadcrumb-item"><a th:href="@{/hoc-phan}">Hoc Phan</a></li>
+            <li class="breadcrumb-item"><a th:href="@{/dashboard}">Trang Chủ</a></li>
+            <li class="breadcrumb-item"><a th:href="@{/hoc-phan}">Học Phần</a></li>
             <li class="breadcrumb-item active" th:text="${hocPhan.maHocPhan}">--</li>
         </ol>
     </nav>
 
     <div class="d-flex justify-content-between align-items-start mb-4">
         <div>
-            <p class="page-subtitle">Hoc Phan</p>
+            <p class="page-subtitle">Học Phần</p>
             <h4 class="page-title" th:text="${hocPhan.maHocPhan + ' — ' + hocPhan.tenHocPhan}">--</h4>
         </div>
         <a th:href="@{/hoc-phan}" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-arrow-left me-1"></i>Quay Lai
+            <i class="bi bi-arrow-left me-1"></i>Quay lại
         </a>
     </div>
 
     <div class="card">
-        <div class="card-header"><i class="bi bi-info-circle me-2"></i>Thong Tin Chi Tiet</div>
+        <div class="card-header"><i class="bi bi-info-circle me-2"></i>Thông Tin Chi Tiết</div>
         <div class="card-body">
             <div class="row">
                 <div class="col-md-6">
                     <table class="table table-borderless mb-0">
                         <tbody>
                             <tr class="info-row">
-                                <td class="info-label">Ma HP</td>
+                                <td class="info-label">Mã HP</td>
                                 <td><code th:text="${hocPhan.maHocPhan}"></code></td>
                             </tr>
                             <tr class="info-row">
-                                <td class="info-label">Ten HP</td>
+                                <td class="info-label">Tên HP</td>
                                 <td class="fw-semibold" th:text="${hocPhan.tenHocPhan}"></td>
                             </tr>
                             <tr class="info-row">
-                                <td class="info-label">So Tin Chi</td>
+                                <td class="info-label">Số Tín Chỉ</td>
                                 <td><span class="badge bg-primary" th:text="${hocPhan.soTinChi}">0</span></td>
                             </tr>
                             <tr class="info-row">
-                                <td class="info-label">Loai HP</td>
+                                <td class="info-label">Loại HP</td>
                                 <td th:text="${hocPhan.loaiHocPhan?.name() ?: '--'}">--</td>
                             </tr>
                         </tbody>
@@ -55,21 +55,21 @@
                     <table class="table table-borderless mb-0">
                         <tbody>
                             <tr class="info-row">
-                                <td class="info-label">Chu Nhiem HP</td>
-                                <td th:text="${hocPhan.chuNhiemHP != null and hocPhan.chuNhiemHP.nguoiDung != null
-                                    ? hocPhan.chuNhiemHP.nguoiDung.hoTen : (hocPhan.chuNhiemHP != null ? hocPhan.chuNhiemHP.maGV : '--')}">--</td>
+                                <td class="info-label">Chủ Nhiệm HP</td>
+                                <td th:text="${hocPhan.chuNhiemHP != null ? hocPhan.chuNhiemHP.hoTen : '--'}">--</td>
                             </tr>
                             <tr class="info-row">
-                                <td class="info-label">Trang Thai</td>
+                                <td class="info-label">Trạng Thái</td>
                                 <td>
                                     <span class="badge"
                                           th:classappend="${hocPhan.trangThai?.name() == 'DaDuyet'} ? 'bg-success' :
                                                          (${hocPhan.trangThai?.name() == 'ChoDuyet'} ? 'bg-warning text-dark' : 'bg-secondary')"
-                                          th:text="${hocPhan.trangThai?.name() ?: 'BanNhap'}">--</span>
+                                          th:text="${hocPhan.trangThai?.name() == 'DaDuyet' ? 'Đã Duyệt' :
+                                                   (hocPhan.trangThai?.name() == 'ChoDuyet' ? 'Chờ Duyệt' : 'Bản Nháp')}">--</span>
                                 </td>
                             </tr>
                             <tr class="info-row">
-                                <td class="info-label">De Cuong</td>
+                                <td class="info-label">Đề Cương</td>
                                 <td>
                                     <a th:if="${hocPhan.fileDeCuong != null and !hocPhan.fileDeCuong.isEmpty()}"
                                        th:href="@{'/files/' + ${hocPhan.fileDeCuong}}"
@@ -77,11 +77,11 @@
                                         <i class="bi bi-file-earmark-pdf me-1"></i>Xem File
                                     </a>
                                     <span th:unless="${hocPhan.fileDeCuong != null and !hocPhan.fileDeCuong.isEmpty()}"
-                                          class="text-muted">Chua co</span>
+                                          class="text-muted">Chưa có</span>
                                 </td>
                             </tr>
                             <tr class="info-row">
-                                <td class="info-label">Cap Nhat</td>
+                                <td class="info-label">Cập Nhật</td>
                                 <td class="small text-muted"
                                     th:text="${hocPhan.updatedAt != null ?
                                         #temporals.format(hocPhan.updatedAt, 'dd/MM/yyyy HH:mm') : '--'}">--</td>

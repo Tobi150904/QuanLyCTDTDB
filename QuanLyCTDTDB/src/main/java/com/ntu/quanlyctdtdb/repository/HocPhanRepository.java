@@ -21,6 +21,29 @@ public interface HocPhanRepository extends JpaRepository<HocPhan, String> {
     @Query("SELECT hp FROM HocPhan hp WHERE hp.trangThai = 'DaDuyet' ORDER BY hp.tenHocPhan")
     List<HocPhan> findAllDaDuyet();
 
+    /**
+     * List view - fetch eagerly ChuNhiemHP + NguoiDung de template Thymeleaf
+     * co the hien thi hoTen GV ma khong bi LazyInitializationException
+     * (open-in-view=false).
+     */
+    @Query("""
+        SELECT DISTINCT hp FROM HocPhan hp
+        LEFT JOIN FETCH hp.chuNhiemHP gv
+        LEFT JOIN FETCH gv.nguoiDung
+        ORDER BY hp.maHocPhan
+        """)
+    List<HocPhan> findAllFetchChuNhiem();
+
+    @Query("""
+        SELECT DISTINCT hp FROM HocPhan hp
+        LEFT JOIN FETCH hp.chuNhiemHP gv
+        LEFT JOIN FETCH gv.nguoiDung
+        WHERE LOWER(hp.tenHocPhan) LIKE LOWER(CONCAT('%', :kw, '%'))
+           OR LOWER(hp.maHocPhan)  LIKE LOWER(CONCAT('%', :kw, '%'))
+        ORDER BY hp.maHocPhan
+        """)
+    List<HocPhan> searchFetchChuNhiem(String kw);
+
     // Lay cac HP chua co trong 1 CTDT
     @Query("""
         SELECT hp FROM HocPhan hp

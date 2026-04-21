@@ -29,13 +29,16 @@ public class ChuongTrinhDaoTaoServiceImpl implements ChuongTrinhDaoTaoService {
     @Override
     @Transactional(readOnly = true)
     public List<ChuongTrinhDaoTao> findAll() {
-        return ctdtRepo.findAll();
+        // Dung query JOIN FETCH de template co the goi ctdt.ctdtHocPhans
+        // va ctdt.nguoiTao.hoTen ma khong bi LazyInitializationException
+        // (open-in-view=false).
+        return ctdtRepo.findAllFetchHocPhan();
     }
 
     @Override
     @Transactional(readOnly = true)
     public ChuongTrinhDaoTao findById(String ma) {
-        return ctdtRepo.findById(ma)
+        return ctdtRepo.findByIdFetchHocPhan(ma)
                 .orElseThrow(() -> new ResourceNotFoundException("ChuongTrinhDaoTao", "MaCTDT", ma));
     }
 

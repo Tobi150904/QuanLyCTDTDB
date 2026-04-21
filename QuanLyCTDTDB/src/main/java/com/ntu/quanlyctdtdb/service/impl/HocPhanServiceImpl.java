@@ -31,10 +31,12 @@ public class HocPhanServiceImpl implements HocPhanService {
     @Override
     @Transactional(readOnly = true)
     public List<HocPhan> findAll(String keyword) {
+        // Luon fetch eager ChuNhiemHP + NguoiDung vi template hien thi hoTen GV
+        // (open-in-view=false nen phai load trong transaction).
         if (keyword != null && !keyword.isBlank()) {
-            return hocPhanRepo.findByTenHocPhanContainingIgnoreCase(keyword.trim());
+            return hocPhanRepo.searchFetchChuNhiem(keyword.trim());
         }
-        return hocPhanRepo.findAll();
+        return hocPhanRepo.findAllFetchChuNhiem();
     }
 
     @Override
