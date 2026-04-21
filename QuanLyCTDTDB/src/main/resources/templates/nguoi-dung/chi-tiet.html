@@ -3,7 +3,7 @@
       xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/base}">
-<head><title>Chi Tiet Nguoi Dung</title></head>
+<head><title>Chi Tiết Người Dùng</title></head>
 <body>
 <div layout:fragment="content">
 
@@ -12,30 +12,31 @@
         <ol class="breadcrumb">
             <li class="breadcrumb-item">
                 <a th:href="@{/dashboard}" class="text-decoration-none">
-                    <i class="bi bi-house-door me-1"></i>Trang Chu
+                    <i class="bi bi-house-door me-1"></i>Trang Chủ
                 </a>
             </li>
             <li class="breadcrumb-item">
-                <a th:href="@{/nguoi-dung}" class="text-decoration-none">Nguoi Dung</a>
+                <a th:href="@{/nguoi-dung}" class="text-decoration-none">Người Dùng</a>
             </li>
             <li class="breadcrumb-item active" aria-current="page"
-                th:text="${nguoiDung.hoTen}">Chi Tiet</li>
+                th:text="${nguoiDung.hoTen}">Chi Tiết</li>
         </ol>
     </nav>
 
     <!-- Page Header -->
     <div class="d-flex justify-content-between align-items-start mb-4">
         <div>
-            <p class="page-subtitle">Quan Tri / Nguoi Dung</p>
-            <h4 class="page-title" th:text="${nguoiDung.hoTen}">Chi Tiet</h4>
+            <p class="page-subtitle">Quản Trị / Người Dùng</p>
+            <h4 class="page-title" th:text="${nguoiDung.hoTen}">Chi Tiết</h4>
         </div>
         <div class="d-flex gap-2">
             <a th:href="@{/nguoi-dung/sua/{ma}(ma=${nguoiDung.maNguoiDung})}"
-               class="btn btn-primary btn-sm">
-                <i class="bi bi-pencil me-1"></i>Chinh Sua
+               class="btn btn-primary btn-sm"
+               aria-label="Chỉnh sửa người dùng">
+                <i class="bi bi-pencil-square me-1"></i>Chỉnh Sửa
             </a>
             <a th:href="@{/nguoi-dung}" class="btn btn-outline-secondary btn-sm">
-                <i class="bi bi-arrow-left me-1"></i>Quay Lai
+                <i class="bi bi-arrow-left me-1"></i>Quay Lại
             </a>
         </div>
     </div>
@@ -46,21 +47,21 @@
             <div class="card h-100">
                 <div class="card-header">
                     <i class="bi bi-person-fill me-2"></i>
-                    <span class="fw-semibold">Thong Tin Tai Khoan</span>
+                    <span class="fw-semibold">Thông Tin Tài Khoản</span>
                 </div>
                 <div class="card-body">
                     <table class="table table-borderless mb-0">
                         <tbody>
                             <tr class="info-row">
-                                <td class="info-label">Ma Nguoi Dung</td>
+                                <td class="info-label">Mã Người Dùng</td>
                                 <td><code th:text="${nguoiDung.maNguoiDung}"></code></td>
                             </tr>
                             <tr class="info-row">
-                                <td class="info-label">Ten Dang Nhap</td>
+                                <td class="info-label">Tên Đăng Nhập</td>
                                 <td th:text="${nguoiDung.tenDangNhap}"></td>
                             </tr>
                             <tr class="info-row">
-                                <td class="info-label">Ho Ten</td>
+                                <td class="info-label">Họ Tên</td>
                                 <td class="fw-semibold" th:text="${nguoiDung.hoTen}"></td>
                             </tr>
                             <tr class="info-row">
@@ -72,32 +73,35 @@
                                 </td>
                             </tr>
                             <tr class="info-row">
-                                <td class="info-label">So Dien Thoai</td>
+                                <td class="info-label">Số Điện Thoại</td>
                                 <td th:text="${nguoiDung.soDienThoai ?: '--'}"></td>
                             </tr>
                             <tr class="info-row">
-                                <td class="info-label">Loai Nguoi Dung</td>
+                                <td class="info-label">Loại Người Dùng</td>
                                 <td>
                                     <span class="badge"
                                           th:classappend="${nguoiDung.loaiNguoiDung.name() == 'Admin'} ? 'bg-dark' :
                                                          (${nguoiDung.loaiNguoiDung.name() == 'GiangVien'} ? 'bg-primary' :
                                                          (${nguoiDung.loaiNguoiDung.name() == 'SinhVien'} ? 'bg-info text-dark' : 'bg-success'))"
-                                          th:text="${nguoiDung.loaiNguoiDung.name()}"></span>
+                                          th:text="${nguoiDung.loaiNguoiDung.name() == 'Admin'       ? 'Quản Trị Viên' :
+                                                   (nguoiDung.loaiNguoiDung.name() == 'GiangVien'  ? 'Giảng Viên'     :
+                                                   (nguoiDung.loaiNguoiDung.name() == 'SinhVien'   ? 'Sinh Viên'      :
+                                                   (nguoiDung.loaiNguoiDung.name() == 'DoanhNghiep' ? 'Doanh Nghiệp' : nguoiDung.loaiNguoiDung.name())))}"></span>
                                 </td>
                             </tr>
                             <tr class="info-row">
-                                <td class="info-label">Trang Thai</td>
+                                <td class="info-label">Trạng Thái</td>
                                 <td>
                                     <span th:if="${nguoiDung.trangThaiTK}" class="badge bg-success">
-                                        <i class="bi bi-check-circle-fill me-1"></i>Hoat Dong
+                                        <i class="bi bi-check-circle-fill me-1"></i>Hoạt Động
                                     </span>
                                     <span th:unless="${nguoiDung.trangThaiTK}" class="badge bg-danger">
-                                        <i class="bi bi-lock-fill me-1"></i>Da Khoa
+                                        <i class="bi bi-lock-fill me-1"></i>Đã Khoá
                                     </span>
                                 </td>
                             </tr>
                             <tr class="info-row">
-                                <td class="info-label">Tao Luc</td>
+                                <td class="info-label">Tạo Lúc</td>
                                 <td class="text-muted" th:text="${nguoiDung.createdAt != null ?
                                     #temporals.format(nguoiDung.createdAt, 'dd/MM/yyyy HH:mm') : '--'}"></td>
                             </tr>
@@ -112,7 +116,7 @@
             <div class="card mb-3">
                 <div class="card-header">
                     <i class="bi bi-shield-check me-2"></i>
-                    <span class="fw-semibold">Vai Tro Nghiep Vu</span>
+                    <span class="fw-semibold">Vai Trò Nghiệp Vụ</span>
                 </div>
                 <div class="card-body">
                     <div th:if="${nguoiDung.nhomNguoiDungs != null and !nguoiDung.nhomNguoiDungs.isEmpty()}"
@@ -120,13 +124,17 @@
                         <span th:each="nhom : ${nguoiDung.nhomNguoiDungs}"
                               class="badge bg-primary"
                               style="font-size:0.85rem; padding:8px 14px;"
-                              th:text="${nhom.id.vaiTro.name()}">
+                              th:with="v=${nhom.id.vaiTro.name()}"
+                              th:text="${v == 'PDT'    ? 'PDT — Phòng Đào Tạo'              :
+                                        (v == 'TTDTXS' ? 'TTDTXS — Trung Tâm Đào Tạo Xuất Sắc' :
+                                        (v == 'CVHT'   ? 'CVHT — Cố Vấn Học Tập'              :
+                                        (v == 'CNHP'   ? 'CNHP — Chủ Nhiệm Học Phần'          : v)))}">
                         </span>
                     </div>
                     <p th:if="${nguoiDung.nhomNguoiDungs == null or nguoiDung.nhomNguoiDungs.isEmpty()}"
                        class="text-muted mb-0">
                         <i class="bi bi-info-circle me-1"></i>
-                        Nguoi dung nay chua co vai tro nghiep vu.
+                        Người dùng này chưa có vai trò nghiệp vụ nào.
                     </p>
                 </div>
             </div>
@@ -135,16 +143,17 @@
             <div class="card">
                 <div class="card-header">
                     <i class="bi bi-lightning me-2"></i>
-                    <span class="fw-semibold">Thao Tac</span>
+                    <span class="fw-semibold">Thao Tác Nhanh</span>
                 </div>
                 <div class="card-body">
                     <div class="d-flex flex-column gap-2">
                         <a th:href="@{/nguoi-dung/sua/{ma}(ma=${nguoiDung.maNguoiDung})}"
-                           class="btn btn-outline-primary btn-sm">
-                            <i class="bi bi-pencil me-2"></i>Chinh Sua Thong Tin
+                           class="btn btn-primary btn-sm"
+                           aria-label="Chỉnh sửa người dùng">
+                            <i class="bi bi-pencil-square me-2"></i>Chỉnh Sửa Thông Tin
                         </a>
                         <form th:action="@{/nguoi-dung/toggle/{ma}(ma=${nguoiDung.maNguoiDung})}"
-                              method="post">
+                              method="post" class="m-0">
                             <input type="hidden"
                                    th:name="${_csrf.parameterName}"
                                    th:value="${_csrf.token}">
@@ -153,7 +162,7 @@
                                     th:classappend="${nguoiDung.trangThaiTK} ? 'btn-outline-warning' : 'btn-outline-success'">
                                 <i class="bi me-2"
                                    th:classappend="${nguoiDung.trangThaiTK} ? 'bi-lock' : 'bi-unlock'"></i>
-                                <span th:text="${nguoiDung.trangThaiTK} ? 'Khoa Tai Khoan' : 'Mo Khoa Tai Khoan'"></span>
+                                <span th:text="${nguoiDung.trangThaiTK} ? 'Khoá Tài Khoản' : 'Mở Khoá Tài Khoản'"></span>
                             </button>
                         </form>
                     </div>
