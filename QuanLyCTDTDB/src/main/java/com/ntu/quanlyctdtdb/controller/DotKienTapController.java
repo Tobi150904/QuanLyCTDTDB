@@ -147,7 +147,7 @@ public class DotKienTapController {
     private void populateModel(Model model) {
         model.addAttribute("lopHCList", lopHCRepo.findAll());
         model.addAttribute("hocKyList", hocKyRepo.findAllByOrderByNgayBatDauDesc());
-        model.addAttribute("giangVienList", giangVienRepo.findAll());
+        model.addAttribute("giangVienList", giangVienRepo.findAllFetchNguoiDung());
         model.addAttribute("doanhNghiepList", doanhNghiepRepo.findAll());
     }
 }

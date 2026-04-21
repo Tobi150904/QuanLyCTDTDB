@@ -51,7 +51,7 @@ public class LopHocPhanController {
                 .collect(Collectors.toMap(HocPhan::getMaHocPhan, Function.identity()));
         model.addAttribute("hocPhanMap", hocPhanMap);
 
-        model.addAttribute("giangVienList", giangVienRepo.findAll());
+        model.addAttribute("giangVienList", giangVienRepo.findAllFetchNguoiDung());
         return "lop-hoc-phan/danh-sach";
     }
 
@@ -97,7 +97,7 @@ public class LopHocPhanController {
         LopHocPhanId id = new LopHocPhanId(maCTDT, maHocPhan, maHocKy, maLop);
         model.addAttribute("lopId", id);
         model.addAttribute("danhSachSV", lopHPService.findSinhVienTrongLop(id));
-        model.addAttribute("giangVienList", giangVienRepo.findAll());
+        model.addAttribute("giangVienList", giangVienRepo.findAllFetchNguoiDung());
         return "lop-hoc-phan/chi-tiet";
     }
 

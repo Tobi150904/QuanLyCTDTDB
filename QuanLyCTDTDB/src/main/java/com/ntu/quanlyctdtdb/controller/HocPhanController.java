@@ -42,7 +42,7 @@ public class HocPhanController {
     public String themForm(Model model) {
         model.addAttribute("hocPhanDTO", new HocPhanDTO());
         model.addAttribute("loaiHPList", LoaiHocPhan.values());
-        model.addAttribute("giangVienList", giangVienRepo.findAll());
+        model.addAttribute("giangVienList", giangVienRepo.findAllFetchNguoiDung());
         model.addAttribute("isEdit", false);
         return "hoc-phan/form";
     }
@@ -55,7 +55,7 @@ public class HocPhanController {
                         Model model, RedirectAttributes ra) {
         if (br.hasErrors()) {
             model.addAttribute("loaiHPList", LoaiHocPhan.values());
-            model.addAttribute("giangVienList", giangVienRepo.findAll());
+            model.addAttribute("giangVienList", giangVienRepo.findAllFetchNguoiDung());
             model.addAttribute("isEdit", false);
             return "hoc-phan/form";
         }
@@ -84,7 +84,7 @@ public class HocPhanController {
         dto.setMaChuNhiemHP(hp.getChuNhiemHP() != null ? hp.getChuNhiemHP().getMaGV() : null);
         model.addAttribute("hocPhanDTO", dto);
         model.addAttribute("loaiHPList", LoaiHocPhan.values());
-        model.addAttribute("giangVienList", giangVienRepo.findAll());
+        model.addAttribute("giangVienList", giangVienRepo.findAllFetchNguoiDung());
         model.addAttribute("isEdit", true);
         return "hoc-phan/form";
     }
@@ -97,7 +97,7 @@ public class HocPhanController {
                        Model model, RedirectAttributes ra) {
         if (br.hasErrors()) {
             model.addAttribute("loaiHPList", LoaiHocPhan.values());
-            model.addAttribute("giangVienList", giangVienRepo.findAll());
+            model.addAttribute("giangVienList", giangVienRepo.findAllFetchNguoiDung());
             model.addAttribute("isEdit", true);
             return "hoc-phan/form";
         }
