@@ -16,6 +16,9 @@ public interface NguoiDungService {
 
     NguoiDung findById(String ma);
 
+    /** Lay NguoiDung kem fetch nhomNguoiDungs (danh cho chi-tiet/form sua) */
+    NguoiDung findByIdWithRoles(String ma);
+
     NguoiDung create(NguoiDungDTO dto);
 
     NguoiDung update(String ma, NguoiDungDTO dto);

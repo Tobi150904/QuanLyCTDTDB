@@ -49,6 +49,13 @@ public class NguoiDungServiceImpl implements NguoiDungService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public NguoiDung findByIdWithRoles(String ma) {
+        return nguoiDungRepo.findWithRolesByMaNguoiDung(ma)
+                .orElseThrow(() -> new ResourceNotFoundException("NguoiDung", "MaNguoiDung", ma));
+    }
+
+    @Override
     public NguoiDung create(NguoiDungDTO dto) {
         // Validate unique
         if (nguoiDungRepo.existsByTenDangNhap(dto.getTenDangNhap())) {

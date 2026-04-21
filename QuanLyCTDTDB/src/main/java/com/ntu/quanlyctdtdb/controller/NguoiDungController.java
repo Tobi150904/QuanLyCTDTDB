@@ -82,7 +82,7 @@ public class NguoiDungController {
     /* ====================== CHINH SUA ====================== */
     @GetMapping("/sua/{ma}")
     public String suaForm(@PathVariable String ma, Model model) {
-        NguoiDung nd = nguoiDungService.findById(ma);
+        NguoiDung nd = nguoiDungService.findByIdWithRoles(ma);
         NguoiDungDTO dto = new NguoiDungDTO();
         dto.setMaNguoiDung(nd.getMaNguoiDung());
         dto.setTenDangNhap(nd.getTenDangNhap());
@@ -159,7 +159,7 @@ public class NguoiDungController {
     /* ====================== CHI TIET ====================== */
     @GetMapping("/chi-tiet/{ma}")
     public String chiTiet(@PathVariable String ma, Model model) {
-        model.addAttribute("nguoiDung", nguoiDungService.findById(ma));
+        model.addAttribute("nguoiDung", nguoiDungService.findByIdWithRoles(ma));
         return "nguoi-dung/chi-tiet";
     }
 }
