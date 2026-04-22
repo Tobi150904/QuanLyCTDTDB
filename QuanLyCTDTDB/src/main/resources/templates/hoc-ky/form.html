@@ -3,27 +3,33 @@
       xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/base}">
-<head><title th:text="${isEdit} ? 'Sua Hoc Ky' : 'Tao Hoc Ky'">Hoc Ky</title></head>
+<head><title th:text="${isEdit} ? 'Chỉnh Sửa Học Kỳ' : 'Tạo Học Kỳ Mới'">Học Kỳ</title></head>
 <body>
 <div layout:fragment="content">
 
     <nav aria-label="breadcrumb" class="mb-3">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a th:href="@{/dashboard}">Trang Chu</a></li>
-            <li class="breadcrumb-item"><a th:href="@{/hoc-ky}">Hoc Ky</a></li>
-            <li class="breadcrumb-item active"
-                th:text="${isEdit} ? 'Chinh Sua' : 'Them Moi'">--</li>
+            <li class="breadcrumb-item">
+                <a th:href="@{/dashboard}" class="text-decoration-none">
+                    <i class="bi bi-house-door me-1"></i>Trang Chủ
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a th:href="@{/hoc-ky}" class="text-decoration-none">Học Kỳ - Năm Học</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page"
+                th:text="${isEdit} ? 'Chỉnh Sửa' : 'Thêm Mới'">--</li>
         </ol>
     </nav>
 
     <div class="d-flex justify-content-between align-items-start mb-4">
         <div>
-            <p class="page-subtitle">Hoc Vu</p>
-            <h4 class="page-title"
-                th:text="${isEdit} ? 'Chinh Sua Hoc Ky' : 'Tao Hoc Ky Moi'">--</h4>
+            <p class="page-subtitle">Học Vụ</p>
+            <h4 class="page-title mb-0"
+                th:text="${isEdit} ? 'Chỉnh Sửa Học Kỳ' : 'Tạo Học Kỳ Mới'">--</h4>
         </div>
         <a th:href="@{/hoc-ky}" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-arrow-left me-1"></i>Quay Lai
+            <i class="bi bi-arrow-left me-1"></i>Quay Lại
         </a>
     </div>
 
@@ -31,7 +37,8 @@
         <div class="col-lg-8">
             <div class="card">
                 <div class="card-header">
-                    <i class="bi bi-calendar-event me-2"></i>Thong Tin Hoc Ky
+                    <i class="bi bi-calendar-event me-2"></i>
+                    <span class="fw-semibold">Thông Tin Học Kỳ</span>
                 </div>
                 <div class="card-body">
 
@@ -39,18 +46,21 @@
                           th:object="${hocKyDTO}"
                           method="post"
                           novalidate>
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
 
-                        <div class="row g-3">
+                        <h6 class="section-label">Kỳ &amp; Năm Học</h6>
+
+                        <div class="row g-3 mb-3">
                             <div class="col-md-4">
                                 <div class="form-floating">
                                     <select class="form-select" id="hocKyThu"
                                             th:field="*{hocKyThu}"
                                             th:disabled="${isEdit}">
-                                        <option value="1">Hoc Ky 1</option>
-                                        <option value="2">Hoc Ky 2</option>
-                                        <option value="3">Hoc Ky He</option>
+                                        <option value="1">Học Kỳ 1</option>
+                                        <option value="2">Học Kỳ 2</option>
+                                        <option value="3">Học Kỳ Hè</option>
                                     </select>
-                                    <label for="hocKyThu">Ky <span class="text-danger">*</span></label>
+                                    <label for="hocKyThu">Kỳ <span class="text-danger">*</span></label>
                                 </div>
                                 <input th:if="${isEdit}" type="hidden" th:field="*{hocKyThu}">
                             </div>
@@ -58,54 +68,74 @@
                                 <div class="form-floating">
                                     <input type="number" class="form-control" id="namBatDau"
                                            th:field="*{namBatDau}" min="2020" max="2099"
-                                           th:readonly="${isEdit}">
-                                    <label for="namBatDau">Nam Bat Dau <span class="text-danger">*</span></label>
+                                           th:readonly="${isEdit}" required>
+                                    <label for="namBatDau">Năm Bắt Đầu <span class="text-danger">*</span></label>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-floating">
                                     <input type="number" class="form-control" id="namKetThuc"
                                            th:field="*{namKetThuc}" min="2020" max="2099"
-                                           th:readonly="${isEdit}">
-                                    <label for="namKetThuc">Nam Ket Thuc <span class="text-danger">*</span></label>
+                                           th:readonly="${isEdit}" required>
+                                    <label for="namKetThuc">Năm Kết Thúc <span class="text-danger">*</span></label>
                                 </div>
-                                <small class="text-muted">Phai = Nam Bat Dau + 1</small>
+                                <small class="form-text text-muted">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Phải bằng <strong>Năm Bắt Đầu + 1</strong>
+                                </small>
                             </div>
+                        </div>
 
+                        <h6 class="section-label">Thời Gian Áp Dụng</h6>
+
+                        <div class="row g-3 mb-3">
                             <div class="col-md-6">
                                 <div class="form-floating">
                                     <input type="date" class="form-control" id="ngayBatDau"
                                            th:field="*{ngayBatDau}">
-                                    <label for="ngayBatDau">Ngay Bat Dau</label>
+                                    <label for="ngayBatDau">Ngày Bắt Đầu</label>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-floating">
                                     <input type="date" class="form-control" id="ngayKetThuc"
                                            th:field="*{ngayKetThuc}">
-                                    <label for="ngayKetThuc">Ngay Ket Thuc</label>
+                                    <label for="ngayKetThuc">Ngày Kết Thúc</label>
                                 </div>
                             </div>
+                        </div>
 
+                        <h6 class="section-label">Trạng Thái</h6>
+
+                        <div class="row g-3 mb-2">
                             <div class="col-12">
                                 <div class="form-floating">
                                     <select class="form-select" id="trangThai" th:field="*{trangThai}">
                                         <option th:each="tt : ${trangThaiList}"
                                                 th:value="${tt.name()}"
-                                                th:text="${tt.name()}"></option>
+                                                th:with="s=${tt.name()}"
+                                                th:text="${s == 'DangDienRa' ? 'Đang Diễn Ra' :
+                                                          (s == 'SapDienRa'  ? 'Sắp Diễn Ra'  : 'Đã Kết Thúc')}"></option>
                                     </select>
-                                    <label for="trangThai">Trang Thai</label>
+                                    <label for="trangThai">Trạng Thái</label>
                                 </div>
-                                <small class="text-muted">Chi 1 hoc ky duoc DangDienRa tai mot thoi diem.</small>
+                                <small class="form-text text-muted">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Chỉ <strong>một</strong> học kỳ được phép ở trạng thái
+                                    &quot;Đang Diễn Ra&quot; tại một thời điểm.
+                                </small>
                             </div>
                         </div>
 
-                        <hr class="my-4">
+                        <hr class="soft-divider">
                         <div class="d-flex justify-content-end gap-2">
-                            <a th:href="@{/hoc-ky}" class="btn btn-outline-secondary">Huy</a>
-                            <button type="submit" class="btn btn-primary">
+                            <a th:href="@{/hoc-ky}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-lg me-1"></i>Huỷ
+                            </a>
+                            <button type="submit" class="btn btn-primary" onclick="showLoading(this)">
+                                <span class="spinner-border spinner-border-sm d-none me-1" role="status"></span>
                                 <i class="bi bi-save me-1"></i>
-                                <span th:text="${isEdit} ? 'Cap Nhat' : 'Tao Moi'">--</span>
+                                <span th:text="${isEdit} ? 'Cập Nhật' : 'Tạo Mới'">--</span>
                             </button>
                         </div>
                     </form>

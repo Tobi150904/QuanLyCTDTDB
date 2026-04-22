@@ -2,8 +2,9 @@
 <html lang="vi"
       xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       layout:decorate="~{layout/base}">
-<head><title>Chi Tiet Doanh Nghiep</title></head>
+<head><title>Chi Tiết Doanh Nghiệp</title></head>
 <body>
 <div layout:fragment="content">
 
@@ -12,59 +13,68 @@
         <ol class="breadcrumb">
             <li class="breadcrumb-item">
                 <a th:href="@{/dashboard}" class="text-decoration-none">
-                    <i class="bi bi-house-door me-1"></i>Trang Chu
+                    <i class="bi bi-house-door me-1"></i>Trang Chủ
                 </a>
             </li>
             <li class="breadcrumb-item">
-                <a th:href="@{/doanh-nghiep}" class="text-decoration-none">Doanh Nghiep</a>
+                <a th:href="@{/doanh-nghiep}" class="text-decoration-none">Doanh Nghiệp</a>
             </li>
             <li class="breadcrumb-item active" aria-current="page"
-                th:text="${doanhNghiep.tenDoanhNghiep}">Chi Tiet</li>
+                th:text="${doanhNghiep.tenDoanhNghiep}">Chi Tiết</li>
         </ol>
     </nav>
 
     <!-- Page Header -->
-    <div class="d-flex justify-content-between align-items-start mb-4">
+    <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
         <div>
-            <p class="page-subtitle">Quan Tri / Doanh Nghiep</p>
-            <h4 class="page-title" th:text="${doanhNghiep.tenDoanhNghiep}">Chi Tiet</h4>
+            <p class="page-subtitle">Quản Trị / Doanh Nghiệp</p>
+            <h4 class="page-title mb-1" th:text="${doanhNghiep.tenDoanhNghiep}">Chi Tiết</h4>
+            <div class="text-muted small">
+                Mã: <code th:text="${doanhNghiep.maDoanhNghiep}"></code>
+                &bull; Trạng thái:
+                <span class="badge ms-1"
+                      th:classappend="${doanhNghiep.trangThai.name() == 'DangHopTac'} ? 'bg-success' : 'bg-secondary'"
+                      th:text="${doanhNghiep.trangThai.name() == 'DangHopTac' ? 'Đang Hợp Tác' : 'Tạm Ngưng'}"></span>
+            </div>
         </div>
         <div class="d-flex gap-2">
             <a th:href="@{/doanh-nghiep/sua/{ma}(ma=${doanhNghiep.maDoanhNghiep})}"
-               class="btn btn-primary btn-sm">
-                <i class="bi bi-pencil me-1"></i>Chinh Sua
+               class="btn btn-primary btn-sm"
+               sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')"
+               aria-label="Chỉnh sửa doanh nghiệp">
+                <i class="bi bi-pencil-square me-1"></i>Chỉnh Sửa
             </a>
             <a th:href="@{/doanh-nghiep}" class="btn btn-outline-secondary btn-sm">
-                <i class="bi bi-arrow-left me-1"></i>Quay Lai
+                <i class="bi bi-arrow-left me-1"></i>Quay Lại
             </a>
         </div>
     </div>
 
     <div class="row g-4">
-        <!-- Left: Thong tin DN -->
+        <!-- Left: Thông tin DN -->
         <div class="col-md-7">
             <div class="card h-100">
                 <div class="card-header">
                     <i class="bi bi-building me-2"></i>
-                    <span class="fw-semibold">Thong Tin Doanh Nghiep</span>
+                    <span class="fw-semibold">Thông Tin Doanh Nghiệp</span>
                 </div>
                 <div class="card-body">
                     <table class="table table-borderless mb-0">
                         <tbody>
                             <tr class="info-row">
-                                <td class="info-label">Ma Doanh Nghiep</td>
+                                <td class="info-label">Mã Doanh Nghiệp</td>
                                 <td><code th:text="${doanhNghiep.maDoanhNghiep}"></code></td>
                             </tr>
                             <tr class="info-row">
-                                <td class="info-label">Ten Doanh Nghiep</td>
+                                <td class="info-label">Tên Doanh Nghiệp</td>
                                 <td class="fw-semibold" th:text="${doanhNghiep.tenDoanhNghiep}"></td>
                             </tr>
                             <tr class="info-row">
-                                <td class="info-label">Linh Vuc</td>
+                                <td class="info-label">Lĩnh Vực</td>
                                 <td th:text="${doanhNghiep.linhVuc ?: '--'}"></td>
                             </tr>
                             <tr class="info-row">
-                                <td class="info-label">Nguoi Dai Dien</td>
+                                <td class="info-label">Người Đại Diện</td>
                                 <td th:text="${doanhNghiep.nguoiDaiDien ?: '--'}"></td>
                             </tr>
                             <tr class="info-row">
@@ -79,31 +89,31 @@
                                 </td>
                             </tr>
                             <tr class="info-row">
-                                <td class="info-label">So Dien Thoai</td>
+                                <td class="info-label">Số Điện Thoại</td>
                                 <td th:text="${doanhNghiep.soDienThoai ?: '--'}"></td>
                             </tr>
                             <tr class="info-row">
-                                <td class="info-label">Dia Chi</td>
+                                <td class="info-label">Địa Chỉ</td>
                                 <td th:text="${doanhNghiep.diaChiDN ?: '--'}"></td>
                             </tr>
                             <tr class="info-row">
-                                <td class="info-label">Trang Thai</td>
+                                <td class="info-label">Trạng Thái</td>
                                 <td>
                                     <span class="badge"
                                           th:classappend="${doanhNghiep.trangThai.name() == 'DangHopTac'} ? 'bg-success' : 'bg-secondary'">
-                                        <i class="bi me-1"
+                                        <i class="bi me-1" aria-hidden="true"
                                            th:classappend="${doanhNghiep.trangThai.name() == 'DangHopTac'} ? 'bi-check-circle-fill' : 'bi-pause-fill'"></i>
-                                        <span th:text="${doanhNghiep.trangThai.name() == 'DangHopTac'} ? 'Dang Hop Tac' : 'Tam Ngung'"></span>
+                                        <span th:text="${doanhNghiep.trangThai.name() == 'DangHopTac' ? 'Đang Hợp Tác' : 'Tạm Ngưng'}"></span>
                                     </span>
                                 </td>
                             </tr>
                             <tr class="info-row">
-                                <td class="info-label">Tao Luc</td>
+                                <td class="info-label">Tạo Lúc</td>
                                 <td class="text-muted" th:text="${doanhNghiep.createdAt != null ?
                                     #temporals.format(doanhNghiep.createdAt, 'dd/MM/yyyy HH:mm') : '--'}"></td>
                             </tr>
                             <tr class="info-row">
-                                <td class="info-label">Cap Nhat Gan Nhat</td>
+                                <td class="info-label">Cập Nhật Gần Nhất</td>
                                 <td class="text-muted" th:text="${doanhNghiep.updatedAt != null ?
                                     #temporals.format(doanhNghiep.updatedAt, 'dd/MM/yyyy HH:mm') : '--'}"></td>
                             </tr>
@@ -113,21 +123,21 @@
             </div>
         </div>
 
-        <!-- Right: Thao tac -->
+        <!-- Right: Thao tác -->
         <div class="col-md-5">
-            <div class="card">
+            <div class="card" sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
                 <div class="card-header">
                     <i class="bi bi-lightning me-2"></i>
-                    <span class="fw-semibold">Thao Tac</span>
+                    <span class="fw-semibold">Thao Tác</span>
                 </div>
                 <div class="card-body">
                     <div class="d-flex flex-column gap-2">
                         <a th:href="@{/doanh-nghiep/sua/{ma}(ma=${doanhNghiep.maDoanhNghiep})}"
                            class="btn btn-outline-primary btn-sm">
-                            <i class="bi bi-pencil me-2"></i>Chinh Sua Thong Tin
+                            <i class="bi bi-pencil me-2"></i>Chỉnh Sửa Thông Tin
                         </a>
                         <form th:action="@{/doanh-nghiep/doi-trang-thai/{ma}(ma=${doanhNghiep.maDoanhNghiep})}"
-                              method="post">
+                              method="post" class="m-0">
                             <input type="hidden"
                                    th:name="${_csrf.parameterName}"
                                    th:value="${_csrf.token}">
@@ -136,25 +146,26 @@
                                     th:classappend="${doanhNghiep.trangThai.name() == 'DangHopTac'} ? 'btn-outline-warning' : 'btn-outline-success'">
                                 <i class="bi me-2"
                                    th:classappend="${doanhNghiep.trangThai.name() == 'DangHopTac'} ? 'bi-pause' : 'bi-play'"></i>
-                                <span th:text="${doanhNghiep.trangThai.name() == 'DangHopTac'} ? 'Tam Ngung Hop Tac' : 'Kich Hoat Hop Tac'"></span>
+                                <span th:text="${doanhNghiep.trangThai.name() == 'DangHopTac' ? 'Tạm Ngưng Hợp Tác' : 'Kích Hoạt Hợp Tác'}"></span>
                             </button>
                         </form>
                         <form th:action="@{/doanh-nghiep/xoa/{ma}(ma=${doanhNghiep.maDoanhNghiep})}"
-                              method="post"
-                              onsubmit="return confirm('Ban co chac muon xoa doanh nghiep nay? Hanh dong khong the hoan tac.');">
+                              method="post" class="m-0"
+                              th:onsubmit="'return confirmDelete(this, event, \'' + ${doanhNghiep.tenDoanhNghiep} + '\')'">
                             <input type="hidden"
                                    th:name="${_csrf.parameterName}"
                                    th:value="${_csrf.token}">
                             <button type="submit" class="btn btn-sm btn-outline-danger w-100">
-                                <i class="bi bi-trash me-2"></i>Xoa Doanh Nghiep
+                                <i class="bi bi-trash me-2"></i>Xoá Doanh Nghiệp
                             </button>
                         </form>
                     </div>
-                    <hr>
+                    <hr class="soft-divider">
                     <p class="text-muted small mb-0">
                         <i class="bi bi-info-circle me-1"></i>
-                        Doanh nghiep dang duoc tham chieu boi cac Dot Kien Tap / Thuc Tap
-                        se khong the xoa truc tiep. Hay chuyen sang <strong>Tam Ngung</strong>.
+                        Doanh nghiệp đang được tham chiếu bởi các Đợt Kiến Tập / Thực Tập
+                        sẽ không thể xoá trực tiếp. Hãy chuyển sang <strong>Tạm Ngưng</strong>
+                        để bảo toàn dữ liệu lịch sử.
                     </p>
                 </div>
             </div>

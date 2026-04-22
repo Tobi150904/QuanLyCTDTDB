@@ -26,10 +26,10 @@
         </a>
     </div>
 
-    <!-- Stats -->
+    <!-- Stats — dung variant classes thay cho inline style de dong nhat design tokens -->
     <div class="row g-3 mb-4">
         <div class="col-6 col-md-3">
-            <div class="stat-card">
+            <div class="stat-card variant-info">
                 <div class="stat-card-icon"><i class="bi bi-collection"></i></div>
                 <div>
                     <div class="stat-card-value" th:text="${thongKe['tong'] ?: 0}">0</div>
@@ -38,8 +38,8 @@
             </div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="stat-card">
-                <div class="stat-card-icon" style="background:#198754;"><i class="bi bi-person-check"></i></div>
+            <div class="stat-card variant-success">
+                <div class="stat-card-icon"><i class="bi bi-person-check"></i></div>
                 <div>
                     <div class="stat-card-value" th:text="${thongKe['daCoCVHT'] ?: 0}">0</div>
                     <div class="stat-card-label">Đã Có CVHT</div>
@@ -47,8 +47,8 @@
             </div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="stat-card">
-                <div class="stat-card-icon" style="background:#dc3545;"><i class="bi bi-person-x"></i></div>
+            <div class="stat-card variant-warning">
+                <div class="stat-card-icon"><i class="bi bi-person-x"></i></div>
                 <div>
                     <div class="stat-card-value" th:text="${thongKe['chuaCoCVHT'] ?: 0}">0</div>
                     <div class="stat-card-label">Chưa Có CVHT</div>
@@ -56,8 +56,8 @@
             </div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="stat-card">
-                <div class="stat-card-icon" style="background:#0dcaf0;"><i class="bi bi-mortarboard"></i></div>
+            <div class="stat-card variant-teal">
+                <div class="stat-card-icon"><i class="bi bi-mortarboard"></i></div>
                 <div>
                     <div class="stat-card-value" th:text="${thongKe['soKhoaHoc'] ?: 0}">0</div>
                     <div class="stat-card-label">Số Khóa</div>
@@ -66,14 +66,8 @@
         </div>
     </div>
 
-    <div th:if="${successMsg}" class="alert alert-success alert-dismissible fade show">
-        <span th:text="${successMsg}"></span>
-        <button class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-    <div th:if="${errorMsg}" class="alert alert-danger alert-dismissible fade show">
-        <span th:text="${errorMsg}"></span>
-        <button class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
+    <!-- Flash messages da duoc render boi layout/base.html -->
+
 
     <!-- Filter -->
     <div class="card mb-4">
@@ -114,7 +108,7 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <span class="fw-semibold"><i class="bi bi-table me-2"></i>Danh Sách Lớp</span>
-            <span class="badge bg-secondary" th:text="'Tổng: ' + ${#lists.size(lopList)}">0</span>
+            <span class="badge bg-light text-dark" th:text="'Tổng: ' + ${#lists.size(lopList)}">0</span>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -132,9 +126,15 @@
                     </thead>
                     <tbody>
                         <tr th:if="${#lists.isEmpty(lopList)}">
-                            <td colspan="7" class="text-center py-5">
-                                <i class="bi bi-inbox display-4 text-muted d-block mb-3"></i>
-                                <p class="text-muted mb-3">Không có lớp nào phù hợp bộ lọc.</p>
+                            <td colspan="7">
+                                <div class="empty-state">
+                                    <i class="bi bi-inbox"></i>
+                                    <p>Không có lớp nào phù hợp bộ lọc.</p>
+                                    <a th:href="@{/lop-hanh-chinh}"
+                                       class="btn btn-outline-secondary btn-sm">
+                                        <i class="bi bi-x-lg me-1"></i>Xoá Bộ Lọc
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                         <tr th:each="lop, stat : ${lopList}">

@@ -58,10 +58,7 @@
                 <input type="hidden" th:field="*{maNguoiDung}">
 
                 <!-- Section: Thong tin co ban -->
-                <h6 class="text-uppercase text-muted mb-3"
-                    style="font-size:0.75rem; letter-spacing:0.5px;">
-                    Thông Tin Cơ Bản
-                </h6>
+                <h6 class="section-label">Thông Tin Cơ Bản</h6>
 
                 <div class="row g-3 mb-3">
                     <!-- Tên đăng nhập -->
@@ -143,7 +140,7 @@
                                    placeholder="Mật khẩu"
                                    th:required="!${isEdit}">
                             <label for="matKhau">
-                                Mật Khẩu
+                                Mật Kh���u
                                 <span class="text-danger" th:unless="${isEdit}">*</span>
                                 <span class="text-muted small" th:if="${isEdit}">(để trống nếu không đổi)</span>
                             </label>
@@ -205,10 +202,7 @@
 
                 <!-- Section: GiangVien fields -->
                 <div id="giangVienFields" class="d-none">
-                    <h6 class="text-uppercase text-muted mb-3"
-                        style="font-size:0.75rem; letter-spacing:0.5px;">
-                        Thông Tin Giảng Viên
-                    </h6>
+                    <h6 class="section-label">Thông Tin Giảng Viên</h6>
                     <div class="row g-3 mb-4">
                         <div class="col-md-4">
                             <div class="form-floating">
@@ -239,10 +233,7 @@
 
                 <!-- Section: SinhVien fields -->
                 <div id="sinhVienFields" class="d-none">
-                    <h6 class="text-uppercase text-muted mb-3"
-                        style="font-size:0.75rem; letter-spacing:0.5px;">
-                        Thông Tin Sinh Viên
-                    </h6>
+                    <h6 class="section-label">Thông Tin Sinh Viên</h6>
                     <div class="row g-3 mb-4">
                         <div class="col-md-6">
                             <div class="form-floating">
@@ -260,10 +251,7 @@
                 </div>
 
                 <!-- Section: Vai Tro -->
-                <h6 class="text-uppercase text-muted mb-3"
-                    style="font-size:0.75rem; letter-spacing:0.5px;">
-                    Vai Trò Nghiệp Vụ (Có Thể Chọn Nhiều)
-                </h6>
+                <h6 class="section-label">Vai Trò Nghiệp Vụ (Có Thể Chọn Nhiều)</h6>
                 <div class="row g-2 mb-4">
                     <div class="col-auto" th:each="vt : ${vaiTroList}">
                         <div class="form-check form-check-inline">

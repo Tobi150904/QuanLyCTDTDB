@@ -605,6 +605,59 @@ a > .stat-card:hover {
     font-weight: 500;
 }
 
+/* Form section divider label — tai su dung cho moi form co group fields
+   (nguoi-dung/form, doanh-nghiep/form, hoc-phan/form...).
+   Thay the <h6 style="font-size:0.75rem; letter-spacing:0.5px;"> inline. */
+.section-label {
+    text-transform: uppercase;
+    color: var(--text-subtle);
+    font-size: 0.72rem;
+    letter-spacing: 0.6px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border-color);
+}
+.section-label + .section-label { margin-top: 24px; }
+
+/* "Card header tone" — highlight card mang nghiep vu (vd: ket qua import) */
+.card-header.tone-success  { background: #198754 !important; color: #fff !important; }
+.card-header.tone-warning  { background: #e8a020 !important; color: #fff !important; }
+.card-header.tone-danger   { background: #b02a37 !important; color: #fff !important; }
+.card-header.tone-info     { background: var(--primary-lt) !important; color: #fff !important; }
+.card-header.tone-success .bi,
+.card-header.tone-warning .bi,
+.card-header.tone-danger .bi,
+.card-header.tone-info .bi { color: #fff; }
+
+/* Empty state container — dung chung cho ca table va card */
+.empty-state {
+    text-align: center;
+    padding: 48px 16px;
+    color: var(--text-muted);
+}
+.empty-state .bi {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 12px;
+    opacity: 0.55;
+    color: var(--text-subtle);
+}
+.empty-state p { margin-bottom: 12px; }
+
+/* Vai tro nghiep vu — pill bo tron hien o chi tiet nguoi dung.
+   Tai su dung cho nguoi-dung/chi-tiet, lop-hanh-chinh/chi-tiet... */
+.role-pill {
+    display: inline-block;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: var(--primary);
+    color: #fff;
+    letter-spacing: 0.2px;
+}
+
 /* ============================================================================
    DASHBOARD — Welcome card + Stat variants theo nghiep vu
    Shared giua dashboard.html va cac module list co "stat summary".

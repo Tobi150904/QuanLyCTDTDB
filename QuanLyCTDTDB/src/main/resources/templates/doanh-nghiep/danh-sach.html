@@ -4,7 +4,7 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       layout:decorate="~{layout/base}">
-<head><title>Quan Ly Doanh Nghiep</title></head>
+<head><title>Quản Lý Doanh Nghiệp</title></head>
 <body>
 <div layout:fragment="content">
 
@@ -13,52 +13,53 @@
         <ol class="breadcrumb">
             <li class="breadcrumb-item">
                 <a th:href="@{/dashboard}" class="text-decoration-none">
-                    <i class="bi bi-house-door me-1"></i>Trang Chu
+                    <i class="bi bi-house-door me-1"></i>Trang Chủ
                 </a>
             </li>
-            <li class="breadcrumb-item active" aria-current="page">Doanh Nghiep</li>
+            <li class="breadcrumb-item active" aria-current="page">Doanh Nghiệp</li>
         </ol>
     </nav>
 
     <!-- Page Header -->
-    <div class="d-flex justify-content-between align-items-start mb-4">
+    <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
         <div>
-            <p class="page-subtitle">Quan Tri</p>
-            <h4 class="page-title">Quan Ly Doanh Nghiep</h4>
+            <p class="page-subtitle">Quản Trị</p>
+            <h4 class="page-title mb-0">Quản Lý Doanh Nghiệp</h4>
         </div>
         <div class="d-flex gap-2">
-            <a th:href="@{/doanh-nghiep/them}" class="btn btn-primary btn-sm">
-                <i class="bi bi-plus-lg me-1"></i>Them Moi
+            <a th:href="@{/doanh-nghiep/them}" class="btn btn-primary btn-sm"
+               sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
+                <i class="bi bi-plus-lg me-1"></i>Thêm Mới
             </a>
         </div>
     </div>
 
-    <!-- Stat summary -->
+    <!-- Stat summary — dung variant classes thay cho inline style -->
     <div class="row g-3 mb-4">
         <div class="col-6 col-md-4">
-            <div class="stat-card">
+            <div class="stat-card variant-info">
                 <div class="stat-card-icon"><i class="bi bi-building"></i></div>
                 <div>
                     <div class="stat-card-value" th:text="${thongKe['tongDoanhNghiep'] ?: 0}">0</div>
-                    <div class="stat-card-label">Tong Cong</div>
+                    <div class="stat-card-label">Tổng Cộng</div>
                 </div>
             </div>
         </div>
         <div class="col-6 col-md-4">
-            <div class="stat-card">
+            <div class="stat-card variant-success">
                 <div class="stat-card-icon"><i class="bi bi-check-circle"></i></div>
                 <div>
                     <div class="stat-card-value" th:text="${thongKe['dangHopTac'] ?: 0}">0</div>
-                    <div class="stat-card-label">Dang Hop Tac</div>
+                    <div class="stat-card-label">Đang Hợp Tác</div>
                 </div>
             </div>
         </div>
         <div class="col-12 col-md-4">
-            <div class="stat-card">
+            <div class="stat-card variant-warning">
                 <div class="stat-card-icon"><i class="bi bi-pause-circle"></i></div>
                 <div>
                     <div class="stat-card-value" th:text="${thongKe['tamNgung'] ?: 0}">0</div>
-                    <div class="stat-card-label">Tam Ngung</div>
+                    <div class="stat-card-label">Tạm Ngưng</div>
                 </div>
             </div>
         </div>
@@ -69,30 +70,36 @@
         <div class="card-body py-3">
             <form th:action="@{/doanh-nghiep}" method="get" class="row g-2 align-items-end">
                 <div class="col-12 col-md-6">
+                    <label class="form-label fw-medium small mb-1">Từ Khoá</label>
                     <div class="input-group search-bar">
                         <span class="input-group-text"><i class="bi bi-search"></i></span>
                         <input type="text"
                                class="form-control"
                                name="keyword"
                                th:value="${keyword}"
-                               placeholder="Tim ten, linh vuc, nguoi dai dien, email...">
+                               aria-label="Từ khoá tìm kiếm doanh nghiệp"
+                               placeholder="Tìm theo tên, lĩnh vực, người đại diện, email...">
                     </div>
                 </div>
                 <div class="col-12 col-md-3">
-                    <select class="form-select form-select-sm" name="trangThai">
-                        <option value="">-- Tat Ca Trang Thai --</option>
+                    <label class="form-label fw-medium small mb-1">Trạng Thái</label>
+                    <select class="form-select form-select-sm" name="trangThai"
+                            aria-label="Lọc theo trạng thái">
+                        <option value="">-- Tất Cả Trạng Thái --</option>
                         <option th:each="tt : ${trangThaiList}"
                                 th:value="${tt.name()}"
-                                th:text="${tt.name()}"
+                                th:text="${tt.name() == 'DangHopTac' ? 'Đang Hợp Tác' : 'Tạm Ngưng'}"
                                 th:selected="${trangThaiFilter != null and trangThaiFilter == tt}">
                         </option>
                     </select>
                 </div>
                 <div class="col-auto">
                     <button type="submit" class="btn btn-primary btn-sm">
-                        <i class="bi bi-search me-1"></i>Tim Kiem
+                        <i class="bi bi-search me-1"></i>Tìm Kiếm
                     </button>
-                    <a th:href="@{/doanh-nghiep}" class="btn btn-outline-secondary btn-sm ms-1">
+                    <a th:href="@{/doanh-nghiep}" class="btn btn-outline-secondary btn-sm ms-1"
+                       data-bs-toggle="tooltip" data-bs-title="Xoá bộ lọc"
+                       aria-label="Xoá bộ lọc">
                         <i class="bi bi-x-lg"></i>
                     </a>
                 </div>
@@ -104,10 +111,10 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <span class="fw-semibold">
-                <i class="bi bi-table me-2"></i>Danh Sach Doanh Nghiep
+                <i class="bi bi-table me-2"></i>Danh Sách Doanh Nghiệp
             </span>
-            <span class="badge bg-secondary" th:if="${pages != null}"
-                  th:text="'Tong: ' + ${pages.totalElements}">0</span>
+            <span class="badge bg-light text-dark" th:if="${pages != null}"
+                  th:text="'Tổng: ' + ${pages.totalElements}">0</span>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -115,24 +122,27 @@
                     <thead>
                         <tr>
                             <th style="width:50px;">STT</th>
-                            <th>Ma</th>
-                            <th>Ten Doanh Nghiep</th>
-                            <th>Linh Vuc</th>
-                            <th>Nguoi Dai Dien</th>
-                            <th>Lien He</th>
-                            <th>Trang Thai</th>
-                            <th class="text-center" style="width:130px;">Thao Tac</th>
+                            <th>Mã</th>
+                            <th>Tên Doanh Nghiệp</th>
+                            <th>Lĩnh Vực</th>
+                            <th>Người Đại Diện</th>
+                            <th>Liên Hệ</th>
+                            <th>Trạng Thái</th>
+                            <th class="text-center" style="width:140px;">Thao Tác</th>
                         </tr>
                     </thead>
                     <tbody>
                         <!-- Empty state -->
                         <tr th:if="${pages == null or pages.isEmpty()}">
-                            <td colspan="8" class="text-center py-5">
-                                <i class="bi bi-inbox display-4 text-muted d-block mb-3"></i>
-                                <p class="text-muted mb-3">Chua co doanh nghiep nao.</p>
-                                <a th:href="@{/doanh-nghiep/them}" class="btn btn-primary btn-sm">
-                                    <i class="bi bi-plus-lg me-1"></i>Them Moi
-                                </a>
+                            <td colspan="8">
+                                <div class="empty-state">
+                                    <i class="bi bi-inbox"></i>
+                                    <p>Chưa có doanh nghiệp nào phù hợp bộ lọc.</p>
+                                    <a th:href="@{/doanh-nghiep/them}" class="btn btn-primary btn-sm"
+                                       sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
+                                        <i class="bi bi-plus-lg me-1"></i>Thêm Doanh Nghiệp
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                         <!-- Data rows -->
@@ -150,44 +160,52 @@
                             <td th:text="${dn.nguoiDaiDien ?: '--'}"></td>
                             <td class="small">
                                 <div th:if="${dn.email != null and !dn.email.isEmpty()}">
-                                    <i class="bi bi-envelope me-1 text-muted"></i>
+                                    <i class="bi bi-envelope me-1 text-muted" aria-hidden="true"></i>
                                     <a th:href="'mailto:' + ${dn.email}"
                                        th:text="${dn.email}"
                                        class="text-decoration-none"></a>
                                 </div>
                                 <div th:if="${dn.soDienThoai != null and !dn.soDienThoai.isEmpty()}"
                                      class="text-muted">
-                                    <i class="bi bi-telephone me-1"></i>
+                                    <i class="bi bi-telephone me-1" aria-hidden="true"></i>
                                     <span th:text="${dn.soDienThoai}"></span>
                                 </div>
+                                <span th:if="${(dn.email == null or dn.email.isEmpty()) and
+                                              (dn.soDienThoai == null or dn.soDienThoai.isEmpty())}"
+                                      class="text-muted">--</span>
                             </td>
                             <td>
                                 <span class="badge"
                                       th:classappend="${dn.trangThai.name() == 'DangHopTac'} ? 'bg-success' : 'bg-secondary'"
-                                      th:text="${dn.trangThai.name() == 'DangHopTac'} ? 'Dang Hop Tac' : 'Tam Ngung'">
+                                      th:text="${dn.trangThai.name() == 'DangHopTac' ? 'Đang Hợp Tác' : 'Tạm Ngưng'}">
                                 </span>
                             </td>
                             <td class="text-center">
                                 <div class="d-flex gap-1 justify-content-center">
                                     <a th:href="@{/doanh-nghiep/chi-tiet/{ma}(ma=${dn.maDoanhNghiep})}"
                                        class="btn btn-sm btn-outline-secondary"
-                                       data-bs-toggle="tooltip" data-bs-title="Chi Tiet">
+                                       data-bs-toggle="tooltip" data-bs-title="Chi Tiết"
+                                       aria-label="Xem chi tiết">
                                         <i class="bi bi-eye"></i>
                                     </a>
                                     <a th:href="@{/doanh-nghiep/sua/{ma}(ma=${dn.maDoanhNghiep})}"
                                        class="btn btn-sm btn-outline-primary"
-                                       data-bs-toggle="tooltip" data-bs-title="Chinh Sua">
+                                       sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')"
+                                       data-bs-toggle="tooltip" data-bs-title="Chỉnh Sửa"
+                                       aria-label="Chỉnh sửa">
                                         <i class="bi bi-pencil"></i>
                                     </a>
                                     <form th:action="@{/doanh-nghiep/doi-trang-thai/{ma}(ma=${dn.maDoanhNghiep})}"
-                                          method="post">
+                                          method="post" class="d-inline m-0"
+                                          sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
                                         <input type="hidden"
                                                th:name="${_csrf.parameterName}"
                                                th:value="${_csrf.token}">
                                         <button type="submit"
                                                 class="btn btn-sm"
                                                 th:classappend="${dn.trangThai.name() == 'DangHopTac'} ? 'btn-outline-warning' : 'btn-outline-success'"
-                                                th:data-bs-title="${dn.trangThai.name() == 'DangHopTac'} ? 'Tam Ngung' : 'Kich Hoat'"
+                                                th:data-bs-title="${dn.trangThai.name() == 'DangHopTac'} ? 'Tạm Ngưng Hợp Tác' : 'Kích Hoạt Hợp Tác'"
+                                                th:aria-label="${dn.trangThai.name() == 'DangHopTac'} ? 'Tạm ngưng hợp tác' : 'Kích hoạt hợp tác'"
                                                 data-bs-toggle="tooltip">
                                             <i class="bi"
                                                th:classappend="${dn.trangThai.name() == 'DangHopTac'} ? 'bi-pause' : 'bi-play'">
@@ -204,11 +222,12 @@
 
         <!-- Pagination -->
         <div class="card-footer bg-transparent" th:if="${pages != null and pages.totalPages > 1}">
-            <nav>
+            <nav aria-label="Phân trang doanh nghiệp">
                 <ul class="pagination pagination-sm justify-content-end mb-0">
                     <li class="page-item" th:classappend="${pages.first} ? 'disabled'">
                         <a class="page-link"
-                           th:href="@{/doanh-nghiep(page=${pages.number - 1}, keyword=${keyword}, trangThai=${trangThaiFilter})}">
+                           th:href="@{/doanh-nghiep(page=${pages.number - 1}, keyword=${keyword}, trangThai=${trangThaiFilter})}"
+                           aria-label="Trang trước">
                             <i class="bi bi-chevron-left"></i>
                         </a>
                     </li>
@@ -221,7 +240,8 @@
                     </li>
                     <li class="page-item" th:classappend="${pages.last} ? 'disabled'">
                         <a class="page-link"
-                           th:href="@{/doanh-nghiep(page=${pages.number + 1}, keyword=${keyword}, trangThai=${trangThaiFilter})}">
+                           th:href="@{/doanh-nghiep(page=${pages.number + 1}, keyword=${keyword}, trangThai=${trangThaiFilter})}"
+                           aria-label="Trang sau">
                             <i class="bi bi-chevron-right"></i>
                         </a>
                     </li>

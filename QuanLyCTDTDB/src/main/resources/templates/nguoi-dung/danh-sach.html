@@ -144,12 +144,14 @@
                     <tbody>
                         <!-- Empty state -->
                         <tr th:if="${pages == null or pages.isEmpty()}">
-                            <td colspan="9" class="text-center py-5">
-                                <i class="bi bi-inbox display-4 text-muted d-block mb-3"></i>
-                                <p class="text-muted mb-3">Chưa có người dùng nào.</p>
-                                <a th:href="@{/nguoi-dung/them}" class="btn btn-primary btn-sm">
-                                    <i class="bi bi-person-plus me-1"></i>Thêm Mới
-                                </a>
+                            <td colspan="9">
+                                <div class="empty-state">
+                                    <i class="bi bi-inbox"></i>
+                                    <p>Chưa có người dùng nào phù hợp bộ lọc.</p>
+                                    <a th:href="@{/nguoi-dung/them}" class="btn btn-primary btn-sm">
+                                        <i class="bi bi-person-plus me-1"></i>Thêm Người Dùng
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                         <!-- Data rows -->

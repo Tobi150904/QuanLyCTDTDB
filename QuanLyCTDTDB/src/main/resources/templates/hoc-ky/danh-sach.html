@@ -4,7 +4,7 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       layout:decorate="~{layout/base}">
-<head><title>Quan Ly Hoc Ky</title></head>
+<head><title>Quản Lý Học Kỳ</title></head>
 <body>
 <div layout:fragment="content">
 
@@ -12,75 +12,73 @@
         <ol class="breadcrumb">
             <li class="breadcrumb-item">
                 <a th:href="@{/dashboard}" class="text-decoration-none">
-                    <i class="bi bi-house-door me-1"></i>Trang Chu
+                    <i class="bi bi-house-door me-1"></i>Trang Chủ
                 </a>
             </li>
-            <li class="breadcrumb-item active" aria-current="page">Hoc Ky / Nam Hoc</li>
+            <li class="breadcrumb-item active" aria-current="page">Học Kỳ - Năm Học</li>
         </ol>
     </nav>
 
-    <div class="d-flex justify-content-between align-items-start mb-4">
+    <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
         <div>
-            <p class="page-subtitle">Hoc Vu</p>
-            <h4 class="page-title">Quan Ly Hoc Ky / Nam Hoc</h4>
+            <p class="page-subtitle">Học Vụ</p>
+            <h4 class="page-title mb-0">Quản Lý Học Kỳ / Năm Học</h4>
         </div>
-        <a th:href="@{/hoc-ky/them}" class="btn btn-primary btn-sm">
-            <i class="bi bi-plus-lg me-1"></i>Them Hoc Ky
+        <a th:href="@{/hoc-ky/them}" class="btn btn-primary btn-sm"
+           sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
+            <i class="bi bi-plus-lg me-1"></i>Thêm Học Kỳ
         </a>
     </div>
 
+    <!-- Stat cards — dung variant classes thay cho inline style -->
     <div class="row g-3 mb-4">
         <div class="col-6 col-md-3">
-            <div class="stat-card">
+            <div class="stat-card variant-info">
                 <div class="stat-card-icon"><i class="bi bi-calendar3"></i></div>
                 <div>
                     <div class="stat-card-value" th:text="${thongKe['tong'] ?: 0}">0</div>
-                    <div class="stat-card-label">Tong</div>
+                    <div class="stat-card-label">Tổng Cộng</div>
                 </div>
             </div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="stat-card">
-                <div class="stat-card-icon" style="background:#198754;"><i class="bi bi-play-circle"></i></div>
+            <div class="stat-card variant-success">
+                <div class="stat-card-icon"><i class="bi bi-play-circle"></i></div>
                 <div>
                     <div class="stat-card-value" th:text="${thongKe['dangDienRa'] ?: 0}">0</div>
-                    <div class="stat-card-label">Dang Dien Ra</div>
+                    <div class="stat-card-label">Đang Diễn Ra</div>
                 </div>
             </div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="stat-card">
-                <div class="stat-card-icon" style="background:#0dcaf0;"><i class="bi bi-hourglass-split"></i></div>
+            <div class="stat-card variant-teal">
+                <div class="stat-card-icon"><i class="bi bi-hourglass-split"></i></div>
                 <div>
                     <div class="stat-card-value" th:text="${thongKe['sapDienRa'] ?: 0}">0</div>
-                    <div class="stat-card-label">Sap Dien Ra</div>
+                    <div class="stat-card-label">Sắp Diễn Ra</div>
                 </div>
             </div>
         </div>
         <div class="col-6 col-md-3">
             <div class="stat-card">
-                <div class="stat-card-icon" style="background:#6c757d;"><i class="bi bi-check2-square"></i></div>
+                <div class="stat-card-icon"><i class="bi bi-check2-square"></i></div>
                 <div>
                     <div class="stat-card-value" th:text="${thongKe['daKetThuc'] ?: 0}">0</div>
-                    <div class="stat-card-label">Da Ket Thuc</div>
+                    <div class="stat-card-label">Đã Kết Thúc</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div th:if="${successMsg}" class="alert alert-success alert-dismissible fade show">
-        <i class="bi bi-check-circle me-2"></i><span th:text="${successMsg}"></span>
-        <button class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-    <div th:if="${errorMsg}" class="alert alert-danger alert-dismissible fade show">
-        <i class="bi bi-exclamation-triangle me-2"></i><span th:text="${errorMsg}"></span>
-        <button class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
+    <!-- Flash messages are rendered by layout/base.html -->
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <span class="fw-semibold"><i class="bi bi-list-task me-2"></i>Danh Sach Hoc Ky</span>
-            <span class="badge bg-secondary" th:text="'Tong: ' + ${#lists.size(hocKyList)}">0</span>
+            <span class="fw-semibold">
+                <i class="bi bi-list-task me-2"></i>Danh Sách Học Kỳ
+            </span>
+            <span class="badge bg-light text-dark"
+                  th:text="'Tổng: ' + ${#lists.size(hocKyList)}">0</span>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -88,31 +86,34 @@
                     <thead>
                         <tr>
                             <th style="width:50px;">STT</th>
-                            <th>Ma Hoc Ky</th>
-                            <th>Ky</th>
-                            <th>Nam Hoc</th>
-                            <th>Ngay Bat Dau</th>
-                            <th>Ngay Ket Thuc</th>
-                            <th>Trang Thai</th>
-                            <th class="text-center" style="width:170px;">Thao Tac</th>
+                            <th>Mã Học Kỳ</th>
+                            <th class="text-center">Kỳ</th>
+                            <th>Năm Học</th>
+                            <th>Ngày Bắt Đầu</th>
+                            <th>Ngày Kết Thúc</th>
+                            <th>Trạng Thái</th>
+                            <th class="text-center" style="width:180px;">Thao Tác</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr th:if="${#lists.isEmpty(hocKyList)}">
-                            <td colspan="8" class="text-center py-5">
-                                <i class="bi bi-inbox display-4 text-muted d-block mb-3"></i>
-                                <p class="text-muted mb-3">Chua co hoc ky nao.</p>
-                                <a th:href="@{/hoc-ky/them}" class="btn btn-primary btn-sm">
-                                    <i class="bi bi-plus-lg me-1"></i>Tao Hoc Ky Dau Tien
-                                </a>
+                            <td colspan="8">
+                                <div class="empty-state">
+                                    <i class="bi bi-inbox"></i>
+                                    <p>Chưa có học kỳ nào.</p>
+                                    <a th:href="@{/hoc-ky/them}" class="btn btn-primary btn-sm"
+                                       sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
+                                        <i class="bi bi-plus-lg me-1"></i>Tạo Học Kỳ Đầu Tiên
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                         <tr th:each="hk, stat : ${hocKyList}">
                             <td class="text-muted" th:text="${stat.index + 1}">1</td>
                             <td><code th:text="${hk.maHocKy}"></code></td>
-                            <td>
+                            <td class="text-center">
                                 <span class="badge bg-primary"
-                                      th:text="'HK ' + ${hk.hocKyThu}">HK 1</span>
+                                      th:text="${hk.hocKyThu == 3 ? 'HK Hè' : 'HK ' + hk.hocKyThu}">HK 1</span>
                             </td>
                             <td th:text="${hk.namBatDau} + ' - ' + ${hk.namKetThuc}">--</td>
                             <td class="small text-muted"
@@ -123,51 +124,64 @@
                                     #temporals.format(hk.ngayKetThuc, 'dd/MM/yyyy') : '--'}">--</td>
                             <td>
                                 <span class="badge"
-                                      th:classappend="${hk.trangThai.name() == 'DangDienRa'} ? 'bg-success' :
-                                                     (${hk.trangThai.name() == 'SapDienRa'} ? 'bg-info text-dark' : 'bg-secondary')"
-                                      th:text="${hk.trangThai.name()}">--</span>
+                                      th:with="s=${hk.trangThai.name()}"
+                                      th:classappend="${s == 'DangDienRa' ? 'bg-success' :
+                                                      (s == 'SapDienRa'  ? 'bg-info text-dark' : 'bg-secondary')}"
+                                      th:text="${s == 'DangDienRa' ? 'Đang Diễn Ra' :
+                                               (s == 'SapDienRa'  ? 'Sắp Diễn Ra'  : 'Đã Kết Thúc')}">--</span>
                             </td>
                             <td class="text-center">
                                 <div class="d-flex gap-1 justify-content-center">
                                     <a th:href="@{/hoc-ky/sua/{ma}(ma=${hk.maHocKy})}"
                                        class="btn btn-sm btn-outline-primary"
-                                       data-bs-toggle="tooltip" data-bs-title="Sua">
+                                       sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')"
+                                       data-bs-toggle="tooltip" data-bs-title="Chỉnh Sửa"
+                                       aria-label="Chỉnh sửa học kỳ">
                                         <i class="bi bi-pencil"></i>
                                     </a>
-                                    <!-- Doi trang thai -->
+                                    <!-- Kich Hoat: SapDienRa -> DangDienRa -->
                                     <form th:if="${hk.trangThai.name() == 'SapDienRa'}"
                                           th:action="@{/hoc-ky/doi-trang-thai/{ma}(ma=${hk.maHocKy})}"
-                                          method="post" class="d-inline">
+                                          method="post" class="d-inline m-0"
+                                          sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
                                         <input type="hidden" name="moi" value="DangDienRa">
                                         <input type="hidden"
                                                th:name="${_csrf.parameterName}"
                                                th:value="${_csrf.token}">
                                         <button class="btn btn-sm btn-outline-success"
-                                                data-bs-toggle="tooltip" data-bs-title="Kich Hoat">
+                                                data-bs-toggle="tooltip"
+                                                data-bs-title="Kích Hoạt Học Kỳ"
+                                                aria-label="Kích hoạt học kỳ">
                                             <i class="bi bi-play"></i>
                                         </button>
                                     </form>
+                                    <!-- Ket thuc: DangDienRa -> DaKetThuc -->
                                     <form th:if="${hk.trangThai.name() == 'DangDienRa'}"
                                           th:action="@{/hoc-ky/doi-trang-thai/{ma}(ma=${hk.maHocKy})}"
-                                          method="post" class="d-inline"
-                                          onsubmit="return confirm('Ket thuc hoc ky nay? Khong the hoan tac.')">
+                                          method="post" class="d-inline m-0"
+                                          sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')"
+                                          onsubmit="return confirm('Kết thúc học kỳ này? Thao tác không thể hoàn tác.')">
                                         <input type="hidden" name="moi" value="DaKetThuc">
                                         <input type="hidden"
                                                th:name="${_csrf.parameterName}"
                                                th:value="${_csrf.token}">
                                         <button class="btn btn-sm btn-outline-warning"
-                                                data-bs-toggle="tooltip" data-bs-title="Ket Thuc">
+                                                data-bs-toggle="tooltip"
+                                                data-bs-title="Kết Thúc Học Kỳ"
+                                                aria-label="Kết thúc học kỳ">
                                             <i class="bi bi-stop"></i>
                                         </button>
                                     </form>
                                     <form th:action="@{/hoc-ky/xoa/{ma}(ma=${hk.maHocKy})}"
-                                          method="post" class="d-inline"
-                                          onsubmit="return confirm('Xoa hoc ky [[${hk.maHocKy}]]?')">
+                                          method="post" class="d-inline m-0"
+                                          sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')"
+                                          th:onsubmit="'return confirmDelete(this, event, \'' + ${hk.maHocKy} + '\')'">
                                         <input type="hidden"
                                                th:name="${_csrf.parameterName}"
                                                th:value="${_csrf.token}">
                                         <button class="btn btn-sm btn-outline-danger"
-                                                data-bs-toggle="tooltip" data-bs-title="Xoa">
+                                                data-bs-toggle="tooltip"
+                                                data-bs-title="Xoá" aria-label="Xoá học kỳ">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </form>

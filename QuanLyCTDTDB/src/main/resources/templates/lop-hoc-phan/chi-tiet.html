@@ -33,20 +33,13 @@
             </div>
         </div>
         <a th:href="@{/lop-hoc-phan(maCTDT=${lopId.maCTDT},maHocKy=${lopId.maHocKy})}"
-           class="btn btn-light btn-sm">
-            <i class="bi bi-arrow-left me-1"></i>Quay lại
+           class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>Quay Lại
         </a>
     </div>
 
-    <!-- FLASH -->
-    <div th:if="${successMsg}" class="alert alert-success alert-dismissible fade show">
-        <span th:text="${successMsg}"></span>
-        <button class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-    <div th:if="${errorMsg}" class="alert alert-danger alert-dismissible fade show">
-        <span th:text="${errorMsg}"></span>
-        <button class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
+    <!-- Flash messages da duoc render boi layout/base.html -->
+
 
     <div class="row g-4">
         <!-- DS SV TRONG LỚP -->
@@ -74,9 +67,11 @@
                             </thead>
                             <tbody>
                                 <tr th:if="${#lists.isEmpty(danhSachSV)}">
-                                    <td colspan="6" class="text-center text-muted py-5">
-                                        <i class="bi bi-person-x display-5 d-block mb-2 opacity-50"></i>
-                                        Chưa có sinh viên nào đăng ký lớp này.
+                                    <td colspan="6">
+                                        <div class="empty-state">
+                                            <i class="bi bi-person-x"></i>
+                                            <p>Chưa có sinh viên nào đăng ký lớp này.</p>
+                                        </div>
                                     </td>
                                 </tr>
                                 <tr th:each="ds, stat : ${danhSachSV}">
