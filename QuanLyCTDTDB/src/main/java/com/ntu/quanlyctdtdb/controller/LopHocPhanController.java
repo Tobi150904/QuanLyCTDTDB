@@ -63,8 +63,11 @@ public class LopHocPhanController {
             // filter theo HocKyThu parse tu maHocKy. Hien thi ke ca khi chua
             // bam "Tao hang loat" — giai quyet issue user bao "khong ra gi".
             int hocKyThu = parseHocKyThu(maHocKy);
+            // Dung findByCtdtAndKyFetch de JOIN FETCH hocPhan — tranh
+            // LazyInitializationException khi template goi ch.hocPhan.tenHocPhan
+            // (open-in-view=false).
             List<CtdtHocPhan> hpDuKien = hocKyThu > 0
-                    ? ctdtHocPhanRepo.findById_MaCTDTAndHocKyThu(maCTDT, hocKyThu)
+                    ? ctdtHocPhanRepo.findByCtdtAndKyFetch(maCTDT, hocKyThu)
                     : List.of();
             model.addAttribute("hocKyThu", hocKyThu);
             model.addAttribute("hpDuKien", hpDuKien);

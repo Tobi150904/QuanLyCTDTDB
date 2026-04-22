@@ -1,10 +1,12 @@
 package com.ntu.quanlyctdtdb.controller;
 
+import com.ntu.quanlyctdtdb.dto.DoiNguGvDTO;
 import com.ntu.quanlyctdtdb.dto.HocPhanDTO;
 import com.ntu.quanlyctdtdb.entity.HocPhan;
 import com.ntu.quanlyctdtdb.enums.LoaiHocPhan;
 import com.ntu.quanlyctdtdb.repository.GiangVienRepository;
 import com.ntu.quanlyctdtdb.security.CustomUserDetails;
+import com.ntu.quanlyctdtdb.service.DoiNguGvService;
 import com.ntu.quanlyctdtdb.service.HocPhanService;
 import com.ntu.quanlyctdtdb.util.FileStorageUtil;
 import jakarta.validation.Valid;
@@ -25,6 +27,7 @@ public class HocPhanController {
     private final HocPhanService hocPhanService;
     private final GiangVienRepository giangVienRepo;
     private final FileStorageUtil fileStorageUtil;
+    private final DoiNguGvService doiNguService;
 
     @ModelAttribute("activeMenu")
     public String activeMenu() { return "hoc-phan"; }
@@ -171,6 +174,58 @@ public class HocPhanController {
     @GetMapping("/chi-tiet/{ma}")
     public String chiTiet(@PathVariable String ma, Model model) {
         model.addAttribute("hocPhan", hocPhanService.findById(ma));
+        // Doi ngu GV cho HP — fetch ben service de trang chi-tiet render
+        // duoc ho ten GV (open-in-view=false).
+        model.addAttribute("doiNguList", doiNguService.findByHocPhan(ma));
+        model.addAttribute("doiNguDTO", new DoiNguGvDTO());
+        model.addAttribute("giangVienList", giangVienRepo.findAllFetchNguoiDung());
         return "hoc-phan/chi-tiet";
+    }
+
+    /* ====================== DOI NGU GV CUA HP ====================== */
+    @PostMapping("/chi-tiet/{ma}/doi-ngu/them")
+    public String themDoiNgu(@PathVariable String ma,
+                              @Valid @ModelAttribute DoiNguGvDTO dto,
+                              BindingResult br,
+                              RedirectAttributes ra) {
+        // Force maHocPhan theo path de tranh tampering
+        dto.setMaHocPhan(ma);
+        if (br.hasErrors()) {
+            ra.addFlashAttribute("errorMsg", "Du lieu khong hop le");
+            return "redirect:/hoc-phan/chi-tiet/" + ma;
+        }
+        try {
+            doiNguService.them(dto);
+            ra.addFlashAttribute("successMsg", "Da them GV vao doi ngu!");
+        } catch (Exception e) {
+            ra.addFlashAttribute("errorMsg", e.getMessage());
+        }
+        return "redirect:/hoc-phan/chi-tiet/" + ma;
+    }
+
+    @PostMapping("/chi-tiet/{ma}/doi-ngu/toggle")
+    public String toggleDoiNgu(@PathVariable String ma,
+                                @RequestParam String maGV,
+                                RedirectAttributes ra) {
+        try {
+            doiNguService.toggleTrangThai(ma, maGV);
+            ra.addFlashAttribute("successMsg", "Da cap nhat trang thai GV trong doi ngu.");
+        } catch (Exception e) {
+            ra.addFlashAttribute("errorMsg", e.getMessage());
+        }
+        return "redirect:/hoc-phan/chi-tiet/" + ma;
+    }
+
+    @PostMapping("/chi-tiet/{ma}/doi-ngu/xoa")
+    public String xoaDoiNgu(@PathVariable String ma,
+                             @RequestParam String maGV,
+                             RedirectAttributes ra) {
+        try {
+            doiNguService.xoa(ma, maGV);
+            ra.addFlashAttribute("successMsg", "Da xoa GV khoi doi ngu.");
+        } catch (Exception e) {
+            ra.addFlashAttribute("errorMsg", e.getMessage());
+        }
+        return "redirect:/hoc-phan/chi-tiet/" + ma;
     }
 }
