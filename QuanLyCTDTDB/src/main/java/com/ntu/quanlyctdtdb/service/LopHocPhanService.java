@@ -8,11 +8,19 @@ import java.util.List;
 
 public interface LopHocPhanService {
 
-    /** Tao cac lop HP tu dong cho mot CTDT trong mot hoc ky */
-    void taoLopHocPhanChoCTDT(String maCTDT, String maHocKy);
+    /**
+     * Tao hang loat LopHocPhan cho 1 CTDT trong 1 HocKy.
+     * Loc theo {@code hocKyThu} khop voi tien trinh CTDT va doc so lop tu
+     * {@code KeHoachMoLop} (fallback {@code CTDT_HocPhan.SoLopDuKien}).
+     * @return so LopHocPhan duoc tao moi (lop da ton tai duoc bo qua)
+     */
+    int taoLopHocPhanChoCTDT(String maCTDT, String maHocKy);
 
-    /** Phan cong giang vien cho lop HP */
+    /** Phan cong giang vien cho lop HP. Soft-check: GV ngoai doi ngu van duoc phan cong nhung log WARN. */
     LopHocPhan phanCongGiangVien(LopHocPhanId id, String maGV);
+
+    /** Kiem tra nhanh GV co thuoc doi ngu giang vien cua HP khong. */
+    boolean gvThuocDoiNguHocPhan(String maHocPhan, String maGV);
 
     /** Mo/Dong lop HP */
     LopHocPhan toggleTrangThai(LopHocPhanId id);

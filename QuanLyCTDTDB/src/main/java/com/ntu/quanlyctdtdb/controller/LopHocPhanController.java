@@ -61,15 +61,22 @@ public class LopHocPhanController {
                                @RequestParam String maHocKy,
                                RedirectAttributes ra) {
         try {
-            lopHPService.taoLopHocPhanChoCTDT(maCTDT, maHocKy);
-            ra.addFlashAttribute("successMsg", "Tao lop hoc phan thanh cong!");
+            int created = lopHPService.taoLopHocPhanChoCTDT(maCTDT, maHocKy);
+            if (created == 0) {
+                ra.addFlashAttribute("errorMsg",
+                        "Khong co lop nao duoc tao. Co the: (1) hoc ky nay khong khop voi tien trinh CTDT "
+                      + "(dua tren Khoa + HocKyThu), hoac (2) cac lop da duoc tao truoc do.");
+            } else {
+                ra.addFlashAttribute("successMsg",
+                        "Tao thanh cong " + created + " lop hoc phan moi cho CTDT nay trong hoc ky da chon!");
+            }
         } catch (Exception e) {
             ra.addFlashAttribute("errorMsg", e.getMessage());
         }
         return "redirect:/lop-hoc-phan?maCTDT=" + maCTDT + "&maHocKy=" + maHocKy;
     }
 
-    /** Phan cong giang vien */
+    /** Phan cong giang vien (soft-check: GV ngoai doi ngu van duoc gan + warning). */
     @PostMapping("/phan-cong")
     public String phanCong(@RequestParam String maCTDT,
                             @RequestParam String maHocPhan,
@@ -79,8 +86,16 @@ public class LopHocPhanController {
                             RedirectAttributes ra) {
         try {
             LopHocPhanId id = new LopHocPhanId(maCTDT, maHocPhan, maHocKy, maLop);
+            boolean thuocDoiNgu = lopHPService.gvThuocDoiNguHocPhan(maHocPhan, maGV);
             lopHPService.phanCongGiangVien(id, maGV);
-            ra.addFlashAttribute("successMsg", "Phan cong giang vien thanh cong!");
+            if (thuocDoiNgu) {
+                ra.addFlashAttribute("successMsg", "Phan cong giang vien thanh cong!");
+            } else {
+                ra.addFlashAttribute("warningMsg",
+                        "Da phan cong GV " + maGV + " cho lop, NHUNG GV nay chua thuoc doi ngu giang vien "
+                      + "cua hoc phan " + maHocPhan + ". Vui long them GV vao doi ngu hoc phan "
+                      + "(/hoc-phan/chi-tiet/" + maHocPhan + ") de chuan hoa.");
+            }
         } catch (Exception e) {
             ra.addFlashAttribute("errorMsg", e.getMessage());
         }

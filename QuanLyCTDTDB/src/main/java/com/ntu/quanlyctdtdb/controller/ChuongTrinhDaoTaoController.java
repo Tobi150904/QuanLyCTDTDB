@@ -1,9 +1,13 @@
 package com.ntu.quanlyctdtdb.controller;
 
+import com.ntu.quanlyctdtdb.dto.BcnThanhVienDTO;
 import com.ntu.quanlyctdtdb.dto.ChuongTrinhDaoTaoDTO;
 import com.ntu.quanlyctdtdb.dto.CtdtHocPhanDTO;
 import com.ntu.quanlyctdtdb.entity.ChuongTrinhDaoTao;
+import com.ntu.quanlyctdtdb.enums.ChucDanhBCN;
+import com.ntu.quanlyctdtdb.repository.GiangVienRepository;
 import com.ntu.quanlyctdtdb.security.CustomUserDetails;
+import com.ntu.quanlyctdtdb.service.BcnThanhVienService;
 import com.ntu.quanlyctdtdb.service.ChuongTrinhDaoTaoService;
 import com.ntu.quanlyctdtdb.util.FileStorageUtil;
 import jakarta.validation.Valid;
@@ -22,6 +26,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class ChuongTrinhDaoTaoController {
 
     private final ChuongTrinhDaoTaoService ctdtService;
+    private final BcnThanhVienService bcnService;
+    private final GiangVienRepository giangVienRepo;
     private final FileStorageUtil fileStorageUtil;
 
     @ModelAttribute("activeMenu")
@@ -120,6 +126,12 @@ public class ChuongTrinhDaoTaoController {
         model.addAttribute("ctdt", ctdtService.findById(ma));
         model.addAttribute("hocPhanChuaThuoc", ctdtService.findHocPhanChuaThuoc(ma));
         model.addAttribute("ctdtHocPhanDTO", new CtdtHocPhanDTO());
+
+        // Du lieu cho tab Ban Chu Nhiem
+        model.addAttribute("bcnThanhViens", bcnService.findByCtdt(ma));
+        model.addAttribute("bcnDTO", new BcnThanhVienDTO());
+        model.addAttribute("chucDanhList", ChucDanhBCN.values());
+        model.addAttribute("giangVienList", giangVienRepo.findAllFetchNguoiDung());
         return "ctdt/chi-tiet";
     }
 
@@ -151,5 +163,40 @@ public class ChuongTrinhDaoTaoController {
             ra.addFlashAttribute("errorMsg", e.getMessage());
         }
         return "redirect:/ctdt/chi-tiet/" + ma;
+    }
+
+    /* ====================== QUAN LY BAN CHU NHIEM ====================== */
+    /** Them thanh vien vao BCN cua CTDT. */
+    @PostMapping("/chi-tiet/{ma}/them-bcn")
+    public String themBcn(@PathVariable String ma,
+                           @Valid @ModelAttribute("bcnDTO") BcnThanhVienDTO dto,
+                           BindingResult br,
+                           RedirectAttributes ra) {
+        if (br.hasErrors()) {
+            ra.addFlashAttribute("errorMsg", "Du lieu BCN khong hop le");
+            return "redirect:/ctdt/chi-tiet/" + ma + "#tab-bcn";
+        }
+        try {
+            bcnService.themThanhVien(ma, dto);
+            ra.addFlashAttribute("successMsg", "Them thanh vien BCN thanh cong!");
+        } catch (Exception e) {
+            ra.addFlashAttribute("errorMsg", e.getMessage());
+        }
+        return "redirect:/ctdt/chi-tiet/" + ma + "#tab-bcn";
+    }
+
+    /** Xoa 1 thanh vien khoi BCN. */
+    @PostMapping("/chi-tiet/{ma}/xoa-bcn")
+    public String xoaBcn(@PathVariable String ma,
+                          @RequestParam String maGV,
+                          @RequestParam ChucDanhBCN chucDanh,
+                          RedirectAttributes ra) {
+        try {
+            bcnService.xoaThanhVien(ma, maGV, chucDanh);
+            ra.addFlashAttribute("successMsg", "Da xoa thanh vien khoi BCN!");
+        } catch (Exception e) {
+            ra.addFlashAttribute("errorMsg", e.getMessage());
+        }
+        return "redirect:/ctdt/chi-tiet/" + ma + "#tab-bcn";
     }
 }
