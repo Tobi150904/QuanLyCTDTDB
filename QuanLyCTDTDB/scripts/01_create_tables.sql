@@ -11,6 +11,12 @@
 -- Tai sao DROP TABLE IF EXISTS: dam bao idempotent ngay ca khi da ton tai
 -- schema cu lech cot. Chay lai an toan khi DB dang rong hoac chi co bang cu.
 -- CANH BAO: Script nay se XOA toan bo du lieu hien co. Backup truoc khi chay.
+--
+-- CHINH SACH FK — IMMUTABLE KEYS:
+--   Tat ca FK trong file nay khong khai bao ON UPDATE => mac dinh RESTRICT.
+--   Business key (MaGV, MaSV, MaHP, MaCTDT, MaHocKy, MaDoanhNghiep, MaLopHC,
+--   MaNguoiDung) la BAT BIEN sau khi INSERT. Chi tiet: docs/02 §1.1.
+--   Muon "doi ma" -> tao record moi + soft-delete record cu, KHONG UPDATE PK.
 -- =============================================================================
 
 -- Tao database neu chua co (idempotent). Charset utf8mb4 cho tieng Viet co dau.
@@ -112,7 +118,11 @@ CREATE TABLE DoanhNghiep (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =============================================================================
--- 5. VaiTroThucTap  (danh muc VARCHAR PK: 'GV','DN','CVHT','SV')
+-- 5. VaiTroThucTap  (danh muc VARCHAR PK: 'GV','DN','CVHT')
+--    KHONG co role 'SV': fk_kqtt_nguoidanhgia REFERENCES GiangVien(MaGV)
+--    => nguoi danh gia bat buoc la ban ghi trong bang GiangVien; SV khong luu
+--    trong GiangVien nen khong the la nguoi danh gia. Cam nhan SV (neu co)
+--    nen luu thanh truong TEXT tren DanhSachThucTap, khong phai KetQuaThucTap.
 -- =============================================================================
 CREATE TABLE VaiTroThucTap (
     MaVaiTro   VARCHAR(10)  NOT NULL,

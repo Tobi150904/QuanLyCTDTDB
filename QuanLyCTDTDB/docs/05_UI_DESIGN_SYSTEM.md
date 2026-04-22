@@ -382,12 +382,19 @@ PDT/TTDTXS:        Kien Tap, Thuc Tap, Bao Cao
 ```
 
 ### Badge trang thai DotThucTap (TrangThaiDotTT)
+
+> Enum co 6 gia tri: `ChuanBi`, `ChoDuyet`, `DaDuyet`, `DangThucHien`, `DaKetThuc`, `DaHuy`.
+> `DaHuy` PHAI hien thi mau do (`bg-danger`) de canh bao nguoi dung — dong nhat
+> voi badge `TrangThaiCTDT` va `TrangThaiDotKT`. Fallback `bg-light` danh cho
+> trang thai `ChuanBi` (moi tao, chua chay).
+
 ```html
 <span th:with="tt=${dot.trangThai}"
-      th:class="${tt.name() == 'DaKetThuc'} ? 'badge bg-secondary' :
+      th:class="${tt.name() == 'DaHuy'} ? 'badge bg-danger' :
+               (${tt.name() == 'DaKetThuc'} ? 'badge bg-secondary' :
                (${tt.name() == 'DangThucHien'} ? 'badge bg-success' :
                (${tt.name() == 'DaDuyet'} ? 'badge bg-info text-dark' :
-               (${tt.name() == 'ChoDuyet'} ? 'badge bg-warning text-dark' : 'badge bg-light text-dark')))"
+               (${tt.name() == 'ChoDuyet'} ? 'badge bg-warning text-dark' : 'badge bg-light text-dark'))))"
       th:text="${tt.name()}">
 </span>
 ```

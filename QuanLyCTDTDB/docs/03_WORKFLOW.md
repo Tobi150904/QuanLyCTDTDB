@@ -642,13 +642,13 @@ BUOC 2 — POST /thuc-tap/ket-qua/{maThucTap} (Diem, NhanXet, MaVaiTro)
      Neu co roi: UPDATE (cho phep sua)
      Neu chua: INSERT INTO KetQuaThucTap (MaThucTap, MaVaiTro, MaNguoiDanhGia, Diem, NhanXet)
 
-BUOC 3 — [Tuy chon] SV nhap cam nhan (NhanXet rieng cho SV)
-  -> POST /thuc-tap/cam-nhan/{maThucTap} (NhanXetSV)
-  -> Kiem tra: currentUser.maSV = DanhSachThucTap.MaSV
-  -> MaVaiTro = 'SV' trong VaiTroThucTap
-  -> INSERT/UPDATE KetQuaThucTap
+-- BUOC 3 (da loai bo khoi MVP): SV KHONG tu danh gia chinh thuc vao
+--   KetQuaThucTap. Ly do: fk_kqtt_nguoidanhgia REFERENCES GiangVien(MaGV),
+--   nen chi GV/DN/CVHT (cac nguoi luu trong bang GiangVien) moi nhap duoc.
+--   Neu co yeu cau ghi nhan cam nhan dinh tinh cua SV: dung truong text tren
+--   DanhSachThucTap (vd `NhanXetSV`), khong tao ban ghi KetQuaThucTap.
 
-BUOC 4 — [Khi ket thuc] POST /thuc-tap/{ma}/ket-thuc [PDT/TTDTXS]
+BUOC 3 — [Khi ket thuc] POST /thuc-tap/{ma}/ket-thuc [PDT/TTDTXS]
   -> UPDATE DotThucTap SET TrangThai='DaKetThuc'
   -> UPDATE DanhSachThucTap SET TrangThai='DaKetThuc' WHERE MaDotTT = ?
 ```

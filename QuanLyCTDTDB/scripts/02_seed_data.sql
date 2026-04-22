@@ -142,12 +142,17 @@ INSERT INTO DoanhNghiep (MaDoanhNghiep, TenDoanhNghiep, LinhVuc, NguoiDaiDien, E
 -- =============================================================================
 -- 5. VaiTroThucTap  (danh muc vai tro danh gia trong KetQuaThucTap)
 --    docs/02 §3.9, docs/03 §6.
+--    LUU Y: KetQuaThucTap.fk_kqtt_nguoidanhgia REFERENCES GiangVien(MaGV),
+--    do do moi vai tro o day deu phai la nguoi duoc luu trong bang GiangVien
+--    (GV huong dan, DN dai dien, CVHT deu co ban ghi trong bang GiangVien).
+--    SV khong luu vao GiangVien nen KHONG co vai tro 'SV' — SV khong tu cham
+--    diem chinh thuc vao KetQuaThucTap (nhan xet dinh tinh dung truong text
+--    tren DanhSachThucTap neu can, khong phai 1 ban ghi KetQuaThucTap).
 -- =============================================================================
 INSERT INTO VaiTroThucTap (MaVaiTro, TenVaiTro, MoTa) VALUES
 ('GV',   'Giang Vien Huong Dan', 'Giang vien phu trach huong dan thuc tap tai truong'),
 ('DN',   'Doanh Nghiep',         'Nguoi phu trach tai don vi tiep nhan sinh vien thuc tap'),
-('CVHT', 'Co Van Hoc Tap',       'Co van hoc tap cua lop hanh chinh'),
-('SV',   'Sinh Vien Tu Danh Gia','Cam nhan va tu nhan xet cua chinh sinh vien');
+('CVHT', 'Co Van Hoc Tap',       'Co van hoc tap cua lop hanh chinh');
 
 -- =============================================================================
 -- 6. NhomNguoiDung  <- NguoiDung
@@ -487,7 +492,7 @@ INSERT INTO KetQuaThucTap (MaThucTap, MaVaiTro, MaNguoiDanhGia, Diem, NhanXet) V
 -- SELECT COUNT(*) AS NguoiDung        FROM NguoiDung;                -- 20
 -- SELECT COUNT(*) AS GiangVien        FROM GiangVien;                -- 6
 -- SELECT COUNT(*) AS DoanhNghiep      FROM DoanhNghiep;              -- 4
--- SELECT COUNT(*) AS VaiTroThucTap    FROM VaiTroThucTap;            -- 4
+-- SELECT COUNT(*) AS VaiTroThucTap    FROM VaiTroThucTap;            -- 3
 -- SELECT COUNT(*) AS NhomNguoiDung    FROM NhomNguoiDung;            -- 10
 -- SELECT COUNT(*) AS CTDT             FROM ChuongTrinhDaoTao;        -- 3
 -- SELECT COUNT(*) AS BCN              FROM BCN_ThanhVien;            -- 9

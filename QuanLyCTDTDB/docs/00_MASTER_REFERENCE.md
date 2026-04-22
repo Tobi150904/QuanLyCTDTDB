@@ -218,7 +218,7 @@ PDT import Excel phan cong (DanhSachThucTap): MaSV, LoaiThucTap, MaDoanhNghiep
   -> UNIQUE (MaDotTT, MaSV) - bo qua ban ghi trung
   -> Validate: LoaiThucTap='DoanhNghiep' BAT BUOC MaDN + DN DangHopTac;
                LoaiThucTap='Truong' BAT BUOC MaDN=NULL.
-DN / GV / CVHT / SV nhap KetQuaThucTap (Diem, NhanXet theo VaiTroThucTap)
+DN / GV / CVHT nhap KetQuaThucTap (Diem, NhanXet theo VaiTroThucTap)
   -> Upsert theo (MaThucTap, MaVaiTro) - 1 vai tro 1 ban ghi.
 PDT xuat bao cao Excel
 ```
