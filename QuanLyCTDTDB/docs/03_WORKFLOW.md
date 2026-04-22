@@ -19,8 +19,10 @@ HocPhan:      BanNhap -> ChoDuyet -> DaDuyet
 LopHocPhan:   DangMo -> DaDong -> [ket thuc hoc ky]
               DangMo -> DaHuy   [huy bo]
 
-DotKienTap:   ChuanBi -> ChoDuyet -> DaDuyet -> DaThucHien -> DaHuy
+DotKienTap:   ChuanBi -> ChoDuyet -> DaDuyet -> DaThucHien
+              {ChuanBi,ChoDuyet,DaDuyet,DaThucHien} -> DaHuy
 DotThucTap:   ChuanBi -> ChoDuyet -> DaDuyet -> DangThucHien -> DaKetThuc
+              {any} -> DaHuy (truoc khi DaKetThuc)
 
 DanhSachThucTap: DaPhanCong -> DangThucTap -> DaKetThuc -> DaHuy
 
@@ -416,78 +418,184 @@ BUOC 2 — POST /danh-gia/canh-bao/{maSV}/{ctdt}/{hp}/{hk}/{nhom}/xu-ly
 
 ## MODULE 7: QUAN LY KIEN TAP
 
-### WF-07.1: Tao va phe duyet Dot Kien Tap
+### WF-07.1: Tao Dot Kien Tap va AUTO-ADD Sinh Vien (HYBRID RULE)
 
 ```
-Actor: BCN tao, TTDTXS phe duyet, GV + DN nhan xet
+Actor: BCN/TTDTXS tao, TTDTXS phe duyet
 
 BUOC 1 — BCN/TTDTXS: GET /kien-tap/them
-  -> Option: LopHanhChinh (list), DoanhNghiep (list, TrangThai=DangHopTac), GiangVien (list)
-  -> Form: TenDotKT, MaLopHC, MaHocKy, ThoiGian, MaGVPhuTrach, MaDoanhNghiep, KinhPhiChung, KinhPhiTungSV
+  -> Option: LopHanhChinh (list), DoanhNghiep (list, chi TrangThai=DangHopTac),
+             GiangVien (list fetch NguoiDung), HocKyNamHoc (list desc NgayBatDau)
+  -> Form: TenDotKT, MaLopHC, MaHocKy, ThoiGian, MaGVPhuTrach (optional),
+           MaDoanhNghiep, KinhPhiChung, KinhPhiTungSV
+  -> activeMenu = "kien-tap"
 
-BUOC 2 — POST /kien-tap/them (DotKienTapDTO + file)
-  -> Validate: LopHC ton tai, DoanhNghiep DangHopTac
-  -> INSERT INTO DotKienTap (..., TrangThai='ChuanBi', NguoiTao=currentUser)
-  -> FileStorageUtil.save(FileMinhChung)
-  -> Lay danh sach SinhVien tu LopHanhChinh.MaLopHC:
-       SELECT MaSV FROM SinhVien WHERE MaLopHC = ? AND TrangThaiSV = 'DangHoc'
-  -> INSERT INTO DanhSachSinhVienKienTap (MaDotKT, MaSV, DaThamGia=1) cho tung SV
+BUOC 2 — POST /kien-tap/them (DotKienTapDTO + MultipartFile fileMinhChung)
+  -> Validate server:
+       - MaLopHC ton tai
+       - MaHocKy ton tai
+       - MaDoanhNghiep.TrangThai = 'DangHopTac'  (reject neu 'TamNgung')
+       - MaGVPhuTrach ton tai neu != null
+  -> @Transactional:
+       1. INSERT INTO DotKienTap (..., TrangThai='ChuanBi', NguoiTao=currentUser.maNguoiDung)
+       2. [Tuy chon] FileStorageUtil.save(fileMinhChung) -> UPDATE FileMinhChung
+       3. AUTO-ADD sinh vien (NGHIEP VU HYBRID):
+          SELECT MaSV FROM SinhVien WHERE MaLopHC = ? AND TrangThaiSV = 'DangHoc'
+          Voi moi maSV:
+            INSERT INTO DanhSachSinhVienKienTap (MaDotKT, MaSV, DaThamGia=1)
+          (Sinh vien BaoLuu/ThoiHoc/TotNghiep KHONG duoc them tu dong.)
+       4. Neu lop KHONG co SV 'DangHoc' nao: flash warningMsg
+          "Dot duoc tao nhung lop chua co sinh vien DangHoc. Hay them sinh vien truoc khi nop duyet."
 
-BUOC 3 — BCN: POST /kien-tap/{ma}/nop-duyet
-  -> TrangThai: ChuanBi -> ChoDuyet
+BUOC 3 — BCN: POST /kien-tap/gui-phe-duyet/{id}
+  -> Kiem tra: TrangThai = 'ChuanBi'
+  -> Kiem tra: co it nhat 1 SV DaThamGia=1 trong DanhSachSinhVienKienTap (chan truong hop danh sach rong)
+  -> UPDATE TrangThai = 'ChoDuyet'
 
-BUOC 4 — TTDTXS: POST /kien-tap/{ma}/phe-duyet
-  -> TrangThai: ChoDuyet -> DaDuyet
+BUOC 4 — TTDTXS: POST /kien-tap/phe-duyet/{id}
+  -> Kiem tra: TrangThai = 'ChoDuyet'
+  -> UPDATE DotKienTap SET
+       TrangThai='DaDuyet',
+       NguoiDuyet=currentUser.maNguoiDung,
+       NgayDuyet=NOW()
 
-BUOC 5 — Sau khi thuc hien: POST /kien-tap/{ma}/hoan-thanh [BCN/TTDTXS]
-  -> TrangThai: DaDuyet -> DaThucHien
+BUOC 5a — Hoan thanh: POST /kien-tap/hoan-thanh/{id}  [BCN/TTDTXS]
+  -> Kiem tra: TrangThai = 'DaDuyet'
+  -> UPDATE TrangThai = 'DaThucHien'
+
+BUOC 5b — Huy dot: POST /kien-tap/huy/{id}  [BCN/TTDTXS]
+  -> Kiem tra: TrangThai IN ('ChuanBi','ChoDuyet','DaDuyet','DaThucHien')
+  -> UPDATE TrangThai = 'DaHuy'
+  -> Luu ly do vao log (neu co field).
+```
+
+**Bang bi tac dong:** DotKienTap, DanhSachSinhVienKienTap
+
+---
+
+### WF-07.2: Cap nhat DaThamGia (Danh dau khong tham gia / tham gia)
+
+```
+Actor: BCN / TTDTXS / ADMIN
+
+Use case: Sinh vien om om, trung lich, di thuc tap cho khac -> can loai khoi thong ke
+"thuc te tham gia" nhung KHONG xoa ban ghi (giu lai de audit).
+
+BUOC 1 — GET /kien-tap/chi-tiet/{maDotKT}
+  -> Hien thi bang DanhSachSinhVienKienTap:
+     | MaSV | HoTen | TrangThaiSV | DaThamGia (toggle switch) | Thao tac |
+  -> Sinh vien DaThamGia=0 hien badge "Khong tham gia" mau warning
+  -> Sinh vien DaThamGia=1 hien badge "Tham gia" mau success
+
+BUOC 2 — POST /kien-tap/chi-tiet/{maDotKT}/sv/{maSV}/danh-dau (param daThamGia=0|1)
+  -> Kiem tra: DotKienTap.TrangThai != 'DaHuy' (dot da huy thi khoa)
+  -> Kiem tra: ban ghi (maDotKT, maSV) ton tai
+  -> UPDATE DanhSachSinhVienKienTap SET DaThamGia = ? WHERE (MaDotKT, MaSV)
+  -> Flash successMsg: "Da cap nhat trang thai tham gia cho SV <maSV>"
+
+KET QUA:
+  - Ban ghi duoc GIU LAI (khong DELETE).
+  - Thong ke "So SV thuc te tham gia" = COUNT WHERE DaThamGia=1.
+  - Lich su thay doi co the theo doi qua `updated_at`.
 ```
 
 ---
 
-### WF-07.2: GV va DN nhap Nhan Xet Kien Tap
+### WF-07.3: Dong bo danh sach SV (re-sync sau khi lop co bien dong)
 
 ```
-Actor: GiangVien (MaGVPhuTrach), DoanhNghiep (MaDoanhNghiep)
+Actor: BCN / TTDTXS / ADMIN
+
+Use case: Sau khi tao dot, co SV moi duoc chuyen vao lop HC, hoac SV BaoLuu quay lai hoc.
+
+BUOC 1 — GET /kien-tap/chi-tiet/{maDotKT}
+  -> Hien nut "Dong bo danh sach lop" (tooltip giai thich)
+
+BUOC 2 — POST /kien-tap/chi-tiet/{maDotKT}/dong-bo
+  -> Kiem tra: DotKienTap.TrangThai != 'DaHuy'
+  -> Tim maLopHC cua dot
+  -> SELECT MaSV FROM SinhVien WHERE MaLopHC = ? AND TrangThaiSV='DangHoc'
+  -> Voi moi maSV KHONG co trong DanhSachSinhVienKienTap (maDotKT, ?):
+       INSERT (MaDotKT, MaSV, DaThamGia=1)
+  -> KHONG XOA ban ghi hien co (giu toan ven du lieu audit).
+  -> Flash: "Da them N sinh vien moi vao dot kien tap"
+```
+
+---
+
+### WF-07.4: GV va DN nhap Nhan Xet Kien Tap
+
+```
+Actor: GiangVien (MaGVPhuTrach), DoanhNghiep (tai khoan DN tuong ung MaDoanhNghiep)
+
+Dieu kien: DotKienTap.TrangThai IN ('DaDuyet','DaThucHien')
+(Khong cho nhap khi ChuanBi/ChoDuyet vi dot chua duoc duyet chinh thuc.)
 
 GV nhan xet:
--> POST /kien-tap/{ma}/nhan-xet-gv
+-> GET  /kien-tap/chi-tiet/{id} -> form NhanXetGV (hien thi neu currentUser.maGV == MaGVPhuTrach)
+-> POST /kien-tap/nhan-xet-gv/{id}
 -> Kiem tra: currentUser.maGV == DotKienTap.MaGVPhuTrach
--> UPDATE DotKienTap SET NhanXetGV = ? WHERE MaDotKT = ?
+-> UPDATE DotKienTap SET NhanXetGV = ?
 
 DN nhan xet:
--> POST /kien-tap/{ma}/nhan-xet-dn
--> Kiem tra: currentUser.maDoanhNghiep == DotKienTap.MaDoanhNghiep
--> UPDATE DotKienTap SET NhanXetDN = ? WHERE MaDotKT = ?
+-> GET  /kien-tap/chi-tiet/{id} -> form NhanXetDN (hien thi neu currentUser.maNguoiDung == MaDoanhNghiep)
+-> POST /kien-tap/nhan-xet-dn/{id}
+-> Kiem tra: currentUser.maNguoiDung == DotKienTap.MaDoanhNghiep
+-> UPDATE DotKienTap SET NhanXetDN = ?
 
-Xem danh sach SV:
--> GET /kien-tap/{ma} -> SELECT * FROM DanhSachSinhVienKienTap WHERE MaDotKT = ?
-   JOIN SinhVien ON MaSV -> JOIN NguoiDung ON MaNguoiDung
+2 textarea NhanXetGV va NhanXetDN HOAN TOAN DOC LAP — khong ghi de len nhau.
 ```
 
 ---
 
 ## MODULE 8: QUAN LY THUC TAP
 
-### WF-08.1: Tao Dot Thuc Tap
+### WF-08.1: Tao va phe duyet Dot Thuc Tap
 
 ```
-Actor: PDT, TTDTXS
+Actor: PDT / TTDTXS tao, TTDTXS phe duyet
 
 BUOC 1 — GET /thuc-tap/them
-  -> Option: CTDT_HocPhan (chi HP loai ThucTap hoac KienTap, DaDuyet)
-  -> Option: HocKyNamHoc
+  -> Option:
+     - CTDT_HocPhan: chi lay cap (CTDT,HP) voi HP.LoaiHocPhan IN ('ThucTap','KienTap')
+       AND HP.TrangThai='DaDuyet' AND CTDT.TrangThai='DaDuyet'
+     - HocKyNamHoc: list sap xep theo NgayBatDau DESC
+  -> activeMenu = "thuc-tap"
 
-BUOC 2 — POST /thuc-tap/them (DotThucTapDTO)
-  -> Validate: (MaCTDT, MaHocPhan) ton tai trong CTDT_HocPhan, HocPhan.LoaiHocPhan IN ('ThucTap','KienTap')
-  -> INSERT INTO DotThucTap (..., TrangThai='ChuanBi', NguoiTao=currentUser)
+BUOC 2 — POST /thuc-tap/them (DotThucTapDTO + [optional] MultipartFile fileMinhChung)
+  -> Validate server:
+     - (MaCTDT, MaHocPhan) ton tai trong CTDT_HocPhan
+     - HocPhan.LoaiHocPhan IN ('ThucTap','KienTap')  (reject neu LyThuyet/ThucHanh/DoAn)
+     - MaHocKy ton tai
+     - NgayBatDau <= NgayKetThuc (validate bean)
+  -> INSERT INTO DotThucTap (..., TrangThai='ChuanBi', NguoiTao=currentUser.maNguoiDung)
+  -> [Tuy chon] FileStorageUtil.save(fileMinhChung) -> UPDATE FileMinhChung
 
-BUOC 3 — POST /thuc-tap/{ma}/nop-duyet
-  -> TrangThai: ChuanBi -> ChoDuyet
+BUOC 3 — POST /thuc-tap/gui-phe-duyet/{id}
+  -> Kiem tra: TrangThai = 'ChuanBi'
+  -> UPDATE TrangThai = 'ChoDuyet'
 
-BUOC 4 — TTDTXS: POST /thuc-tap/{ma}/phe-duyet
-  -> TrangThai: ChoDuyet -> DaDuyet -> DangThucHien
-  -> UPDATE DotThucTap SET TrangThai='DangThucHien', NguoiDuyet=currentUser, NgayDuyet=NOW()
+BUOC 4 — TTDTXS: POST /thuc-tap/phe-duyet/{id}
+  -> Kiem tra: TrangThai = 'ChoDuyet'
+  -> UPDATE DotThucTap SET
+       TrangThai='DaDuyet',
+       NguoiDuyet=currentUser.maNguoiDung,
+       NgayDuyet=NOW()
+
+BUOC 5a — TTDTXS: POST /thuc-tap/bat-dau/{id}
+  -> Kiem tra: TrangThai = 'DaDuyet'
+  -> UPDATE TrangThai = 'DangThucHien'
+  (Co the ghep voi BUOC 4 neu deploy muon auto-chuyen; hien de rieng de audit.)
+
+BUOC 5b — TTDTXS: POST /thuc-tap/ket-thuc/{id}
+  -> Kiem tra: TrangThai = 'DangThucHien'
+  -> UPDATE DotThucTap SET TrangThai = 'DaKetThuc'
+  -> Cascade: UPDATE DanhSachThucTap SET TrangThai='DaKetThuc'
+              WHERE MaDotTT = ? AND TrangThai='DangThucTap'
+
+BUOC 5c — TTDTXS: POST /thuc-tap/huy/{id}
+  -> Kiem tra: TrangThai != 'DaKetThuc'
+  -> UPDATE TrangThai = 'DaHuy'
 ```
 
 ---

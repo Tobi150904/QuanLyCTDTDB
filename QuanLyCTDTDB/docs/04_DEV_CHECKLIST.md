@@ -25,7 +25,7 @@
 
 ## PHASE 1: FOUNDATION (KHONG CODE BUSINESS TRUOC KHI XONG)
 
-### Enums (10 enum types — khop voi 01_create_tables.sql)
+### Enums (15 enum types — khop voi 01_create_tables.sql va src/main/java/.../enums/)
 - [x] `LoaiNguoiDung.java`  -> Admin, GiangVien, SinhVien, DoanhNghiep
 - [x] `VaiTro.java`          -> PDT, TTDTXS, CVHT, CNHP
 - [x] `TrangThaiHocKy.java` -> SapDienRa, DangDienRa, DaKetThuc
@@ -303,46 +303,82 @@
 
 ## PHASE 5: MODULE P3 — KIEN TAP & THUC TAP
 
-### Quan ly Kien Tap [BCN, TTDTXS, GV, DN]
-- [ ] `DotKienTapDTO.java`
-- [ ] `KienTapService.java` interface + impl
-  - CRUD DotKienTap, submitForApproval, approve, markDone
-  - getSinhVienCuaLop (lay tu LopHanhChinh -> DanhSachSinhVienKienTap)
-- [ ] `KienTapController.java`
-  - GET  /kien-tap
-  - GET  /kien-tap/them
-  - POST /kien-tap/them                 - tao dot + add SV tu LopHC
-  - GET  /kien-tap/{ma}                 - detail + list SV
-  - POST /kien-tap/{ma}/nop-duyet
-  - POST /kien-tap/{ma}/phe-duyet       - [TTDTXS]
-  - POST /kien-tap/{ma}/hoan-thanh      - DaDuyet -> DaThucHien [BCN/TTDTXS]
-  - POST /kien-tap/{ma}/nhan-xet-gv     - [GV]
-  - POST /kien-tap/{ma}/nhan-xet-dn     - [DN]
-- [ ] `templates/kientap/list.html`, `form.html`, `detail.html`
-- [ ] `FileStorageUtil.java`            - luu file upload, kiem tra extension
-- [ ] TEST: Tao dot -> duyet -> GV + DN nhap nhan xet rieng
+### Quan ly Kien Tap [BCN, TTDTXS, GV, DN] — DANG LAM (Phase 3.6)
+- [x] `DotKienTapDTO.java`
+- [x] `DotKienTapService.java` interface + impl (skeleton)
+- [ ] Fix service layer theo nghiep vu Hybrid (auto-add + toggle + transitions):
+  - [ ] `create()`: SET NguoiTao tu SecurityContext, validate DN DangHopTac,
+        AUTO-ADD tat ca SV `DangHoc` cua lop vao DanhSachSinhVienKienTap (DaThamGia=1).
+  - [ ] `pheduyet()`: SET NguoiDuyet + NgayDuyet.
+  - [ ] `hoanThanh(id)`: DaDuyet -> DaThucHien.
+  - [ ] `huy(id)`: bat ky trang thai truoc DaHuy -> DaHuy (tru chinh DaHuy).
+  - [ ] `capNhatDaThamGia(maDotKT, maSV, daThamGia)`: toggle co validation (khoa khi DaHuy).
+  - [ ] `dongBoDanhSachSV(maDotKT)`: them SV DangHoc moi, khong xoa.
+  - [ ] `nhanXetGV(maDotKT, maGV, text)`: validate currentUser == MaGVPhuTrach.
+  - [ ] `nhanXetDN(maDotKT, maNguoiDung, text)`: validate currentUser == MaDoanhNghiep.
+- [ ] `DotKienTapController.java` bo sung endpoint:
+  - [x] GET  /kien-tap                              - list
+  - [x] GET  /kien-tap/them, POST /kien-tap/them
+  - [x] GET  /kien-tap/sua/{id}, POST /kien-tap/sua/{id}
+  - [x] POST /kien-tap/gui-phe-duyet/{id}
+  - [x] POST /kien-tap/phe-duyet/{id}               - [TTDTXS]
+  - [x] GET  /kien-tap/chi-tiet/{id}
+  - [ ] POST /kien-tap/hoan-thanh/{id}              - [BCN/TTDTXS]  NEW
+  - [ ] POST /kien-tap/huy/{id}                     - [BCN/TTDTXS]  NEW
+  - [ ] POST /kien-tap/nhan-xet-gv/{id}             - [GV]          NEW
+  - [ ] POST /kien-tap/nhan-xet-dn/{id}             - [DN]          NEW
+  - [ ] POST /kien-tap/chi-tiet/{id}/sv/{maSV}/danh-dau              NEW
+  - [ ] POST /kien-tap/chi-tiet/{id}/dong-bo                         NEW
+  - [ ] activeMenu="kien-tap" tren moi GET handler
+- [ ] Templates (THIEU hoan toan - TD-01 cho module kien-tap):
+  - [ ] `templates/kien-tap/danh-sach.html`
+  - [ ] `templates/kien-tap/form.html`
+  - [ ] `templates/kien-tap/chi-tiet.html` (co bang DS SV voi toggle DaThamGia
+        + 2 textarea NhanXet GV/DN conditional theo role)
+- [x] `FileStorageUtil.java` - luu file upload, kiem tra extension (DA CO tu Phase 2)
+- [ ] TEST: Tao dot -> auto-add 3 SV DangHoc cua K22A (khong co SV BaoLuu)
+- [ ] TEST: Toggle DaThamGia 1 SV -> van giu ban ghi, COUNT(DaThamGia=1) giam 1
+- [ ] TEST: Dong bo danh sach khi them SV moi vao lop -> INSERT sinh vien moi
+- [ ] TEST: Duyet dot -> GV + DN nhap nhan xet rieng (2 textarea khong ghi de)
+- [ ] TEST: Huy dot -> khong toggle duoc DaThamGia nua
 
-### Quan ly Thuc Tap [PDT, TTDTXS, GV, SV, DN]
-- [ ] `DotThucTapDTO.java`
-- [ ] `DanhSachThucTapDTO.java`
-- [ ] `ThucTapExcelDTO.java`
-- [ ] `ThucTapService.java` interface + impl
-  - CRUD DotThucTap, submitForApproval, approve
-  - importPhanCong(MultipartFile): doc Excel, skip trung (MaDotTT, MaSV), bao loi
-  - nhapKetQua(maThucTap, maVaiTro, maNguoiDanhGia, diem, nhanXet)
-- [ ] `ThucTapController.java`
-  - GET  /thuc-tap
-  - GET  /thuc-tap/them
-  - POST /thuc-tap/them
-  - GET  /thuc-tap/{ma}                 - detail + phan cong list
-  - POST /thuc-tap/{ma}/nop-duyet
-  - POST /thuc-tap/{ma}/phe-duyet       - [TTDTXS]
-  - POST /thuc-tap/{ma}/import-phan-cong - [PDT] Excel import
-  - POST /thuc-tap/ket-qua/{maThucTap}  - [DN/GV/CVHT]
-  - GET  /thuc-tap/cua-toi              - [SV] xem phan cong cua ban than
-- [ ] `templates/thuctap/list.html`, `form.html`, `detail.html`
-- [ ] TEST: Import Excel co ban ghi trung -> skip + hien bao cao
-- [ ] TEST: DN nhap ket qua, GV nhap ket qua -> 2 ban ghi KetQuaThucTap voi MaVaiTro khac nhau
+### Quan ly Thuc Tap [PDT, TTDTXS, GV, SV, DN] — DANG LAM (Phase 3.7)
+- [x] `DotThucTapDTO.java`
+- [x] `ThucTapExcelDTO.java`
+- [ ] `DanhSachThucTapDTO.java` (form nhap phan cong + ket qua)
+- [x] `DotThucTapService.java` interface + impl (skeleton)
+- [ ] Fix service layer theo nghiep vu:
+  - [ ] `create()`: validate HocPhan.LoaiHocPhan IN ('ThucTap','KienTap'); SET NguoiTao.
+  - [ ] `pheduyet()`: SET NguoiDuyet + NgayDuyet, transition ChoDuyet -> DaDuyet.
+  - [ ] `batDau(id)`: DaDuyet -> DangThucHien (tach rieng tu pheduyet).
+  - [ ] `ketThuc(id)`: DangThucHien -> DaKetThuc; cascade DanhSachThucTap.TrangThai.
+  - [ ] `huy(id)`: bat ky truoc DaKetThuc -> DaHuy.
+  - [ ] `importPhanCong(maDotTT, file)`: parse Excel, validate
+        (LoaiThucTap=='DoanhNghiep' -> MaDN bat buoc, DN DangHopTac), skip trung, trar ve report.
+  - [ ] `nhapKetQua(maThucTap, maVaiTro, maNguoiDanhGia, diem, nhanXet)`: upsert
+        theo (MaThucTap, MaVaiTro).
+- [ ] `DotThucTapController.java` bo sung endpoint:
+  - [x] GET  /thuc-tap, /thuc-tap/them (+POST), /thuc-tap/sua (+POST)
+  - [x] POST /thuc-tap/gui-phe-duyet/{id}
+  - [x] POST /thuc-tap/phe-duyet/{id}
+  - [x] GET  /thuc-tap/chi-tiet/{id}
+  - [ ] POST /thuc-tap/bat-dau/{id}             - [TTDTXS]  NEW
+  - [ ] POST /thuc-tap/ket-thuc/{id}            - [TTDTXS]  NEW
+  - [ ] POST /thuc-tap/huy/{id}                 - [TTDTXS]  NEW
+  - [ ] POST /thuc-tap/import-phan-cong/{id}    - [PDT] Excel import  NEW
+  - [ ] POST /thuc-tap/ket-qua/{maThucTap}      - [DN/GV/CVHT/SV] upsert KetQuaThucTap  NEW
+  - [ ] GET  /thuc-tap/cua-toi                  - [SV] xem phan cong cua ban than  NEW
+  - [ ] activeMenu="thuc-tap" tren moi GET handler
+- [ ] Templates (THIEU hoan toan - TD-01 cho module thuc-tap):
+  - [ ] `templates/thuc-tap/danh-sach.html`
+  - [ ] `templates/thuc-tap/form.html`
+  - [ ] `templates/thuc-tap/chi-tiet.html` (bang phan cong + form import Excel +
+        modal nhap ket qua voi MaVaiTro)
+  - [ ] `templates/thuc-tap/cua-toi.html` (SV xem phan cong cua minh)
+- [ ] TEST: Tao dot voi HP LyThuyet -> reject BusinessException.
+- [ ] TEST: Import Excel co 1 trung + 1 thieu MaDN khi LoaiThucTap=DN -> bao cao 1 inserted, 2 skipped.
+- [ ] TEST: DN nhap ket qua + GV nhap ket qua -> 2 ban ghi KetQuaThucTap voi MaVaiTro khac nhau.
+- [ ] TEST: Ket thuc dot -> cascade DanhSachThucTap.TrangThai = DaKetThuc.
 
 ---
 
