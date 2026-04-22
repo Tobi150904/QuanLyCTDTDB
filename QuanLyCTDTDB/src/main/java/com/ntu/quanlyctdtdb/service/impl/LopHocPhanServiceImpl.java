@@ -128,6 +128,22 @@ public class LopHocPhanServiceImpl implements LopHocPhanService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<LopHocPhan> findByCTDT(String maCTDT) {
+        // Filter "OR" tren trang danh sach: cho phep nguoi dung chi chon CTDT
+        // ma khong chon hoc ky — hien tat ca lop da/dang mo cua CTDT do.
+        return lopHocPhanRepo.findByCtdtFetch(maCTDT);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<LopHocPhan> findByHocKy(String maHocKy) {
+        // Filter "OR" tren trang danh sach: cho phep TTDTXS/PDT xem tong hop
+        // toan bo lop mo trong mot ky across cac CTDT (vd HK1-2024).
+        return lopHocPhanRepo.findByHocKyFetch(maHocKy);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<LopHocPhan> findChuaPhanCongGV() {
         return lopHocPhanRepo.findChuaPhanCongGiangVien();
     }

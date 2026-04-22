@@ -55,22 +55,41 @@ public class LopHocPhanController {
         model.addAttribute("maCTDT", maCTDT);
         model.addAttribute("maHocKy", maHocKy);
 
-        if (maCTDT != null && !maCTDT.isBlank() && maHocKy != null && !maHocKy.isBlank()) {
-            List<LopHocPhan> danhSach = lopHPService.findByCTDTAndHocKy(maCTDT, maHocKy);
+        boolean hasCTDT  = maCTDT  != null && !maCTDT.isBlank();
+        boolean hasHocKy = maHocKy != null && !maHocKy.isBlank();
+
+        // Cho phep tra cuu bang "hoac CTDT, hoac HocKy, hoac ca hai":
+        //   - Chi CTDT         -> tat ca lop cua CTDT across nhieu ky (bao cao tong hop theo CTDT)
+        //   - Chi HocKy        -> tat ca lop mo trong ky do across CTDT (view cap truong)
+        //   - CTDT + HocKy     -> lop cua 1 ky cua 1 CTDT, kem "Ke Hoach Mo Lop" va "Tao Hang Loat"
+        // Tinh chinh 2026-Q2 batch 5: truoc day BUOC lam ca 2 tieu chi — khong
+        // phu hop voi nhu cau bao cao tong hop va xem cheo CTDT.
+        if (hasCTDT || hasHocKy) {
+            List<LopHocPhan> danhSach;
+            if (hasCTDT && hasHocKy) {
+                danhSach = lopHPService.findByCTDTAndHocKy(maCTDT, maHocKy);
+            } else if (hasCTDT) {
+                danhSach = lopHPService.findByCTDT(maCTDT);
+            } else {
+                danhSach = lopHPService.findByHocKy(maHocKy);
+            }
             model.addAttribute("danhSach", danhSach);
 
-            // Danh sach HP DU KIEN mo cua ky da chon: lay tu CtdtHocPhan
-            // filter theo HocKyThu parse tu maHocKy. Hien thi ke ca khi chua
-            // bam "Tao hang loat" — giai quyet issue user bao "khong ra gi".
-            int hocKyThu = parseHocKyThu(maHocKy);
-            // Dung findByCtdtAndKyFetch de JOIN FETCH hocPhan — tranh
-            // LazyInitializationException khi template goi ch.hocPhan.tenHocPhan
-            // (open-in-view=false).
-            List<CtdtHocPhan> hpDuKien = hocKyThu > 0
-                    ? ctdtHocPhanRepo.findByCtdtAndKyFetch(maCTDT, hocKyThu)
-                    : List.of();
-            model.addAttribute("hocKyThu", hocKyThu);
-            model.addAttribute("hpDuKien", hpDuKien);
+            // "Ke Hoach Mo Lop" + "Tao Hang Loat" CHI co y nghia khi user chon
+            // BOTH CTDT va HocKy (vi can ca ma CTDT de join sang CtdtHocPhan
+            // va ma HocKy de xac dinh ky). Neu chi co 1 tham so, bo 2 khoi UI
+            // nay de tranh gay nham lan nghiep vu.
+            if (hasCTDT && hasHocKy) {
+                int hocKyThu = parseHocKyThu(maHocKy);
+                // Dung findByCtdtAndKyFetch de JOIN FETCH hocPhan — tranh
+                // LazyInitializationException khi template goi ch.hocPhan.tenHocPhan
+                // (open-in-view=false).
+                List<CtdtHocPhan> hpDuKien = hocKyThu > 0
+                        ? ctdtHocPhanRepo.findByCtdtAndKyFetch(maCTDT, hocKyThu)
+                        : List.of();
+                model.addAttribute("hocKyThu", hocKyThu);
+                model.addAttribute("hpDuKien", hpDuKien);
+            }
 
             // Dem so lop da mo cho tung HP (de hien thi "da mo X/Y lop")
             Map<String, Long> daMoCount = danhSach.stream()

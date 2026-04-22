@@ -39,15 +39,23 @@
     <div class="card mb-4">
         <div class="card-header bg-white">
             <span class="fw-semibold">
-                <i class="bi bi-funnel me-2"></i>Chọn CTĐT &amp; Học Kỳ
+                <i class="bi bi-funnel me-2"></i>Lọc Theo CTĐT Hoặc Học Kỳ
             </span>
         </div>
         <div class="card-body">
-            <form th:action="@{/lop-hoc-phan}" method="get" class="row g-2 align-items-end mb-3">
+            <p class="text-muted small mb-3 mb-md-2">
+                <i class="bi bi-info-circle me-1"></i>
+                Chọn <strong>ít nhất một</strong> tiêu chí để tra cứu. Có thể lọc chỉ theo CTĐT
+                (xem tất cả các kỳ của một CTĐT), chỉ theo Học Kỳ (xem toàn trường trong một kỳ),
+                hoặc kết hợp cả hai (để mở thêm tác vụ &quot;Kế Hoạch Mở Lớp&quot; và &quot;Tạo Hàng Loạt&quot;).
+            </p>
+            <form th:action="@{/lop-hoc-phan}" method="get"
+                  class="row g-2 align-items-end mb-0"
+                  onsubmit="return validateLopHpFilter(this)">
                 <div class="col-md-5">
                     <label class="form-label fw-medium small">Chương Trình Đào Tạo</label>
-                    <select class="form-select" name="maCTDT" required>
-                        <option value="">-- Chọn CTĐT --</option>
+                    <select class="form-select" name="maCTDT">
+                        <option value="">-- Tất cả CTĐT --</option>
                         <option th:each="c : ${ctdtList}"
                                 th:value="${c.maCTDT}"
                                 th:text="${c.maCTDT + ' - ' + c.tenCTDT}"
@@ -56,8 +64,8 @@
                 </div>
                 <div class="col-md-4">
                     <label class="form-label fw-medium small">Học Kỳ</label>
-                    <select class="form-select" name="maHocKy" required>
-                        <option value="">-- Chọn Học Kỳ --</option>
+                    <select class="form-select" name="maHocKy">
+                        <option value="">-- Tất cả Học Kỳ --</option>
                         <option th:each="hk : ${hocKyList}"
                                 th:value="${hk.maHocKy}"
                                 th:text="${hk.maHocKy + ' - ' + hk.tenHocKy}"
@@ -81,6 +89,21 @@
             </form>
         </div>
     </div>
+
+    <script th:inline="javascript">
+        /* Validate: it nhat 1 trong 2 truong phai duoc chon.
+           Giu logic "OR" o FE de co UX feedback som; BE van cho phep de trong
+           (se hien prompt empty state), nen day chi la guard rail thien chi. */
+        function validateLopHpFilter(form) {
+            var ctdt = form.querySelector('select[name="maCTDT"]').value;
+            var hocKy = form.querySelector('select[name="maHocKy"]').value;
+            if (!ctdt && !hocKy) {
+                alert('Vui long chon it nhat 1 tieu chi: CTĐT hoac Học Kỳ.');
+                return false;
+            }
+            return true;
+        }
+    </script>
 
     <!-- KẾ HOẠCH MỞ LỚP (HP DỰ KIẾN THEO CTĐT + HỌC KỲ) -->
     <div class="card mb-4"
@@ -211,12 +234,23 @@
     </div>
 
     <!-- BẢNG DS LỚP HP CỦA CTĐT + HỌC KỲ -->
-    <div class="card mb-4" th:if="${danhSach != null}">
-        <div class="card-header d-flex justify-content-between align-items-center">
+    <div class="card mb-4" th:if="${danhSach != null}"
+         th:with="onlyCTDT=${(maCTDT != null and !maCTDT.isBlank()) and (maHocKy == null or maHocKy.isBlank())},
+                  onlyHocKy=${(maHocKy != null and !maHocKy.isBlank()) and (maCTDT == null or maCTDT.isBlank())},
+                  showCtdtCol=${onlyHocKy},
+                  showHkCol=${onlyCTDT},
+                  extraCols=${(showCtdtCol ? 1 : 0) + (showHkCol ? 1 : 0)}">
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
             <span class="fw-semibold">
                 <i class="bi bi-collection me-2"></i>Danh Sách Lớp Học Phần
+                <small class="text-white-50 ms-1" th:if="${onlyCTDT}">
+                    (Tất cả các kỳ của CTĐT)
+                </small>
+                <small class="text-white-50 ms-1" th:if="${onlyHocKy}">
+                    (Toàn trường trong Học Kỳ)
+                </small>
             </span>
-            <span class="badge bg-secondary" th:text="'Tổng: ' + ${#lists.size(danhSach)}">0</span>
+            <span class="badge bg-light text-dark" th:text="'Tổng: ' + ${#lists.size(danhSach)}">0</span>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -224,8 +258,10 @@
                     <thead>
                         <tr>
                             <th style="width:50px;">STT</th>
+                            <th th:if="${showCtdtCol}">CTĐT</th>
                             <th>Mã HP</th>
                             <th>Tên Học Phần</th>
+                            <th th:if="${showHkCol}">Học Kỳ</th>
                             <th class="text-center">Nhóm</th>
                             <th>Giảng Viên</th>
                             <th class="text-center">Sĩ Số (HT/TĐ)</th>
@@ -235,20 +271,32 @@
                     </thead>
                     <tbody>
                         <tr th:if="${#lists.isEmpty(danhSach)}">
-                            <td colspan="8" class="text-center py-5">
+                            <td th:colspan="${8 + extraCols}" class="text-center py-5">
                                 <i class="bi bi-inbox display-4 text-muted d-block mb-3"></i>
-                                <p class="text-muted mb-0">
+                                <p class="text-muted mb-0" th:if="${onlyCTDT}">
+                                    CTĐT này chưa có lớp học phần nào. Chọn thêm Học Kỳ để tạo lớp từ CTĐT.
+                                </p>
+                                <p class="text-muted mb-0" th:if="${onlyHocKy}">
+                                    Học Kỳ này chưa có lớp học phần nào được mở ở bất kỳ CTĐT.
+                                </p>
+                                <p class="text-muted mb-0" th:unless="${onlyCTDT or onlyHocKy}">
                                     Chưa có lớp học phần. Bấm &quot;Tạo Hàng Loạt&quot; để sinh lớp từ CTĐT.
                                 </p>
                             </td>
                         </tr>
                         <tr th:each="lhp, stat : ${danhSach}">
                             <td class="text-muted" th:text="${stat.index + 1}">1</td>
+                            <td th:if="${showCtdtCol}">
+                                <code th:text="${lhp.id.maCTDT}"></code>
+                            </td>
                             <td><code th:text="${lhp.id.maHocPhan}"></code></td>
                             <td class="fw-medium"
                                 th:text="${hocPhanMap[lhp.id.maHocPhan] != null
                                     ? hocPhanMap[lhp.id.maHocPhan].tenHocPhan
                                     : '--'}">--</td>
+                            <td th:if="${showHkCol}">
+                                <code th:text="${lhp.id.maHocKy}"></code>
+                            </td>
                             <td class="text-center">
                                 <span class="badge bg-light text-dark"
                                       th:text="'N' + ${lhp.id.maLopHocPhan}">N1</span>
@@ -338,7 +386,8 @@
     <div class="card mb-4" th:unless="${danhSach != null}">
         <div class="card-body text-center py-5 text-muted">
             <i class="bi bi-arrow-up-circle display-5 d-block mb-3 opacity-50"></i>
-            Vui lòng chọn CTĐT và Học Kỳ để xem danh sách lớp học phần.
+            Vui lòng chọn <strong>CTĐT</strong> hoặc <strong>Học Kỳ</strong> (ít nhất một)
+            để xem danh sách lớp học phần.
         </div>
     </div>
 

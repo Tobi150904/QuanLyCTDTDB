@@ -31,8 +31,20 @@ public interface LopHocPhanService {
     /** Mo/Dong lop HP */
     LopHocPhan toggleTrangThai(LopHocPhanId id);
 
-    /** Lay danh sach lop HP theo CTDT va hoc ky */
+    /** Lay danh sach lop HP theo CTDT va hoc ky (lay full cua 1 ky cua CTDT). */
     List<LopHocPhan> findByCTDTAndHocKy(String maCTDT, String maHocKy);
+
+    /**
+     * Lay tat ca lop HP cua mot CTDT across nhieu ky — dung khi nguoi dung
+     * chi loc theo CTDT ma khong chi dinh hoc ky.
+     */
+    List<LopHocPhan> findByCTDT(String maCTDT);
+
+    /**
+     * Lay tat ca lop HP trong mot hoc ky across CTDT — dung khi nguoi dung
+     * chi loc theo hoc ky (view cap truong: TTDTXS/PDT).
+     */
+    List<LopHocPhan> findByHocKy(String maHocKy);
 
     /** Lay danh sach cac lop chua co GV */
     List<LopHocPhan> findChuaPhanCongGV();
