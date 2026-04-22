@@ -42,7 +42,10 @@ public class HocPhanServiceImpl implements HocPhanService {
     @Override
     @Transactional(readOnly = true)
     public HocPhan findById(String ma) {
-        return hocPhanRepo.findById(ma)
+        // Dung findByIdFetch de load ChuNhiemHP + NguoiDung mot lan trong
+        // transaction — tranh LazyInitializationException khi template
+        // hoc-phan/chi-tiet goi hocPhan.chuNhiemHP.hoTen (open-in-view=false).
+        return hocPhanRepo.findByIdFetch(ma)
                 .orElseThrow(() -> new ResourceNotFoundException("HocPhan", "MaHocPhan", ma));
     }
 

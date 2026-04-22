@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface HocPhanRepository extends JpaRepository<HocPhan, String> {
@@ -43,6 +44,18 @@ public interface HocPhanRepository extends JpaRepository<HocPhan, String> {
         ORDER BY hp.maHocPhan
         """)
     List<HocPhan> searchFetchChuNhiem(String kw);
+
+    /**
+     * Detail view: fetch ChuNhiemHP + NguoiDung cua no de template
+     * hoc-phan/chi-tiet hien thi duoc hoTen chu nhiem (open-in-view=false).
+     */
+    @Query("""
+        SELECT hp FROM HocPhan hp
+        LEFT JOIN FETCH hp.chuNhiemHP gv
+        LEFT JOIN FETCH gv.nguoiDung
+        WHERE hp.maHocPhan = :ma
+        """)
+    Optional<HocPhan> findByIdFetch(String ma);
 
     // Lay cac HP chua co trong 1 CTDT
     @Query("""

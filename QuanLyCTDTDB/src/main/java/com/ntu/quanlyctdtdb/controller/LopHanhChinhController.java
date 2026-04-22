@@ -53,7 +53,9 @@ public class LopHanhChinhController {
     public String chiTiet(@PathVariable String ma, Model model) {
         LopHanhChinh lop = service.findById(ma);
         model.addAttribute("lop", lop);
-        model.addAttribute("sinhVienList", sinhVienRepo.findByLopHanhChinh_MaLopHC(ma));
+        // findByLopFetch fetch NguoiDung kem theo de render hoTen trong template
+        // (open-in-view=false — xem SinhVienRepository).
+        model.addAttribute("sinhVienList", sinhVienRepo.findByLopFetch(ma));
         model.addAttribute("activeMenu", ACTIVE_MENU);
         return "lop-hanh-chinh/chi-tiet";
     }

@@ -14,6 +14,20 @@ import java.util.Optional;
 public interface SinhVienRepository extends JpaRepository<SinhVien, String> {
     Optional<SinhVien> findByNguoiDung_MaNguoiDung(String maNguoiDung);
     List<SinhVien> findByLopHanhChinh_MaLopHC(String maLopHC);
+
+    /**
+     * Fetch version — dung cho trang chi tiet lop-hanh-chinh hien thi danh
+     * sach SV kem {@code hoTen}. Can JOIN FETCH {@code nguoiDung} vi
+     * {@code open-in-view=false} khien truy cap lazy o template nem
+     * LazyInitializationException.
+     */
+    @Query("""
+        SELECT sv FROM SinhVien sv
+        LEFT JOIN FETCH sv.nguoiDung
+        WHERE sv.lopHanhChinh.maLopHC = :maLopHC
+        ORDER BY sv.maSV
+        """)
+    List<SinhVien> findByLopFetch(@Param("maLopHC") String maLopHC);
     List<SinhVien> findByTrangThaiSV(TrangThaiSinhVien trangThai);
     long countByLopHanhChinh_MaLopHC(String maLopHC);
 

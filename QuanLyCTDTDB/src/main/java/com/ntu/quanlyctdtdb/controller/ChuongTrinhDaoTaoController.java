@@ -1,9 +1,13 @@
 package com.ntu.quanlyctdtdb.controller;
 
+import com.ntu.quanlyctdtdb.dto.BcnThanhVienDTO;
 import com.ntu.quanlyctdtdb.dto.ChuongTrinhDaoTaoDTO;
 import com.ntu.quanlyctdtdb.dto.CtdtHocPhanDTO;
 import com.ntu.quanlyctdtdb.entity.ChuongTrinhDaoTao;
+import com.ntu.quanlyctdtdb.enums.ChucDanhBCN;
+import com.ntu.quanlyctdtdb.repository.GiangVienRepository;
 import com.ntu.quanlyctdtdb.security.CustomUserDetails;
+import com.ntu.quanlyctdtdb.service.BcnThanhVienService;
 import com.ntu.quanlyctdtdb.service.ChuongTrinhDaoTaoService;
 import com.ntu.quanlyctdtdb.util.FileStorageUtil;
 import jakarta.validation.Valid;
@@ -23,6 +27,8 @@ public class ChuongTrinhDaoTaoController {
 
     private final ChuongTrinhDaoTaoService ctdtService;
     private final FileStorageUtil fileStorageUtil;
+    private final BcnThanhVienService bcnService;
+    private final GiangVienRepository giangVienRepo;
 
     @ModelAttribute("activeMenu")
     public String activeMenu() { return "ctdt"; }
@@ -120,7 +126,47 @@ public class ChuongTrinhDaoTaoController {
         model.addAttribute("ctdt", ctdtService.findById(ma));
         model.addAttribute("hocPhanChuaThuoc", ctdtService.findHocPhanChuaThuoc(ma));
         model.addAttribute("ctdtHocPhanDTO", new CtdtHocPhanDTO());
+
+        // Ban Chu Nhiem — fetch qua service rieng de tranh
+        // MultipleBagFetchException khi cung load 2 @OneToMany List tu CTDT.
+        model.addAttribute("bcnList", bcnService.findByCtdt(ma));
+        model.addAttribute("bcnThanhVienDTO", new BcnThanhVienDTO());
+        model.addAttribute("giangVienList", giangVienRepo.findAllFetchNguoiDung());
+        model.addAttribute("chucDanhList", ChucDanhBCN.values());
         return "ctdt/chi-tiet";
+    }
+
+    /* ====================== BCN: THEM / XOA THANH VIEN ====================== */
+    @PostMapping("/chi-tiet/{ma}/bcn/them")
+    public String themBcn(@PathVariable String ma,
+                           @Valid @ModelAttribute BcnThanhVienDTO dto,
+                           BindingResult br,
+                           RedirectAttributes ra) {
+        if (br.hasErrors()) {
+            ra.addFlashAttribute("errorMsg", "Du lieu khong hop le");
+            return "redirect:/ctdt/chi-tiet/" + ma;
+        }
+        try {
+            bcnService.themThanhVien(ma, dto);
+            ra.addFlashAttribute("successMsg", "Them thanh vien BCN thanh cong!");
+        } catch (Exception e) {
+            ra.addFlashAttribute("errorMsg", e.getMessage());
+        }
+        return "redirect:/ctdt/chi-tiet/" + ma;
+    }
+
+    @PostMapping("/chi-tiet/{ma}/bcn/xoa")
+    public String xoaBcn(@PathVariable String ma,
+                          @RequestParam String maGV,
+                          @RequestParam ChucDanhBCN chucDanh,
+                          RedirectAttributes ra) {
+        try {
+            bcnService.xoaThanhVien(ma, maGV, chucDanh);
+            ra.addFlashAttribute("successMsg", "Da xoa thanh vien BCN.");
+        } catch (Exception e) {
+            ra.addFlashAttribute("errorMsg", e.getMessage());
+        }
+        return "redirect:/ctdt/chi-tiet/" + ma;
     }
 
     @PostMapping("/chi-tiet/{ma}/them-hp")

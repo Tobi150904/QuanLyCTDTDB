@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -29,15 +30,36 @@ public class LopHocPhanServiceImpl implements LopHocPhanService {
     private final EmailService emailService;
 
     @Override
-    public void taoLopHocPhanChoCTDT(String maCTDT, String maHocKy) {
+    public int taoLopHocPhanChoCTDT(String maCTDT, String maHocKy, Map<String, Integer> soLopOverride) {
         HocKyNamHoc hocKy = hocKyRepo.findById(maHocKy)
                 .orElseThrow(() -> new ResourceNotFoundException("HocKyNamHoc", "MaHocKy", maHocKy));
 
-        List<CtdtHocPhan> dsHocPhan = ctdtHocPhanRepo.findById_MaCTDT(maCTDT);
+        // Parse so thu tu ky (1..n) tu maHocKy dang "HKn-YYYY". Chi mo lop cho HP
+        // co CtdtHocPhan.hocKyThu trung voi so ky nay — truoc day code mo het
+        // tat ca HP cua CTDT sang chung 1 ky (bug).
+        int hocKyThu = parseHocKyThu(hocKy.getMaHocKy());
+        if (hocKyThu <= 0) {
+            throw new BusinessException(
+                    "MaHocKy '" + maHocKy + "' khong dung dinh dang HKn-YYYY, khong xac dinh duoc so ky.");
+        }
+
+        List<CtdtHocPhan> dsHocPhan = ctdtHocPhanRepo.findById_MaCTDTAndHocKyThu(maCTDT, hocKyThu);
+        if (dsHocPhan.isEmpty()) {
+            throw new BusinessException(
+                    "CTDT " + maCTDT + " khong co hoc phan nao o HK" + hocKyThu
+                    + ". Vao CTDT chi tiet de them HP cho ky nay truoc.");
+        }
+
+        Map<String, Integer> override = soLopOverride == null ? Map.of() : soLopOverride;
+        int tongTao = 0;
         for (CtdtHocPhan ctdtHP : dsHocPhan) {
-            int soLop = ctdtHP.getSoLopDuKien() != null ? ctdtHP.getSoLopDuKien() : 1;
+            String maHocPhan = ctdtHP.getId().getMaHocPhan();
+            int soLopDefault = ctdtHP.getSoLopDuKien() != null ? ctdtHP.getSoLopDuKien() : 1;
+            int soLop = override.getOrDefault(maHocPhan, soLopDefault);
+            if (soLop < 1) soLop = 1; // guard — luon mo it nhat 1 lop neu HP nam trong danh sach
+
             for (int i = 1; i <= soLop; i++) {
-                LopHocPhanId id = new LopHocPhanId(maCTDT, ctdtHP.getId().getMaHocPhan(), maHocKy, i);
+                LopHocPhanId id = new LopHocPhanId(maCTDT, maHocPhan, maHocKy, i);
                 if (!lopHocPhanRepo.existsById(id)) {
                     LopHocPhan lhp = LopHocPhan.builder()
                             .id(id)
@@ -46,10 +68,20 @@ public class LopHocPhanServiceImpl implements LopHocPhanService {
                             .siSoThucTe(0)
                             .build();
                     lopHocPhanRepo.save(lhp);
+                    tongTao++;
                 }
             }
         }
-        log.info("[LopHocPhan] Tao lop cho CTDT={} HocKy={}: {} hoc phan", maCTDT, maHocKy, dsHocPhan.size());
+        log.info("[LopHocPhan] Tao lop cho CTDT={} HK{}={}: {} HP, {} lop moi",
+                maCTDT, hocKyThu, maHocKy, dsHocPhan.size(), tongTao);
+        return tongTao;
+    }
+
+    /** Parse so ky (1..n) tu maHocKy dang "HKn-YYYY"; tra 0 neu khong hop le. */
+    private int parseHocKyThu(String maHocKy) {
+        if (maHocKy == null || !maHocKy.startsWith("HK") || maHocKy.length() < 3) return 0;
+        char c = maHocKy.charAt(2);
+        return Character.isDigit(c) ? Character.getNumericValue(c) : 0;
     }
 
     @Override
