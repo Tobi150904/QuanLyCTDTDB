@@ -186,27 +186,40 @@ GV thay LopHocPhan cua minh
 CVHT xu ly canh bao (DaCanhBao=1, KetQuaXuLy)
 ```
 
-### 6.4 Luong Kien Tap
+### 6.4 Luong Kien Tap (Hybrid Auto-Add + Toggle DaThamGia)
 ```
-BCN/TTDTXS tao DotKienTap (ChuanBi)
-  -> Chon LopHanhChinh + DoanhNghiep + GVPhuTrach
+BCN/TTDTXS tao DotKienTap (TrangThai='ChuanBi', NguoiTao=currentUser)
+  -> Chon LopHanhChinh + DoanhNghiep (bat buoc DangHopTac) + GVPhuTrach + HocKy
   -> Upload FileMinhChung
-  -> Nop len (ChoDuyet)
-    -> TTDTXS duyet (DaDuyet -> DaThucHien)
-He thong lay danh sach SV tu LopHanhChinh -> DanhSachSinhVienKienTap
-GV nhap NhanXetGV
-DN login nhap NhanXetDN
+  -> AUTO-ADD: he thong select SinhVien WHERE MaLopHC=? AND TrangThaiSV='DangHoc'
+               INSERT DanhSachSinhVienKienTap (..., DaThamGia=1) cho TAT CA SV du dieu kien.
+               (SV BaoLuu/ThoiHoc/TotNghiep KHONG duoc them tu dong.)
+Admin/BCN co the TOGGLE DaThamGia (POST /kien-tap/chi-tiet/{id}/sv/{maSV}/danh-dau):
+  -> Danh dau "Khong tham gia" giu lai ban ghi (audit), chi dao cac loai bao cao
+     "thuc te tham gia".
+  -> Chi khoa toggle khi dot da o trang thai DaHuy.
+Nut "Dong bo danh sach" re-sync khi lop co SV moi (chi INSERT, khong XOA).
+Nop len (ChoDuyet) -> TTDTXS duyet (set NguoiDuyet+NgayDuyet, -> DaDuyet)
+  -> BCN/TTDTXS xac nhan hoan thanh (DaDuyet -> DaThucHien)
+  -> BCN/TTDTXS huy bat ky trang thai nao (tru DaHuy) -> DaHuy
+GV (MaGVPhuTrach)     nhap NhanXetGV  (doc lap)
+DN (MaDoanhNghiep)    nhap NhanXetDN  (doc lap, khong ghi de)
 ```
 
 ### 6.5 Luong Thuc Tap
 ```
-PDT/TTDTXS tao DotThucTap (ChuanBi)
-  -> Chon CTDT_HocPhan (bat buoc la HP loai ThucTap/KienTap) + HocKy
-  -> Nop len (ChoDuyet) -> TTDTXS duyet (DaDuyet -> DangThucHien)
+PDT/TTDTXS tao DotThucTap (ChuanBi, NguoiTao=currentUser)
+  -> Chon CTDT_HocPhan (bat buoc la HP loai ThucTap/KienTap, DaDuyet) + HocKy
+  -> Nop len (ChoDuyet) -> TTDTXS duyet (set NguoiDuyet+NgayDuyet, -> DaDuyet)
+  -> TTDTXS bat dau (DaDuyet -> DangThucHien)
+  -> TTDTXS ket thuc (DangThucHien -> DaKetThuc + cascade DanhSachThucTap.TrangThai)
+  -> TTDTXS huy bat ky truoc DaKetThuc -> DaHuy
 PDT import Excel phan cong (DanhSachThucTap): MaSV, LoaiThucTap, MaDoanhNghiep
   -> UNIQUE (MaDotTT, MaSV) - bo qua ban ghi trung
-DN / GV / CVHT nhap KetQuaThucTap (Diem, NhanXet theo VaiTroThucTap)
-SV nhap NhanXet (cam nhan)
+  -> Validate: LoaiThucTap='DoanhNghiep' BAT BUOC MaDN + DN DangHopTac;
+               LoaiThucTap='Truong' BAT BUOC MaDN=NULL.
+DN / GV / CVHT / SV nhap KetQuaThucTap (Diem, NhanXet theo VaiTroThucTap)
+  -> Upsert theo (MaThucTap, MaVaiTro) - 1 vai tro 1 ban ghi.
 PDT xuat bao cao Excel
 ```
 
@@ -297,4 +310,4 @@ PDT xuat bao cao Excel
 | 07_ROADMAP.md                         | Ke hoach lam viec chi tiet theo phase              |
 | scripts/README.md                     | Huong dan chay SQL + quy tac migration             |
 | scripts/01_create_tables.sql          | DDL tao database + 20 bang                         |
-| scripts/02_seed_data.sql              | DML du lieu mau test day du (16 user, 3 CTDT, ...)|
+| scripts/02_seed_data.sql              | DML du lieu mau test day du (20 user, 12 SV, 3 CTDT, test case DaThamGia=0, SV BaoLuu, ThoiHoc) |

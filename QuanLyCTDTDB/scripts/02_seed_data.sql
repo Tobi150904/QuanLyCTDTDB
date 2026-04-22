@@ -1,9 +1,16 @@
 -- =============================================================================
 -- 02_seed_data.sql  --  Du lieu mau day du, nhat quan voi docs + schema
 --
--- Phien ban: v2 (Phase 3)
+-- Phien ban: v3 (Phase 3 review - Hybrid DaThamGia)
 -- Nguon su that: docs/01_ERD_SCHEMA.md, docs/02_Mo Ta & Thiet Ke Du Lieu.md,
 --               docs/03_WORKFLOW.md, scripts/01_create_tables.sql
+--
+-- THAY DOI v3 so voi v2:
+--   + Them SV2023004 (CNTT-K23A, BaoLuu)   -> minh hoa quy tac "chi SV DangHoc moi auto-add"
+--   + Them SV2022005 (CNTT-K22B, ThoiHoc)  -> tuong tu
+--   + DotKienTap 2 (CNTT-K22B): SV2022004 bi danh dau DaThamGia=0 (khong tham gia)
+--     -> minh hoa nghiep vu toggle hybrid (ban ghi van ton tai de audit).
+--   + Cap nhat counts: NguoiDung 18 -> 20, SinhVien 10 -> 12 (DS KT van giu 7).
 --
 -- Chay SAU KHI da chay 01_create_tables.sql thanh cong.
 -- Thu tu INSERT khop voi dependency chain FK — chay theo thu tu tu tren xuong.
@@ -89,6 +96,9 @@ INSERT INTO NguoiDung
 ('SV2022002',  'sv.2022002',    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2022002@sv.ntu.edu.vn',     'Bui Thi Quynh',        '0912000022', 1, 'SinhVien'),
 ('SV2022003',  'sv.2022003',    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2022003@sv.ntu.edu.vn',     'Ngo Van Tan',          '0912000023', 1, 'SinhVien'),
 ('SV2022004',  'sv.2022004',    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2022004@sv.ntu.edu.vn',     'Dao Thi Uyen',         '0912000024', 1, 'SinhVien'),
+-- ---- Sinh Vien trang thai KHAC DangHoc (de minh hoa auto-add chi lay DangHoc) ----
+('SV2022005',  'sv.2022005',    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2022005@sv.ntu.edu.vn',     'Ly Thi Van',           '0912000025', 1, 'SinhVien'),
+('SV2023004',  'sv.2023004',    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2023004@sv.ntu.edu.vn',     'Truong Quoc Bao',      '0912000014', 1, 'SinhVien'),
 -- ---- Doanh Nghiep (tai khoan login cho nguoi dai dien DN) ----
 ('DN001',      'dn.fpt',        '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'hr@fpt.com.vn',               'FPT Software',         '0281000001', 1, 'DoanhNghiep'),
 ('DN002',      'dn.vng',        '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'internship@vng.com.vn',       'VNG Corporation',      '0281000002', 1, 'DoanhNghiep');
@@ -252,7 +262,10 @@ INSERT INTO SinhVien (MaSV, MaNguoiDung, MaLopHC, TrangThaiSV) VALUES
 ('SV2022002', 'SV2022002', 'CNTT-K22A', 'DangHoc'),
 -- K22B (nam 3)
 ('SV2022003', 'SV2022003', 'CNTT-K22B', 'DangHoc'),
-('SV2022004', 'SV2022004', 'CNTT-K22B', 'DangHoc');
+('SV2022004', 'SV2022004', 'CNTT-K22B', 'DangHoc'),
+-- Test case: SV KHONG thuoc trang thai DangHoc -> khong auto-add vao dot kien tap
+('SV2022005', 'SV2022005', 'CNTT-K22B', 'ThoiHoc'),   -- da thoi hoc tu HK2-2023
+('SV2023004', 'SV2023004', 'CNTT-K23A', 'BaoLuu');    -- dang bao luu HK1-2024
 
 -- =============================================================================
 -- 13. CTDT_HocPhan  <- ChuongTrinhDaoTao, HocPhan
@@ -377,19 +390,26 @@ INSERT INTO DotKienTap
     'GV001', NULL, NULL);
 
 -- =============================================================================
--- 17. DanhSachSinhVienKienTap  <- DotKienTap, SinhVien
---    Business (docs/02 §3.7): Khi tao dot KT, auto add TAT CA SV DangHoc
---    cua lop thuoc dot do vao bang nay.
---    Seed:
---      Dot 1 (CNTT-K22A): SV2022001, SV2022002 (2 SV)
---      Dot 2 (CNTT-K22B): SV2022003, SV2022004 (2 SV)
---      Dot 3 (CNTT-K23A): SV2023001, SV2023002, SV2023003 (3 SV)
+-- 17. DanhSachSinhVienKienTap  <- DotKienTap, SinhVien  (HYBRID RULE)
+--    Business (docs/02 §3.7 + docs/03 WF-07.1, WF-07.2):
+--      1. Khi tao dot KT, service auto-add TAT CA SV co TrangThaiSV='DangHoc'
+--         cua lop thuoc dot do (DaThamGia=1).
+--      2. Admin/BCN co the TOGGLE DaThamGia (danh dau "khong tham gia") — KHONG
+--         xoa ban ghi, luon giu de audit.
+--
+--    Seed mo phong:
+--      Dot 1 (CNTT-K22A): SV2022001, SV2022002              (2 SV, ca 2 DaThamGia=1)
+--      Dot 2 (CNTT-K22B): SV2022003 (DaThamGia=1),
+--                         SV2022004 (DaThamGia=0)           (minh hoa toggle)
+--          * SV2022005 (ThoiHoc) KHONG xuat hien - chung minh auto-add chi lay DangHoc.
+--      Dot 3 (CNTT-K23A): SV2023001, SV2023002, SV2023003   (3 SV, ca 3 DaThamGia=1)
+--          * SV2023004 (BaoLuu) KHONG xuat hien - chung minh auto-add chi lay DangHoc.
 -- =============================================================================
 INSERT INTO DanhSachSinhVienKienTap (MaDotKT, MaSV, DaThamGia) VALUES
 (1, 'SV2022001', 1),
 (1, 'SV2022002', 1),
 (2, 'SV2022003', 1),
-(2, 'SV2022004', 1),
+(2, 'SV2022004', 0),
 (3, 'SV2023001', 1),
 (3, 'SV2023002', 1),
 (3, 'SV2023003', 1);
@@ -451,7 +471,7 @@ INSERT INTO KetQuaThucTap (MaThucTap, MaVaiTro, MaNguoiDanhGia, Diem, NhanXet) V
 -- =============================================================================
 -- Chay tung dong duoi day de xac nhan dung so luong ban ghi:
 -- SELECT COUNT(*) AS HocKyNamHoc      FROM HocKyNamHoc;              -- 4
--- SELECT COUNT(*) AS NguoiDung        FROM NguoiDung;                -- 18
+-- SELECT COUNT(*) AS NguoiDung        FROM NguoiDung;                -- 20
 -- SELECT COUNT(*) AS GiangVien        FROM GiangVien;                -- 6
 -- SELECT COUNT(*) AS DoanhNghiep      FROM DoanhNghiep;              -- 4
 -- SELECT COUNT(*) AS VaiTroThucTap    FROM VaiTroThucTap;            -- 4
@@ -461,7 +481,10 @@ INSERT INTO KetQuaThucTap (MaThucTap, MaVaiTro, MaNguoiDanhGia, Diem, NhanXet) V
 -- SELECT COUNT(*) AS HocPhan          FROM HocPhan;                  -- 10
 -- SELECT COUNT(*) AS DoiNguGV         FROM DoiNguGiangVienHP;        -- 25
 -- SELECT COUNT(*) AS LopHC            FROM LopHanhChinh;             -- 4
--- SELECT COUNT(*) AS SinhVien         FROM SinhVien;                 -- 10
+-- SELECT COUNT(*) AS SinhVien         FROM SinhVien;                 -- 12 (10 DangHoc + 1 BaoLuu + 1 ThoiHoc)
+-- SELECT COUNT(*) AS SV_DangHoc       FROM SinhVien WHERE TrangThaiSV='DangHoc'; -- 10
+-- SELECT COUNT(*) AS DSKT_ThamGia     FROM DanhSachSinhVienKienTap WHERE DaThamGia=1; -- 6
+-- SELECT COUNT(*) AS DSKT_KhongThamGia FROM DanhSachSinhVienKienTap WHERE DaThamGia=0; -- 1
 -- SELECT COUNT(*) AS CTDT_HP          FROM CTDT_HocPhan;             -- 18
 -- SELECT COUNT(*) AS LopHocPhan       FROM LopHocPhan;               -- 12
 -- SELECT COUNT(*) AS DSSV_LHP         FROM DanhSachSinhVienLopHocPhan; -- 15
@@ -488,6 +511,9 @@ INSERT INTO KetQuaThucTap (MaThucTap, MaVaiTro, MaNguoiDanhGia, Diem, NhanXet) V
 -- sv.2023001     SinhVien        -                       CNTT-K23A, DangHoc
 -- sv.2022001     SinhVien        -                       CNTT-K22A, DangThucTap (Dot 1 @FPT)
 -- sv.2022003     SinhVien        -                       CNTT-K22B, DaCanhBao HP-OOP (da xu ly)
+-- sv.2022004     SinhVien        -                       CNTT-K22B, Dot KT 2 - DaThamGia=0 (minh hoa toggle)
+-- sv.2022005     SinhVien        -                       CNTT-K22B, ThoiHoc - KHONG auto-add vao Dot KT
+-- sv.2023004     SinhVien        -                       CNTT-K23A, BaoLuu  - KHONG auto-add vao Dot KT
 -- dn.fpt         DoanhNghiep     -                       FPT Software, DangHopTac
 -- dn.vng         DoanhNghiep     -                       VNG Corporation, DangHopTac
 

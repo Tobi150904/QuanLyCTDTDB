@@ -157,30 +157,81 @@ Test:
 
 ## PHASE 5 — KIEN TAP & THUC TAP
 
-### 5.1 Kien Tap [~]
+### 5.1 Kien Tap [~] — DANG LAM
 
-- Controller + Service da san, chi can templates
+**Trang thai hien tai:**
+- Service + Controller la SKELETON: chi co create/update/list/pheduyet/guiPheDuyet/detail.
+- Chua co logic Auto-add SV, chua set NguoiTao/NguoiDuyet, thieu 6 endpoint quan trong.
+- Templates hoan toan chua ton tai -> controller tra ve 500.
+
+**Cong viec can lam:**
+- Fix service:
+  - `create()`: SET `NguoiTao = currentUser.maNguoiDung`; validate DN `DangHopTac`;
+    AUTO-ADD tat ca SV `DangHoc` cua lop vao `DanhSachSinhVienKienTap (DaThamGia=1)`.
+  - `pheduyet()`: SET `NguoiDuyet + NgayDuyet`.
+  - Them: `hoanThanh()`, `huy()`, `capNhatDaThamGia()`, `dongBoDanhSachSV()`,
+    `nhanXetGV()`, `nhanXetDN()`.
+- Bo sung controller endpoint:
+  - POST `/kien-tap/hoan-thanh/{id}`  (DaDuyet -> DaThucHien)
+  - POST `/kien-tap/huy/{id}`         ({ChuanBi,ChoDuyet,DaDuyet,DaThucHien} -> DaHuy)
+  - POST `/kien-tap/chi-tiet/{id}/sv/{maSV}/danh-dau?daThamGia=0|1`
+  - POST `/kien-tap/chi-tiet/{id}/dong-bo`
+  - POST `/kien-tap/nhan-xet-gv/{id}`, POST `/kien-tap/nhan-xet-dn/{id}`
 - Templates:
   - `templates/kien-tap/danh-sach.html`
-  - `templates/kien-tap/form.html` — upload FileMinhChung, chon LopHC + DN + GVPhuTrach
-  - `templates/kien-tap/chi-tiet.html` — thong tin dot + danh sach SV tham gia + 2 textarea NhanXet (GV/DN)
-- Workflow state: ChuanBi -> ChoDuyet -> DaDuyet -> DaThucHien (-> DaHuy)
-- Test: Tao dot -> duyet -> GV4 + DN1 nhap nhan xet rieng (2 textarea khong ghi de nhau)
+  - `templates/kien-tap/form.html` — upload FileMinhChung, chon LopHC + DN + GVPhuTrach + HocKy
+  - `templates/kien-tap/chi-tiet.html`:
+    - Header: badge trang thai + action transitions conditional theo role/state.
+    - Bang DS SV: cot DaThamGia hien toggle + nut "Danh dau khong tham gia"/"Xac nhan tham gia".
+    - Nut "Dong bo danh sach lop" (tooltip giai thich khi nao dung).
+    - 2 textarea NhanXet (GV/DN) hien conditional theo role.
+- Workflow state:
+  `ChuanBi -> ChoDuyet -> DaDuyet -> DaThucHien`
+  `{ChuanBi,ChoDuyet,DaDuyet,DaThucHien} -> DaHuy`
 
-### 5.2 Thuc Tap + Ket Qua [~]
+**Test:**
+- Tao dot cho lop K22B -> tu dong them 2 SV DangHoc (SV2022003, SV2022004); SV2022005 ThoiHoc KHONG duoc them.
+- Toggle DaThamGia=0 cho SV2022004 -> ban ghi van ton tai, COUNT DaThamGia=1 = 1.
+- Dong bo sau khi them SV moi vao lop -> insert ban ghi moi, giu nguyen DaThamGia cua SV2022004.
+- Duyet dot -> GV4 + DN1 nhap nhan xet rieng (2 textarea khong ghi de nhau).
+- Huy dot -> toggle DaThamGia bi khoa.
 
-- Controller + Service da san, chi can templates + logic import Excel
+### 5.2 Thuc Tap + Ket Qua [~] — DANG LAM
+
+**Trang thai hien tai:**
+- Service + Controller la SKELETON tuong tu Kien Tap.
+- Chua validate `LoaiHocPhan IN ('ThucTap','KienTap')` khi tao dot.
+- Thieu 6 endpoint quan trong + logic import Excel + upsert KetQuaThucTap.
+- Templates chua ton tai.
+
+**Cong viec can lam:**
+- Fix service:
+  - `create()`: validate `HocPhan.LoaiHocPhan` + SET `NguoiTao`.
+  - `pheduyet()`: SET `NguoiDuyet + NgayDuyet`.
+  - Them: `batDau()`, `ketThuc()` (cascade DanhSachThucTap.TrangThai), `huy()`,
+    `importPhanCong()`, `nhapKetQua()`.
+- Controller endpoint bo sung:
+  - POST `/thuc-tap/bat-dau/{id}`, `/ket-thuc/{id}`, `/huy/{id}`
+  - POST `/thuc-tap/import-phan-cong/{id}` (Excel)
+  - POST `/thuc-tap/ket-qua/{maThucTap}` (upsert KetQuaThucTap)
+  - GET `/thuc-tap/cua-toi` (SV xem phan cong cua minh)
 - Templates:
   - `templates/thuc-tap/danh-sach.html`
-  - `templates/thuc-tap/form.html` — chon CTDT_HocPhan (loai ThucTap/KienTap) + HocKy
+  - `templates/thuc-tap/form.html` — chon CTDT_HocPhan (filter loai ThucTap/KienTap) + HocKy
   - `templates/thuc-tap/chi-tiet.html` — list phan cong + import Excel + modal nhap ket qua
   - `templates/thuc-tap/cua-toi.html` — SV xem phan cong cua minh
-- Import Excel: dung `ThucTapExcelDTO` + `ExcelImportUtil.parseMultipartToDTO(...)`, skip trung `(MaDotTT, MaSV)`, tra ve `ImportReport { totalRows, inserted, skipped, errors[] }`
-- Nhap ket qua: modal chon `VaiTro` (GV/DN/CVHT/SV), Diem (0-10), NhanXet. Upsert theo `(MaThucTap, MaVaiTro)`
+- Import Excel: dung `ThucTapExcelDTO` + `ExcelImportUtil.parseMultipartToDTO(...)`,
+  validate rules LoaiThucTap/MaDN theo §3.8 cua docs/02, skip trung `(MaDotTT, MaSV)`,
+  tra ve `ImportReport { totalRows, inserted, skipped, errors[] }`.
+- Nhap ket qua: modal chon `VaiTro` (GV/DN/CVHT/SV), Diem (0-10), NhanXet.
+  Upsert theo `(MaThucTap, MaVaiTro)`.
 
-Test:
-- Import Excel chua 2 dong: 1 dong trung -> report bao 1 inserted, 1 skipped
-- DN + GV cung nhap cho `(MaThucTap=1)` -> tao 2 record `KetQuaThucTap` voi `MaVaiTro` khac
+**Test:**
+- Tao dot voi HP `LoaiHocPhan=LyThuyet` -> reject BusinessException.
+- Import Excel chua 2 dong: 1 dong trung + 1 dong LoaiThucTap='DoanhNghiep' thieu MaDN
+  -> report 0 inserted, 2 skipped + cac loi cu the.
+- DN + GV cung nhap cho `(MaThucTap=1)` -> tao 2 record `KetQuaThucTap` voi `MaVaiTro` khac.
+- Ket thuc dot -> cascade `DanhSachThucTap.TrangThai = DaKetThuc`.
 
 ---
 

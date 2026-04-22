@@ -356,23 +356,46 @@ PDT/TTDTXS:        Kien Tap, Thuc Tap, Bao Cao
 
 ## 8. THYMELEAF HELPERS (copy vao template khi can)
 
-### Badge trang thai CTDT
+> Luu y: cac enum Java cua project dung PascalCase (`DaDuyet`, `ChoDuyet`, `ChuanBi`...),
+> KHONG phai UPPER_SNAKE_CASE. `enum.name()` tra ve dung ten Java (`"DaDuyet"`).
+> Moi comparison Thymeleaf phai dung chuoi PascalCase de khop.
+
+### Badge trang thai CTDT / HocPhan (TrangThaiCTDT, TrangThaiHocPhan)
 ```html
 <span th:with="tt=${ctdt.trangThai}"
-      th:class="${tt.name() == 'DA_DUYET'} ? 'badge bg-success' :
-               (${tt.name() == 'CHO_DUYET'} ? 'badge bg-warning text-dark' :
-               (${tt.name() == 'DA_HUY'} ? 'badge bg-danger' : 'badge bg-secondary'))"
+      th:class="${tt.name() == 'DaDuyet'} ? 'badge bg-success' :
+               (${tt.name() == 'ChoDuyet'} ? 'badge bg-warning text-dark' :
+               (${tt.name() == 'DaHuy'} ? 'badge bg-danger' : 'badge bg-secondary'))"
       th:text="${tt.name()}">
 </span>
 ```
 
-### Badge trang thai HocPhan
+### Badge trang thai DotKienTap (TrangThaiDotKT)
 ```html
-<span th:with="tt=${hp.trangThai}"
-      th:class="${tt.name() == 'DA_DUYET'} ? 'badge bg-success' :
-               (${tt.name() == 'CHO_DUYET'} ? 'badge bg-warning text-dark' : 'badge bg-secondary')"
+<span th:with="tt=${dot.trangThai}"
+      th:class="${tt.name() == 'DaDuyet'} ? 'badge bg-info text-dark' :
+               (${tt.name() == 'DaThucHien'} ? 'badge bg-success' :
+               (${tt.name() == 'ChoDuyet'} ? 'badge bg-warning text-dark' :
+               (${tt.name() == 'DaHuy'} ? 'badge bg-danger' : 'badge bg-secondary')))"
       th:text="${tt.name()}">
 </span>
+```
+
+### Badge trang thai DotThucTap (TrangThaiDotTT)
+```html
+<span th:with="tt=${dot.trangThai}"
+      th:class="${tt.name() == 'DaKetThuc'} ? 'badge bg-secondary' :
+               (${tt.name() == 'DangThucHien'} ? 'badge bg-success' :
+               (${tt.name() == 'DaDuyet'} ? 'badge bg-info text-dark' :
+               (${tt.name() == 'ChoDuyet'} ? 'badge bg-warning text-dark' : 'badge bg-light text-dark')))"
+      th:text="${tt.name()}">
+</span>
+```
+
+### Badge DaThamGia (cho bang DanhSachSinhVienKienTap)
+```html
+<span th:if="${row.daThamGia}" class="badge bg-success">Tham gia</span>
+<span th:unless="${row.daThamGia}" class="badge bg-warning text-dark">Khong tham gia</span>
 ```
 
 ### Nut xoa co confirm

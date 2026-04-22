@@ -22,8 +22,8 @@ com.ntu.quanlyctdtdb/
 │   ├── HocPhanController.java           /hoc-phan/** (Controller DONE, thieu templates)
 │   ├── ChuongTrinhDaoTaoController.java /ctdt/**     (Controller DONE, thieu templates)
 │   ├── LopHocPhanController.java        /lop-hoc-phan/** (Controller DONE, thieu templates)
-│   ├── DotKienTapController.java        /kien-tap/** (Controller DONE, thieu templates)
-│   └── DotThucTapController.java        /thuc-tap/** (Controller DONE, thieu templates)
+│   ├── DotKienTapController.java        /kien-tap/** (Controller SKELETON, thieu 6 endpoint + templates)
+│   └── DotThucTapController.java        /thuc-tap/** (Controller SKELETON, thieu 6 endpoint + templates)
 ├── dto/
 │   ├── NguoiDungDTO.java, NguoiDungExcelDTO.java
 │   ├── HocPhanDTO.java
@@ -77,13 +77,18 @@ profile/profile.html         (DONE)
 | CTDT              | DONE   | DONE       | DONE    | DONE       | THIEU     | Controller 500    |
 | Lop Hoc Phan      | DONE   | DONE       | DONE    | DONE       | THIEU     | Controller 500    |
 | Danh Gia + Canh Bao| DONE  | DONE       | THIEU   | THIEU      | THIEU     | Gap — Phase 4     |
-| Kien Tap          | DONE   | DONE       | DONE    | DONE       | THIEU     | Controller 500    |
-| Thuc Tap          | DONE   | DONE       | DONE    | DONE       | THIEU     | Controller 500    |
+| Kien Tap          | DONE   | DONE       | PARTIAL | PARTIAL    | THIEU     | Thieu endpoint hoan-thanh/huy/nhan-xet/toggle/dong-bo + template |
+| Thuc Tap          | DONE   | DONE       | PARTIAL | PARTIAL    | THIEU     | Thieu endpoint bat-dau/ket-thuc/huy/import/ket-qua + template |
 | Bao Cao           | -      | -          | THIEU   | THIEU      | THIEU     | Gap — Phase 6     |
 
 **Diem can chu y:**
 - 5 controller da viet san (HocPhan, CTDT, LopHocPhan, DotKienTap, DotThucTap) se tra ve `TemplateInputException` khi truy cap vi thieu file HTML tuong ung. User se thay trang 500 hoac white-label error page.
-- 3 module (DoanhNghiep, HocKyNamHoc, LopHanhChinh) moi co Repository + Entity, chua co Service/Controller/Template.
+- 3 module (HocKyNamHoc, LopHanhChinh, DanhGia) moi co Repository + Entity, chua co Service/Controller/Template.
+- DotKienTap/DotThucTap service+controller moi la SKELETON:
+  - Thieu logic Auto-add SV khi tao DotKienTap (quy tac Hybrid WF-07.1 BUOC 2).
+  - Thieu endpoint transitions: `/hoan-thanh`, `/huy` (kien-tap); `/bat-dau`, `/ket-thuc`, `/huy` (thuc-tap).
+  - Thieu endpoint toggle `DaThamGia`, dong bo danh sach, nhan xet GV/DN, import Excel phan cong, upsert ket qua.
+  - Chua set `NguoiTao`, `NguoiDuyet`, `NgayDuyet` -> insert duoi NOT NULL se crash.
 
 ---
 

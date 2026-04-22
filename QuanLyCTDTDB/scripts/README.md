@@ -21,20 +21,24 @@ Script `01_create_tables.sql` da co `CREATE DATABASE IF NOT EXISTS QuanLyCTDTDB`
 - Tat ca ENUM trong DDL khop 100% voi enum Java (`@Enumerated(EnumType.STRING)`)
 - CHECK constraint cho `SiSoToiDa BETWEEN 30 AND 60`, `Diem BETWEEN 0 AND 10`
 
-### 02_seed_data.sql  (v2 — Phase 3)
+### 02_seed_data.sql  (v3 — Phase 3 review, Hybrid DaThamGia)
 Script idempotent (TRUNCATE truoc khi INSERT, chay lai an toan bao nhieu lan cung duoc).
 
-- **18 NguoiDung** (1 Admin, 6 GV, 10 SV, 2 DN) — tat ca mat khau `Password@123` (BCrypt da hash san).
+- **20 NguoiDung** (1 Admin, 6 GV, 12 SV, 2 DN) — tat ca mat khau `Password@123` (BCrypt da hash san).
   MaSV theo quy uoc `SV + nam + 3 so` (vd `SV2024001`) — khop `docs/02 §1`.
 - **4 Hoc Ky**: HK1-2023, HK2-2023 (DaKetThuc); HK1-2024 (DangDienRa); HK2-2024 (SapDienRa).
 - **4 Doanh Nghiep** (3 DangHopTac, 1 TamNgung).
 - **3 CTDT** (2022, 2023 `DaDuyet`; 2024 `ChoDuyet`). Moi CTDT co du 3 vi tri BCN: ChuNhiem/ThuKy/UyVien.
 - **10 Hoc Phan** (9 DaDuyet, 1 ChoDuyet HP-AI), **25 record `DoiNguGiangVienHP`** (10 CNHP auto + 15 GV bo sung), **18 record `CTDT_HocPhan`**.
 - **4 Lop Hanh Chinh** (K22A, K22B, K23A, K24A), moi lop co CVHT + thuoc CTDT khac nhau.
-- **10 Sinh Vien** trai deu 4 lop.
+- **12 Sinh Vien**: 10 `DangHoc` (trai deu 4 lop) + 1 `BaoLuu` (SV2023004) + 1 `ThoiHoc` (SV2022005).
+  Hai SV nay de MINH HOA quy tac: auto-add chi lay `TrangThaiSV='DangHoc'` — xem `docs/02 §3.7`.
 - **12 Lop Hoc Phan**: 5 DaDong (HK1-2023, HK2-2023) + 7 DangMo (HK1-2024, co 2 lop chua phan cong GV de test).
 - **15 record `DanhSachSinhVienLopHocPhan`** trong do co 2 `DaCanhBao=1`: 1 da xu ly, 1 CHUA xu ly (de dashboard CVHT nhin thay).
-- **3 Dot Kien Tap** (DaThucHien, DaDuyet, ChoDuyet), **7 SV tham gia** (auto add het SV DangHoc cua lop theo `docs/02 §3.7`).
+- **3 Dot Kien Tap** (DaThucHien, DaDuyet, ChoDuyet), **7 record `DanhSachSinhVienKienTap`** — auto-add tu SV `DangHoc` (K22A:2, K22B:2, K23A:3):
+  - 6 record `DaThamGia=1` (tham gia thuc te).
+  - 1 record `DaThamGia=0` (SV2022004 Dot 2) — MINH HOA thao tac "danh dau khong tham gia" giu lai ban ghi de audit (WF-07.2).
+  - SV2022005 (ThoiHoc) va SV2023004 (BaoLuu) KHONG ton tai o bang nay -> quy tac auto-add hoat dong dung.
 - **2 Dot Thuc Tap**, **4 phan cong thuc tap** (3 DN + 1 tai Truong), **4 ket qua danh gia** (1 SV co danh gia tu ca GV lan DN).
 
 Chi tiet so ban ghi + tai khoan test: xem phan cuoi `02_seed_data.sql` (khoi `KIEM TRA NHANH SAU KHI CHAY` + `TAI KHOAN TEST`) hoac `docs/02_Mô Tả & Thiết kế dữ liệu.md` § 4.
@@ -62,11 +66,13 @@ mysql -u root -p QuanLyCTDTDB < scripts/02_seed_data.sql
 ```sql
 USE QuanLyCTDTDB;
 SHOW TABLES;                    -- Phai tra ve 20 bang
-SELECT COUNT(*) FROM NguoiDung; -- Phai ra 18
+SELECT COUNT(*) FROM NguoiDung; -- Phai ra 20
 SELECT COUNT(*) FROM HocPhan;   -- Phai ra 10
-SELECT COUNT(*) FROM SinhVien;  -- Phai ra 10
+SELECT COUNT(*) FROM SinhVien;  -- Phai ra 12 (10 DangHoc + 1 BaoLuu + 1 ThoiHoc)
+SELECT COUNT(*) FROM SinhVien WHERE TrangThaiSV='DangHoc';  -- Phai ra 10
 SELECT COUNT(*) FROM LopHocPhan;                  -- Phai ra 12
 SELECT COUNT(*) FROM DanhSachSinhVienKienTap;     -- Phai ra 7
+SELECT COUNT(*) FROM DanhSachSinhVienKienTap WHERE DaThamGia=0; -- Phai ra 1 (minh hoa toggle)
 
 -- Kiem tra login: hash Password@123 co tai user 'admin'
 SELECT MaNguoiDung, TenDangNhap, LoaiNguoiDung FROM NguoiDung WHERE TenDangNhap='admin';
