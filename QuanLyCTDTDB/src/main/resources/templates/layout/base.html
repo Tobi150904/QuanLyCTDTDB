@@ -48,7 +48,10 @@
 
         <!-- Right: User + Logout -->
         <div class="ms-auto d-flex align-items-center gap-2">
-            <!-- Cảnh báo badge (CVHT) -->
+            <!--/* [PHASE 4 — DanhGia & CanhBao]
+                 An tam den khi xay xong module Danh Gia (xem docs/07_ROADMAP.md
+                 Phase 4). Controller /danh-gia/canh-bao chua ton tai -> click se
+                 roi 404/500. Bo cap <!-/* ... *-/--> (bo dau gach) de bat lai.
             <div sec:authorize="hasRole('CVHT')" class="d-none d-sm-block">
                 <a th:href="@{/danh-gia/canh-bao}"
                    class="btn btn-sm btn-warning text-dark position-relative"
@@ -57,6 +60,7 @@
                     <span class="visually-hidden">Cảnh báo</span>
                 </a>
             </div>
+            */-->
 
             <!-- User dropdown -->
             <div class="dropdown">
@@ -199,7 +203,18 @@
                 </a>
             </li>
 
-            <!-- ---- ĐÁNH GIÁ ---- -->
+            <!--/* ========================================================
+                 [PHASE 4/5/6 — DanhGia / KienTap-ThucTap / BaoCao]
+                 An toan bo section sidebar den khi cac module duoc xay xong:
+                  - Phase 4: DanhGia + CanhBao   (chua co controller/template)
+                  - Phase 5: KienTap + ThucTap   (co controller + service nhung
+                             thieu templates -> click se TemplateInputException)
+                  - Phase 6: BaoCao              (chua co controller/template)
+                 Xem docs/07_ROADMAP.md. Khi template san sang, bo cap
+                 <!-/* ... *-/--> (bo dau gach) de bat lai.
+            =========================================================
+
+            <!- ---- ĐÁNH GIÁ ---- ->
             <li class="sidebar-section-header"
                 sec:authorize="hasAnyRole('GIANG_VIEN','CVHT','ADMIN')">
                 <span>Đánh Giá</span>
@@ -224,7 +239,7 @@
                 </a>
             </li>
 
-            <!-- ---- KIẾN TẬP / THỰC TẬP ---- -->
+            <!- ---- KIẾN TẬP / THỰC TẬP ---- ->
             <li class="sidebar-section-header"
                 sec:authorize="hasAnyRole('PDT','TTDTXS','CNHP','ADMIN','GIANG_VIEN','DOANH_NGHIEP')">
                 <span>Kiến Tập &amp; Thực Tập</span>
@@ -250,7 +265,7 @@
                 </a>
             </li>
 
-            <!-- ---- BÁO CÁO ---- -->
+            <!- ---- BÁO CÁO ---- ->
             <li class="sidebar-section-header"
                 sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
                 <span>Báo Cáo</span>
@@ -264,6 +279,7 @@
                     <span>Báo Cáo &amp; Thống Kê</span>
                 </a>
             </li>
+            */-->
 
         </ul>
     </div>
