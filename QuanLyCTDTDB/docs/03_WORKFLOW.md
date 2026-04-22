@@ -209,8 +209,12 @@ BUOC 1 — CNHP: GET /hoc-phan/them -> form
 BUOC 2 — CNHP: POST /hoc-phan/them (HocPhanDTO)
   -> Validate: MaHocPhan unique, SoTinChi 1-10, ChuNhiemHP la GV ton tai
   -> INSERT INTO HocPhan (..., TrangThai='BanNhap', ChuNhiemHP=maGV)
-  -> INSERT INTO DoiNguGiangVienHP (MaHocPhan, MaGiangVien=ChuNhiemHP, TrangThai=1)
-     [CNHP tu dong co trong doi ngu]
+  [NOTE — 2026-Q2 batch 3]
+  Truoc day doc ta yeu cau tu dong them ChuNhiemHP vao DoiNguGiangVienHP
+  khi tao HP. Hien tai code KHONG thuc hien auto-add: CNHP se duoc them
+  tu tay qua tab "Doi Ngu Giang Vien" trong trang chi-tiet HP (xem WF-03.2).
+  Rang buoc bao ve (service layer): KHONG cho xoa GV ra khoi doi ngu
+  neu GV do la ChuNhiemHP cua chinh HP.
 
 BUOC 3 — CNHP: POST /hoc-phan/{ma}/nop-duyet
   -> Kiem tra: TrangThai = 'BanNhap'
@@ -235,21 +239,39 @@ BUOC 5b — TTDTXS: POST /hoc-phan/{ma}/tu-choi (kem ly do)
 ### WF-03.2: Quan ly Doi Ngu Giang Vien Hoc Phan
 
 ```
-Actor: CNHP
+Actor: CNHP, TTDTXS, PDT, ADMIN (security: hasAnyRole('PDT','TTDTXS','ADMIN'))
+Implementation (2026-Q2 batch 3): DoiNguGvService + DoiNguGvServiceImpl,
+                                  3 endpoint tren HocPhanController.
 
-BUOC 1 — GET /hoc-phan/{ma} -> hien thi chi tiet + danh sach doi ngu GV hien tai
+BUOC 1 — GET /hoc-phan/chi-tiet/{ma}
+  -> Controller goi doiNguService.findByHocPhan(ma) — query
+     DoiNguGiangVienHpRepository.findByHocPhanFetch JOIN FETCH GV + NguoiDung
+     (bat buoc vi open-in-view=false).
+  -> Hien thi tab "Doi Ngu Giang Vien" + modal "Them GV" (select GV tu
+     giangVienRepo.findAllFetchNguoiDung).
 
-BUOC 2 — Them GV: POST /hoc-phan/{ma}/them-gv (maGV)
-  -> Kiem tra GV ton tai trong bang GiangVien
+BUOC 2 — Them GV: POST /hoc-phan/chi-tiet/{ma}/doi-ngu/them (DoiNguGvDTO)
+  -> Validate: maGV khong trong, GV ton tai trong bang GiangVien
   -> Kiem tra chua ton tai trong DoiNguGiangVienHP (MaHocPhan, MaGiangVien)
-  -> INSERT INTO DoiNguGiangVienHP (MaHocPhan, MaGiangVien, TrangThai=1)
+     (phat sinh BusinessException neu da co)
+  -> INSERT INTO DoiNguGiangVienHP (MaHocPhan, MaGiangVien, TrangThai= dto.trangThai ?: 1)
+     (cot `created_at` do DB tu sinh qua @CreationTimestamp — khong set tay
+      NgayThem vi schema khong co cot do.)
 
-BUOC 3 — Xoa GV: POST /hoc-phan/{ma}/xoa-gv/{maGV}
-  -> Kiem tra: GV nay KHONG la ChuNhiemHP (khong duoc phep xoa CNHP)
-  -> Kiem tra: GV nay chua duoc gan vao LopHocPhan nao dang mo
-     Neu da duoc gan: UPDATE DoiNguGiangVienHP SET TrangThai=0 (an di, khong xoa)
-     Neu chua duoc gan: DELETE FROM DoiNguGiangVienHP
+BUOC 3 — Toggle trang thai: POST /hoc-phan/chi-tiet/{ma}/doi-ngu/toggle (maGV)
+  -> UPDATE DoiNguGiangVienHP SET TrangThai = !TrangThai
+  -> Dung de "tam ngung" GV (TrangThai=0) ma khong mat record — GV nay
+     khi duoc gan vao LopHocPhan van rot vao nhanh warningMsg o WF-05.1.
+
+BUOC 4 — Xoa hoan toan: POST /hoc-phan/chi-tiet/{ma}/doi-ngu/xoa (maGV)
+  -> Guard: GV KHONG duoc la ChuNhiemHP cua HP (throw BusinessException).
+  -> DELETE FROM DoiNguGiangVienHP WHERE (MaHocPhan, MaGiangVien)
+  -> Khuyen nghi: dung "Toggle" (soft disable) cho GV cu chua muon xoa,
+     chi "Xoa" khi GV chuyen cong tac / khong con lien quan.
 ```
+
+**Bang bi tac dong:** DoiNguGiangVienHP
+**DTO:** `dto/DoiNguGvDTO.java` (maHocPhan, maGV, trangThai)
 
 ---
 
@@ -266,8 +288,18 @@ BUOC 2 — BCN: POST /ctdt/them (ChuongTrinhDaoTaoDTO)
   -> INSERT INTO ChuongTrinhDaoTao (..., TrangThai='BanNhap', NguoiTao=currentUser)
   -> KHONG tao BCN_ThanhVien o buoc nay (lam rieng)
 
-BUOC 3 — BCN: GET /ctdt/{ma} -> hien thi chi tiet
-  -> Hien thi 2 section: Thanh vien BCN + Danh sach Hoc Phan
+BUOC 3 — BCN/PDT/ADMIN: GET /ctdt/chi-tiet/{ma} -> hien thi chi tiet
+  -> Hien thi 2 section:
+     (a) Ban Chu Nhiem (bcnList) — query
+         BcnThanhVienRepository.findByCtdtFetch JOIN FETCH GV + NguoiDung.
+         UI cho phep:
+           POST /ctdt/chi-tiet/{ma}/bcn/them (BcnThanhVienDTO)
+             Validate: maGV + chucDanh != null. Rang buoc: 1 CTDT chi co
+             DUY NHAT 1 Chu Nhiem (BcnThanhVienService.themThanhVien guard
+             bang findFirstByChuongTrinhDaoTao_MaCTDTAndId_ChucDanh).
+           POST /ctdt/chi-tiet/{ma}/bcn/xoa (maGV, chucDanh)
+             Hard-delete record (khong soft disable).
+     (b) Danh sach Hoc Phan cua CTDT + modal them HP
 
 BUOC 4 — BCN: POST /ctdt/{ma}/them-hoc-phan (CTDT_HocPhanDTO)
   -> Truyen: MaHocPhan, HocKyThu (1-10), SoLopDuKien (mac dinh 1), BatBuoc (mac dinh true)
@@ -294,25 +326,48 @@ BUOC 1 — TTDTXS: POST /ctdt/{ma}/phe-duyet
 BUOC 2 — UPDATE ChuongTrinhDaoTao SET
            TrangThai='DaDuyet', NguoiDuyet=currentUser, NgayDuyet=NOW()
 
-BUOC 3 — autoCreateLopHocPhan(maCTDT, maHocKyDangDienRa):
-  Lay danh sach CTDT_HocPhan WHERE MaCTDT = ?
-  Lay MaHocKy hien tai (TrangThaiHocKy='DangDienRa')
-  Lay MaLopHC cua cac lop hanh chinh dang theo hoc CTDT nay
-
-  Voi moi CTDT_HocPhan:
-    Lap tu MaLopHocPhan = 1 den SoLopDuKien:
-      -> INSERT INTO LopHocPhan (
-             MaCTDT, MaHocPhan, MaHocKy=maHocKyDangDienRa,
-             MaLopHocPhan (thu tu),
-             MaGiangVien = NULL,  <- QUAN TRONG: chua phan cong
-             SiSoToiDa = 45,      <- mac dinh, co the chinh
-             TrangThai = 'DangMo'
-         )
-      -> Ket qua: tao SoLopDuKien lop HP cho moi HP trong CTDT
+BUOC 3 — [Doi quyet dinh thiet ke 2026-Q2 batch 3]
+  LopHocPhan KHONG duoc tao tu dong khi CTDT DaDuyet.
+  Ly do nghiep vu:
+    - Mot CTDT mo nhieu nam lien tiep (vd: "CTDT CNTT Khoa 2023-2027"
+      mo lop cho ca HK1-2023, HK1-2024, HK1-2025... khong biet ky nao).
+    - So lop mo per-HP co the khac nhau moi ky theo tinh hinh tuyen sinh
+      (vd: CNTT101 mo 3 lop o HK1-2023 nhung chi mo 2 o HK1-2024).
+  Do do tao LopHocPhan la 1 ACTION THU CONG co tham so:
+    POST /lop-hoc-phan/tao-hang-loat
+         ?maCTDT=CTDT001&maHocKy=HK1-2023
+         hpCode[]=CNTT101, soLop[]=3
+         hpCode[]=CNTT102, soLop[]=4
+    -> parseHocKyThu("HK1-2023") = 1 (parse chu so sau "HK")
+    -> SELECT * FROM CTDT_HocPhan WHERE MaCTDT=? AND HocKyThu=1
+       (chi HP thuoc ky 1 moi duoc mo lop cho MaHocKy=HK1-2023)
+    -> Voi moi CtdtHocPhan:
+         soLop = override.get(maHP) ?: ctdtHP.soLopDuKien
+         Lap tu MaLopHocPhan = 1 den soLop:
+           if NOT EXISTS (skip idempotent):
+             INSERT INTO LopHocPhan (
+                 MaCTDT, MaHocPhan, MaHocKy,
+                 MaLopHocPhan (thu tu),
+                 MaGiangVien = NULL,  <- chua phan cong
+                 SiSoToiDa = 50,       <- mac dinh
+                 SiSoThucTe = 0,
+                 TrangThai = 'DangMo'
+             )
+    -> Flash:
+         - "Tao moi N lop hoc phan thanh cong!" (neu N > 0)
+         - "Khong tao moi lop nao (tat ca cac lop du kien da ton tai)"
+           (neu N = 0 — idempotent skip).
+  UI ho tro:
+    - Trang /lop-hoc-phan?maCTDT=&maHocKy= hien luon section
+      "Ke Hoach Mo Lop" liet ke HP du kien cua ky da chon + badge "Da mo/Chua mo".
+    - Modal "Tao Hang Loat" pre-fill soLop = ctdtHP.soLopDuKien,
+      cho user chinh lai truoc khi confirm (per-HP override).
 
 BUOC 4 — Ket qua:
   - CTDT.TrangThai = 'DaDuyet'
-  - LopHocPhan duoc tao tu dong theo so luong lop du kien
+  - NguoiDuyet + NgayDuyet duoc set (audit trail — fix 2026-Q2 B4)
+  - LopHocPhan CHUA duoc tao. Admin / BCN / TTDTXS goi action thu cong o
+    trang /lop-hoc-phan moi tao duoc.
   - MaGiangVien = NULL (chua co giang vien)
   - BCN/TTDTXS se phan cong GV sau (WF-05)
 ```
@@ -334,16 +389,24 @@ BUOC 1 — GET /lop-hoc-phan?maHocKy=HK20241&filter=chuaCoGV
 BUOC 2 — POST /lop-hoc-phan/{ctdt}/{hp}/{hk}/{nhom}/gan-gv (maGV)
   -> Kiem tra GiangVien ton tai trong bang GiangVien
 
-BUOC 3 — Kiem tra doi ngu:
-  Neu GV co trong DoiNguGiangVienHP WHERE MaHocPhan = ? AND MaGiangVien = ? AND TrangThai = 1:
-    -> Gan binh thuong
-  Neu GV KHONG co trong doi ngu:
-    -> Hien canh bao: "GV X khong co trong doi ngu HP Y. Xac nhan?"
-    -> Van cho phep phan cong (sau khi nguoi dung xac nhan)
+BUOC 3 — SOFT CHECK doi ngu (LopHocPhanController.phanCong):
+  Truoc khi goi service lopHPService.phanCongGiangVien, controller query:
+    SELECT * FROM DoiNguGiangVienHP
+    WHERE MaHocPhan = ? AND MaGiangVien = ? AND TrangThai = TRUE
+  Luong xu ly:
+    (a) GV THUOC doi ngu va dang hoat dong:
+        -> UPDATE LopHocPhan SET MaGiangVien = ? WHERE (composite PK)
+        -> Flash successMsg: "Phan cong giang vien thanh cong!"
+    (b) GV KHONG thuoc doi ngu (hoac ton tai nhung TrangThai=false):
+        -> VAN UPDATE LopHocPhan SET MaGiangVien = ? (khong chan cung!)
+        -> Flash warningMsg: "Da phan cong, nhung CANH BAO: GV <maGV> khong
+           thuoc doi ngu cua HP <maHocPhan> (hoac dang tam ngung). Hay bo
+           sung vao doi ngu tai trang Chi tiet Hoc Phan."
+  Thiet ke nay tuan thu quyet dinh nghiep vu: khong chan phan cong khan
+  cap (vd GV khac bi om dot xuat) nhung ghi nhan "exception" de user chu
+  dong bo sung doi ngu sau do.
 
-BUOC 4 — UPDATE LopHocPhan SET MaGiangVien = ? WHERE (composite PK)
-
-BUOC 5 — [Tuy chon] Gui thong bao email cho GV ve lop HP duoc phan cong
+BUOC 4 — [Tuy chon] Gui thong bao email cho GV ve lop HP duoc phan cong
 ```
 
 ---

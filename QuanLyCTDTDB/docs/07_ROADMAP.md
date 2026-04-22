@@ -100,7 +100,7 @@ Dot review 2026-Q2 phat hien va fix 6 bug code, cap nhat docs va checklist.
 | Templates                              | [x] `lop-hanh-chinh/{danh-sach,form,chi-tiet}.html`   |
 | Nghiep vu                              | [x] Guard xoa khi con SV; cho phep null de huy CVHT   |
 
-### 3.3 Hoc Phan + Doi Ngu GV [x]
+### 3.3 Hoc Phan + Doi Ngu GV [x] (batch 2 + batch 3)
 
 - [x] Controller + Service + 3 templates (`danh-sach`, `form`, `chi-tiet`)
 - [x] Workflow state badge: BanNhap (secondary), ChoDuyet (warning), DaDuyet (success)
@@ -108,9 +108,21 @@ Dot review 2026-Q2 phat hien va fix 6 bug code, cap nhat docs va checklist.
 - [x] Gui email CNHP khi phe duyet / tu choi (MockEmailServiceImpl log)
 - [x] **Fix 2026-Q2 (B1)**: doi `/files/...` -> `/uploads/...` de link tai file hoat dong
 - [x] **Fix 2026-Q2 (B3)**: uu tien `dto.maHocPhan` (format `HP-MATHE`) thay vi force `HP001`
-- Test: CNHP tao -> nop -> TTDTXS duyet -> email log thanh cong
+- [x] **BATCH 3 — DoiNguGV module**:
+  - DTO `DoiNguGvDTO`, service `DoiNguGvService` + impl.
+  - 3 endpoint moi tren `HocPhanController`:
+    `/hoc-phan/chi-tiet/{ma}/doi-ngu/them`,
+    `/hoc-phan/chi-tiet/{ma}/doi-ngu/toggle`,
+    `/hoc-phan/chi-tiet/{ma}/doi-ngu/xoa`.
+  - Section "Doi Ngu Giang Vien" trong `hoc-phan/chi-tiet.html` (table + modal them).
+  - Service guard: khong duoc xoa GV la ChuNhiemHP cua HP.
+  - Repository: `findByHocPhanFetch` JOIN FETCH GV + NguoiDung.
+- [x] **BATCH 3 — Fix LazyInit chi-tiet HP**: `HocPhanRepository.findByIdFetch`
+  JOIN FETCH ChuNhiemHP + NguoiDung -> trang chi-tiet HP hien ten GV dung.
+- Test: CNHP tao -> nop -> TTDTXS duyet -> email log thanh cong.
+  Them GV vao doi ngu / toggle tat / xoa thu -> guard hoat dong.
 
-### 3.4 CTDT + CTDT_HocPhan [x]
+### 3.4 CTDT + CTDT_HocPhan + BCN [x] (batch 2 + batch 3)
 
 - [x] Controller + Service + 3 templates
 - [x] CRUD CTDT + them/xoa HP trong CTDT (CtdtHocPhan)
@@ -118,16 +130,43 @@ Dot review 2026-Q2 phat hien va fix 6 bug code, cap nhat docs va checklist.
       controller set file path tren entity detached -> bi mat sau commit
 - [x] **Fix 2026-Q2 (B4)**: pheduyet set day du `nguoiDuyet` + `ngayDuyet`
 - [x] **Fix 2026-Q2 (B6)**: xoaHocPhan co server-side guard chan xoa khi CTDT DaDuyet
-- [~] Cascade autoCreateLopHocPhan khi CTDT->DaDuyet: hien dung manual action
-      `/lop-hoc-phan/tao-hang-loat` vi can chon HocKy. Defer sang Phase 4.
+- [x] **BATCH 3 — BCN module** (Ban Chu Nhiem CTDT):
+  - DTO `BcnThanhVienDTO` (maGV, chucDanh, ngayBoNhiem, ghiChu).
+  - Service `BcnThanhVienService` + impl: themThanhVien (guard 1 CTDT chi
+    1 Chu Nhiem qua `findFirstByChuongTrinhDaoTao_MaCTDTAndId_ChucDanh`),
+    xoaThanhVien, findByCtdt.
+  - 2 endpoint tren `ChuongTrinhDaoTaoController`:
+    `/ctdt/chi-tiet/{ma}/bcn/them`, `/ctdt/chi-tiet/{ma}/bcn/xoa`.
+  - Tab "Ban Chu Nhiem" trong `ctdt/chi-tiet.html` + modal them.
+  - Repository: `findByCtdtFetch` JOIN FETCH GV + NguoiDung.
+- [x] **Thiet ke (khong phai defer)**: tao LopHocPhan = manual action
+      `/lop-hoc-phan/tao-hang-loat?maCTDT=&maHocKy=` + HocKyThu filter +
+      per-HP soLopOverride. Ly do: 1 CTDT mo nhieu nam lien tiep, moi
+      ky so lop khac, phai cho user chon ro + cho override. Khong co
+      khai niem "auto cascade khi pheduyet" nua.
 
-### 3.5 Lop Hoc Phan [x]
+### 3.5 Lop Hoc Phan [x] (batch 2 + batch 3)
 
 - [x] Controller + Service + 2 templates (`danh-sach`, `chi-tiet`)
-- [x] taoLopHocPhanChoCTDT(maCTDT, maHocKy) — idempotent, skip neu da ton tai
-- [x] phanCongGiangVien + email notification GV
-- [x] dangKyLopHocPhan (guard trang thai DangMo + chan trung)
-- [x] canhBaoSinhVien + gui email CVHT
+- [x] taoLopHocPhanChoCTDT(maCTDT, maHocKy, soLopOverride) — idempotent, skip neu ton tai.
+  **BATCH 3 UPDATE**: signature them `Map<String,Integer> soLopOverride`.
+  Service nay parse chu so sau "HK" trong maHocKy (format `HKn-YYYY`) va
+  chi INSERT cho HP co `CtdtHocPhan.hocKyThu == parsedKy`. Fix bug:
+  truoc day chon ky nao cung tao het tat ca HP cua CTDT.
+- [x] phanCongGiangVien + email notification GV.
+  **BATCH 3 UPDATE**: `LopHocPhanController.phanCong` them soft-check truoc
+  khi goi service. GV khong thuoc `DoiNguGiangVienHP` (hoac bi TrangThai=0)
+  van duoc gan, nhung flash `warningMsg` thay vi successMsg, huong dan user
+  bo sung doi ngu tai trang Chi tiet Hoc Phan.
+- [x] **BATCH 3 — Ke Hoach Mo Lop card**: `danhSach` handler them `hpDuKien`
+  (list CtdtHocPhan theo maCTDT + hocKyThu fetch qua `findByCtdtAndKyFetch`)
+  va `daMoCount` (map maHP -> so lop da mo) vao model. Template hien badge
+  "Da mo N/M lop" / "Chua mo" tren tung HP du kien.
+- [x] **BATCH 3 — Modal tao hang loat**: pre-fill SoLop = `ctdtHP.soLopDuKien`,
+  cho user chinh per-HP truoc khi confirm (gui qua `soLop[hpCode]` map
+  xuong controller).
+- [x] dangKyLopHocPhan (guard trang thai DangMo + chan trung).
+- [x] canhBaoSinhVien + gui email CVHT.
 - Thiet ke dac biet: bo truc tiep `@ManyToOne` den `HocPhan`/`HocKy` trong
   `LopHocPhan` (tranh Hibernate 7 duplicate column error tren EmbeddedId 4 cot);
   template nhan `hocPhanMap` tu controller de render tenHocPhan.

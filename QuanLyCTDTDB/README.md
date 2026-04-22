@@ -2,7 +2,7 @@
 
 He thong noi bo quan ly Chuong Trinh Dao Tao (CTDT), Hoc Phan, Lop Hoc Phan, Kien Tap va Thuc Tap cho khoi dao tao xuat sac truong dai hoc.
 
-> **Trang thai:** Dang o giai doan Phase 2 (module Nguoi Dung da chay, cac module nghiep vu khac dang hoan thien layer controller/template). Xem `docs/06_PROJECT_SCAFFOLD.md` va `docs/07_ROADMAP.md` de biet phan viec chi tiet.
+> **Trang thai (cap nhat 2026-Q2 batch 3):** Phase 3 (Modules Nghiep Vu Chinh) **da hoan thanh** cho 7 module (Nguoi Dung, Doanh Nghiep, Hoc Ky Nam Hoc, Lop Hanh Chinh, Hoc Phan + DoiNguGV, CTDT + BCN, Lop Hoc Phan). Phase 4 (Danh Gia & Canh Bao) va Phase 5 (Kien Tap & Thuc Tap — 2 service/controller con skeleton, thieu templates) la uu tien ke tiep. Xem `docs/06_PROJECT_SCAFFOLD.md` va `docs/07_ROADMAP.md` de biet phan viec chi tiet.
 
 ---
 

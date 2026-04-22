@@ -213,6 +213,60 @@ Toan bo 5 module P1 (HocKy, LopHanhChinh, HocPhan, CTDT, LopHocPhan) da:
       - Cap nhat `docs/02 §4` dong bo so ban ghi moi.
 - [x] **Controller + Service Phase 3 con lai** — tat ca 5 module da hoan thanh
 
+### Fix 2026-Q2 batch 3 (mo rong module + soft-check phan cong)
+
+- [x] **BCN module** — them class quan ly Ban Chu Nhiem CTDT:
+  - `dto/BcnThanhVienDTO.java` (maGV, chucDanh, ngayBoNhiem, ghiChu).
+  - `service/BcnThanhVienService` + `impl/BcnThanhVienServiceImpl` (themThanhVien,
+    xoaThanhVien, findByCtdt — guard 1 CTDT chi 1 ChuNhiem).
+  - `repository/BcnThanhVienRepository.findByCtdtFetch` (JOIN FETCH GV+NguoiDung).
+  - `repository/BcnThanhVienRepository.findFirstByChuongTrinhDaoTao_MaCTDTAndId_ChucDanh`
+    (dung de guard duplicate Chu Nhiem).
+  - 2 endpoint tren `ChuongTrinhDaoTaoController`: `/ctdt/chi-tiet/{ma}/bcn/them`
+    va `/ctdt/chi-tiet/{ma}/bcn/xoa`.
+  - Tab "Ban Chu Nhiem" trong `templates/ctdt/chi-tiet.html` kem modal them.
+
+- [x] **DoiNguGV module** — quan ly doi ngu GV cua Hoc Phan:
+  - `dto/DoiNguGvDTO.java` (maHocPhan, maGV, trangThai).
+  - `service/DoiNguGvService` + `impl/DoiNguGvServiceImpl` (them, xoa, toggleTrangThai,
+    findByHocPhan) — service guard chan xoa GV la ChuNhiemHP.
+  - `repository/DoiNguGiangVienHpRepository.findByHocPhanFetch` (JOIN FETCH).
+  - 3 endpoint tren `HocPhanController`: `/hoc-phan/chi-tiet/{ma}/doi-ngu/them`,
+    `/hoc-phan/chi-tiet/{ma}/doi-ngu/toggle`, `/hoc-phan/chi-tiet/{ma}/doi-ngu/xoa`.
+  - Section "Doi Ngu Giang Vien" trong `templates/hoc-phan/chi-tiet.html` voi
+    badge Dang day / Tam ngung + nut toggle/xoa.
+  - Khong set cot `ngay_them` (schema khong co) — hien thi `created_at` trong template.
+
+- [x] **Soft-check khi phan cong GV cho LopHocPhan** (WF-05.1 BUOC 3):
+  - `LopHocPhanController.phanCong` query `DoiNguGiangVienHpRepository.findById(id)`
+    truoc khi goi service. Neu GV khong thuoc doi ngu hoac TrangThai=false,
+    van gan MaGiangVien nhung flash warningMsg thay vi successMsg.
+  - Design decision: KHONG chan cung de dap ung truong hop khan cap (GV thay the
+    dot xuat). User duoc huong dan bo sung doi ngu tai chi-tiet HP.
+
+- [x] **HocKyThu filter khi tao lop hang loat** (fix bug bao cao tai chat):
+  - `LopHocPhanServiceImpl.taoLopHocPhanChoCTDT` nay parse chu so sau "HK" trong
+    MaHocKy (format `HKn-YYYY`) va chi INSERT lop cho HP co
+    `CtdtHocPhan.hocKyThu == parsedKy`. Truoc day doc het HP cua CTDT sang mot ky,
+    gay bug: chon ky nao cung tao het tat ca HP.
+  - Signature moi: `taoLopHocPhanChoCTDT(maCTDT, maHocKy, Map<String,Integer> soLopOverride)`
+    cho phep override SoLop per-HP theo ky (giu `CtdtHocPhan.soLopDuKien` lam default).
+
+- [x] **Ke Hoach Mo Lop hien thi du kien theo ky** — fix bug "tim lan 2 khong ra":
+  - `LopHocPhanController.danhSach` nay luon bo sung `hpDuKien` (list `CtdtHocPhan`
+    fetch qua `findByCtdtAndKyFetch` JOIN FETCH hocPhan) va `daMoCount` (map
+    maHP -> so lop da mo) vao model.
+  - Template `lop-hoc-phan/danh-sach.html` them card "Ke Hoach Mo Lop" voi badge
+    "Da mo" / "Chua mo" — user thay HP du kien ngay ca khi chua bam tao.
+  - Modal tao hang loat pre-fill so lop = soLopDuKien, cho user chinh per-HP.
+
+- [x] **Fix LazyInit o chi-tiet Hoc Phan va Lop Hanh Chinh**:
+  - `HocPhanRepository.findByIdFetch` JOIN FETCH ChuNhiemHP + NguoiDung
+    -> trang chi-tiet HP nay hien thi duoc "MaGV — Ho Ten" chu nhiem (truoc day
+    template render bi LazyInitException voi `open-in-view=false`).
+  - `SinhVienRepository.findByLopFetch` JOIN FETCH NguoiDung
+    -> trang chi-tiet Lop Hanh Chinh hien duoc danh sach SV kem ho ten.
+
 ### Fix 2026-Q2 (dot review Phase 3)
 
 - [x] **B1 — Link tai file de cuong 404**: doi `@{/files/...}` -> `@{/uploads/...}`
@@ -236,12 +290,15 @@ Toan bo 5 module P1 (HocKy, LopHanhChinh, HocPhan, CTDT, LopHocPhan) da:
 
 ### Van de con lai (chap nhan defer sang phase sau)
 
-- Cascade `autoCreateLopHocPhan` khi CTDT chuyen sang DaDuyet: hien dang dung
-  manual action `/lop-hoc-phan/tao-hang-loat?maCTDT=&maHocKy=` vi nghiep vu
-  can user chon ro HocKy. Defer sang Phase 4 neu co yeu cau UX cao hon.
+- **KHONG defer** tao LopHocPhan thu cong — day la QUYET DINH THIET KE (xem
+  WF-04.2 BUOC 3 trong `03_WORKFLOW.md`): 1 CTDT mo nhieu nam, moi ky so lop
+  co the khac, user PHAI chon HocKy + co the override SoLop per-HP. Khong co
+  khai niem "auto cascade khi pheduyet" nua.
 - Phase 2.3 "Bao mat toan cuc URL + test 403": da co URL rules trong
   SecurityConfig nhung chua co integration test voi `@WithMockUser` —
   defer sang giai doan Pre-Prod Hardening.
+- `LopHocPhan` chua co ngay bat dau / ket thuc ky — hien dua vao `HocKyNamHoc`.
+  Neu can lich hoc chi tiet tung tuan, se them bang `LichHoc` o Phase 6.
 
 ### Quan ly Hoc Ky Nam Hoc [PDT, TTDTXS]
 - [x] `HocKyNamHocService.java` interface + impl
@@ -288,9 +345,10 @@ Toan bo 5 module P1 (HocKy, LopHanhChinh, HocPhan, CTDT, LopHocPhan) da:
   - [x] **Fix 2026-Q2**: xoaHocPhan co server-side guard chan xoa khi CTDT DaDuyet
   - [x] updateFileWord — **Fix 2026-Q2**: tach rieng de luu path file sau khi upload
         (truoc day controller set tren entity detached -> path bi mat)
-  - [~] autoCreateLopHocPhan: hien tai dung qua manual action o
-        `/lop-hoc-phan/tao-hang-loat` (chap nhan do nghiep vu can chon HocKy cu the).
-        Cascade tu dong khi pheduyet chua trien khai — defer sang Phase 4.
+  - [x] **Thiet ke (khong phai defer)**: tao LopHocPhan = manual action o
+        `/lop-hoc-phan/tao-hang-loat?maCTDT=&maHocKy=` + HocKyThu filter + per-HP
+        soLopOverride (xem batch 3 fix §). Ly do: 1 CTDT mo nhieu nam, moi ky
+        so lop khac, phai cho user chon ro.
 - [x] `ChuongTrinhDaoTaoController.java` (8 endpoint: list, CRUD, phe-duyet, chi-tiet, them-hp, xoa-hp)
   - [x] **Fix 2026-Q2**: them() va sua() goi `ctdtService.updateFileWord(ma, path)`
         thay vi `ctdt.setFileWord(path)` tren detached entity

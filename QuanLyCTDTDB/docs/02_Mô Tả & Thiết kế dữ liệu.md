@@ -205,23 +205,42 @@ deu cap nhat binh thuong.
 - `SoTinChi`: 1 <= x <= 10 (kiem tra o @Min @Max trong DTO)
 - `TrangThai` moi tao: mac dinh `BanNhap`
 - `ChuNhiemHP` bat buoc ton tai trong bang `GiangVien`
-- Khi tao HocPhan: tu dong INSERT `DoiNguGiangVienHP(MaHocPhan, ChuNhiemHP, TrangThai=1)`
-- **Khong duoc xoa CNHP khoi DoiNguGiangVienHP** (kiem tra trong service)
-- Neu GV da duoc gan vao LopHocPhan: UPDATE TrangThai=0, khong DELETE
+- **[2026-Q2 batch 3]** Khi tao HocPhan: hien tai KHONG tu dong INSERT ChuNhiemHP
+  vao DoiNguGiangVienHP (khong con auto-add). CNHP se duoc them qua tab
+  "Doi Ngu Giang Vien" trong trang chi-tiet HP (endpoint
+  `POST /hoc-phan/chi-tiet/{ma}/doi-ngu/them`).
+- **Khong duoc xoa CNHP khoi DoiNguGiangVienHP** (service `DoiNguGvService.xoa()`
+  guard bang cach kiem tra `MaGV == HocPhan.ChuNhiemHP`).
+- **Toggle vs Xoa**: co 2 action khac nhau:
+  - `toggle` (POST .../doi-ngu/toggle): flip `TrangThai` giua 1 (dang day) va 0
+    (tam ngung). Giu record de tham chieu lich su, dung khi GV tam thoi ko day.
+  - `xoa` (POST .../doi-ngu/xoa): HARD DELETE record. Chi dung khi GV chuyen
+    cong tac hoac khong con lien quan.
 
 ### 3.4 ChuongTrinhDaoTao
 - `TrangThai` moi tao: `BanNhap`
 - Chi them HocPhan vao CTDT khi `HocPhan.TrangThai = DaDuyet`
 - `HocKyThu`: 1 <= x <= 10
-- `SoLopDuKien`: >= 1
-- Khi phe duyet CTDT (DaDuyet): tu dong tao `LopHocPhan` theo `SoLopDuKien`
-- `NguoiDuyet` phai khac `NguoiTao` (kiem tra o service)
+- `SoLopDuKien`: >= 1 (la SO LOP DU KIEN mac dinh, co the override per-ky khi tao lop hang loat)
+- **[2026-Q2 batch 3]** Khi phe duyet CTDT (DaDuyet): **KHONG** tu dong tao LopHocPhan.
+  Thay vao do TTDTXS/BCN/PDT vao trang `/lop-hoc-phan?maCTDT=&maHocKy=` -> card
+  "Ke Hoach Mo Lop" -> nut "Tao Hang Loat" de chon ky cu the + override SoLop
+  per-HP. Service `taoLopHocPhanChoCTDT(maCTDT, maHocKy, soLopOverride)` parse
+  chu so sau "HK" trong maHocKy va chi tao lop cho HP co `HocKyThu` trung. Ly do:
+  1 CTDT mo nhieu nam (vd HK1-2023, HK1-2024, HK1-2025), moi ky so lop co the
+  khac tuy tuyen sinh.
+- `NguoiDuyet` phai khac `NguoiTao` (kiem tra o service).
+- Khi phe duyet: service set `NguoiDuyet` + `NgayDuyet = LocalDateTime.now()` (audit).
 
 ### 3.5 LopHocPhan
 - `SiSoToiDa`: 30 <= x <= 60 (MySQL CHECK constraint + @Min @Max trong DTO)
 - `SiSoThucTe`: <= SiSoToiDa (kiem tra truoc khi them SV)
 - `MaGiangVien = NULL` khi moi tao (phan cong sau)
-- Khi gan GV khong trong DoiNguGiangVienHP: canh bao nhung van cho phep (confirm dialog)
+- **[2026-Q2 batch 3]** SOFT-CHECK khi gan GV (xem WF-05.1 BUOC 3):
+  `LopHocPhanController.phanCong` truy van `DoiNguGiangVienHpRepository.findById`
+  truoc khi goi service. Neu GV khong thuoc doi ngu (hoac `TrangThai=false`)
+  -> van UPDATE `MaGiangVien` nhung flash **warningMsg** thay vi successMsg.
+  Khong chan cung de dap ung truong hop khan cap (GV om dot xuat, dieu dong...).
 
 ### 3.6 DanhSachSinhVienLopHocPhan
 - `DaCanhBao`: Mac dinh 0, khi GV tich = 1 -> trigger gui email CVHT

@@ -156,29 +156,51 @@ com.ntu.quanlyctdtdb/
 
 ### 6.1 Luong quan ly Hoc Phan
 ```
-BCN tao HP (BanNhap)
-  -> BCN nop len (ChoDuyet)
-    -> TTDTXS phe duyet (DaDuyet)  |  TTDTXS tu choi (BanNhap + ly do)
-BCN them GV vao DoiNguGiangVienHP
-CNHP quan ly doi ngu GV, upload de cuong
+CNHP tao HP (BanNhap, ChuNhiemHP = maGV)
+  -> CNHP nop len (ChoDuyet)
+    -> TTDTXS phe duyet (DaDuyet) + email CNHP
+    -> TTDTXS tu choi (BanNhap + ly do) + email CNHP
+CNHP/TTDTXS/PDT/ADMIN quan ly DoiNguGiangVienHP qua trang
+  /hoc-phan/chi-tiet/{ma} (tab "Doi Ngu Giang Vien"):
+    - Them GV       : POST .../doi-ngu/them
+    - Toggle dang day: POST .../doi-ngu/toggle   (soft disable bang TrangThai=0/1)
+    - Xoa hoan toan : POST .../doi-ngu/xoa      (service chan khi GV = ChuNhiemHP)
+CNHP upload tai lieu / de cuong chi tiet.
 ```
 
 ### 6.2 Luong quan ly CTDT
 ```
 BCN tao CTDT (BanNhap)
-  -> BCN them HocPhan vao CTDT qua bang CTDT_HocPhan (HocKyThu, SoLopDuKien)
+  -> BCN them HocPhan vao CTDT qua bang CTDT_HocPhan (HocKyThu, SoLopDuKien, BatBuoc)
+  -> BCN quan ly Ban Chu Nhiem (BCN_ThanhVien) qua tab "Ban Chu Nhiem"
+     trong trang /ctdt/chi-tiet/{ma}: them/xoa Chu Nhiem + Thu Ky + Uy Vien
+     (rang buoc: 1 CTDT chi co DUY NHAT 1 Chu Nhiem).
   -> BCN nop len (ChoDuyet)
-    -> TTDTXS phe duyet (DaDuyet)
-      => He thong TU DONG tao LopHocPhan theo SoLopDuKien cho tung HP trong CTDT
-         (MaLopHocPhan = 1..N, MaGiangVien = NULL)
+    -> TTDTXS phe duyet (DaDuyet) — set NguoiDuyet + NgayDuyet (audit)
   -> BCN gan LopHanhChinh vao CTDT
+
+LopHocPhan KHONG duoc tao tu dong khi CTDT DaDuyet. Ly do: nghiep vu can
+user chon ro HocKy muon mo lop + cho phep override SoLop per-HP theo
+tinh hinh tuyen sinh thuc te cua tung ky (vd ky 1-2023 mo 3 lop CNTT101,
+ky 1-2024 chi mo 2 lop). User goi manual action:
+
+  POST /lop-hoc-phan/tao-hang-loat?maCTDT=&maHocKy=
+       hpCode[i], soLop[i]    -> override SoLopDuKien theo ky
+  => Chi tao lop cho HP co CtdtHocPhan.HocKyThu trung voi so ky parse
+     tu MaHocKy (format HKn-YYYY). Idempotent: lop da ton tai -> skip.
 ```
 
 ### 6.3 Luong phan cong Lop Hoc Phan
 ```
 BCN/TTDTXS xem danh sach LopHocPhan chua co GV
-  -> Gan GiangVien cho LopHocPhan
-     (Neu GV khong trong DoiNguGiangVienHP -> canh bao nhung van cho phep)
+  -> Gan GiangVien cho LopHocPhan (POST /lop-hoc-phan/phan-cong)
+     SOFT CHECK (khong chan cung):
+       - Truoc khi goi service, controller truy van
+         DoiNguGiangVienHp (MaHocPhan, MaGV) + TrangThai=true.
+       - Neu GV THUOC doi ngu va dang hoat dong -> flash successMsg.
+       - Neu GV KHONG thuoc doi ngu (hoac bi TrangThai=false)
+         -> van gan (UPDATE LopHocPhan.MaGiangVien) + flash warningMsg
+            huong dan bo sung GV vao doi ngu tai trang Chi Tiet Hoc Phan.
 GV thay LopHocPhan cua minh
   -> Upload TaiLieu (DeCuongChiTiet, DeThiGiuaKy, DeThiCuoiKy)
   -> Nhap nhan xet SV (DanhSachSinhVienLopHocPhan)
