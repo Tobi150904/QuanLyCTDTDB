@@ -264,7 +264,9 @@ CREATE TABLE LopHocPhan (
     PRIMARY KEY (MaCTDT, MaHocPhan, MaHocKy, MaLopHocPhan),
     CONSTRAINT fk_lhp_ctdthp FOREIGN KEY (MaCTDT, MaHocPhan) REFERENCES CTDT_HocPhan(MaCTDT, MaHocPhan),
     CONSTRAINT fk_lhp_hocky  FOREIGN KEY (MaHocKy)           REFERENCES HocKyNamHoc(MaHocKy),
-    CONSTRAINT fk_lhp_gv     FOREIGN KEY (MaGiangVien)       REFERENCES GiangVien(MaGV)
+    CONSTRAINT fk_lhp_gv     FOREIGN KEY (MaGiangVien)       REFERENCES GiangVien(MaGV),
+    CONSTRAINT chk_lhp_siso_toida    CHECK (SiSoToiDa  BETWEEN 30 AND 60),
+    CONSTRAINT chk_lhp_siso_thucte   CHECK (SiSoThucTe >= 0 AND SiSoThucTe <= SiSoToiDa)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =============================================================================
@@ -373,7 +375,8 @@ CREATE TABLE DanhSachThucTap (
     PRIMARY KEY (MaThucTap),
     CONSTRAINT fk_dstt_dottt FOREIGN KEY (MaDotTT)       REFERENCES DotThucTap(MaDotTT) ON DELETE CASCADE,
     CONSTRAINT fk_dstt_sv    FOREIGN KEY (MaSV)          REFERENCES SinhVien(MaSV)     ON DELETE CASCADE,
-    CONSTRAINT fk_dstt_dn    FOREIGN KEY (MaDoanhNghiep) REFERENCES DoanhNghiep(MaDoanhNghiep)
+    CONSTRAINT fk_dstt_dn    FOREIGN KEY (MaDoanhNghiep) REFERENCES DoanhNghiep(MaDoanhNghiep),
+    CONSTRAINT uk_dstt_dot_sv UNIQUE (MaDotTT, MaSV)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =============================================================================
@@ -391,7 +394,9 @@ CREATE TABLE KetQuaThucTap (
     PRIMARY KEY (MaKetQua),
     CONSTRAINT fk_kqtt_dstt FOREIGN KEY (MaThucTap)      REFERENCES DanhSachThucTap(MaThucTap) ON DELETE CASCADE,
     CONSTRAINT fk_kqtt_vt   FOREIGN KEY (MaVaiTro)       REFERENCES VaiTroThucTap(MaVaiTro),
-    CONSTRAINT fk_kqtt_nguoidanhgia FOREIGN KEY (MaNguoiDanhGia) REFERENCES GiangVien(MaGV)
+    CONSTRAINT fk_kqtt_nguoidanhgia FOREIGN KEY (MaNguoiDanhGia) REFERENCES GiangVien(MaGV),
+    CONSTRAINT chk_kqtt_diem CHECK (Diem IS NULL OR (Diem >= 0 AND Diem <= 10)),
+    CONSTRAINT uk_kqtt_thuctap_vaitro UNIQUE (MaThucTap, MaVaiTro)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;

@@ -19,10 +19,22 @@ Script `01_create_tables.sql` da co `CREATE DATABASE IF NOT EXISTS QuanLyCTDTDB`
 - CREATE 20 bang: `HocKyNamHoc`, `NguoiDung`, `GiangVien`, `DoanhNghiep`, `VaiTroThucTap`, `NhomNguoiDung`, `ChuongTrinhDaoTao`, `BCN_ThanhVien`, `HocPhan`, `DoiNguGiangVienHP`, `LopHanhChinh`, `SinhVien`, `CTDT_HocPhan`, `LopHocPhan`, `DanhSachSinhVienLopHocPhan`, `DotKienTap`, `DanhSachSinhVienKienTap`, `DotThucTap`, `DanhSachThucTap`, `KetQuaThucTap`
 - Tat ca FOREIGN KEY deu dat name de easier debug
 - Tat ca ENUM trong DDL khop 100% voi enum Java (`@Enumerated(EnumType.STRING)`)
-- CHECK constraint cho `SiSoToiDa BETWEEN 30 AND 60`, `Diem BETWEEN 0 AND 10`
+- CHECK constraint:
+  - `LopHocPhan.SiSoToiDa BETWEEN 30 AND 60`
+  - `LopHocPhan.SiSoThucTe >= 0 AND <= SiSoToiDa`
+  - `KetQuaThucTap.Diem` NULL hoac `BETWEEN 0 AND 10`
+- UNIQUE constraint nghiep vu:
+  - `DanhSachThucTap (MaDotTT, MaSV)` — mot SV chi co 1 phan cong/dot
+  - `KetQuaThucTap (MaThucTap, MaVaiTro)` — moi vai tro chi 1 ket qua/thuc tap
 
 ### 02_seed_data.sql  (v3 — Phase 3 review, Hybrid DaThamGia)
-Script idempotent (TRUNCATE truoc khi INSERT, chay lai an toan bao nhieu lan cung duoc).
+Script idempotent (DELETE truoc khi INSERT, chay lai an toan bao nhieu lan cung duoc).
+
+> **Luu y:** Script dung `DELETE FROM` thay vi `TRUNCATE TABLE`. Ly do: MySQL 8+
+> chan `TRUNCATE` tren bang co FK tham chieu den no (error #1701 — *Cannot truncate
+> a table referenced in a foreign key constraint*), NGAY CA KHI da `SET
+> FOREIGN_KEY_CHECKS=0`. Sau khi DELETE, script `ALTER TABLE ... AUTO_INCREMENT=1`
+> de reset counter cho `KetQuaThucTap`, `DanhSachThucTap`, `DotThucTap`, `DotKienTap`.
 
 - **20 NguoiDung** (1 Admin, 6 GV, 12 SV, 2 DN) — tat ca mat khau `Password@123` (BCrypt da hash san).
   MaSV theo quy uoc `SV + nam + 3 so` (vd `SV2024001`) — khop `docs/02 §1`.

@@ -146,7 +146,7 @@ com.ntu.quanlyctdtdb/
 | TrangThaiLopHocPhan   | DangMo, DaDong, DaHuy                                      | LopHocPhan                   |
 | TrangThaiSinhVien     | DangHoc, BaoLuu, ThoiHoc, TotNghiep                       | SinhVien                     |
 | TrangThaiDotKT        | ChuanBi, ChoDuyet, DaDuyet, DaThucHien, DaHuy             | DotKienTap                   |
-| TrangThaiDotTT        | ChuanBi, ChoDuyet, DaDuyet, DangThucHien, DaKetThuc       | DotThucTap                   |
+| TrangThaiDotTT        | ChuanBi, ChoDuyet, DaDuyet, DangThucHien, DaKetThuc, DaHuy | DotThucTap                   |
 | TrangThaiThucTap      | DaPhanCong, DangThucTap, DaKetThuc, DaHuy                 | DanhSachThucTap              |
 | LoaiThucTap           | Truong, DoanhNghiep                                        | DanhSachThucTap              |
 

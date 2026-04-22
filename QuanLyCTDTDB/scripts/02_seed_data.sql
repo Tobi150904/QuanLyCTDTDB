@@ -25,29 +25,42 @@
 USE QuanLyCTDTDB;
 
 -- Lam sach du lieu cu de script idempotent (tranh xung dot PK/UK khi seed lai).
--- Khong DROP bang, chi TRUNCATE noi dung. Tat FK check trong suot qua trinh xoa.
+-- LUU Y QUAN TRONG (MySQL 8+):
+--   KHONG dung TRUNCATE TABLE cho cac bang CO BANG CON tham chieu qua FK
+--   (vd DanhSachThucTap bi KetQuaThucTap.fk_kqtt_dstt tham chieu).
+--   TRUNCATE bi chan boi rang buoc FK NGAY CA KHI da SET FOREIGN_KEY_CHECKS=0
+--   (MySQL loi #1701). Thay vao do dung DELETE FROM + reset AUTO_INCREMENT thu cong.
 SET FOREIGN_KEY_CHECKS = 0;
 
-TRUNCATE TABLE KetQuaThucTap;
-TRUNCATE TABLE DanhSachThucTap;
-TRUNCATE TABLE DotThucTap;
-TRUNCATE TABLE DanhSachSinhVienKienTap;
-TRUNCATE TABLE DotKienTap;
-TRUNCATE TABLE DanhSachSinhVienLopHocPhan;
-TRUNCATE TABLE LopHocPhan;
-TRUNCATE TABLE CTDT_HocPhan;
-TRUNCATE TABLE DoiNguGiangVienHP;
-TRUNCATE TABLE SinhVien;
-TRUNCATE TABLE LopHanhChinh;
-TRUNCATE TABLE HocPhan;
-TRUNCATE TABLE BCN_ThanhVien;
-TRUNCATE TABLE ChuongTrinhDaoTao;
-TRUNCATE TABLE NhomNguoiDung;
-TRUNCATE TABLE VaiTroThucTap;
-TRUNCATE TABLE DoanhNghiep;
-TRUNCATE TABLE GiangVien;
-TRUNCATE TABLE NguoiDung;
-TRUNCATE TABLE HocKyNamHoc;
+-- Xoa du lieu theo thu tu nguoc phu thuoc FK (con -> cha)
+DELETE FROM KetQuaThucTap;
+DELETE FROM DanhSachThucTap;
+DELETE FROM DotThucTap;
+DELETE FROM DanhSachSinhVienKienTap;
+DELETE FROM DotKienTap;
+DELETE FROM DanhSachSinhVienLopHocPhan;
+DELETE FROM LopHocPhan;
+DELETE FROM CTDT_HocPhan;
+DELETE FROM DoiNguGiangVienHP;
+DELETE FROM SinhVien;
+DELETE FROM LopHanhChinh;
+DELETE FROM HocPhan;
+DELETE FROM BCN_ThanhVien;
+DELETE FROM ChuongTrinhDaoTao;
+DELETE FROM NhomNguoiDung;
+DELETE FROM VaiTroThucTap;
+DELETE FROM DoanhNghiep;
+DELETE FROM GiangVien;
+DELETE FROM NguoiDung;
+DELETE FROM HocKyNamHoc;
+
+-- Reset AUTO_INCREMENT cho cac bang co PK IDENTITY de ID bat dau lai tu 1
+-- (seed INSERT voi MaDotKT/MaDotTT/MaThucTap tuong minh 1..N, sau do ung
+--  dung tu dong cap phat id tiep theo = N+1, giu so dep).
+ALTER TABLE KetQuaThucTap   AUTO_INCREMENT = 1;
+ALTER TABLE DanhSachThucTap AUTO_INCREMENT = 1;
+ALTER TABLE DotThucTap      AUTO_INCREMENT = 1;
+ALTER TABLE DotKienTap      AUTO_INCREMENT = 1;
 
 SET FOREIGN_KEY_CHECKS = 1;
 
