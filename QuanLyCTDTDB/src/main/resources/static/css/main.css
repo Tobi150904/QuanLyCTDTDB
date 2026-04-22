@@ -604,3 +604,154 @@ a > .stat-card:hover {
     color: var(--text-muted);
     font-weight: 500;
 }
+
+/* ============================================================================
+   DASHBOARD — Welcome card + Stat variants theo nghiep vu
+   Shared giua dashboard.html va cac module list co "stat summary".
+   ============================================================================ */
+.welcome-card {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-lt) 100%);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    position: relative;
+}
+.welcome-card::after {
+    content: '';
+    position: absolute;
+    right: -40px;
+    top: -40px;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(232, 160, 32, 0.18) 0%, transparent 70%);
+    pointer-events: none;
+}
+.welcome-card .welcome-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.14);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.85rem;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+/* Chip "hoc ky hien tai" o page header */
+.hk-chip {
+    background: var(--surface-card);
+    color: var(--primary);
+    border: 1px solid var(--border-color);
+    font-weight: 600;
+    font-size: 0.8rem;
+    padding: 7px 14px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+.hk-chip .hk-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #198754;
+    box-shadow: 0 0 0 3px rgba(25, 135, 84, 0.18);
+}
+
+/* Variants for .stat-card — mau theo nghiep vu */
+.stat-card.variant-success { border-left-color: #198754; }
+.stat-card.variant-success .stat-card-icon { color: #198754; background: #e9f7ef; }
+.stat-card.variant-warning { border-left-color: #e8a020; }
+.stat-card.variant-warning .stat-card-icon { color: #b7791f; background: #fff5e0; }
+.stat-card.variant-info    { border-left-color: #2d5f9e; }
+.stat-card.variant-info    .stat-card-icon { color: #2d5f9e; background: #e7f1fb; }
+.stat-card.variant-teal    { border-left-color: #0d9488; }
+.stat-card.variant-teal    .stat-card-icon { color: #0d9488; background: #d5f3ef; }
+.stat-card.variant-purple  { border-left-color: #6f42c1; }
+.stat-card.variant-purple  .stat-card-icon { color: #6f42c1; background: #eee4f8; }
+.stat-card.variant-orange  { border-left-color: #ea7a0c; }
+.stat-card.variant-orange  .stat-card-icon { color: #ea7a0c; background: #ffe9d4; }
+
+/* ============================================================================
+   ERROR PAGES (403 / 404 / 500)
+   ============================================================================ */
+.error-page {
+    min-height: calc(100vh - var(--navbar-height) - 48px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+}
+.error-card {
+    background: var(--surface-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    padding: 48px 40px;
+    text-align: center;
+    max-width: 520px;
+    width: 100%;
+}
+.error-icon-wrap {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    font-size: 2.8rem;
+}
+.error-icon-wrap.tone-danger  { background: #fbeaea; color: #b02a37; }
+.error-icon-wrap.tone-info    { background: #e7f1fb; color: var(--primary-lt); }
+.error-icon-wrap.tone-warning { background: #fff5e0; color: #b7791f; }
+.error-code {
+    font-size: 0.75rem;
+    letter-spacing: 4px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-subtle);
+    margin-bottom: 6px;
+}
+.error-title {
+    color: var(--primary);
+    font-weight: 700;
+    font-size: 1.35rem;
+    margin-bottom: 8px;
+    letter-spacing: -0.01em;
+}
+.error-desc {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin-bottom: 24px;
+}
+
+/* ============================================================================
+   PASSWORD STRENGTH METER (profile.html)
+   ============================================================================ */
+.pw-strength {
+    display: flex;
+    gap: 4px;
+    margin-top: 8px;
+}
+.pw-strength-seg {
+    flex: 1;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--border-color);
+    transition: background-color var(--transition);
+}
+.pw-strength-seg.filled-weak   { background: #dc3545; }
+.pw-strength-seg.filled-medium { background: #e8a020; }
+.pw-strength-seg.filled-strong { background: #198754; }
+.pw-strength-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+.pw-match-ok   { color: #198754; font-size: 0.78rem; }
+.pw-match-bad  { color: #dc3545; font-size: 0.78rem; }

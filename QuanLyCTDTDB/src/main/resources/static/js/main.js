@@ -79,13 +79,13 @@ function showLoading(button) {
 function confirmDelete(form, event, itemName) {
     event.preventDefault();
     var msg = itemName
-        ? ('Ban co chac muon xoa "' + itemName + '"? Hanh dong nay khong the hoan tac.')
-        : 'Ban co chac muon xoa muc nay? Hanh dong nay khong the hoan tac.';
+        ? ('Bạn có chắc muốn xoá "' + itemName + '"? Hành động này không thể hoàn tác.')
+        : 'Bạn có chắc muốn xoá mục này? Hành động này không thể hoàn tác.';
 
     // Dung Bootstrap modal neu co, ngac khong dung confirm() trong JS thuan
     var modalEl = document.getElementById('confirmDeleteModal');
     if (modalEl) {
-        document.getElementById('confirmDeleteModalLabel').textContent = 'Xac Nhan Xoa';
+        document.getElementById('confirmDeleteModalLabel').textContent = 'Xác Nhận Xoá';
         document.getElementById('confirmDeleteModalBody').textContent = msg;
         var confirmBtn = document.getElementById('confirmDeleteBtn');
         confirmBtn.onclick = function () {

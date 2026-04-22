@@ -3,35 +3,35 @@
       xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/base}">
-<head><title>Ho So Ca Nhan</title></head>
+<head><title>Hồ Sơ Cá Nhân</title></head>
 <body>
 <div layout:fragment="content">
 
     <!-- Breadcrumb -->
-    <nav aria-label="breadcrumb" class="mb-3">
+    <nav aria-label="Đường dẫn" class="mb-3">
         <ol class="breadcrumb">
             <li class="breadcrumb-item">
                 <a th:href="@{/dashboard}" class="text-decoration-none">
-                    <i class="bi bi-house-door me-1"></i>Trang Chu
+                    <i class="bi bi-house-door me-1" aria-hidden="true"></i>Trang Chủ
                 </a>
             </li>
-            <li class="breadcrumb-item active" aria-current="page">Ho So Ca Nhan</li>
+            <li class="breadcrumb-item active" aria-current="page">Hồ Sơ Cá Nhân</li>
         </ol>
     </nav>
 
     <!-- Page Header -->
     <div class="mb-4">
-        <p class="page-subtitle">Tai Khoan</p>
-        <h4 class="page-title">Ho So Ca Nhan</h4>
+        <p class="page-subtitle">Tài Khoản</p>
+        <h4 class="page-title">Hồ Sơ Cá Nhân</h4>
     </div>
 
     <div class="row g-4">
         <!-- Left: Thong tin ca nhan -->
-        <div class="col-md-6">
-            <div class="card">
+        <div class="col-lg-6">
+            <div class="card h-100">
                 <div class="card-header">
-                    <i class="bi bi-person-fill me-2"></i>
-                    <span class="fw-semibold">Thong Tin Ca Nhan</span>
+                    <i class="bi bi-person-fill me-2" aria-hidden="true"></i>
+                    <span class="fw-semibold">Thông Tin Cá Nhân</span>
                 </div>
                 <div class="card-body">
                     <form th:action="@{/profile/cap-nhat}" method="post" novalidate>
@@ -40,43 +40,52 @@
                                th:value="${_csrf.token}">
 
                         <div class="mb-3">
-                            <label class="form-label fw-medium">Ma Nguoi Dung</label>
-                            <input type="text" class="form-control"
-                                   th:value="${nguoiDung.maNguoiDung}" readonly>
+                            <label class="form-label fw-medium" for="maNguoiDung">
+                                Mã Người Dùng
+                            </label>
+                            <input id="maNguoiDung" type="text" class="form-control"
+                                   th:value="${nguoiDung.maNguoiDung}" readonly aria-readonly="true">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-medium">Ten Dang Nhap</label>
-                            <input type="text" class="form-control"
-                                   th:value="${nguoiDung.tenDangNhap}" readonly>
+                            <label class="form-label fw-medium" for="tenDangNhap">
+                                Tên Đăng Nhập
+                            </label>
+                            <input id="tenDangNhap" type="text" class="form-control"
+                                   th:value="${nguoiDung.tenDangNhap}" readonly aria-readonly="true">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-medium">Email</label>
-                            <input type="email" class="form-control"
-                                   th:value="${nguoiDung.email}" readonly>
+                            <label class="form-label fw-medium" for="email">Email</label>
+                            <input id="email" type="email" class="form-control"
+                                   th:value="${nguoiDung.email}" readonly aria-readonly="true">
                         </div>
                         <div class="mb-3">
                             <label for="hoTen" class="form-label fw-medium">
-                                Ho Ten <span class="text-danger">*</span>
+                                Họ và Tên <span class="text-danger" aria-hidden="true">*</span>
                             </label>
                             <input type="text" class="form-control"
                                    id="hoTen" name="hoTen"
                                    th:value="${nguoiDung.hoTen}"
-                                   required>
+                                   maxlength="100"
+                                   required
+                                   aria-required="true">
                         </div>
                         <div class="mb-4">
                             <label for="soDienThoai" class="form-label fw-medium">
-                                So Dien Thoai
+                                Số Điện Thoại
                             </label>
                             <input type="tel" class="form-control"
                                    id="soDienThoai" name="soDienThoai"
                                    th:value="${nguoiDung.soDienThoai}"
-                                   maxlength="15">
+                                   pattern="[0-9+\\-\\s]{8,15}"
+                                   maxlength="15"
+                                   placeholder="VD: 0901234567">
+                            <div class="form-text">Chỉ nhập chữ số, khoảng 10 ký tự.</div>
                         </div>
                         <button type="submit" class="btn btn-primary btn-sm"
                                 onclick="showLoading(this)">
                             <span class="spinner-border spinner-border-sm d-none me-1"
-                                  role="status"></span>
-                            <i class="bi bi-save me-1"></i>Luu Thay Doi
+                                  role="status" aria-hidden="true"></span>
+                            <i class="bi bi-save me-1" aria-hidden="true"></i>Lưu Thay Đổi
                         </button>
                     </form>
                 </div>
@@ -84,51 +93,73 @@
         </div>
 
         <!-- Right: Doi mat khau -->
-        <div class="col-md-6">
-            <div class="card">
+        <div class="col-lg-6">
+            <div class="card h-100">
                 <div class="card-header">
-                    <i class="bi bi-key me-2"></i>
-                    <span class="fw-semibold">Doi Mat Khau</span>
+                    <i class="bi bi-key me-2" aria-hidden="true"></i>
+                    <span class="fw-semibold">Đổi Mật Khẩu</span>
                 </div>
                 <div class="card-body">
-                    <form th:action="@{/profile/doi-mat-khau}" method="post" novalidate>
+                    <form th:action="@{/profile/doi-mat-khau}" method="post" novalidate id="pwForm">
                         <input type="hidden"
                                th:name="${_csrf.parameterName}"
                                th:value="${_csrf.token}">
 
                         <div class="mb-3">
                             <label for="matKhauCu" class="form-label fw-medium">
-                                Mat Khau Hien Tai <span class="text-danger">*</span>
+                                Mật Khẩu Hiện Tại
+                                <span class="text-danger" aria-hidden="true">*</span>
                             </label>
                             <input type="password" class="form-control"
                                    id="matKhauCu" name="matKhauCu"
-                                   placeholder="Nhap mat khau hien tai"
-                                   required>
+                                   placeholder="Nhập mật khẩu hiện tại"
+                                   autocomplete="current-password"
+                                   required
+                                   aria-required="true">
                         </div>
                         <div class="mb-3">
                             <label for="matKhauMoi" class="form-label fw-medium">
-                                Mat Khau Moi <span class="text-danger">*</span>
+                                Mật Khẩu Mới
+                                <span class="text-danger" aria-hidden="true">*</span>
                             </label>
                             <input type="password" class="form-control"
                                    id="matKhauMoi" name="matKhauMoi"
-                                   placeholder="Toi thieu 8 ky tu"
+                                   placeholder="Tối thiểu 8 ký tự"
+                                   autocomplete="new-password"
                                    minlength="8"
-                                   required>
+                                   required
+                                   aria-required="true"
+                                   aria-describedby="pwHelp">
+                            <!-- Strength meter -->
+                            <div class="pw-strength" aria-hidden="true">
+                                <span class="pw-strength-seg" data-seg="1"></span>
+                                <span class="pw-strength-seg" data-seg="2"></span>
+                                <span class="pw-strength-seg" data-seg="3"></span>
+                                <span class="pw-strength-seg" data-seg="4"></span>
+                            </div>
+                            <div class="pw-strength-label" id="pwHelp">
+                                Độ mạnh: <span id="pwStrengthText">Chưa nhập</span>.
+                                Khuyến nghị ≥ 8 ký tự, gồm chữ hoa, chữ thường, chữ số và ký tự đặc biệt.
+                            </div>
                         </div>
                         <div class="mb-4">
                             <label for="xacNhanMatKhau" class="form-label fw-medium">
-                                Xac Nhan Mat Khau Moi <span class="text-danger">*</span>
+                                Xác Nhận Mật Khẩu Mới
+                                <span class="text-danger" aria-hidden="true">*</span>
                             </label>
                             <input type="password" class="form-control"
                                    id="xacNhanMatKhau" name="xacNhanMatKhau"
-                                   placeholder="Nhap lai mat khau moi"
-                                   required>
+                                   placeholder="Nhập lại mật khẩu mới"
+                                   autocomplete="new-password"
+                                   required
+                                   aria-required="true">
+                            <div id="pwMatchMsg" class="mt-1" aria-live="polite"></div>
                         </div>
                         <button type="submit" class="btn btn-primary btn-sm"
                                 onclick="showLoading(this)">
                             <span class="spinner-border spinner-border-sm d-none me-1"
-                                  role="status"></span>
-                            <i class="bi bi-lock me-1"></i>Doi Mat Khau
+                                  role="status" aria-hidden="true"></span>
+                            <i class="bi bi-lock me-1" aria-hidden="true"></i>Đổi Mật Khẩu
                         </button>
                     </form>
                 </div>
@@ -137,5 +168,74 @@
     </div>
 
 </div>
+
+<th:block layout:fragment="scripts">
+<script>
+    (function () {
+        'use strict';
+
+        var pwNew = document.getElementById('matKhauMoi');
+        var pwConfirm = document.getElementById('xacNhanMatKhau');
+        var segs = document.querySelectorAll('.pw-strength-seg');
+        var strengthText = document.getElementById('pwStrengthText');
+        var matchMsg = document.getElementById('pwMatchMsg');
+        var form = document.getElementById('pwForm');
+
+        // Tinh do manh: 0..4 dua tren chieu dai + do da dang ky tu
+        function scorePassword(pw) {
+            if (!pw) return 0;
+            var score = 0;
+            if (pw.length >= 8)  score++;
+            if (pw.length >= 12) score++;
+            if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) score++;
+            if (/\d/.test(pw) && /[^A-Za-z0-9]/.test(pw)) score++;
+            return Math.min(score, 4);
+        }
+
+        function labelFor(score) {
+            if (score <= 0) return { text: 'Chưa nhập', tone: '' };
+            if (score === 1) return { text: 'Yếu',      tone: 'filled-weak' };
+            if (score === 2) return { text: 'Trung bình', tone: 'filled-medium' };
+            if (score === 3) return { text: 'Khá',      tone: 'filled-strong' };
+            return { text: 'Mạnh', tone: 'filled-strong' };
+        }
+
+        function render(score) {
+            var info = labelFor(score);
+            segs.forEach(function (s, idx) {
+                s.classList.remove('filled-weak', 'filled-medium', 'filled-strong');
+                if (idx < score && info.tone) s.classList.add(info.tone);
+            });
+            strengthText.textContent = info.text;
+        }
+
+        function checkMatch() {
+            if (!pwConfirm.value) { matchMsg.textContent = ''; matchMsg.className = ''; return; }
+            if (pwNew.value === pwConfirm.value) {
+                matchMsg.textContent = '✓ Mật khẩu khớp.';
+                matchMsg.className = 'pw-match-ok';
+            } else {
+                matchMsg.textContent = '✗ Mật khẩu chưa khớp.';
+                matchMsg.className = 'pw-match-bad';
+            }
+        }
+
+        pwNew.addEventListener('input', function () {
+            render(scorePassword(pwNew.value));
+            checkMatch();
+        });
+        pwConfirm.addEventListener('input', checkMatch);
+
+        form.addEventListener('submit', function (e) {
+            if (pwNew.value !== pwConfirm.value) {
+                e.preventDefault();
+                pwConfirm.focus();
+                matchMsg.textContent = '✗ Mật khẩu xác nhận không khớp. Vui lòng kiểm tra lại.';
+                matchMsg.className = 'pw-match-bad';
+            }
+        });
+    })();
+</script>
+</th:block>
 </body>
 </html>

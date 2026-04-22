@@ -5,225 +5,168 @@
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       layout:decorate="~{layout/base}">
 <head>
-    <title>Trang Chu</title>
-    <style>
-        /* Chi dung cho dashboard — welcome card gradient */
-        .welcome-card {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-lt) 100%);
-            color: #fff;
-            border: none;
-            border-radius: var(--radius-lg);
-            overflow: hidden;
-            position: relative;
-        }
-        .welcome-card::after {
-            content: '';
-            position: absolute;
-            right: -40px;
-            top: -40px;
-            width: 180px;
-            height: 180px;
-            background: radial-gradient(circle, rgba(232,160,32,0.18) 0%, transparent 70%);
-            pointer-events: none;
-        }
-        .welcome-avatar {
-            width: 56px;
-            height: 56px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.12);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.8rem;
-            color: #fff;
-        }
-        .hk-chip {
-            background: var(--surface-card);
-            color: var(--primary);
-            border: 1px solid var(--border-color);
-            font-weight: 600;
-            font-size: 0.8rem;
-            padding: 7px 14px;
-            border-radius: 999px;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .hk-chip .hk-dot {
-            width: 8px; height: 8px; border-radius: 50%;
-            background: #198754; box-shadow: 0 0 0 3px rgba(25,135,84,0.18);
-        }
-        /* Variant for stat cards theo mau nghiep vu */
-        .stat-card.variant-success { border-left-color: #198754; }
-        .stat-card.variant-success .stat-card-icon { color: #198754; background: #e9f7ef; }
-        .stat-card.variant-warning { border-left-color: #e8a020; }
-        .stat-card.variant-warning .stat-card-icon { color: #b7791f; background: #fff5e0; }
-        .stat-card.variant-info    { border-left-color: #2d5f9e; }
-        .stat-card.variant-info    .stat-card-icon { color: #2d5f9e; background: #e7f1fb; }
-        .stat-card.variant-teal    { border-left-color: #0d9488; }
-        .stat-card.variant-teal    .stat-card-icon { color: #0d9488; background: #d5f3ef; }
-        .stat-card.variant-purple  { border-left-color: #6f42c1; }
-        .stat-card.variant-purple  .stat-card-icon { color: #6f42c1; background: #eee4f8; }
-        .stat-card.variant-orange  { border-left-color: #ea7a0c; }
-        .stat-card.variant-orange  .stat-card-icon { color: #ea7a0c; background: #ffe9d4; }
-    </style>
+    <title>Trang Chủ</title>
 </head>
 <body>
 <div layout:fragment="content">
 
-    <!-- Page Header -->
+    <!-- ===================== PAGE HEADER ===================== -->
     <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
         <div>
-            <p class="page-subtitle">Tong Quan</p>
-            <h4 class="page-title">Trang Chu — He Thong QLDTXS</h4>
+            <p class="page-subtitle">Tổng Quan</p>
+            <h4 class="page-title">Trang Chủ — Hệ Thống QLĐTXS</h4>
         </div>
         <div th:if="${hocKyHienTai}">
-            <span class="hk-chip">
-                <span class="hk-dot"></span>
-                <i class="bi bi-calendar3"></i>
-                <span th:text="${hocKyHienTai.tenHocKy}">HK Hien Tai</span>
+            <span class="hk-chip" aria-label="Học kỳ hiện tại">
+                <span class="hk-dot" aria-hidden="true"></span>
+                <i class="bi bi-calendar3" aria-hidden="true"></i>
+                <span th:text="${hocKyHienTai.tenHocKy}">Học Kỳ Hiện Tại</span>
             </span>
         </div>
     </div>
 
-    <!-- Welcome card -->
+    <!-- ===================== WELCOME CARD ===================== -->
     <div class="card welcome-card mb-4">
         <div class="card-body py-4 px-4 position-relative">
-            <div class="d-flex align-items-center gap-3">
-                <div class="welcome-avatar">
+            <div class="d-flex align-items-center gap-3 flex-wrap">
+                <div class="welcome-avatar" aria-hidden="true">
                     <i class="bi bi-person-circle"></i>
                 </div>
-                <div>
+                <div class="flex-grow-1">
                     <h5 class="mb-1 fw-semibold">
-                        Xin chao, <span sec:authentication="principal.hoTen">Nguoi Dung</span>!
+                        Xin chào,
+                        <span sec:authentication="principal.hoTen">Người Dùng</span>!
                     </h5>
                     <p class="mb-0 small" style="opacity:0.85;">
-                        <i class="bi bi-clock me-1"></i>
-                        <span id="currentDateTime"></span>
+                        <i class="bi bi-clock me-1" aria-hidden="true"></i>
+                        <span id="currentDateTime">Đang tải ngày giờ…</span>
                     </p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ===================== STAT CARDS (Admin / PDT / TTDTXS) ===================== -->
-    <div sec:authorize="hasAnyRole('ADMIN','PDT','TTDTXS')">
-        <p class="page-subtitle mb-3">Thong Ke Nguoi Dung</p>
+    <!-- ===================== STAT CARDS — ADMIN / PDT / TTDTXS ===================== -->
+    <section sec:authorize="hasAnyRole('ADMIN','PDT','TTDTXS')"
+             aria-labelledby="sec-thongke-nd">
+
+        <p class="page-subtitle mb-3" id="sec-thongke-nd">Thống Kê Người Dùng</p>
         <div class="row g-3 mb-4">
             <div class="col-6 col-md-3">
                 <div class="stat-card">
-                    <div class="stat-card-icon"><i class="bi bi-people"></i></div>
+                    <div class="stat-card-icon"><i class="bi bi-people" aria-hidden="true"></i></div>
                     <div>
                         <div class="stat-card-value" th:text="${thongKe['tongNguoiDung'] ?: 0}">0</div>
-                        <div class="stat-card-label">Tong Nguoi Dung</div>
+                        <div class="stat-card-label">Tổng Người Dùng</div>
                     </div>
                 </div>
             </div>
             <div class="col-6 col-md-3">
                 <div class="stat-card variant-info">
-                    <div class="stat-card-icon"><i class="bi bi-person-workspace"></i></div>
+                    <div class="stat-card-icon"><i class="bi bi-person-workspace" aria-hidden="true"></i></div>
                     <div>
                         <div class="stat-card-value" th:text="${thongKe['giangVien'] ?: 0}">0</div>
-                        <div class="stat-card-label">Giang Vien</div>
+                        <div class="stat-card-label">Giảng Viên</div>
                     </div>
                 </div>
             </div>
             <div class="col-6 col-md-3">
                 <div class="stat-card variant-teal">
-                    <div class="stat-card-icon"><i class="bi bi-person-badge"></i></div>
+                    <div class="stat-card-icon"><i class="bi bi-person-badge" aria-hidden="true"></i></div>
                     <div>
                         <div class="stat-card-value" th:text="${thongKe['sinhVien'] ?: 0}">0</div>
-                        <div class="stat-card-label">Sinh Vien</div>
+                        <div class="stat-card-label">Sinh Viên</div>
                     </div>
                 </div>
             </div>
             <div class="col-6 col-md-3">
                 <div class="stat-card variant-success">
-                    <div class="stat-card-icon"><i class="bi bi-building"></i></div>
+                    <div class="stat-card-icon"><i class="bi bi-building" aria-hidden="true"></i></div>
                     <div>
                         <div class="stat-card-value" th:text="${thongKe['doanhNghiep'] ?: 0}">0</div>
-                        <div class="stat-card-label">Doanh Nghiep</div>
+                        <div class="stat-card-label">Doanh Nghiệp</div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <p class="page-subtitle mb-3">Chuong Trinh Dao Tao &amp; Hoc Phan</p>
+        <p class="page-subtitle mb-3">Chương Trình Đào Tạo &amp; Học Phần</p>
         <div class="row g-3 mb-4">
             <div class="col-6 col-md-3">
                 <div class="stat-card variant-success">
-                    <div class="stat-card-icon"><i class="bi bi-book-half"></i></div>
+                    <div class="stat-card-icon"><i class="bi bi-book-half" aria-hidden="true"></i></div>
                     <div>
                         <div class="stat-card-value" th:text="${thongKe['hocPhanDaDuyet'] ?: 0}">0</div>
-                        <div class="stat-card-label">HP Da Duyet</div>
+                        <div class="stat-card-label">HP Đã Duyệt</div>
                     </div>
                 </div>
             </div>
             <div class="col-6 col-md-3">
                 <div class="stat-card variant-warning">
-                    <div class="stat-card-icon"><i class="bi bi-hourglass-split"></i></div>
+                    <div class="stat-card-icon"><i class="bi bi-hourglass-split" aria-hidden="true"></i></div>
                     <div>
                         <div class="stat-card-value" th:text="${thongKe['hocPhanChoDuyet'] ?: 0}">0</div>
-                        <div class="stat-card-label">HP Cho Duyet</div>
+                        <div class="stat-card-label">HP Chờ Duyệt</div>
                     </div>
                 </div>
             </div>
             <div class="col-6 col-md-3">
                 <div class="stat-card variant-info">
-                    <div class="stat-card-icon"><i class="bi bi-journal-bookmark"></i></div>
+                    <div class="stat-card-icon"><i class="bi bi-journal-bookmark" aria-hidden="true"></i></div>
                     <div>
                         <div class="stat-card-value" th:text="${thongKe['ctdtDaDuyet'] ?: 0}">0</div>
-                        <div class="stat-card-label">CTDT Da Duyet</div>
+                        <div class="stat-card-label">CTĐT Đã Duyệt</div>
                     </div>
                 </div>
             </div>
             <div class="col-6 col-md-3">
                 <div class="stat-card variant-teal">
-                    <div class="stat-card-icon"><i class="bi bi-collection"></i></div>
+                    <div class="stat-card-icon"><i class="bi bi-collection" aria-hidden="true"></i></div>
                     <div>
                         <div class="stat-card-value" th:text="${thongKe['lopHocPhanDangMo'] ?: 0}">0</div>
-                        <div class="stat-card-label">Lop HP Dang Mo</div>
+                        <div class="stat-card-label">Lớp HP Đang Mở</div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <p class="page-subtitle mb-3">Kien Tap &amp; Thuc Tap</p>
+        <p class="page-subtitle mb-3">Kiến Tập &amp; Thực Tập</p>
         <div class="row g-3 mb-4">
             <div class="col-6 col-md-3">
                 <div class="stat-card variant-purple">
-                    <div class="stat-card-icon"><i class="bi bi-briefcase"></i></div>
+                    <div class="stat-card-icon"><i class="bi bi-briefcase" aria-hidden="true"></i></div>
                     <div>
                         <div class="stat-card-value"
                              th:text="${thongKe['dotKienTapDangHoatDong'] ?: 0}">0</div>
-                        <div class="stat-card-label">Dot Kien Tap</div>
+                        <div class="stat-card-label">Đợt Kiến Tập</div>
                     </div>
                 </div>
             </div>
             <div class="col-6 col-md-3">
                 <div class="stat-card variant-orange">
-                    <div class="stat-card-icon"><i class="bi bi-building-check"></i></div>
+                    <div class="stat-card-icon"><i class="bi bi-building-check" aria-hidden="true"></i></div>
                     <div>
                         <div class="stat-card-value"
                              th:text="${thongKe['dotThucTapDangDienRa'] ?: 0}">0</div>
-                        <div class="stat-card-label">Dot Thuc Tap</div>
+                        <div class="stat-card-label">Đợt Thực Tập</div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 
-    <!-- ===================== GIANG VIEN dashboard ===================== -->
-    <div sec:authorize="hasRole('GIANG_VIEN') and !hasAnyRole('PDT','TTDTXS','ADMIN')">
-        <p class="page-subtitle mb-3">Chuyen Trang Nhanh</p>
+    <!-- ===================== GIẢNG VIÊN dashboard ===================== -->
+    <section sec:authorize="hasRole('GIANG_VIEN') and !hasAnyRole('PDT','TTDTXS','ADMIN')"
+             aria-labelledby="sec-gv">
+        <p class="page-subtitle mb-3" id="sec-gv">Chuyển Trang Nhanh</p>
         <div class="row g-3">
             <div class="col-sm-6 col-md-4">
                 <a th:href="@{/lop-hoc-phan}" class="text-decoration-none">
                     <div class="stat-card h-100">
-                        <div class="stat-card-icon"><i class="bi bi-collection"></i></div>
+                        <div class="stat-card-icon"><i class="bi bi-collection" aria-hidden="true"></i></div>
                         <div>
-                            <div class="fw-semibold text-primary">Lop Hoc Phan Cua Toi</div>
-                            <div class="stat-card-label">Xem va quan ly lop HP</div>
+                            <div class="fw-semibold text-primary">Lớp Học Phần Của Tôi</div>
+                            <div class="stat-card-label">Xem và quản lý lớp HP</div>
                         </div>
                     </div>
                 </a>
@@ -231,10 +174,10 @@
             <div class="col-sm-6 col-md-4">
                 <a th:href="@{/danh-gia}" class="text-decoration-none">
                     <div class="stat-card h-100">
-                        <div class="stat-card-icon"><i class="bi bi-clipboard-check"></i></div>
+                        <div class="stat-card-icon"><i class="bi bi-clipboard-check" aria-hidden="true"></i></div>
                         <div>
-                            <div class="fw-semibold text-primary">Danh Gia Sinh Vien</div>
-                            <div class="stat-card-label">Nhan xet va canh bao</div>
+                            <div class="fw-semibold text-primary">Đánh Giá Sinh Viên</div>
+                            <div class="stat-card-label">Nhận xét và cảnh báo</div>
                         </div>
                     </div>
                 </a>
@@ -242,46 +185,48 @@
             <div class="col-sm-6 col-md-4">
                 <a th:href="@{/kien-tap}" class="text-decoration-none">
                     <div class="stat-card h-100">
-                        <div class="stat-card-icon"><i class="bi bi-briefcase"></i></div>
+                        <div class="stat-card-icon"><i class="bi bi-briefcase" aria-hidden="true"></i></div>
                         <div>
-                            <div class="fw-semibold text-primary">Kien Tap</div>
-                            <div class="stat-card-label">Quan ly dot kien tap</div>
+                            <div class="fw-semibold text-primary">Kiến Tập</div>
+                            <div class="stat-card-label">Quản lý đợt kiến tập</div>
                         </div>
                     </div>
                 </a>
             </div>
         </div>
-    </div>
+    </section>
 
-    <!-- ===================== SINH VIEN dashboard ===================== -->
-    <div sec:authorize="hasRole('SINH_VIEN') and !hasAnyRole('PDT','TTDTXS','ADMIN','GIANG_VIEN')">
-        <p class="page-subtitle mb-3">Chuyen Trang Nhanh</p>
+    <!-- ===================== SINH VIÊN dashboard ===================== -->
+    <section sec:authorize="hasRole('SINH_VIEN') and !hasAnyRole('PDT','TTDTXS','ADMIN','GIANG_VIEN')"
+             aria-labelledby="sec-sv">
+        <p class="page-subtitle mb-3" id="sec-sv">Chuyển Trang Nhanh</p>
         <div class="row g-3">
             <div class="col-sm-6 col-md-4">
                 <a th:href="@{/thuc-tap}" class="text-decoration-none">
                     <div class="stat-card h-100">
-                        <div class="stat-card-icon"><i class="bi bi-building-check"></i></div>
+                        <div class="stat-card-icon"><i class="bi bi-building-check" aria-hidden="true"></i></div>
                         <div>
-                            <div class="fw-semibold text-primary">Thuc Tap Cua Toi</div>
-                            <div class="stat-card-label">Xem ket qua thuc tap</div>
+                            <div class="fw-semibold text-primary">Thực Tập Của Tôi</div>
+                            <div class="stat-card-label">Xem kết quả thực tập</div>
                         </div>
                     </div>
                 </a>
             </div>
         </div>
-    </div>
+    </section>
 
-    <!-- ===================== DOANH NGHIEP dashboard ===================== -->
-    <div sec:authorize="hasRole('DOANH_NGHIEP') and !hasAnyRole('PDT','TTDTXS','ADMIN')">
-        <p class="page-subtitle mb-3">Chuyen Trang Nhanh</p>
+    <!-- ===================== DOANH NGHIỆP dashboard ===================== -->
+    <section sec:authorize="hasRole('DOANH_NGHIEP') and !hasAnyRole('PDT','TTDTXS','ADMIN')"
+             aria-labelledby="sec-dn">
+        <p class="page-subtitle mb-3" id="sec-dn">Chuyển Trang Nhanh</p>
         <div class="row g-3">
             <div class="col-sm-6 col-md-4">
                 <a th:href="@{/kien-tap}" class="text-decoration-none">
                     <div class="stat-card h-100">
-                        <div class="stat-card-icon"><i class="bi bi-briefcase"></i></div>
+                        <div class="stat-card-icon"><i class="bi bi-briefcase" aria-hidden="true"></i></div>
                         <div>
-                            <div class="fw-semibold text-primary">Kien Tap</div>
-                            <div class="stat-card-label">Quan ly sinh vien kien tap</div>
+                            <div class="fw-semibold text-primary">Kiến Tập</div>
+                            <div class="stat-card-label">Quản lý sinh viên kiến tập</div>
                         </div>
                     </div>
                 </a>
@@ -289,69 +234,73 @@
             <div class="col-sm-6 col-md-4">
                 <a th:href="@{/thuc-tap}" class="text-decoration-none">
                     <div class="stat-card h-100">
-                        <div class="stat-card-icon"><i class="bi bi-building-check"></i></div>
+                        <div class="stat-card-icon"><i class="bi bi-building-check" aria-hidden="true"></i></div>
                         <div>
-                            <div class="fw-semibold text-primary">Thuc Tap</div>
-                            <div class="stat-card-label">Danh gia sinh vien thuc tap</div>
+                            <div class="fw-semibold text-primary">Thực Tập</div>
+                            <div class="stat-card-label">Đánh giá sinh viên thực tập</div>
                         </div>
                     </div>
                 </a>
             </div>
         </div>
-    </div>
+    </section>
 
-    <!-- ===================== Quick Actions ===================== -->
-    <div class="mt-4" sec:authorize="hasAnyRole('ADMIN','PDT','TTDTXS','CNHP')">
-        <p class="page-subtitle mb-3">Thao Tac Nhanh</p>
+    <!-- ===================== QUICK ACTIONS ===================== -->
+    <section class="mt-4" sec:authorize="hasAnyRole('ADMIN','PDT','TTDTXS','CNHP')"
+             aria-labelledby="sec-quick">
+        <p class="page-subtitle mb-3" id="sec-quick">Thao Tác Nhanh</p>
         <div class="d-flex flex-wrap gap-2">
             <a sec:authorize="hasAnyRole('PDT','ADMIN')"
                th:href="@{/nguoi-dung/them}"
                class="btn btn-sm btn-outline-primary">
-                <i class="bi bi-person-plus me-1"></i>Them Nguoi Dung
+                <i class="bi bi-person-plus me-1" aria-hidden="true"></i>Thêm Người Dùng
             </a>
             <a sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')"
                th:href="@{/doanh-nghiep/them}"
                class="btn btn-sm btn-outline-primary">
-                <i class="bi bi-building-add me-1"></i>Them Doanh Nghiep
+                <i class="bi bi-building-add me-1" aria-hidden="true"></i>Thêm Doanh Nghiệp
             </a>
             <a sec:authorize="hasAnyRole('CNHP','TTDTXS','ADMIN')"
                th:href="@{/hoc-phan/them}"
                class="btn btn-sm btn-outline-primary">
-                <i class="bi bi-plus-circle me-1"></i>Them Hoc Phan
+                <i class="bi bi-plus-circle me-1" aria-hidden="true"></i>Thêm Học Phần
             </a>
             <a sec:authorize="hasAnyRole('PDT','TTDTXS','CNHP','ADMIN')"
                th:href="@{/ctdt/them}"
                class="btn btn-sm btn-outline-primary">
-                <i class="bi bi-journal-plus me-1"></i>Tao CTDT
+                <i class="bi bi-journal-plus me-1" aria-hidden="true"></i>Tạo CTĐT
             </a>
             <a sec:authorize="hasAnyRole('TTDTXS','CNHP','ADMIN')"
                th:href="@{/kien-tap/them}"
                class="btn btn-sm btn-outline-primary">
-                <i class="bi bi-briefcase me-1"></i>Tao Dot Kien Tap
+                <i class="bi bi-briefcase me-1" aria-hidden="true"></i>Tạo Đợt Kiến Tập
             </a>
             <a sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')"
                th:href="@{/bao-cao}"
-               class="btn btn-sm btn-outline-success">
-                <i class="bi bi-bar-chart-line me-1"></i>Xem Bao Cao
+               class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-bar-chart-line me-1" aria-hidden="true"></i>Xem Báo Cáo
             </a>
         </div>
-    </div>
+    </section>
 
 </div>
 
 <th:block layout:fragment="scripts">
 <script>
-    function updateDateTime() {
-        var now = new Date();
-        var options = {
-            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
-            hour: '2-digit', minute: '2-digit'
-        };
-        document.getElementById('currentDateTime').textContent =
-            now.toLocaleDateString('vi-VN', options);
-    }
-    updateDateTime();
-    setInterval(updateDateTime, 60000);
+    (function () {
+        'use strict';
+        function updateDateTime() {
+            var now = new Date();
+            var opts = {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+            };
+            var el = document.getElementById('currentDateTime');
+            if (el) el.textContent = now.toLocaleDateString('vi-VN', opts);
+        }
+        updateDateTime();
+        setInterval(updateDateTime, 60000);
+    })();
 </script>
 </th:block>
 </body>

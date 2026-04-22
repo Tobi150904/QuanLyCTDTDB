@@ -3,21 +3,31 @@
       xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/base}">
-<head><title>404 - Khong Tim Thay Trang</title></head>
+<head><title>404 — Không Tìm Thấy Trang</title></head>
 <body>
 <div layout:fragment="content">
-    <div class="text-center py-5">
-        <div style="font-size:5rem; color:#dee2e6;">
-            <i class="bi bi-search"></i>
+    <div class="error-page">
+        <div class="error-card" role="alert" aria-labelledby="errTitle">
+            <div class="error-icon-wrap tone-info" aria-hidden="true">
+                <i class="bi bi-compass"></i>
+            </div>
+            <p class="error-code">Lỗi 404</p>
+            <h1 id="errTitle" class="error-title">Không Tìm Thấy Trang</h1>
+            <p class="error-desc">
+                Trang bạn đang tìm không tồn tại hoặc đã được di chuyển.<br>
+                Vui lòng kiểm tra lại đường dẫn hoặc quay về trang chủ.
+            </p>
+            <p th:if="${errorMsg}" class="text-danger small mb-3" th:text="${errorMsg}"></p>
+            <div class="d-flex justify-content-center gap-2 flex-wrap">
+                <a th:href="@{/dashboard}" class="btn btn-primary">
+                    <i class="bi bi-house-door me-1" aria-hidden="true"></i>Về Trang Chủ
+                </a>
+                <button type="button" class="btn btn-outline-secondary"
+                        onclick="history.back()">
+                    <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Quay Lại
+                </button>
+            </div>
         </div>
-        <h3 class="fw-bold mt-3" style="color:#1e3a5f;">404 — Khong Tim Thay Trang</h3>
-        <p class="text-muted mb-2">
-            Trang ban dang tim khong ton tai hoac da bi xoa.
-        </p>
-        <p th:if="${errorMsg}" class="text-danger small mb-4" th:text="${errorMsg}"></p>
-        <a th:href="@{/dashboard}" class="btn btn-primary">
-            <i class="bi bi-house-door me-2"></i>Quay Ve Trang Chu
-        </a>
     </div>
 </div>
 </body>

@@ -3,21 +3,30 @@
       xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/base}">
-<head><title>403 - Khong Co Quyen Truy Cap</title></head>
+<head><title>403 — Không Có Quyền Truy Cập</title></head>
 <body>
 <div layout:fragment="content">
-    <div class="text-center py-5">
-        <div style="font-size:5rem; color:#dee2e6;">
-            <i class="bi bi-shield-x"></i>
+    <div class="error-page">
+        <div class="error-card" role="alert" aria-labelledby="errTitle">
+            <div class="error-icon-wrap tone-warning" aria-hidden="true">
+                <i class="bi bi-shield-lock-fill"></i>
+            </div>
+            <p class="error-code">Lỗi 403</p>
+            <h1 id="errTitle" class="error-title">Không Có Quyền Truy Cập</h1>
+            <p class="error-desc">
+                Tài khoản của bạn không được cấp quyền truy cập trang này.<br>
+                Vui lòng liên hệ quản trị viên nếu cho rằng đây là sự nhầm lẫn.
+            </p>
+            <div class="d-flex justify-content-center gap-2 flex-wrap">
+                <a th:href="@{/dashboard}" class="btn btn-primary">
+                    <i class="bi bi-house-door me-1" aria-hidden="true"></i>Về Trang Chủ
+                </a>
+                <button type="button" class="btn btn-outline-secondary"
+                        onclick="history.back()">
+                    <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Quay Lại
+                </button>
+            </div>
         </div>
-        <h3 class="fw-bold mt-3" style="color:#1e3a5f;">403 — Khong Co Quyen Truy Cap</h3>
-        <p class="text-muted mb-4">
-            Ban khong co quyen thuc hien hanh dong nay.<br>
-            Vui long lien he quan tri vien neu can ho tro.
-        </p>
-        <a th:href="@{/dashboard}" class="btn btn-primary">
-            <i class="bi bi-house-door me-2"></i>Quay Ve Trang Chu
-        </a>
     </div>
 </div>
 </body>
