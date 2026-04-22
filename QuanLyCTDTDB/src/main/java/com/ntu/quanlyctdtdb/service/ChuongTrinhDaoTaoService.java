@@ -33,4 +33,7 @@ public interface ChuongTrinhDaoTaoService {
 
     /** Lay danh sach HP chua co trong CTDT */
     List<com.ntu.quanlyctdtdb.entity.HocPhan> findHocPhanChuaThuoc(String maCTDT);
+
+    /** Cap nhat duong dan File Word cua CTDT (goi sau khi da upload file thanh cong). */
+    ChuongTrinhDaoTao updateFileWord(String maCTDT, String fileWordPath);
 }

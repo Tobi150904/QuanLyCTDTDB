@@ -179,7 +179,12 @@
 
 ---
 
-## PHASE 3: MODULE P1 — NGHIEP VU CHINH  (DANG THUC HIEN)
+## PHASE 3: MODULE P1 — NGHIEP VU CHINH  (DA HOAN THANH — 2026-Q2)
+
+Toan bo 5 module P1 (HocKy, LopHanhChinh, HocPhan, CTDT, LopHocPhan) da:
+- Co DTO + service interface + service impl + controller + templates.
+- Duoc fix 6 bug code va sync docs trong dot review 2026-Q2 (xem muc "Fix 2026-Q2" ben duoi).
+- Security URL rules da cau hinh day du trong `SecurityConfig.filterChain`.
 
 ### Tien do Phase 3 (cap nhat 2026-Q2)
 - [x] **Fix compile error** `HocKyNamHocController`: loai bo enum sai `ChuanBi`,
@@ -206,7 +211,37 @@
         DangHoc vao DanhSachSinhVienKienTap (docs/02 §3.7).
       - Bao gom 2 ban ghi `DaCanhBao=1` minh hoa 2 trang thai: da xu ly + chua xu ly.
       - Cap nhat `docs/02 §4` dong bo so ban ghi moi.
-- [ ] **Controller + Service Phase 3 con lai** (duoi day) — dang trien khai
+- [x] **Controller + Service Phase 3 con lai** — tat ca 5 module da hoan thanh
+
+### Fix 2026-Q2 (dot review Phase 3)
+
+- [x] **B1 — Link tai file de cuong 404**: doi `@{/files/...}` -> `@{/uploads/...}`
+      trong `hoc-phan/danh-sach.html` va `hoc-phan/chi-tiet.html`. Resource handler
+      trong `WebMvcConfig` chi expose `/uploads/**`.
+- [x] **B2 — CTDT mat file upload**: `ChuongTrinhDaoTaoController.them()` truoc day
+      set `fileWord` tren entity detached (transaction da dong) — path bi mat.
+      Giai phap: them `ChuongTrinhDaoTaoService.updateFileWord(ma, path)` goi sau
+      `create()` de luu correctly. Dong thoi bo sung xu ly file cho `sua()`.
+- [x] **B3 — HocPhan bo qua user input**: `HocPhanServiceImpl.create()` auto-gen
+      `HP001` khong dung format docs (`HP-MATHE`). Fix: uu tien `dto.maHocPhan`
+      neu user nhap (co uniqueness check), fallback autogen neu trong.
+- [x] **B4 — CTDT phe duyet thieu audit**: `pheduyet()` khong set `nguoiDuyet` +
+      `ngayDuyet`. Fix: load NguoiDung + set `LocalDateTime.now()` khi DaDuyet.
+- [x] **B5 — HocKy doi trang thai bi block**: Roadmap §3.1 yeu cau auto-close HK
+      cu khi kich hoat HK moi, nhung service throw BusinessException. Fix: thay
+      `ensureNoOtherActiveExcept` bang `autoCloseOtherActive` (cascade set DaKetThuc).
+- [x] **B6 — CTDT xoa HP khong co guard state**: `xoaHocPhan()` cho phep xoa ke
+      ca CTDT DaDuyet neu goi POST truc tiep. Fix: them server-side guard chan
+      xoa khi CTDT DaDuyet.
+
+### Van de con lai (chap nhan defer sang phase sau)
+
+- Cascade `autoCreateLopHocPhan` khi CTDT chuyen sang DaDuyet: hien dang dung
+  manual action `/lop-hoc-phan/tao-hang-loat?maCTDT=&maHocKy=` vi nghiep vu
+  can user chon ro HocKy. Defer sang Phase 4 neu co yeu cau UX cao hon.
+- Phase 2.3 "Bao mat toan cuc URL + test 403": da co URL rules trong
+  SecurityConfig nhung chua co integration test voi `@WithMockUser` —
+  defer sang giai doan Pre-Prod Hardening.
 
 ### Quan ly Hoc Ky Nam Hoc [PDT, TTDTXS]
 - [x] `HocKyNamHocService.java` interface + impl
@@ -214,70 +249,71 @@
 - [x] `HocKyNamHocController.java` (CRUD + toggle trang thai)
 - [x] `templates/hoc-ky/danh-sach.html`, `form.html`
 
-### Quan ly Lop Hanh Chinh [PDT, TTDTXS]
-- [ ] `LopHanhChinhService.java` interface + impl
-  - CRUD, assignCoVan
-- [ ] `LopHanhChinhController.java`
-- [ ] `templates/lophanhchinh/list.html`, `form.html`
+### Quan ly Lop Hanh Chinh [PDT, TTDTXS] — DA XONG (Phase 3)
+- [x] `LopHanhChinhDTO.java` (@Pattern ma lop, @Size, @NotBlank)
+- [x] `LopHanhChinhService.java` + `LopHanhChinhServiceImpl.java`
+  - [x] CRUD + search(keyword, maCTDT, khoaHoc)
+  - [x] phanCongCoVan(maLop, maGV) — chap nhan null de huy phan cong
+  - [x] delete guard: chan khi lop van co SinhVien
+  - [x] getThongKe (tong, daCoCVHT, chuaCoCVHT, soKhoaHoc)
+- [x] `LopHanhChinhController.java` (7 endpoint: list, chi-tiet, CRUD, phan-cong-cvht, xoa)
+- [x] `templates/lop-hanh-chinh/danh-sach.html`, `form.html`, `chi-tiet.html`
+  > Template dung kebab-case tieng Viet: `lop-hanh-chinh/*` thay cho `lophanhchinh/*`
 
-### Quan ly Hoc Phan [BCN/CNHP, TTDTXS]
-- [ ] `HocPhanDTO.java`
-- [ ] `HocPhanService.java` interface + `HocPhanServiceImpl.java`
-  - CRUD, submitForApproval (BanNhap -> ChoDuyet)
-  - approve/reject (ChoDuyet -> DaDuyet/BanNhap)
-  - addToDoiNgu, removeFromDoiNgu
-- [ ] `HocPhanController.java`
-  - GET  /hoc-phan                       - list + filter
-  - GET  /hoc-phan/them
-  - POST /hoc-phan/them
-  - GET  /hoc-phan/{ma}                  - detail + danh sach doi ngu GV
-  - GET  /hoc-phan/{ma}/sua
-  - POST /hoc-phan/{ma}/sua
-  - POST /hoc-phan/{ma}/nop-duyet        - BanNhap -> ChoDuyet
-  - POST /hoc-phan/{ma}/phe-duyet        - ChoDuyet -> DaDuyet [TTDTXS]
-  - POST /hoc-phan/{ma}/tu-choi          - ChoDuyet -> BanNhap [TTDTXS]
-  - POST /hoc-phan/{ma}/them-gv          - them vao DoiNguGiangVienHP
-  - POST /hoc-phan/{ma}/xoa-gv/{maGV}   - xoa khoi doi ngu
-- [ ] `templates/hocphan/list.html`, `form.html`, `detail.html`
-- [ ] TEST: BCN tao -> nop -> TTDTXS duyet -> CNHP quan ly doi ngu
+### Quan ly Hoc Phan [CNHP, TTDTXS] — DA XONG (Phase 3)
+- [x] `HocPhanDTO.java` (@NotBlank, @Min/@Max soTinChi, @NotNull loaiHocPhan)
+- [x] `HocPhanService.java` + `HocPhanServiceImpl.java`
+  - [x] CRUD + findAll(keyword) voi JOIN FETCH ChuNhiemHP.NguoiDung
+  - [x] guiChoDuyet (BanNhap -> ChoDuyet)
+  - [x] pheduyet (ChoDuyet -> DaDuyet) + gui email CNHP qua EmailService
+  - [x] tuChoi (ChoDuyet -> BanNhap) + ly do + email CNHP
+  - [x] toggleTrangThai (DaDuyet <-> BanNhap)
+  - [x] uploadDeCuong
+  - [x] **Fix 2026-Q2**: create uu tien `dto.maHocPhan` do user nhap
+        (format `HP-MATHE` theo docs/02 §1), fallback autogen neu trong
+- [x] `HocPhanController.java` (10 endpoint: list, them, sua, chi-tiet, gui-cho-duyet, phe-duyet, tu-choi, toggle, ...)
+- [x] `templates/hoc-phan/danh-sach.html`, `form.html`, `chi-tiet.html`
+  - [x] **Fix 2026-Q2**: doi `@{/files/...}` -> `@{/uploads/...}` khop voi
+        `WebMvcConfig.addResourceHandlers("/uploads/**")`. Link tai de cuong nay moi hoat dong.
+- [x] TEST: CNHP tao -> nop -> TTDTXS duyet -> email gui CNHP (MockEmailServiceImpl log)
 
-### Quan ly CTDT [BCN, TTDTXS]
-- [ ] `ChuongTrinhDaoTaoDTO.java`
-- [ ] `CTDT_HocPhanDTO.java`            - mapping chi tiet HP trong CTDT
-- [ ] `ChuongTrinhDaoTaoService.java` interface + impl
-  - CRUD CTDT
-  - addHocPhan, removeHocPhan (quan ly CTDT_HocPhan)
-  - submitForApproval, approve (khi duyet: tu dong tao LopHocPhan)
-  - autoCreateLopHocPhan(maCTDT, maHocKy)  <- NGHIEP VU QUAN TRONG
-- [ ] `ChuongTrinhDaoTaoController.java`
-  - GET  /ctdt
-  - GET  /ctdt/them
-  - POST /ctdt/them
-  - GET  /ctdt/{ma}                      - detail + danh sach HP
-  - GET  /ctdt/{ma}/sua
-  - POST /ctdt/{ma}/sua
-  - POST /ctdt/{ma}/them-hoc-phan
-  - POST /ctdt/{ma}/xoa-hoc-phan/{maHP}
-  - POST /ctdt/{ma}/nop-duyet
-  - POST /ctdt/{ma}/phe-duyet            - [TTDTXS] -> trigger autoCreateLopHocPhan
-  - POST /ctdt/{ma}/tu-choi              - [TTDTXS]
-- [ ] `templates/ctdt/list.html`, `form.html`, `detail.html`
-- [ ] TEST: Duyet CTDT -> LopHocPhan duoc tao theo SoLopDuKien, MaGiangVien=NULL
+### Quan ly CTDT [PDT, TTDTXS] — DA XONG (Phase 3)
+- [x] `ChuongTrinhDaoTaoDTO.java`
+- [x] `CtdtHocPhanDTO.java` (@NotBlank, @Min/@Max hocKyThu)
+- [x] `ChuongTrinhDaoTaoService.java` + `ChuongTrinhDaoTaoServiceImpl.java`
+  - [x] CRUD + findAllFetchHocPhan (JOIN FETCH tranh LazyInitException)
+  - [x] guiChoDuyet (BanNhap -> ChoDuyet)
+  - [x] pheduyet — **Fix 2026-Q2**: set `nguoiDuyet` + `ngayDuyet` (audit trail).
+  - [x] themHocPhan / xoaHocPhan (quan ly CTDT_HocPhan)
+  - [x] **Fix 2026-Q2**: xoaHocPhan co server-side guard chan xoa khi CTDT DaDuyet
+  - [x] updateFileWord — **Fix 2026-Q2**: tach rieng de luu path file sau khi upload
+        (truoc day controller set tren entity detached -> path bi mat)
+  - [~] autoCreateLopHocPhan: hien tai dung qua manual action o
+        `/lop-hoc-phan/tao-hang-loat` (chap nhan do nghiep vu can chon HocKy cu the).
+        Cascade tu dong khi pheduyet chua trien khai — defer sang Phase 4.
+- [x] `ChuongTrinhDaoTaoController.java` (8 endpoint: list, CRUD, phe-duyet, chi-tiet, them-hp, xoa-hp)
+  - [x] **Fix 2026-Q2**: them() va sua() goi `ctdtService.updateFileWord(ma, path)`
+        thay vi `ctdt.setFileWord(path)` tren detached entity
+- [x] `templates/ctdt/danh-sach.html`, `form.html`, `chi-tiet.html`
+- [x] TEST: Duyet CTDT -> `nguoiDuyet` + `ngayDuyet` duoc set
 
-### Quan ly Lop Hoc Phan [BCN, TTDTXS, GV]
-- [ ] `LopHocPhanDTO.java`
-- [ ] `LopHocPhanService.java` interface + impl
-  - getByHocKy, getByGiangVien, getByLopHanhChinh
-  - assignGiangVien, removeGiangVien
-  - addSinhVien, removeSinhVien
-- [ ] `LopHocPhanController.java`
-  - GET  /lop-hoc-phan                   - list + filter theo HK, HP, GV
-  - GET  /lop-hoc-phan/{ctdt}/{hp}/{hk}/{nhom}  - chi tiet + danh sach SV
-  - POST /lop-hoc-phan/{ctdt}/{hp}/{hk}/{nhom}/gan-gv
-  - POST /lop-hoc-phan/{ctdt}/{hp}/{hk}/{nhom}/them-sv
-  - POST /lop-hoc-phan/{ctdt}/{hp}/{hk}/{nhom}/xoa-sv/{maSV}
-- [ ] `templates/lophocphan/list.html`, `detail.html`
-- [ ] TEST: Gan GV ngoai doi ngu -> hien canh bao, van cho phep
+### Quan ly Lop Hoc Phan [CNHP, TTDTXS, GV] — DA XONG (Phase 3)
+- [x] `LopHocPhanService.java` + `LopHocPhanServiceImpl.java`
+  - [x] taoLopHocPhanChoCTDT(maCTDT, maHocKy) — idempotent (skip neu da ton tai)
+  - [x] phanCongGiangVien + gui email thong bao GV qua EmailService
+  - [x] toggleTrangThai (DangMo <-> DaDong)
+  - [x] findByCTDTAndHocKy (JOIN FETCH)
+  - [x] findChuaPhanCongGV
+  - [x] dangKyLopHocPhan (guard trang thai DangMo + chan trung)
+  - [x] canhBaoSinhVien — set DaCanhBao + gui email CVHT
+  - [x] findSinhVienTrongLop
+- [x] `LopHocPhanController.java` (6 endpoint: list, tao-hang-loat, phan-cong, chi-tiet, dang-ky-sv, canh-bao-sv)
+- [x] `templates/lop-hoc-phan/danh-sach.html`, `chi-tiet.html`
+  > **Luu y thiet ke**: LopHocPhan su dung EmbeddedId 4 cot (MaCTDT + MaHocPhan + MaHocKy + MaLopHocPhan).
+  > Khong map truc tiep `@ManyToOne HocPhan` de tranh Hibernate 7 duplicate column error;
+  > controller phai truyen `hocPhanMap` rieng cho template render tenHocPhan.
+- [x] TEST: Phan cong GV -> email thong bao (MockEmailServiceImpl log)
+- [x] TEST: Canh bao SV -> DaCanhBao=true + email CVHT
 
 ---
 

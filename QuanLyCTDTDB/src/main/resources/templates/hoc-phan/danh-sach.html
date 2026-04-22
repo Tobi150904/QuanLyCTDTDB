@@ -109,7 +109,7 @@
                                 th:text="${hp.chuNhiemHP != null ? hp.chuNhiemHP.hoTen : '--'}">--</td>
                             <td>
                                 <a th:if="${hp.fileDeCuong != null and !hp.fileDeCuong.isEmpty()}"
-                                   th:href="@{'/files/' + ${hp.fileDeCuong}}" target="_blank"
+                                   th:href="@{'/uploads/' + ${hp.fileDeCuong}}" target="_blank"
                                    class="small text-decoration-none">
                                     <i class="bi bi-file-earmark-pdf me-1"></i>Xem
                                 </a>

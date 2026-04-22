@@ -51,9 +51,25 @@ public class HocPhanServiceImpl implements HocPhanService {
         GiangVien chuNhiem = giangVienRepo.findById(dto.getMaChuNhiemHP())
                 .orElseThrow(() -> new ResourceNotFoundException("GiangVien", "MaGV", dto.getMaChuNhiemHP()));
 
-        // Sinh ma hoc phan tu dong: HP + 3 so
-        long count = hocPhanRepo.count();
-        String maHP = String.format("HP%03d", count + 1);
+        // Ma hoc phan: UU TIEN gia tri user nhap o form (vd "HP-LTW", "HP-CSDL"
+        // theo quy uoc docs/02 §1 "HP + MA-THE"). Neu de trong thi fallback
+        // sang pattern HP + 3 so tang dan.
+        String maHP;
+        String maFromDto = dto.getMaHocPhan();
+        if (maFromDto != null && !maFromDto.isBlank()) {
+            maHP = maFromDto.trim();
+            if (hocPhanRepo.existsById(maHP)) {
+                throw new BusinessException("Ma hoc phan da ton tai: " + maHP);
+            }
+        } else {
+            long count = hocPhanRepo.count();
+            maHP = String.format("HP%03d", count + 1);
+            // Phong truong hop xung dot khi seed da dung HP001..HP00N
+            while (hocPhanRepo.existsById(maHP)) {
+                count++;
+                maHP = String.format("HP%03d", count + 1);
+            }
+        }
 
         HocPhan hp = HocPhan.builder()
                 .maHocPhan(maHP)

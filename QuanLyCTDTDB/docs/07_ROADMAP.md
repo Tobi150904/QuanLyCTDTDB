@@ -77,56 +77,60 @@ Test case:
 
 ---
 
-## PHASE 3 — MODULES NGHIEP VU CHINH
+## PHASE 3 — MODULES NGHIEP VU CHINH  (DA HOAN THANH 2026-Q2)
 
-### 3.1 Hoc Ky Nam Hoc [ ]
+Tat ca 5 module duoi day da co DTO + service + controller + templates + security rules.
+Dot review 2026-Q2 phat hien va fix 6 bug code, cap nhat docs va checklist.
 
-| Tac vu                                 | Target                                                |
+### 3.1 Hoc Ky Nam Hoc [x]
+
+| Tac vu                                 | Trang thai                                             |
 |----------------------------------------|-------------------------------------------------------|
-| `HocKyNamHocService` + impl            | CRUD + setTrangThai (chi 1 HK o DangDienRa)          |
-| `HocKyNamHocController`                | `/hoc-ky`                                            |
-| Templates                              | `templates/hoc-ky/{danh-sach,form}.html`             |
-| Nghiep vu                              | Khi chuyen 1 HK sang DangDienRa, tu dong chuyen HK truoc ve DaKetThuc |
+| `HocKyNamHocService` + impl            | [x] CRUD + doiTrangThai + delete guard                |
+| `HocKyNamHocController`                | [x] `/hoc-ky` (7 endpoint)                            |
+| Templates                              | [x] `hoc-ky/{danh-sach,form}.html`                    |
+| Nghiep vu                              | [x] Auto-close HK cu khi kich hoat HK moi (fix B5)    |
 
-### 3.2 Lop Hanh Chinh [ ]
+### 3.2 Lop Hanh Chinh [x]
 
-| Tac vu                                 | Target                                                |
+| Tac vu                                 | Trang thai                                             |
 |----------------------------------------|-------------------------------------------------------|
-| `LopHanhChinhService` + impl           | CRUD + assignCoVan(maLop, maGV)                      |
-| `LopHanhChinhController`               | `/lop-hanh-chinh`                                    |
-| Templates                              | `templates/lop-hanh-chinh/{danh-sach,form,chi-tiet}.html` |
-| Nghiep vu                              | Hien thi si so SV, co van hoc tap, CTDT ap dung     |
+| `LopHanhChinhService` + impl           | [x] CRUD + search + phanCongCoVan + thongKe           |
+| `LopHanhChinhController`               | [x] `/lop-hanh-chinh` (7 endpoint)                    |
+| Templates                              | [x] `lop-hanh-chinh/{danh-sach,form,chi-tiet}.html`   |
+| Nghiep vu                              | [x] Guard xoa khi con SV; cho phep null de huy CVHT   |
 
-### 3.3 Hoc Phan + Doi Ngu GV [~]
+### 3.3 Hoc Phan + Doi Ngu GV [x]
 
-- Controller + Service da san, chi can templates
-- Templates can viet:
-  - `templates/hoc-phan/danh-sach.html` — filter theo trang thai, loai, CNHP
-  - `templates/hoc-phan/form.html` — them/sua voi upload FileDeCuong
-  - `templates/hoc-phan/chi-tiet.html` — danh sach doi ngu GV + nut them/xoa GV
-- Workflow state badge: BanNhap (gray), ChoDuyet (warning), DaDuyet (success)
-- Action button: Nop duyet (ChoDuyet), Duyet (TTDTXS), Tu choi (TTDTXS, modal ly do)
-- Test: BCN tao -> nop -> TTDTXS duyet -> CNHP quan ly doi ngu
+- [x] Controller + Service + 3 templates (`danh-sach`, `form`, `chi-tiet`)
+- [x] Workflow state badge: BanNhap (secondary), ChoDuyet (warning), DaDuyet (success)
+- [x] Action button: Nop duyet (CNHP), Phe duyet/Tu choi (TTDTXS modal ly do)
+- [x] Gui email CNHP khi phe duyet / tu choi (MockEmailServiceImpl log)
+- [x] **Fix 2026-Q2 (B1)**: doi `/files/...` -> `/uploads/...` de link tai file hoat dong
+- [x] **Fix 2026-Q2 (B3)**: uu tien `dto.maHocPhan` (format `HP-MATHE`) thay vi force `HP001`
+- Test: CNHP tao -> nop -> TTDTXS duyet -> email log thanh cong
 
-### 3.4 CTDT + CTDT_HocPhan [~]
+### 3.4 CTDT + CTDT_HocPhan [x]
 
-- Controller + Service da san, chi can templates
-- Khi CTDT chuyen sang `DaDuyet`, service se tu dong tao `LopHocPhan` theo `SoLopDuKien` (MaGiangVien=NULL)
-- Template:
-  - `templates/ctdt/danh-sach.html`
-  - `templates/ctdt/form.html`
-  - `templates/ctdt/chi-tiet.html` — show CTDT_HocPhan list + modal them HP + nut nop duyet
-- Unit test: duyet CTDT -> verify so LopHocPhan tao ra = sum(SoLopDuKien)
+- [x] Controller + Service + 3 templates
+- [x] CRUD CTDT + them/xoa HP trong CTDT (CtdtHocPhan)
+- [x] **Fix 2026-Q2 (B2)**: tach service method `updateFileWord()` vi truoc day
+      controller set file path tren entity detached -> bi mat sau commit
+- [x] **Fix 2026-Q2 (B4)**: pheduyet set day du `nguoiDuyet` + `ngayDuyet`
+- [x] **Fix 2026-Q2 (B6)**: xoaHocPhan co server-side guard chan xoa khi CTDT DaDuyet
+- [~] Cascade autoCreateLopHocPhan khi CTDT->DaDuyet: hien dung manual action
+      `/lop-hoc-phan/tao-hang-loat` vi can chon HocKy. Defer sang Phase 4.
 
-### 3.5 Lop Hoc Phan [~]
+### 3.5 Lop Hoc Phan [x]
 
-- Controller + Service da san, chi can templates
-- Template:
-  - `templates/lop-hoc-phan/danh-sach.html` — filter (HocKy, HocPhan, GiangVien)
-  - `templates/lop-hoc-phan/chi-tiet.html` — info + modal gan GV + danh sach SV + nut them/xoa SV
-- Nghiep vu:
-  - Gan GV khong thuoc DoiNguGiangVienHP -> hien cau hoi xac nhan (data-confirm)
-  - Them SV vuot qua SiSoToiDa -> chan o service, tra loi BusinessException
+- [x] Controller + Service + 2 templates (`danh-sach`, `chi-tiet`)
+- [x] taoLopHocPhanChoCTDT(maCTDT, maHocKy) — idempotent, skip neu da ton tai
+- [x] phanCongGiangVien + email notification GV
+- [x] dangKyLopHocPhan (guard trang thai DangMo + chan trung)
+- [x] canhBaoSinhVien + gui email CVHT
+- Thiet ke dac biet: bo truc tiep `@ManyToOne` den `HocPhan`/`HocKy` trong
+  `LopHocPhan` (tranh Hibernate 7 duplicate column error tren EmbeddedId 4 cot);
+  template nhan `hocPhanMap` tu controller de render tenHocPhan.
 
 ---
 

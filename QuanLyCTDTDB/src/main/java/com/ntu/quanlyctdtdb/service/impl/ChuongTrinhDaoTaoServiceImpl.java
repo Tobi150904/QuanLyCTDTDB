@@ -87,7 +87,13 @@ public class ChuongTrinhDaoTaoServiceImpl implements ChuongTrinhDaoTaoService {
         if (ctdt.getTrangThai() != TrangThaiCTDT.ChoDuyet) {
             throw new BusinessException("Chi phe duyet CTDT o trang thai ChoDuyet");
         }
+        // Luu audit trail: ai duyet + duyet luc nao (cot NguoiDuyet/NgayDuyet trong DDL).
+        NguoiDung nguoiDuyet = nguoiDungRepo.findById(maNguoiDungDuyet)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "NguoiDung", "MaNguoiDung", maNguoiDungDuyet));
         ctdt.setTrangThai(TrangThaiCTDT.DaDuyet);
+        ctdt.setNguoiDuyet(nguoiDuyet);
+        ctdt.setNgayDuyet(java.time.LocalDateTime.now());
         return ctdtRepo.save(ctdt);
     }
 
@@ -116,6 +122,15 @@ public class ChuongTrinhDaoTaoServiceImpl implements ChuongTrinhDaoTaoService {
 
     @Override
     public void xoaHocPhan(String maCTDT, String maHocPhan) {
+        // Server-side guard: CTDT DaDuyet la immutable ve cau truc chuong trinh —
+        // template da an nut xoa nhung van can chan POST truc tiep qua curl/admin.
+        ChuongTrinhDaoTao ctdt = ctdtRepo.findById(maCTDT)
+                .orElseThrow(() -> new ResourceNotFoundException("ChuongTrinhDaoTao", "MaCTDT", maCTDT));
+        if (ctdt.getTrangThai() == TrangThaiCTDT.DaDuyet) {
+            throw new BusinessException(
+                    "Khong the xoa hoc phan khoi CTDT da duoc phe duyet. "
+                    + "Neu can chinh sua, hay tao phien ban CTDT moi.");
+        }
         CtdtHocPhanId id = new CtdtHocPhanId(maCTDT, maHocPhan);
         if (!ctdtHocPhanRepo.existsById(id)) {
             throw new ResourceNotFoundException("CtdtHocPhan", "id", maCTDT + "+" + maHocPhan);
@@ -127,5 +142,16 @@ public class ChuongTrinhDaoTaoServiceImpl implements ChuongTrinhDaoTaoService {
     @Transactional(readOnly = true)
     public List<HocPhan> findHocPhanChuaThuoc(String maCTDT) {
         return hocPhanRepo.findHocPhanChuaCoTrongCTDT(maCTDT);
+    }
+
+    @Override
+    public ChuongTrinhDaoTao updateFileWord(String maCTDT, String fileWordPath) {
+        // Load bang findById thuong (khong can fetch collection) de tranh
+        // overhead khi controller chi can luu file path.
+        ChuongTrinhDaoTao ctdt = ctdtRepo.findById(maCTDT)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "ChuongTrinhDaoTao", "MaCTDT", maCTDT));
+        ctdt.setFileWord(fileWordPath);
+        return ctdtRepo.save(ctdt);
     }
 }

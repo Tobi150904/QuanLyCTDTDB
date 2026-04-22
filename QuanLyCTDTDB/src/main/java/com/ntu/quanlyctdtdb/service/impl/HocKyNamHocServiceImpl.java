@@ -79,7 +79,8 @@ public class HocKyNamHocServiceImpl implements HocKyNamHocService {
         TrangThaiHocKy trangThai = dto.getTrangThai() != null
                 ? dto.getTrangThai() : TrangThaiHocKy.SapDienRa;
         if (trangThai == TrangThaiHocKy.DangDienRa) {
-            ensureNoOtherActiveExcept(null);
+            // Tu dong dong HK cu dang DangDienRa (neu co) truoc khi kich hoat HK moi.
+            autoCloseOtherActive(null);
         }
         HocKyNamHoc e = HocKyNamHoc.builder()
                 .maHocKy(maHocKy)
@@ -119,7 +120,7 @@ public class HocKyNamHocServiceImpl implements HocKyNamHocService {
                     "Hoc ky da ket thuc, khong the chuyen lai trang thai truoc do.");
         }
         if (moi == TrangThaiHocKy.DangDienRa && cu != TrangThaiHocKy.DangDienRa) {
-            ensureNoOtherActiveExcept(maHocKy);
+            autoCloseOtherActive(maHocKy);
         }
 
         String tenHocKy = dto.getTenHocKy();
@@ -140,7 +141,9 @@ public class HocKyNamHocServiceImpl implements HocKyNamHocService {
             throw new BusinessException("Hoc ky da ket thuc, khong the chuyen trang thai.");
         }
         if (moi == TrangThaiHocKy.DangDienRa && e.getTrangThai() != TrangThaiHocKy.DangDienRa) {
-            ensureNoOtherActiveExcept(maHocKy);
+            // Roadmap §3.1: Khi chuyen 1 HK sang DangDienRa, tu dong chuyen HK truoc
+            // ve DaKetThuc thay vi throw lam block user flow.
+            autoCloseOtherActive(maHocKy);
         }
         e.setTrangThai(moi);
         return hocKyRepo.save(e);
@@ -176,15 +179,20 @@ public class HocKyNamHocServiceImpl implements HocKyNamHocService {
 
     /* ================ Helpers ================ */
 
-    private void ensureNoOtherActiveExcept(String excludeMaHocKy) {
-        long active = hocKyRepo.findAll().stream()
+    /**
+     * Tu dong chuyen cac HK dang DangDienRa khac sang DaKetThuc (tru HK duoc
+     * loai tru). Dam bao rang buoc "toi da 1 HK DangDienRa cung luc" van dung,
+     * nhung cho phep user kich hoat HK moi ma khong phai tat HK cu tay.
+     * Roadmap §3.1.
+     */
+    private void autoCloseOtherActive(String excludeMaHocKy) {
+        hocKyRepo.findAll().stream()
                 .filter(h -> h.getTrangThai() == TrangThaiHocKy.DangDienRa)
                 .filter(h -> excludeMaHocKy == null || !excludeMaHocKy.equals(h.getMaHocKy()))
-                .count();
-        if (active >= 1) {
-            throw new BusinessException(
-                    "Da co hoc ky khac dang DangDienRa. Hay ket thuc no truoc khi kich hoat hoc ky moi.");
-        }
+                .forEach(h -> {
+                    h.setTrangThai(TrangThaiHocKy.DaKetThuc);
+                    hocKyRepo.save(h);
+                });
     }
 
     private void validateDates(LocalDate start, LocalDate end) {

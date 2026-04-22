@@ -54,8 +54,10 @@ public class ChuongTrinhDaoTaoController {
             ChuongTrinhDaoTao ctdt = ctdtService.create(dto, ud.getMaNguoiDung());
             if (file != null && !file.isEmpty()) {
                 String path = fileStorageUtil.saveFile(file, "ctdt", ctdt.getMaCTDT());
-                // fileWord luu de tham chieu
-                ctdt.setFileWord(path);
+                // Phai goi qua service de save vao DB — neu chi setFileWord()
+                // tren reference da detached sau khi create() ket thuc, gia tri
+                // se KHONG duoc persist (tx da commit).
+                ctdtService.updateFileWord(ctdt.getMaCTDT(), path);
             }
             ra.addFlashAttribute("successMsg", "Tao CTDT thanh cong!");
         } catch (Exception e) {
@@ -88,6 +90,10 @@ public class ChuongTrinhDaoTaoController {
         }
         try {
             ctdtService.update(ma, dto);
+            if (file != null && !file.isEmpty()) {
+                String path = fileStorageUtil.saveFile(file, "ctdt", ma);
+                ctdtService.updateFileWord(ma, path);
+            }
             ra.addFlashAttribute("successMsg", "Cap nhat CTDT thanh cong!");
         } catch (Exception e) {
             ra.addFlashAttribute("errorMsg", e.getMessage());
