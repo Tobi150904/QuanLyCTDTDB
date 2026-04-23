@@ -58,13 +58,28 @@ document.addEventListener('DOMContentLoaded', function () {
 // =============================================================================
 // 5. showLoading — disable button va hien spinner khi submit form
 // =============================================================================
+//
+// FIX BUG: truoc day set `button.disabled = true` DONG BO trong onclick
+// lam browser bo qua default action "submit form" (HTML spec: submit button
+// bi disabled KHONG the kich hoat submit). Hau qua: form khong bao gio duoc
+// submit, khong co POST den server, log server sach tuyet doi, browser
+// console cung sach (vi day khong phai JS error) — user tuong app hong.
+//
+// Fix: dung setTimeout(..., 0) de disable o MICROTASK KE TIEP, sau khi trinh
+// duyet da bat dau submit form. Spinner van hien thi, va double-click van
+// duoc ngan (vi tick ke tiep button da disabled). Form van submit binh thuong.
 function showLoading(button) {
     var spinner = button.querySelector('.spinner-border');
     var icon = button.querySelector('i:not(.spinner-border)');
     if (spinner) spinner.classList.remove('d-none');
     if (icon) icon.classList.add('d-none');
-    button.disabled = true;
-    // Re-enable sau 15 giay de phong truong hop loi
+
+    // Defer disable sang tick sau — cho phep form submit chay truoc.
+    setTimeout(function () {
+        button.disabled = true;
+    }, 0);
+
+    // Re-enable sau 15 giay de phong truong hop loi network.
     setTimeout(function () {
         button.disabled = false;
         if (spinner) spinner.classList.add('d-none');
