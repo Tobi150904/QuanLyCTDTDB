@@ -5,6 +5,7 @@ import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
+import org.springframework.web.filter.CommonsRequestLoggingFilter;
 import org.springframework.web.multipart.support.MultipartFilter;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -58,5 +59,27 @@ public class WebMvcConfig implements WebMvcConfigurer {
         registration.setOrder(Ordered.HIGHEST_PRECEDENCE);
         registration.setName("multipartFilter");
         return registration;
+    }
+
+    /**
+     * TAM THOI — log chi tiet moi request (URI + query + payload + headers)
+     * o muc DEBUG. Dung de chan doan loi "form submit khong save du lieu
+     * khong log ERROR gi" do CSRF 403 im lang hoac validation fail that bai
+     * am tham. Xoa bean nay SAU KHI fix xong vi in body da nhay cam (password,
+     * token).
+     *
+     * <p>Muon tat nhanh: set {@code logging.level.org.springframework.web.filter.CommonsRequestLoggingFilter=INFO}
+     * trong {@code application.properties} — filter van chay nhung khong in.
+     */
+    @Bean
+    public CommonsRequestLoggingFilter requestLoggingFilter() {
+        CommonsRequestLoggingFilter loggingFilter = new CommonsRequestLoggingFilter();
+        loggingFilter.setIncludeClientInfo(true);
+        loggingFilter.setIncludeQueryString(true);
+        loggingFilter.setIncludePayload(true);
+        loggingFilter.setMaxPayloadLength(2000);
+        loggingFilter.setIncludeHeaders(false); // headers co Cookie -> sensitive
+        loggingFilter.setAfterMessagePrefix("REQ: ");
+        return loggingFilter;
     }
 }
