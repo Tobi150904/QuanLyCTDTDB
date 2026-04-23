@@ -119,9 +119,13 @@
                 </a>
             </li>
 
-            <!-- ---- QUẢN TRỊ ---- -->
-            <li class="sidebar-section-header">
-                <span sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">Quản Trị</span>
+            <!-- ---- QUẢN TRỊ ----
+                 sec:authorize phai dat o <li> (khong phai <span>), neu khong
+                 browser van render <li class="sidebar-section-header"> rong
+                 voi padding → sidebar cua SV/GV/DN/CVHT bi lo gap xau. -->
+            <li class="sidebar-section-header"
+                sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
+                <span>Quản Trị</span>
             </li>
 
             <!-- Người Dùng -->
