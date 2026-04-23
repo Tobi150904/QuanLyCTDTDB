@@ -17,12 +17,8 @@ public class NguoiDungDTO {
     @Size(min = 3, max = 50, message = "Ten dang nhap 3-50 ky tu")
     private String tenDangNhap;
 
-    // Chi bat buoc khi tao moi. Khi cap nhat, de trong = giu nguyen mat khau cu.
-    //
-    // KHONG dung @Size(min=8) o day — @Size van validate chuoi RONG ("") va lam
-    // form update fail voi message "Mat khau toi thieu 8 ky tu" du user da de
-    // trong y nguyen vong. Thay vao do kiem tra length trong
-    // NguoiDungServiceImpl.create() / update() khi matKhau != blank.
+    // Chi bat buoc khi tao moi
+    @Size(min = 8, message = "Mat khau toi thieu 8 ky tu")
     private String matKhau;
 
     @NotBlank(message = "Email khong duoc de trong")
