@@ -1,5 +1,6 @@
 package com.ntu.quanlyctdtdb.controller;
 
+import com.ntu.quanlyctdtdb.entity.ChuongTrinhDaoTao;
 import com.ntu.quanlyctdtdb.entity.CtdtHocPhan;
 import com.ntu.quanlyctdtdb.entity.HocPhan;
 import com.ntu.quanlyctdtdb.entity.LopHocPhan;
@@ -11,6 +12,7 @@ import com.ntu.quanlyctdtdb.repository.GiangVienRepository;
 import com.ntu.quanlyctdtdb.repository.HocKyNamHocRepository;
 import com.ntu.quanlyctdtdb.repository.HocPhanRepository;
 import com.ntu.quanlyctdtdb.service.LopHocPhanService;
+import com.ntu.quanlyctdtdb.util.HocKyUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -35,13 +37,6 @@ public class LopHocPhanController {
     private final HocPhanRepository hocPhanRepo;
     private final CtdtHocPhanRepository ctdtHocPhanRepo;
     private final DoiNguGiangVienHpRepository doiNguRepo;
-
-    /** Parse so ky (1..n) tu maHocKy dang "HKn-YYYY"; tra 0 neu khong hop le. */
-    private static int parseHocKyThu(String maHocKy) {
-        if (maHocKy == null || !maHocKy.startsWith("HK") || maHocKy.length() < 3) return 0;
-        char c = maHocKy.charAt(2);
-        return Character.isDigit(c) ? Character.getNumericValue(c) : 0;
-    }
 
     @ModelAttribute("activeMenu")
     public String activeMenu() { return "lop-hoc-phan"; }
@@ -80,7 +75,16 @@ public class LopHocPhanController {
             // va ma HocKy de xac dinh ky). Neu chi co 1 tham so, bo 2 khoi UI
             // nay de tranh gay nham lan nghiep vu.
             if (hasCTDT && hasHocKy) {
-                int hocKyThu = parseHocKyThu(maHocKy);
+                // BUG-FIX: hocKyThu cua CtdtHocPhan la so ky THEO CTDT (1..8
+                // cho khung 4 nam), KHONG phai so ky trong 1 nam hoc (1..3).
+                // Truoc day code parse "HK1-2023" -> 1 va dung lam hocKyThu
+                // -> moi CTDT chi ra HP cua HK1 va HK2 (sai). Dung CTDT.khoa
+                // (nam bat dau cua khoa) + HocKyNamHoc.maHocKy de quy doi
+                // sang ky thu cua CTDT qua HocKyUtil.
+                ChuongTrinhDaoTao ctdt = ctdtRepo.findById(maCTDT).orElse(null);
+                String khoa = ctdt != null ? ctdt.getKhoa() : null;
+                int hocKyThu = HocKyUtil.toProgramSemester(khoa, maHocKy);
+
                 // Dung findByCtdtAndKyFetch de JOIN FETCH hocPhan — tranh
                 // LazyInitializationException khi template goi ch.hocPhan.tenHocPhan
                 // (open-in-view=false).
@@ -89,6 +93,12 @@ public class LopHocPhanController {
                         : List.of();
                 model.addAttribute("hocKyThu", hocKyThu);
                 model.addAttribute("hpDuKien", hpDuKien);
+
+                // Expose them thong tin de template giai thich mapping cho
+                // user (giam confusion khi thay "HK1-2023" tra ra HP cua HK3).
+                model.addAttribute("ctdtKhoa", khoa);
+                model.addAttribute("hkInYear", HocKyUtil.parseHkIndexInYear(maHocKy));
+                model.addAttribute("hkYear",  HocKyUtil.parseHkYear(maHocKy));
             }
 
             // Dem so lop da mo cho tung HP (de hien thi "da mo X/Y lop")

@@ -7,6 +7,7 @@ import com.ntu.quanlyctdtdb.exception.ResourceNotFoundException;
 import com.ntu.quanlyctdtdb.repository.*;
 import com.ntu.quanlyctdtdb.service.EmailService;
 import com.ntu.quanlyctdtdb.service.LopHocPhanService;
+import com.ntu.quanlyctdtdb.util.HocKyUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ public class LopHocPhanServiceImpl implements LopHocPhanService {
 
     private final LopHocPhanRepository lopHocPhanRepo;
     private final CtdtHocPhanRepository ctdtHocPhanRepo;
+    private final ChuongTrinhDaoTaoRepository ctdtRepo;
     private final GiangVienRepository giangVienRepo;
     private final SinhVienRepository sinhVienRepo;
     private final DanhSachSvLopHocPhanRepository dsSvRepo;
@@ -33,21 +35,35 @@ public class LopHocPhanServiceImpl implements LopHocPhanService {
     public int taoLopHocPhanChoCTDT(String maCTDT, String maHocKy, Map<String, Integer> soLopOverride) {
         HocKyNamHoc hocKy = hocKyRepo.findById(maHocKy)
                 .orElseThrow(() -> new ResourceNotFoundException("HocKyNamHoc", "MaHocKy", maHocKy));
+        ChuongTrinhDaoTao ctdt = ctdtRepo.findById(maCTDT)
+                .orElseThrow(() -> new ResourceNotFoundException("ChuongTrinhDaoTao", "MaCTDT", maCTDT));
 
-        // Parse so thu tu ky (1..n) tu maHocKy dang "HKn-YYYY". Chi mo lop cho HP
-        // co CtdtHocPhan.hocKyThu trung voi so ky nay — truoc day code mo het
-        // tat ca HP cua CTDT sang chung 1 ky (bug).
-        int hocKyThu = parseHocKyThu(hocKy.getMaHocKy());
+        // BUG-FIX: CtdtHocPhan.hocKyThu la so ky THEO KHUNG CTDT (1..8 voi
+        // CTDT 4 nam), KHONG phai so ky trong nam hoc. Truoc day code lay
+        // parseHocKyThu(maHocKy) = 1 hoac 2 nen bat ky CTDT nao + HocKy nao
+        // cung chi tao lop cho HP xep o HK1/HK2 — SAI. Phai quy doi dua tren
+        // CTDT.khoa (nam bat dau) va HocKy.maHocKy.
+        // Vi du: CTDT khoa 2022 + HK1-2023 -> hocKyThu = 3 (nam thu 2, ky 1).
+        int hocKyThu = HocKyUtil.toProgramSemester(ctdt.getKhoa(), maHocKy);
         if (hocKyThu <= 0) {
+            int hkInYear = HocKyUtil.parseHkIndexInYear(maHocKy);
+            if (hkInYear == 3) {
+                throw new BusinessException(
+                        "Hoc ky he (" + maHocKy + ") khong nam trong khung CTDT chinh khoa. "
+                      + "Khong the tao lop hang loat cho ky he qua tinh nang nay.");
+            }
             throw new BusinessException(
-                    "MaHocKy '" + maHocKy + "' khong dung dinh dang HKn-YYYY, khong xac dinh duoc so ky.");
+                    "Khong the quy doi " + maHocKy + " sang ky cua CTDT " + maCTDT
+                  + " (Khoa='" + ctdt.getKhoa() + "'). Kiem tra lai Khoa cua CTDT "
+                  + "va dinh dang MaHocKy (HKn-YYYY).");
         }
 
         List<CtdtHocPhan> dsHocPhan = ctdtHocPhanRepo.findById_MaCTDTAndHocKyThu(maCTDT, hocKyThu);
         if (dsHocPhan.isEmpty()) {
             throw new BusinessException(
                     "CTDT " + maCTDT + " khong co hoc phan nao o HK" + hocKyThu
-                    + ". Vao CTDT chi tiet de them HP cho ky nay truoc.");
+                    + " (tuong ung " + maHocKy + " cua khoa " + ctdt.getKhoa() + "). "
+                    + "Vao CTDT chi tiet de them HP cho ky nay truoc.");
         }
 
         Map<String, Integer> override = soLopOverride == null ? Map.of() : soLopOverride;
@@ -75,13 +91,6 @@ public class LopHocPhanServiceImpl implements LopHocPhanService {
         log.info("[LopHocPhan] Tao lop cho CTDT={} HK{}={}: {} HP, {} lop moi",
                 maCTDT, hocKyThu, maHocKy, dsHocPhan.size(), tongTao);
         return tongTao;
-    }
-
-    /** Parse so ky (1..n) tu maHocKy dang "HKn-YYYY"; tra 0 neu khong hop le. */
-    private int parseHocKyThu(String maHocKy) {
-        if (maHocKy == null || !maHocKy.startsWith("HK") || maHocKy.length() < 3) return 0;
-        char c = maHocKy.charAt(2);
-        return Character.isDigit(c) ? Character.getNumericValue(c) : 0;
     }
 
     @Override
