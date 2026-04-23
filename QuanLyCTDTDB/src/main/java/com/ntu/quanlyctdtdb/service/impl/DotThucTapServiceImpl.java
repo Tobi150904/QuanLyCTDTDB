@@ -2,7 +2,9 @@ package com.ntu.quanlyctdtdb.service.impl;
 
 import com.ntu.quanlyctdtdb.dto.DotThucTapDTO;
 import com.ntu.quanlyctdtdb.entity.*;
+import com.ntu.quanlyctdtdb.enums.LoaiHocPhan;
 import com.ntu.quanlyctdtdb.enums.TrangThaiDotTT;
+import com.ntu.quanlyctdtdb.enums.TrangThaiHocPhan;
 import com.ntu.quanlyctdtdb.enums.TrangThaiThucTap;
 import com.ntu.quanlyctdtdb.exception.BusinessException;
 import com.ntu.quanlyctdtdb.exception.ResourceNotFoundException;
@@ -13,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Slf4j
@@ -27,6 +30,7 @@ public class DotThucTapServiceImpl implements DotThucTapService {
     private final HocKyNamHocRepository hocKyRepo;
     private final SinhVienRepository sinhVienRepo;
     private final DoanhNghiepRepository doanhNghiepRepo;
+    private final NguoiDungRepository nguoiDungRepo;
 
     @Override
     @Transactional(readOnly = true)
@@ -50,6 +54,31 @@ public class DotThucTapServiceImpl implements DotThucTapService {
         HocKyNamHoc hocKy = hocKyRepo.findById(dto.getMaHocKy())
                 .orElseThrow(() -> new ResourceNotFoundException("HocKyNamHoc", "MaHocKy", dto.getMaHocKy()));
 
+        // Rang buoc nghiep vu: Dot thuc tap CHI duoc tao cho Hoc Phan thuoc
+        // loai ThucTap hoac KienTap va da duoc phe duyet (docs/02 §3.8, roadmap 5.2).
+        HocPhan hp = ctdtHP.getHocPhan();
+        if (hp == null) {
+            throw new BusinessException(
+                    "Hoc Phan trong CTDT " + dto.getMaCTDT() + " chua duoc cau hinh dung.");
+        }
+        LoaiHocPhan loai = hp.getLoaiHocPhan();
+        if (loai != LoaiHocPhan.ThucTap && loai != LoaiHocPhan.KienTap) {
+            throw new BusinessException(
+                    "Chi co the tao dot thuc tap cho hoc phan loai ThucTap hoac KienTap. "
+                    + "Hoc phan '" + hp.getTenHocPhan() + "' dang la " + loai + ".");
+        }
+        if (hp.getTrangThai() != TrangThaiHocPhan.DaDuyet) {
+            throw new BusinessException(
+                    "Hoc phan '" + hp.getTenHocPhan() + "' chua duoc phe duyet, "
+                    + "khong the tao dot thuc tap.");
+        }
+
+        // NguoiTao BAT BUOC NOT NULL (SQL & entity). Truoc day bo qua field nay
+        // dan toi DataIntegrityViolationException khi goi create() tu controller.
+        NguoiDung nguoiTao = nguoiDungRepo.findById(maNguoiDungTao)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "NguoiDung", "MaNguoiDung", maNguoiDungTao));
+
         DotThucTap dot = DotThucTap.builder()
                 .tenDotTT(dto.getTenDotTT())
                 .ctdtHocPhan(ctdtHP)
@@ -57,6 +86,7 @@ public class DotThucTapServiceImpl implements DotThucTapService {
                 .ngayBatDau(dto.getNgayBatDau())
                 .ngayKetThuc(dto.getNgayKetThuc())
                 .trangThai(TrangThaiDotTT.ChuanBi)
+                .nguoiTao(nguoiTao)
                 .build();
         return dotTTRepo.save(dot);
     }
@@ -64,8 +94,13 @@ public class DotThucTapServiceImpl implements DotThucTapService {
     @Override
     public DotThucTap update(Integer id, DotThucTapDTO dto) {
         DotThucTap dot = findById(id);
-        if (dot.getTrangThai() == TrangThaiDotTT.DaDuyet) {
-            throw new BusinessException("Khong the sua dot thuc tap da duoc phe duyet");
+        // Chi cho sua khi chua di qua buoc phe duyet — sau DaDuyet/DangThucHien/
+        // DaKetThuc/DaHuy thi du lieu mang y nghia audit, khong the chinh.
+        if (dot.getTrangThai() != TrangThaiDotTT.ChuanBi
+                && dot.getTrangThai() != TrangThaiDotTT.ChoDuyet) {
+            throw new BusinessException(
+                    "Chi co the cap nhat dot thuc tap o trang thai ChuanBi hoac ChoDuyet. "
+                    + "Trang thai hien tai: " + dot.getTrangThai());
         }
         dot.setTenDotTT(dto.getTenDotTT());
         dot.setNgayBatDau(dto.getNgayBatDau());
@@ -89,7 +124,14 @@ public class DotThucTapServiceImpl implements DotThucTapService {
         if (dot.getTrangThai() != TrangThaiDotTT.ChoDuyet) {
             throw new BusinessException("Chi co the phe duyet dot o trang thai ChoDuyet");
         }
+        // Audit bat buoc cho production: set NguoiDuyet + NgayDuyet (docs/02 §3.8,
+        // roadmap Phase 5.2). Truoc day field bi bo qua, bao cao duyet khong truy xuat duoc.
+        NguoiDung nguoiDuyet = nguoiDungRepo.findById(maNguoiDung)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "NguoiDung", "MaNguoiDung", maNguoiDung));
         dot.setTrangThai(TrangThaiDotTT.DaDuyet);
+        dot.setNguoiDuyet(nguoiDuyet);
+        dot.setNgayDuyet(LocalDateTime.now());
         return dotTTRepo.save(dot);
     }
 

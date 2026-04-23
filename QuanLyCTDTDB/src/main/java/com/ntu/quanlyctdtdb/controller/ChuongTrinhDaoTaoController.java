@@ -12,6 +12,7 @@ import com.ntu.quanlyctdtdb.service.ChuongTrinhDaoTaoService;
 import com.ntu.quanlyctdtdb.util.FileStorageUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -107,6 +108,9 @@ public class ChuongTrinhDaoTaoController {
         return "redirect:/ctdt";
     }
 
+    // Phe duyet CTDT: chi TTDTXS hoac ADMIN moi co quyen (docs/02 §4, review P0-4).
+    // URL-level rule cho ca PDT va CNHP vao /ctdt/**, can chan cap method.
+    @PreAuthorize("hasAnyRole('TTDTXS','ADMIN')")
     @PostMapping("/phe-duyet/{ma}")
     public String pheduyet(@PathVariable String ma,
                             @AuthenticationPrincipal CustomUserDetails ud,

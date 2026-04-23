@@ -10,6 +10,7 @@ import com.ntu.quanlyctdtdb.security.CustomUserDetails;
 import com.ntu.quanlyctdtdb.service.DotKienTapService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -152,6 +153,9 @@ public class DotKienTapController {
         return "redirect:/kien-tap/chi-tiet/" + id;
     }
 
+    // Phe duyet dot kien tap — chi TTDTXS hoac ADMIN (review P0-4).
+    // URL rule cho GV, CNHP, DN cung vao /kien-tap/**, nen phai guard o method.
+    @PreAuthorize("hasAnyRole('TTDTXS','ADMIN')")
     @PostMapping("/phe-duyet/{id}")
     public String pheduyet(@PathVariable Integer id,
                            @AuthenticationPrincipal CustomUserDetails ud,

@@ -11,6 +11,7 @@ import com.ntu.quanlyctdtdb.service.HocPhanService;
 import com.ntu.quanlyctdtdb.util.FileStorageUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -130,6 +131,10 @@ public class HocPhanController {
     }
 
     /* ====================== PHE DUYET ====================== */
+    // Chi TTDTXS hoac ADMIN moi duoc phe duyet Hoc Phan (docs/02 §4, review P0-4).
+    // SecurityConfig cho phep ca CNHP vao /hoc-phan/**, can block cap method
+    // de defence-in-depth.
+    @PreAuthorize("hasAnyRole('TTDTXS','ADMIN')")
     @PostMapping("/phe-duyet/{ma}")
     public String pheduyet(@PathVariable String ma,
                             @AuthenticationPrincipal CustomUserDetails ud,
@@ -144,6 +149,7 @@ public class HocPhanController {
     }
 
     /* ====================== TU CHOI ====================== */
+    @PreAuthorize("hasAnyRole('TTDTXS','ADMIN')")
     @PostMapping("/tu-choi/{ma}")
     public String tuChoi(@PathVariable String ma,
                           @RequestParam String lyDo,
