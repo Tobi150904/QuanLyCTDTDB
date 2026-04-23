@@ -6,6 +6,27 @@
     <meta name="theme-color" content="#1e3a5f">
     <meta name="description"
           content="Đăng nhập Hệ Thống Quản Lý Chương Trình Đào Tạo Xuất Sắc.">
+
+    <!--
+      CSRF pre-resolution (CRITICAL FIX for logout -> login crash).
+
+      Template login.html co khoi <style> inline ~360 dong. Khi Thymeleaf
+      stream output, du lieu day nhanh chong vuot qua response buffer 8 KiB
+      cua Tomcat -> auto-commit response. Sau do toi line 363 khi xu ly
+      <form th:action>, SpringActionTagProcessor goi CSRF processor de tao
+      hidden input _csrf -> can persist token vao session (hoac cookie).
+      Nhung response da commit -> fail voi IllegalStateException / silently
+      mat cookie -> trang login 500 hoac thieu token -> post login 403.
+
+      Fix: tham chieu ${_csrf.token} o <head>, TRUOC <style> block. Khi do
+      RepositoryDeferredCsrfToken.init() chay, persist token vao cookie
+      XSRF-TOKEN ngay (buffer con <1 KiB, chua flush). Khi toi <form>, token
+      da cached -> khong cheo response headers nua. An toan.
+    -->
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <meta name="_csrf_parameter" th:content="${_csrf.parameterName}"/>
+
     <title>Đăng Nhập — Hệ Thống QLĐTXS</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
