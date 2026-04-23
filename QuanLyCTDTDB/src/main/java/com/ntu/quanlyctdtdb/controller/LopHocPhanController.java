@@ -20,6 +20,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -79,6 +80,39 @@ public class LopHocPhanController {
                 danhSach = lopHPService.findByHocKy(maHocKy);
             }
             model.addAttribute("danhSach", danhSach);
+
+            // "Ke Hoach Mo Lop Toan Truong": khi user chon HocKy nhung KHONG
+            // chon 1 CTDT cu the (= "Tat ca CTDT"), build per-CTDT plan.
+            // Moi CTDT co khoa khac nhau nen HK1-2025 quy doi ra programSemester
+            // khac nhau:
+            //   CTDT khoa 2022 + HK1-2025 -> HK7
+            //   CTDT khoa 2023 + HK1-2025 -> HK5
+            //   CTDT khoa 2024 + HK1-2025 -> HK3
+            //   CTDT khoa 2025 + HK1-2025 -> HK1
+            // Template se hien mot bang gom cot "CTDT | HK CTDT | HP ..." de
+            // user thay duoc "ke hoach day" cua hoc ky nay o cap truong.
+            if (hasHocKy && !hasCTDT) {
+                int hkInYear = HocKyUtil.parseHkIndexInYear(maHocKy);
+                int hkYear   = HocKyUtil.parseHkYear(maHocKy);
+                List<CtdtPlanRow> allCtdtPlans = new java.util.ArrayList<>();
+                for (ChuongTrinhDaoTao c : ctdtRepo.findAll()) {
+                    int programSem = HocKyUtil.toProgramSemester(c.getKhoa(), maHocKy);
+                    if (programSem <= 0) {
+                        // CTDT nam ngoai khung ky nay (vd HK1-2025 voi CTDT
+                        // khoa 2026 -> offset am). Bo qua de view gon gang.
+                        continue;
+                    }
+                    List<CtdtHocPhan> hps = ctdtHocPhanRepo
+                            .findByCtdtAndKyFetch(c.getMaCTDT(), programSem);
+                    if (hps.isEmpty()) continue;
+                    allCtdtPlans.add(new CtdtPlanRow(
+                            c.getMaCTDT(), c.getTenCTDT(), c.getKhoa(),
+                            programSem, hps));
+                }
+                model.addAttribute("allCtdtPlans", allCtdtPlans);
+                model.addAttribute("hkInYear", hkInYear);
+                model.addAttribute("hkYear", hkYear);
+            }
 
             // "Ke Hoach Mo Lop" + "Tao Hang Loat" CHI co y nghia khi user chon
             // BOTH CTDT va HocKy (vi can ca ma CTDT de join sang CtdtHocPhan
@@ -261,4 +295,17 @@ public class LopHocPhanController {
         return "redirect:/lop-hoc-phan/chi-tiet?maCTDT=" + maCTDT +
                "&maHocPhan=" + maHocPhan + "&maHocKy=" + maHocKy + "&maLop=" + maLop;
     }
+
+    /**
+     * View model cho "Ke Hoach Mo Lop Toan Truong": mot dong tuong ung 1 CTDT
+     * - programSemester da duoc quy doi tu HocKyNamHoc. Template render cac
+     * row duoc nhom theo CTDT, moi nhom hien maCTDT + khoa + HK CTDT + danh
+     * sach HP du kien.
+     */
+    public record CtdtPlanRow(
+            String maCTDT,
+            String tenCTDT,
+            String khoa,
+            int hocKyThu,
+            List<CtdtHocPhan> hocPhans) {}
 }

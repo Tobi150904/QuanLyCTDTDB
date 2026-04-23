@@ -39,9 +39,33 @@ public class HocKyNamHocServiceImpl implements HocKyNamHocService {
     private final DotThucTapRepository dotThucTapRepo;
 
     @Override
-    @Transactional(readOnly = true)
     public List<HocKyNamHoc> findAll() {
+        // Auto-resync trang thai moi lan list danh sach: neu ngay hien tai
+        // da qua/vao khoang ngayBatDau..ngayKetThuc ma trang thai chua cap
+        // nhat (do nguoi tao set sai / du lieu cu trong DB), tu dong dong
+        // bo lai de hien thi dung. Khong dong "DaKetThuc" vi state do la
+        // final (xem update()).
+        resyncStatuses();
         return hocKyRepo.findAllByOrderByNgayBatDauDesc();
+    }
+
+    /**
+     * Dong bo trang thai cua tat ca HK theo ngay hien tai. Quy tac:
+     *  - today < ngayBatDau           -&gt; SapDienRa
+     *  - ngayBatDau &lt;= today &lt;= ngayKetThuc -&gt; DangDienRa
+     *  - today &gt; ngayKetThuc         -&gt; DaKetThuc
+     * State {@code DaKetThuc} la final: da dong thi giu nguyen du ngay co
+     * bi doi (hanh vi nay match logic trong {@link #update}).
+     */
+    private void resyncStatuses() {
+        hocKyRepo.findAll().forEach(h -> {
+            if (h.getTrangThai() == TrangThaiHocKy.DaKetThuc) return;
+            TrangThaiHocKy expected = deriveStatus(h.getNgayBatDau(), h.getNgayKetThuc());
+            if (expected != h.getTrangThai()) {
+                h.setTrangThai(expected);
+                hocKyRepo.save(h);
+            }
+        });
     }
 
     @Override
@@ -76,8 +100,13 @@ public class HocKyNamHocServiceImpl implements HocKyNamHocService {
             tenHocKy = buildTenHocKy(dto.getHocKyThu(), dto.getNamBatDau(), dto.getNamKetThuc());
         }
 
-        TrangThaiHocKy trangThai = dto.getTrangThai() != null
-                ? dto.getTrangThai() : TrangThaiHocKy.SapDienRa;
+        // FIX: Luon quy dinh trang thai dua tren ngay bat dau/ket thuc so voi
+        // ngay hien tai - tranh case user chon sai trong form (vi du HK-2025
+        // co ngay bat dau 01/02/2026 - 01/06/2026 nhung user chon SapDienRa
+        // trong khi hom nay da 23/04/2026). Neu user co ban chat da pick
+        // trang thai "DangDienRa" hoac "DaKetThuc" nhung ngay khong khop thi
+        // he thong vuon dung dates la source of truth.
+        TrangThaiHocKy trangThai = deriveStatus(dto.getNgayBatDau(), dto.getNgayKetThuc());
         if (trangThai == TrangThaiHocKy.DangDienRa) {
             // Tu dong dong HK cu dang DangDienRa (neu co) truoc khi kich hoat HK moi.
             autoCloseOtherActive(null);
@@ -112,13 +141,15 @@ public class HocKyNamHocServiceImpl implements HocKyNamHocService {
                     "Khong duoc doi Ma Hoc Ky. Neu can, hay xoa va tao moi.");
         }
 
-        TrangThaiHocKy moi = dto.getTrangThai();
+        // FIX: trang thai luon duoc suy tu ngay bat dau/ket thuc - tranh
+        // user set tay nhung sai voi realities (xem comment tuong tu trong
+        // create()). Giu ngoai le: HK da DaKetThuc thi KHONG tu dong "hoi
+        // sinh" khi ngay bat dau/ket thuc bi doi - van coi nhu da ket thuc.
         TrangThaiHocKy cu = e.getTrangThai();
+        TrangThaiHocKy moi = cu == TrangThaiHocKy.DaKetThuc
+                ? TrangThaiHocKy.DaKetThuc
+                : deriveStatus(dto.getNgayBatDau(), dto.getNgayKetThuc());
 
-        if (cu == TrangThaiHocKy.DaKetThuc && moi != TrangThaiHocKy.DaKetThuc) {
-            throw new BusinessException(
-                    "Hoc ky da ket thuc, khong the chuyen lai trang thai truoc do.");
-        }
         if (moi == TrangThaiHocKy.DangDienRa && cu != TrangThaiHocKy.DangDienRa) {
             autoCloseOtherActive(maHocKy);
         }
@@ -193,6 +224,18 @@ public class HocKyNamHocServiceImpl implements HocKyNamHocService {
                     h.setTrangThai(TrangThaiHocKy.DaKetThuc);
                     hocKyRepo.save(h);
                 });
+    }
+
+    /**
+     * Suy ra trang thai HK theo ngay hien tai.
+     * Tham chieu {@link #resyncStatuses} cho quy tac day du.
+     */
+    private TrangThaiHocKy deriveStatus(LocalDate start, LocalDate end) {
+        LocalDate today = LocalDate.now();
+        if (start == null || end == null) return TrangThaiHocKy.SapDienRa;
+        if (today.isBefore(start))   return TrangThaiHocKy.SapDienRa;
+        if (today.isAfter(end))      return TrangThaiHocKy.DaKetThuc;
+        return TrangThaiHocKy.DangDienRa;
     }
 
     private void validateDates(LocalDate start, LocalDate end) {

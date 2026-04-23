@@ -213,12 +213,13 @@
                                        aria-label="Xem chi tiết">
                                         <i class="bi bi-eye"></i>
                                     </a>
-                                    <!-- Chỉnh sửa (text + icon de de nhan ra) -->
+                                    <!-- Chinh sua: giu chi icon de dong bo voi 3 nut thao tac con lai
+                                         (Xem / Khoa / Xoa). Tooltip + aria-label van mo ta day du. -->
                                     <a th:href="@{/nguoi-dung/sua/{ma}(ma=${nd.maNguoiDung})}"
-                                       class="btn btn-sm btn-primary"
+                                       class="btn btn-sm btn-outline-primary"
                                        data-bs-toggle="tooltip" data-bs-title="Chỉnh Sửa Người Dùng"
                                        aria-label="Chỉnh sửa người dùng">
-                                        <i class="bi bi-pencil-square me-1"></i>Sửa
+                                        <i class="bi bi-pencil"></i>
                                     </a>
                                     <!-- Khoá / Mở khoá -->
                                     <form th:action="@{/nguoi-dung/toggle/{ma}(ma=${nd.maNguoiDung})}"

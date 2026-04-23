@@ -2,6 +2,7 @@ package com.ntu.quanlyctdtdb.controller;
 
 import com.ntu.quanlyctdtdb.dto.NguoiDungDTO;
 import com.ntu.quanlyctdtdb.dto.NguoiDungExcelDTO;
+import com.ntu.quanlyctdtdb.entity.LopHanhChinh;
 import com.ntu.quanlyctdtdb.entity.NguoiDung;
 import com.ntu.quanlyctdtdb.enums.LoaiNguoiDung;
 import com.ntu.quanlyctdtdb.enums.VaiTro;
@@ -232,11 +233,17 @@ public class NguoiDungController {
         if (nd.getLoaiNguoiDung() == LoaiNguoiDung.SinhVien) {
             sinhVienRepo.findById(ma).ifPresent(sv -> {
                 model.addAttribute("sinhVien", sv);
-                if (sv.getLopHanhChinh() != null) {
-                    // Trigger lazy load khi con trong transaction (RequestMapping
-                    // bao trum transaction readOnly qua service). Sau do truyen
-                    // lop vao template - dam bao khong LazyInit o view.
-                    model.addAttribute("lopHanhChinh", sv.getLopHanhChinh());
+                // FIX LazyInit: sv.getLopHanhChinh() la proxy LAZY. Truy cap
+                // getMaLopHC() tren proxy khong trigger init (ID la san). Sau
+                // do dung lopHCRepo.findByIdFetch(...) de load LopHanhChinh
+                // KEM ChuongTrinhDaoTao trong 1 query - template
+                // (nguoi-dung/chi-tiet) truy cap lopHanhChinh.tenLop va
+                // lopHanhChinh.chuongTrinhDaoTao.maCTDT se khong nem
+                // LazyInitializationException (open-in-view=false).
+                LopHanhChinh lopProxy = sv.getLopHanhChinh();
+                if (lopProxy != null) {
+                    lopHCRepo.findByIdFetch(lopProxy.getMaLopHC())
+                            .ifPresent(lop -> model.addAttribute("lopHanhChinh", lop));
                 }
             });
         } else if (nd.getLoaiNguoiDung() == LoaiNguoiDung.GiangVien) {

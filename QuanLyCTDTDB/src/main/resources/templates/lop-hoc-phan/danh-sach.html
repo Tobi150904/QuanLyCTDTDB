@@ -100,6 +100,81 @@
         }
     </script>
 
+    <!-- KẾ HOẠCH MỞ LỚP TOÀN TRƯỜNG (HK da chon + Tat ca CTDT) -->
+    <div class="card mb-4"
+         th:if="${allCtdtPlans != null and !#lists.isEmpty(allCtdtPlans)}">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span class="fw-semibold">
+                <i class="bi bi-buildings me-2"></i>Kế Hoạch Mở Lớp Toàn Trường
+                <small class="text-muted">
+                    (HK<span th:text="${hkInYear}">?</span> năm
+                    <span th:text="${hkYear}">?</span>-<span th:text="${hkYear + 1}">?</span>
+                    — quy đổi theo từng CTĐT)
+                </small>
+            </span>
+            <span class="badge bg-light text-dark"
+                  th:text="'Số CTĐT áp dụng: ' + ${#lists.size(allCtdtPlans)}">0</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width:140px;">CTĐT</th>
+                            <th style="width:90px;">Khóa</th>
+                            <th class="text-center" style="width:110px;">Kỳ CTĐT</th>
+                            <th>Mã HP</th>
+                            <th>Tên HP</th>
+                            <th class="text-center" style="width:60px;">TC</th>
+                            <th class="text-center" style="width:110px;">Bắt Buộc</th>
+                            <th class="text-center" style="width:120px;">Số Lớp DK</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <th:block th:each="plan : ${allCtdtPlans}">
+                            <tr class="table-light">
+                                <td colspan="8" class="fw-semibold">
+                                    <i class="bi bi-mortarboard me-1"></i>
+                                    <a th:href="@{/lop-hoc-phan(maCTDT=${plan.maCTDT},maHocKy=${maHocKy})}"
+                                       class="text-decoration-none"
+                                       th:text="${plan.maCTDT + ' — ' + plan.tenCTDT}">--</a>
+                                    <span class="badge bg-primary ms-2"
+                                          th:text="'Kỳ ' + ${plan.hocKyThu} + ' / CTĐT'">--</span>
+                                    <span class="badge bg-light text-dark ms-1"
+                                          th:text="'Khóa ' + ${plan.khoa}">--</span>
+                                </td>
+                            </tr>
+                            <tr th:each="ch : ${plan.hocPhans}">
+                                <td class="text-muted small"
+                                    th:text="${plan.maCTDT}">--</td>
+                                <td class="text-muted small"
+                                    th:text="${plan.khoa}">--</td>
+                                <td class="text-center">
+                                    <span class="badge bg-info text-dark"
+                                          th:text="'HK' + ${plan.hocKyThu}">HK?</span>
+                                </td>
+                                <td><code th:text="${ch.id.maHocPhan}"></code></td>
+                                <td th:text="${ch.hocPhan != null ? ch.hocPhan.tenHocPhan : '--'}">--</td>
+                                <td class="text-center"
+                                    th:text="${ch.hocPhan != null ? ch.hocPhan.soTinChi : '--'}">--</td>
+                                <td class="text-center">
+                                    <span class="badge"
+                                          th:classappend="${ch.batBuoc} ? 'bg-primary' : 'bg-secondary'"
+                                          th:text="${ch.batBuoc} ? 'Bắt Buộc' : 'Tự Chọn'">--</span>
+                                </td>
+                                <td class="text-center" th:text="${ch.soLopDuKien}">0</td>
+                            </tr>
+                        </th:block>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-transparent small text-muted">
+            <i class="bi bi-info-circle me-1"></i>
+            Bấm vào tên CTĐT để mở trang &quot;Tạo Hàng Loạt&quot; lớp học phần cho CTĐT đó.
+        </div>
+    </div>
+
     <!-- KẾ HOẠCH MỞ LỚP (HP DỰ KIẾN THEO CTĐT + HỌC KỲ) -->
     <div class="card mb-4"
          th:if="${hpDuKien != null and maCTDT != null and !maCTDT.isBlank() and maHocKy != null and !maHocKy.isBlank()}">

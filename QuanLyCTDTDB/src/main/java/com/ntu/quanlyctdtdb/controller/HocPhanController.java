@@ -11,6 +11,7 @@ import com.ntu.quanlyctdtdb.service.HocPhanService;
 import com.ntu.quanlyctdtdb.util.FileStorageUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -31,6 +32,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
  *   - SinhVien   : R  (tra cuu thong tin HP truoc khi dang ky)
  * Class-level cho doc, method-level chan writes theo dung matrix.
  */
+@Slf4j
 @Controller
 @RequestMapping("/hoc-phan")
 @RequiredArgsConstructor
@@ -68,12 +70,26 @@ public class HocPhanController {
 
     @PreAuthorize("hasAnyRole('CNHP','TTDTXS','ADMIN')")
     @PostMapping("/them")
-    public String them(@Valid @ModelAttribute HocPhanDTO dto,
+    public String them(@Valid @ModelAttribute("hocPhanDTO") HocPhanDTO dto,
                         BindingResult br,
                         @RequestParam(value = "fileDeCuong", required = false) MultipartFile file,
                         @AuthenticationPrincipal CustomUserDetails userDetails,
                         Model model, RedirectAttributes ra) {
+        // Log day du de developer xac dinh vi sao form khong tao duoc HP.
+        // Truoc day neu binding/validation fail, controller return form ma
+        // khong log gi - user lan lon vi "khong bao console, khong tao duoc".
+        log.info("POST /hoc-phan/them dto={}", dto);
         if (br.hasErrors()) {
+            log.warn("Validation errors khi tao HocPhan: {}",
+                    br.getAllErrors().stream()
+                            .map(err -> err.getDefaultMessage()).toList());
+            // Gom loi thanh 1 chuoi ngan de hien thi o banner phia tren form.
+            String msg = br.getAllErrors().stream()
+                    .map(err -> err.getDefaultMessage())
+                    .filter(s -> s != null && !s.isBlank())
+                    .distinct()
+                    .reduce((a, b) -> a + "; " + b).orElse("Du lieu khong hop le.");
+            model.addAttribute("errorMsg", msg);
             model.addAttribute("loaiHPList", LoaiHocPhan.values());
             model.addAttribute("giangVienList", giangVienRepo.findAllFetchNguoiDung());
             model.addAttribute("isEdit", false);
@@ -87,7 +103,9 @@ public class HocPhanController {
             }
             ra.addFlashAttribute("successMsg", "Tao hoc phan thanh cong! Cho phe duyet.");
         } catch (Exception e) {
-            ra.addFlashAttribute("errorMsg", e.getMessage());
+            log.error("Loi khi tao HocPhan dto={}: {}", dto, e.getMessage(), e);
+            ra.addFlashAttribute("errorMsg",
+                    e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName());
         }
         return "redirect:/hoc-phan";
     }
