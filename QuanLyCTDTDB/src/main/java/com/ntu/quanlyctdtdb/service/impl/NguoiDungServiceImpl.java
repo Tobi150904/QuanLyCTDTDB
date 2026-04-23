@@ -70,6 +70,11 @@ public class NguoiDungServiceImpl implements NguoiDungService {
             throw new BusinessException(
                     "Mật khẩu không được để trống khi tạo mới.");
         }
+        // Policy do dai toi thieu — truoc day o @Size(min=8) trong DTO nhung
+        // annotation do gay false-positive khi update, nen chuyen vao service.
+        if (dto.getMatKhau().length() < 8) {
+            throw new BusinessException("Mật khẩu tối thiểu 8 ký tự.");
+        }
 
         String ma = sinhMaNguoiDung(dto.getLoaiNguoiDung());
 
@@ -154,8 +159,11 @@ public class NguoiDungServiceImpl implements NguoiDungService {
         nd.setHoTen(dto.getHoTen().trim());
         nd.setSoDienThoai(dto.getSoDienThoai());
 
-        // Cap nhat mat khau neu co nhap
+        // Cap nhat mat khau neu co nhap — de trong: giu nguyen mat khau cu.
         if (dto.getMatKhau() != null && !dto.getMatKhau().isBlank()) {
+            if (dto.getMatKhau().length() < 8) {
+                throw new BusinessException("Mật khẩu tối thiểu 8 ký tự.");
+            }
             nd.setMatKhauHash(passwordEncoder.encode(dto.getMatKhau()));
         }
 
