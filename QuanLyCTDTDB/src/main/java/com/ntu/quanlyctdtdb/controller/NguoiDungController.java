@@ -12,12 +12,15 @@ import com.ntu.quanlyctdtdb.service.NguoiDungService;
 import com.ntu.quanlyctdtdb.util.ExcelImportUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.propertyeditors.StringTrimmerEditor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -36,6 +39,19 @@ public class NguoiDungController {
     private final LopHanhChinhRepository lopHCRepo;
     private final GiangVienRepository giangVienRepo;
     private final SinhVienRepository sinhVienRepo;
+
+    /**
+     * Chuyen empty string "" thanh null de form binding. Cuc ky can thiet cho
+     * field {@code matKhau}: khi sua nguoi dung, form submit matKhau="" -> neu
+     * khong trim thanh null, {@code @Size(min=8)} fail ngay vi "" co length=0.
+     * User lo phai nhap mat khau moi dung it nhat 8 ky tu moi luu duoc - sai
+     * UX. Trim -> null -> {@code @Size} bo qua null -> service chi update
+     * password khi value non-blank.
+     */
+    @InitBinder
+    public void initBinder(WebDataBinder binder) {
+        binder.registerCustomEditor(String.class, new StringTrimmerEditor(true));
+    }
 
     /* ====================== DANH SACH ====================== */
     @GetMapping
@@ -185,8 +201,55 @@ public class NguoiDungController {
     /* ====================== CHI TIET ====================== */
     @GetMapping("/chi-tiet/{ma}")
     public String chiTiet(@PathVariable String ma, Model model) {
-        model.addAttribute("nguoiDung", nguoiDungService.findByIdWithRoles(ma));
+        NguoiDung nd = nguoiDungService.findByIdWithRoles(ma);
+        model.addAttribute("nguoiDung", nd);
+
+        // Hien thi thong tin mo rong theo LoaiNguoiDung. Truoc day chi-tiet
+        // cho SV khong hien thi LopHanhChinh - user khong biet SV thuoc lop
+        // nao. Load SinhVien kem LopHanhChinh + ChuongTrinhDaoTao va truyen
+        // vao template de section "Thong Tin Sinh Vien" co du du lieu render.
+        if (nd.getLoaiNguoiDung() == LoaiNguoiDung.SinhVien) {
+            sinhVienRepo.findById(ma).ifPresent(sv -> {
+                model.addAttribute("sinhVien", sv);
+                if (sv.getLopHanhChinh() != null) {
+                    // Trigger lazy load khi con trong transaction (RequestMapping
+                    // bao trum transaction readOnly qua service). Sau do truyen
+                    // lop vao template - dam bao khong LazyInit o view.
+                    model.addAttribute("lopHanhChinh", sv.getLopHanhChinh());
+                }
+            });
+        } else if (nd.getLoaiNguoiDung() == LoaiNguoiDung.GiangVien) {
+            giangVienRepo.findById(ma).ifPresent(gv ->
+                    model.addAttribute("giangVien", gv));
+        }
         model.addAttribute("activeMenu", ACTIVE_MENU);
         return "nguoi-dung/chi-tiet";
+    }
+
+    /* ====================== XOA ====================== */
+    /**
+     * Xoa nguoi dung. Chan:
+     *  - Xoa chinh minh (tranh user tu khoa minh ra).
+     *  - Xoa nguoi dung co du lieu nghiep vu tham chieu (SV da dang ky lop hoc
+     *    phan, GV dang phu trach hoc phan...). Service se throw
+     *    BusinessException voi thong bao cu the.
+     */
+    @PostMapping("/xoa/{ma}")
+    public String xoa(@PathVariable String ma,
+                       Authentication auth,
+                       RedirectAttributes ra) {
+        try {
+            String currentMa = auth != null && auth.getPrincipal()
+                    instanceof com.ntu.quanlyctdtdb.security.CustomUserDetails cud
+                    ? cud.getMaNguoiDung() : null;
+            if (ma.equals(currentMa)) {
+                throw new IllegalStateException("Không thể xoá chính tài khoản đang đăng nhập.");
+            }
+            nguoiDungService.delete(ma);
+            ra.addFlashAttribute("successMsg", "Đã xoá người dùng " + ma + " thành công.");
+        } catch (Exception e) {
+            ra.addFlashAttribute("errorMsg", e.getMessage());
+        }
+        return "redirect:/nguoi-dung";
     }
 }

@@ -138,7 +138,7 @@
                             <th>Loại</th>
                             <th>Vai Trò</th>
                             <th>Trạng Thái</th>
-                            <th class="text-center" style="width:170px;">Thao Tác</th>
+                            <th class="text-center" style="width:210px;">Thao Tác</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -235,6 +235,22 @@
                                             <i class="bi"
                                                th:classappend="${nd.trangThaiTK} ? 'bi-lock' : 'bi-unlock'">
                                             </i>
+                                        </button>
+                                    </form>
+                                    <!-- Xoá -->
+                                    <form th:action="@{/nguoi-dung/xoa/{ma}(ma=${nd.maNguoiDung})}"
+                                          method="post" class="d-inline m-0"
+                                          th:attr="data-item-name=${nd.hoTen}"
+                                          onsubmit="return confirmDeleteFromForm(this, event)">
+                                        <input type="hidden"
+                                               th:name="${_csrf.parameterName}"
+                                               th:value="${_csrf.token}">
+                                        <button type="submit"
+                                                class="btn btn-sm btn-outline-danger"
+                                                data-bs-toggle="tooltip"
+                                                data-bs-title="Xoá Người Dùng"
+                                                aria-label="Xoá người dùng">
+                                            <i class="bi bi-trash"></i>
                                         </button>
                                     </form>
                                 </div>

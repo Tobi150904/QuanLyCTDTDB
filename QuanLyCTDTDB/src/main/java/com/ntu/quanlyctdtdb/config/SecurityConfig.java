@@ -15,6 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
+import org.springframework.security.web.session.HttpSessionEventPublisher;
 
 @Configuration
 @EnableWebSecurity
@@ -27,6 +28,21 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    /**
+     * BAT BUOC khi dung {@code sessionManagement().maximumSessions(...)}.
+     * Spring Security dung {@link org.springframework.security.core.session.SessionRegistry}
+     * de theo doi session active cua moi user. Neu khong co publisher nay,
+     * registry khong biet khi session bi invalidate (logout, timeout) - hau
+     * qua: sau khi logout, registry van giu session cu -> user LOGIN LAI bi
+     * tu choi boi concurrent-session logic (session cu "tranh cho" voi session
+     * moi). Dang ky bean nay de {@code HttpSessionListener} bubble su kien den
+     * registry -> dam bao logout -> login lien tuc hoat dong binh thuong.
+     */
+    @Bean
+    public HttpSessionEventPublisher httpSessionEventPublisher() {
+        return new HttpSessionEventPublisher();
     }
 
     /**

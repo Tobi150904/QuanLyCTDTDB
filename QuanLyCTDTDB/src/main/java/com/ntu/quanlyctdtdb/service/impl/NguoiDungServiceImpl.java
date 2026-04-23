@@ -32,6 +32,11 @@ public class NguoiDungServiceImpl implements NguoiDungService {
     private final SinhVienRepository sinhVienRepo;
     private final LopHanhChinhRepository lopHanhChinhRepo;
     private final NhomNguoiDungRepository nhomNguoiDungRepo;
+    private final DanhSachSvLopHocPhanRepository dsSvLHPRepo;
+    private final DanhSachSvKienTapRepository dsSvKTRepo;
+    private final DanhSachThucTapRepository dsThucTapRepo;
+    private final DoiNguGiangVienHpRepository doiNguGvRepo;
+    private final BcnThanhVienRepository bcnThanhVienRepo;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -211,6 +216,90 @@ public class NguoiDungServiceImpl implements NguoiDungService {
         NguoiDung nd = findById(ma);
         nd.setTrangThaiTK(!Boolean.TRUE.equals(nd.getTrangThaiTK()));
         nguoiDungRepo.save(nd);
+    }
+
+    /**
+     * Xoa nguoi dung. Luong thuc thi:
+     *
+     * <ol>
+     *   <li>Kiem tra rang buoc du lieu theo LoaiNguoiDung:
+     *     <ul>
+     *       <li><b>SinhVien</b>: neu da dang ky lop hoc phan (DanhSachSvLopHocPhan),
+     *           co phan cong kien tap (DanhSachSvKienTap) hoac thuc tap
+     *           (DanhSachThucTap) -> throw BusinessException. Ly do:
+     *           xoa se lam mat lich su hoc tap, bao cao sai lech. Goi y user
+     *           chuyen sang "Khoa tai khoan" (toggle TrangThaiTK) thay vi xoa.
+     *       </li>
+     *       <li><b>GiangVien</b>: neu dang phan cong day hoc phan
+     *           (DoiNguGiangVienHp) hoac la thanh vien ban chu nhiem CTDT
+     *           (BcnThanhVien) -> throw BusinessException.</li>
+     *     </ul>
+     *   </li>
+     *   <li>Xoa NhomNguoiDung (vai tro nghiep vu) truoc.</li>
+     *   <li>Xoa record mo rong (SinhVien hoac GiangVien) neu co.</li>
+     *   <li>Cuoi cung xoa NguoiDung.</li>
+     * </ol>
+     *
+     * <p>Doanh Nghiep user: khong co record mo rong lien ket NguoiDung truc
+     * tiep - xoa NguoiDung la du.
+     */
+    @Override
+    public void delete(String ma) {
+        NguoiDung nd = findById(ma);
+
+        if (nd.getLoaiNguoiDung() == LoaiNguoiDung.SinhVien) {
+            long lhpCount = dsSvLHPRepo.findById_MaSV(ma).size();
+            if (lhpCount > 0) {
+                throw new BusinessException(
+                        "Không thể xoá sinh viên: đang có " + lhpCount
+                      + " đăng ký lớp học phần. Hãy khoá tài khoản thay vì xoá.");
+            }
+            long ktCount = dsSvKTRepo.findBySinhVien_MaSV(ma).size();
+            if (ktCount > 0) {
+                throw new BusinessException(
+                        "Không thể xoá sinh viên: đang có " + ktCount
+                      + " ghi nhận kiến tập. Hãy khoá tài khoản thay vì xoá.");
+            }
+            long ttCount = dsThucTapRepo.findBySinhVien_MaSV(ma).size();
+            if (ttCount > 0) {
+                throw new BusinessException(
+                        "Không thể xoá sinh viên: đang có " + ttCount
+                      + " phân công thực tập. Hãy khoá tài khoản thay vì xoá.");
+            }
+        } else if (nd.getLoaiNguoiDung() == LoaiNguoiDung.GiangVien) {
+            long gvHpCount = doiNguGvRepo.findByGiangVien_MaGVAndTrangThai(ma, true).size();
+            if (gvHpCount > 0) {
+                throw new BusinessException(
+                        "Không thể xoá giảng viên: đang phụ trách " + gvHpCount
+                      + " học phần. Hãy gỡ phân công trước.");
+            }
+            long bcnCount = bcnThanhVienRepo.findByGiangVien_MaGV(ma).size();
+            if (bcnCount > 0) {
+                throw new BusinessException(
+                        "Không thể xoá giảng viên: đang là thành viên BCN của "
+                      + bcnCount + " CTĐT. Hãy gỡ khỏi BCN trước.");
+            }
+            // CVHT cua lop hanh chinh cung chan xoa (LopHanhChinh.coVan FK)
+            long cvhtCount = lopHanhChinhRepo.findByCoVan_MaGV(ma).size();
+            if (cvhtCount > 0) {
+                throw new BusinessException(
+                        "Không thể xoá giảng viên: đang là CVHT của " + cvhtCount
+                      + " lớp hành chính. Hãy gỡ CVHT trước.");
+            }
+        }
+
+        // An toan roi - tien hanh xoa theo thu tu FK:
+        //   NhomNguoiDung -> SinhVien/GiangVien -> NguoiDung
+        nhomNguoiDungRepo.deleteByNguoiDung_MaNguoiDung(ma);
+        nhomNguoiDungRepo.flush();  // dam bao DELETE gui toi DB truoc cac buoc sau
+
+        if (nd.getLoaiNguoiDung() == LoaiNguoiDung.SinhVien) {
+            sinhVienRepo.findById(ma).ifPresent(sinhVienRepo::delete);
+        } else if (nd.getLoaiNguoiDung() == LoaiNguoiDung.GiangVien) {
+            giangVienRepo.findById(ma).ifPresent(giangVienRepo::delete);
+        }
+        nguoiDungRepo.delete(nd);
+        log.info("Da xoa nguoi dung {}", ma);
     }
 
     @Override

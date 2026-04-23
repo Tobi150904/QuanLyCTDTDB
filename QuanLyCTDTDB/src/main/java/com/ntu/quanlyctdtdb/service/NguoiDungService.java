@@ -25,6 +25,13 @@ public interface NguoiDungService {
 
     void toggleTrangThai(String ma);
 
+    /**
+     * Xoa nguoi dung cung voi record mo rong (SinhVien/GiangVien) va cac
+     * NhomNguoiDung. Throw BusinessException neu con rang buoc du lieu
+     * (SV da dang ky hoc phan, GV dang phu trach, ...).
+     */
+    void delete(String ma);
+
     /** Import hang loat tu Excel. Tra ve map: "success" -> count, "errors" -> List<String> */
     Map<String, Object> importFromExcel(List<NguoiDungExcelDTO> rows);
 

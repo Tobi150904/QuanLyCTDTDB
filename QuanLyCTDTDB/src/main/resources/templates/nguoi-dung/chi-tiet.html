@@ -113,6 +113,99 @@
 
         <!-- Right: Vai tro + Thao tac -->
         <div class="col-md-6">
+
+            <!-- Thong Tin Sinh Vien: Lop Hanh Chinh + CTDT.
+                 Section nay truoc day thieu — user xem chi tiet SV khong biet
+                 SV thuoc lop nao. Nay hien day du khi loaiNguoiDung=SinhVien. -->
+            <div class="card mb-3" th:if="${sinhVien != null}">
+                <div class="card-header">
+                    <i class="bi bi-mortarboard me-2"></i>
+                    <span class="fw-semibold">Thông Tin Sinh Viên</span>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless mb-0">
+                        <tbody>
+                            <tr class="info-row">
+                                <td class="info-label">Mã Sinh Viên</td>
+                                <td><code th:text="${sinhVien.maSV}"></code></td>
+                            </tr>
+                            <tr class="info-row" th:if="${lopHanhChinh != null}">
+                                <td class="info-label">Lớp Hành Chính</td>
+                                <td>
+                                    <a th:href="@{/lop-hanh-chinh/chi-tiet/{ma}(ma=${lopHanhChinh.maLopHC})}"
+                                       class="text-decoration-none fw-medium">
+                                        <code th:text="${lopHanhChinh.maLopHC}"></code>
+                                        <span class="text-muted"> — </span>
+                                        <span th:text="${lopHanhChinh.tenLop}"></span>
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr class="info-row" th:if="${lopHanhChinh == null}">
+                                <td class="info-label">Lớp Hành Chính</td>
+                                <td class="text-muted">
+                                    <i class="bi bi-exclamation-triangle me-1"></i>
+                                    Sinh viên chưa được gán lớp hành chính
+                                </td>
+                            </tr>
+                            <tr class="info-row" th:if="${lopHanhChinh != null and lopHanhChinh.khoaHoc != null}">
+                                <td class="info-label">Khoá</td>
+                                <td th:text="${lopHanhChinh.khoaHoc}">--</td>
+                            </tr>
+                            <tr class="info-row" th:if="${lopHanhChinh != null and lopHanhChinh.chuongTrinhDaoTao != null}">
+                                <td class="info-label">Chương Trình ĐT</td>
+                                <td>
+                                    <code th:text="${lopHanhChinh.chuongTrinhDaoTao.maCTDT}"></code>
+                                </td>
+                            </tr>
+                            <tr class="info-row">
+                                <td class="info-label">Trạng Thái Học Tập</td>
+                                <td>
+                                    <span class="badge bg-info text-dark"
+                                          th:text="${sinhVien.trangThaiSV}">--</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Thong Tin Giang Vien: hoc ham, hoc vi, chuyen nganh -->
+            <div class="card mb-3" th:if="${giangVien != null}">
+                <div class="card-header">
+                    <i class="bi bi-person-workspace me-2"></i>
+                    <span class="fw-semibold">Thông Tin Giảng Viên</span>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless mb-0">
+                        <tbody>
+                            <tr class="info-row">
+                                <td class="info-label">Mã Giảng Viên</td>
+                                <td><code th:text="${giangVien.maGV}"></code></td>
+                            </tr>
+                            <tr class="info-row">
+                                <td class="info-label">Học Hàm</td>
+                                <td th:text="${giangVien.hocHam ?: '--'}">--</td>
+                            </tr>
+                            <tr class="info-row">
+                                <td class="info-label">Học Vị</td>
+                                <td th:text="${giangVien.hocVi ?: '--'}">--</td>
+                            </tr>
+                            <tr class="info-row">
+                                <td class="info-label">Chuyên Ngành</td>
+                                <td th:text="${giangVien.chuyenNganh ?: '--'}">--</td>
+                            </tr>
+                            <tr class="info-row">
+                                <td class="info-label">Loại Giảng Viên</td>
+                                <td>
+                                    <span class="badge bg-primary"
+                                          th:text="${giangVien.loaiGiangVien}">--</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
             <div class="card mb-3">
                 <div class="card-header">
                     <i class="bi bi-shield-check me-2"></i>
@@ -164,7 +257,25 @@
                                 <span th:text="${nguoiDung.trangThaiTK} ? 'Khoá Tài Khoản' : 'Mở Khoá Tài Khoản'"></span>
                             </button>
                         </form>
+                        <form th:action="@{/nguoi-dung/xoa/{ma}(ma=${nguoiDung.maNguoiDung})}"
+                              method="post" class="m-0"
+                              th:attr="data-item-name=${nguoiDung.hoTen}"
+                              onsubmit="return confirmDeleteFromForm(this, event)">
+                            <input type="hidden"
+                                   th:name="${_csrf.parameterName}"
+                                   th:value="${_csrf.token}">
+                            <button type="submit" class="btn btn-sm btn-outline-danger w-100">
+                                <i class="bi bi-trash me-2"></i>Xoá Người Dùng
+                            </button>
+                        </form>
                     </div>
+                    <hr class="soft-divider mt-3 mb-2">
+                    <p class="text-muted small mb-0">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Người dùng đang được tham chiếu trong hồ sơ học tập / giảng dạy
+                        sẽ không thể xoá trực tiếp. Hãy chọn <strong>Khoá Tài Khoản</strong>
+                        để bảo toàn dữ liệu lịch sử.
+                    </p>
                 </div>
             </div>
         </div>

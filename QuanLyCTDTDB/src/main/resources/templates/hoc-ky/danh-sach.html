@@ -175,7 +175,8 @@
                                     <form th:action="@{/hoc-ky/xoa/{ma}(ma=${hk.maHocKy})}"
                                           method="post" class="d-inline m-0"
                                           sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')"
-                                          th:onsubmit="'return confirmDelete(this, event, \'' + ${hk.maHocKy} + '\')'">
+                                          th:attr="data-item-name=${hk.maHocKy}"
+                                          onsubmit="return confirmDeleteFromForm(this, event)">
                                         <input type="hidden"
                                                th:name="${_csrf.parameterName}"
                                                th:value="${_csrf.token}">

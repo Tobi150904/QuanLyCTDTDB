@@ -91,6 +91,14 @@ function showLoading(button) {
 // =============================================================================
 // 6. confirmDelete — xac nhan truoc khi submit form xoa
 // =============================================================================
+// Wrapper: Thymeleaf 3.1 cam string concatenation trong th:onsubmit (DOM event
+// handler attribute). Dat ten muc xoa vao data-item-name qua th:attr, roi goi
+// helper nay trong onsubmit thuan text.
+function confirmDeleteFromForm(form, event) {
+    var name = form.getAttribute('data-item-name');
+    return confirmDelete(form, event, name);
+}
+
 function confirmDelete(form, event, itemName) {
     event.preventDefault();
     var msg = itemName
