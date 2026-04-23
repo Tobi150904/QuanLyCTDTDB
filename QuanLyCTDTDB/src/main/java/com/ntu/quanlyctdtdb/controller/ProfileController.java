@@ -25,7 +25,7 @@ public class ProfileController {
     @GetMapping
     public String profile(@AuthenticationPrincipal CustomUserDetails currentUser, Model model) {
         NguoiDung nd = nguoiDungRepo.findById(currentUser.getMaNguoiDung())
-                .orElseThrow(() -> new BusinessException("Khong tim thay nguoi dung"));
+                .orElseThrow(() -> new BusinessException("Không tìm thấy người dùng."));
         model.addAttribute("nguoiDung", nd);
         model.addAttribute("activeMenu", "profile");
         return "profile/profile";
@@ -38,19 +38,27 @@ public class ProfileController {
                               @RequestParam @NotBlank String xacNhanMatKhau,
                               RedirectAttributes ra) {
         NguoiDung nd = nguoiDungRepo.findById(currentUser.getMaNguoiDung())
-                .orElseThrow(() -> new BusinessException("Khong tim thay nguoi dung"));
+                .orElseThrow(() -> new BusinessException("Không tìm thấy người dùng."));
 
         if (!passwordEncoder.matches(matKhauCu, nd.getMatKhauHash())) {
-            ra.addFlashAttribute("errorMsg", "Mat khau cu khong dung.");
+            ra.addFlashAttribute("errorMsg", "Mật khẩu cũ không đúng.");
             return "redirect:/profile";
         }
         if (!matKhauMoi.equals(xacNhanMatKhau)) {
-            ra.addFlashAttribute("errorMsg", "Mat khau moi va xac nhan khong khop.");
+            ra.addFlashAttribute("errorMsg",
+                    "Mật khẩu mới và xác nhận không khớp.");
+            return "redirect:/profile";
+        }
+        // Chan truong hop user dat lai mat khau trung voi mat khau hien tai —
+        // tranh feeling "da doi" nhung thuc te khong co gi thay doi.
+        if (passwordEncoder.matches(matKhauMoi, nd.getMatKhauHash())) {
+            ra.addFlashAttribute("warningMsg",
+                    "Mật khẩu mới không được trùng với mật khẩu hiện tại.");
             return "redirect:/profile";
         }
         nd.setMatKhauHash(passwordEncoder.encode(matKhauMoi));
         nguoiDungRepo.save(nd);
-        ra.addFlashAttribute("successMsg", "Doi mat khau thanh cong!");
+        ra.addFlashAttribute("successMsg", "Đổi mật khẩu thành công!");
         return "redirect:/profile";
     }
 
@@ -60,13 +68,13 @@ public class ProfileController {
                            @RequestParam(required = false) String soDienThoai,
                            RedirectAttributes ra) {
         NguoiDung nd = nguoiDungRepo.findById(currentUser.getMaNguoiDung())
-                .orElseThrow(() -> new BusinessException("Khong tim thay nguoi dung"));
+                .orElseThrow(() -> new BusinessException("Không tìm thấy người dùng."));
         if (hoTen != null && !hoTen.isBlank()) {
             nd.setHoTen(hoTen.trim());
         }
         nd.setSoDienThoai(soDienThoai);
         nguoiDungRepo.save(nd);
-        ra.addFlashAttribute("successMsg", "Cap nhat thong tin thanh cong!");
+        ra.addFlashAttribute("successMsg", "Cập nhật thông tin thành công!");
         return "redirect:/profile";
     }
 }

@@ -31,14 +31,8 @@
         </div>
     </div>
 
-    <div th:if="${successMsg}" class="alert alert-success alert-dismissible fade show">
-        <span th:text="${successMsg}"></span>
-        <button class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-    <div th:if="${errorMsg}" class="alert alert-danger alert-dismissible fade show">
-        <span th:text="${errorMsg}"></span>
-        <button class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
+    <!-- Flash messages da duoc render boi layout/base.html -->
+
 
     <div class="row g-4">
         <div class="col-lg-5">

@@ -11,16 +11,18 @@
     <nav aria-label="breadcrumb" class="mb-3">
         <ol class="breadcrumb">
             <li class="breadcrumb-item">
-                <a th:href="@{/dashboard}"><i class="bi bi-house-door me-1"></i>Trang Chủ</a>
+                <a th:href="@{/dashboard}" class="text-decoration-none">
+                    <i class="bi bi-house-door me-1"></i>Trang Chủ
+                </a>
             </li>
-            <li class="breadcrumb-item active">Học Phần</li>
+            <li class="breadcrumb-item active" aria-current="page">Học Phần</li>
         </ol>
     </nav>
 
-    <div class="d-flex justify-content-between align-items-start mb-4">
+    <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
         <div>
             <p class="page-subtitle">Đào Tạo</p>
-            <h4 class="page-title">Quản Lý Học Phần</h4>
+            <h4 class="page-title mb-0">Quản Lý Học Phần</h4>
         </div>
         <a th:href="@{/hoc-phan/them}" class="btn btn-primary btn-sm"
            sec:authorize="hasAnyRole('CNHP','TTDTXS','ADMIN')">
@@ -28,14 +30,8 @@
         </a>
     </div>
 
-    <div th:if="${successMsg}" class="alert alert-success alert-dismissible fade show">
-        <span th:text="${successMsg}"></span>
-        <button class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-    <div th:if="${errorMsg}" class="alert alert-danger alert-dismissible fade show">
-        <span th:text="${errorMsg}"></span>
-        <button class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
+    <!-- Flash messages da duoc render boi layout/base.html -->
+
 
     <div class="card mb-4">
         <div class="card-body py-3">
@@ -62,7 +58,7 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <span class="fw-semibold"><i class="bi bi-journal-text me-2"></i>Danh Sách Học Phần</span>
-            <span class="badge bg-secondary" th:text="'Tổng: ' + ${#lists.size(danhSach)}">0</span>
+            <span class="badge bg-light text-dark" th:text="'Tổng: ' + ${#lists.size(danhSach)}">0</span>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">

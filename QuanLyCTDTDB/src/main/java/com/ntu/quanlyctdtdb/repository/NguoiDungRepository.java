@@ -58,4 +58,16 @@ public interface NguoiDungRepository extends JpaRepository<NguoiDung, String> {
 
     // Dem so luong theo loai
     long countByLoaiNguoiDung(LoaiNguoiDung loaiNguoiDung);
+
+    /**
+     * Lay MaNguoiDung lon nhat theo prefix (vi du: "SV2025" / "GV" / "AD" / "DN").
+     * Dung de sinh ID moi deterministic - khong phu thuoc count() gay duplicate
+     * khi da co record bi xoa. Ket hop voi @Transactional(SERIALIZABLE) hoac
+     * locking tang cuong de tranh race condition giua 2 request song song.
+     *
+     * <p>Tra ve NULL neu chua co record nao.
+     */
+    @Query("SELECT MAX(n.maNguoiDung) FROM NguoiDung n "
+            + "WHERE n.maNguoiDung LIKE CONCAT(:prefix, '%')")
+    String findMaxMaNguoiDungByPrefix(@Param("prefix") String prefix);
 }

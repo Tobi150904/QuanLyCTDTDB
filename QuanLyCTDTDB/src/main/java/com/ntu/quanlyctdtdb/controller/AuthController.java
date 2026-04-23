@@ -19,16 +19,20 @@ public class AuthController {
                             @RequestParam(required = false) String disabled,
                             Model model) {
         if (error != null) {
-            model.addAttribute("errorMsg", "Ten dang nhap hoac mat khau khong dung.");
+            model.addAttribute("errorMsg",
+                    "Tên đăng nhập hoặc mật khẩu không đúng.");
         }
         if (logout != null) {
-            model.addAttribute("successMsg", "Da dang xuat thanh cong.");
+            model.addAttribute("successMsg",
+                    "Đã đăng xuất thành công.");
         }
         if (expired != null) {
-            model.addAttribute("warningMsg", "Phien lam viec da het han. Vui long dang nhap lai.");
+            model.addAttribute("warningMsg",
+                    "Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.");
         }
         if (disabled != null) {
-            model.addAttribute("errorMsg", "Tai khoan da bi khoa. Vui long lien he quan tri vien.");
+            model.addAttribute("errorMsg",
+                    "Tài khoản đã bị khoá. Vui lòng liên hệ quản trị viên.");
         }
         return "auth/login";
     }

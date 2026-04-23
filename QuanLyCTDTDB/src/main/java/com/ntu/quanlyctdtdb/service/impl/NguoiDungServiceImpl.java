@@ -59,13 +59,16 @@ public class NguoiDungServiceImpl implements NguoiDungService {
     public NguoiDung create(NguoiDungDTO dto) {
         // Validate unique
         if (nguoiDungRepo.existsByTenDangNhap(dto.getTenDangNhap())) {
-            throw new BusinessException("Ten dang nhap da ton tai: " + dto.getTenDangNhap());
+            throw new BusinessException(
+                    "Tên đăng nhập đã tồn tại: " + dto.getTenDangNhap());
         }
         if (nguoiDungRepo.existsByEmail(dto.getEmail())) {
-            throw new BusinessException("Email da ton tai: " + dto.getEmail());
+            throw new BusinessException(
+                    "Email đã tồn tại: " + dto.getEmail());
         }
         if (dto.getMatKhau() == null || dto.getMatKhau().isBlank()) {
-            throw new BusinessException("Mat khau khong duoc de trong khi tao moi");
+            throw new BusinessException(
+                    "Mật khẩu không được để trống khi tạo mới.");
         }
 
         String ma = sinhMaNguoiDung(dto.getLoaiNguoiDung());
@@ -95,7 +98,8 @@ public class NguoiDungServiceImpl implements NguoiDungService {
             giangVienRepo.save(gv);
         } else if (dto.getLoaiNguoiDung() == LoaiNguoiDung.SinhVien) {
             if (dto.getMaLopHC() == null || dto.getMaLopHC().isBlank()) {
-                throw new BusinessException("Sinh vien phai co lop hanh chinh");
+                throw new BusinessException(
+                        "Sinh viên bắt buộc phải thuộc một lớp hành chính.");
             }
             LopHanhChinh lopHC = lopHanhChinhRepo.findById(dto.getMaLopHC())
                     .orElseThrow(() -> new ResourceNotFoundException("LopHanhChinh", "MaLopHC", dto.getMaLopHC()));
@@ -130,7 +134,8 @@ public class NguoiDungServiceImpl implements NguoiDungService {
         // Kiem tra email unique (ngoai tru chinh no)
         if (!nd.getEmail().equals(dto.getEmail()) &&
                 nguoiDungRepo.existsByEmailAndMaNguoiDungNot(dto.getEmail(), ma)) {
-            throw new BusinessException("Email da ton tai: " + dto.getEmail());
+            throw new BusinessException(
+                    "Email đã tồn tại: " + dto.getEmail());
         }
 
         nd.setEmail(dto.getEmail().trim());
@@ -193,24 +198,24 @@ public class NguoiDungServiceImpl implements NguoiDungService {
         List<String> errors = new ArrayList<>();
 
         for (NguoiDungExcelDTO row : rows) {
+            String rowLabel = "Dòng " + row.getRowNum() + ": ";
             try {
                 // Validate
                 if (row.getTenDangNhap() == null || row.getTenDangNhap().isBlank()) {
-                    errors.add("Dong " + row.getRowNum() + ": TenDangNhap trong");
+                    errors.add(rowLabel + "Tên đăng nhập trống.");
                     continue;
                 }
                 if (row.getEmail() == null || row.getEmail().isBlank()) {
-                    errors.add("Dong " + row.getRowNum() + ": Email trong");
+                    errors.add(rowLabel + "Email trống.");
                     continue;
                 }
                 if (nguoiDungRepo.existsByTenDangNhap(row.getTenDangNhap())) {
-                    errors.add("Dong " + row.getRowNum() + ": TenDangNhap '" +
-                               row.getTenDangNhap() + "' da ton tai");
+                    errors.add(rowLabel + "Tên đăng nhập '" + row.getTenDangNhap()
+                            + "' đã tồn tại.");
                     continue;
                 }
                 if (nguoiDungRepo.existsByEmail(row.getEmail())) {
-                    errors.add("Dong " + row.getRowNum() + ": Email '" +
-                               row.getEmail() + "' da ton tai");
+                    errors.add(rowLabel + "Email '" + row.getEmail() + "' đã tồn tại.");
                     continue;
                 }
 
@@ -218,8 +223,8 @@ public class NguoiDungServiceImpl implements NguoiDungService {
                 try {
                     loai = LoaiNguoiDung.valueOf(row.getLoaiNguoiDung());
                 } catch (Exception e) {
-                    errors.add("Dong " + row.getRowNum() + ": LoaiNguoiDung '" +
-                               row.getLoaiNguoiDung() + "' khong hop le");
+                    errors.add(rowLabel + "Loại người dùng '" + row.getLoaiNguoiDung()
+                            + "' không hợp lệ.");
                     continue;
                 }
 
@@ -246,7 +251,7 @@ public class NguoiDungServiceImpl implements NguoiDungService {
                 create(dto);
                 success++;
             } catch (Exception e) {
-                errors.add("Dong " + row.getRowNum() + ": " + e.getMessage());
+                errors.add(rowLabel + e.getMessage());
             }
         }
 
@@ -256,27 +261,52 @@ public class NguoiDungServiceImpl implements NguoiDungService {
         return result;
     }
 
+    /**
+     * Sinh MaNguoiDung moi theo prefix.
+     *
+     * <p><b>Sua 2026-Q2</b>: truoc day dung {@code count(...) + 1} → gay trung
+     * ID sau khi xoa record (vi du xoa SV2025003 roi tao moi → count = 2 →
+     * SV2025003 bi tai su dung → vi pham UNIQUE). Nay dung MAX(maNguoiDung)
+     * theo prefix, parse so thu tu cuoi, +1. Deterministic va an toan voi
+     * soft-delete/re-create.
+     *
+     * <p><b>Luu y concurrency</b>: neu 2 request goi dong thoi, ca hai co the
+     * doc cung MAX va sinh trung ID. Bao ve bang UNIQUE constraint o tang DB
+     * (luon co san vi PK) + retry ben controller (caller) hoac chuyen sang
+     * dung sequence / auto-increment ID o tuong lai.
+     */
     @Override
     public String sinhMaNguoiDung(LoaiNguoiDung loai) {
         return switch (loai) {
-            case Admin -> {
-                long count = nguoiDungRepo.countByLoaiNguoiDung(LoaiNguoiDung.Admin);
-                yield String.format("AD%03d", count + 1);
-            }
-            case GiangVien -> {
-                long count = nguoiDungRepo.countByLoaiNguoiDung(LoaiNguoiDung.GiangVien);
-                yield String.format("GV%03d", count + 1);
-            }
-            case SinhVien -> {
-                long count = nguoiDungRepo.countByLoaiNguoiDung(LoaiNguoiDung.SinhVien);
-                int year = java.time.LocalDate.now().getYear();
-                yield String.format("SV%d%03d", year, count + 1);
-            }
-            case DoanhNghiep -> {
-                long count = nguoiDungRepo.countByLoaiNguoiDung(LoaiNguoiDung.DoanhNghiep);
-                yield String.format("DN%03d", count + 1);
+            case Admin        -> nextIdWithPrefix("AD", 3);
+            case GiangVien    -> nextIdWithPrefix("GV", 3);
+            case DoanhNghiep  -> nextIdWithPrefix("DN", 3);
+            case SinhVien     -> {
+                // SV co them 4 chu so nam trong prefix → "SV2025001"
+                String prefix = "SV" + java.time.LocalDate.now().getYear();
+                yield nextIdWithPrefix(prefix, 3);
             }
         };
+    }
+
+    /**
+     * Helper: tinh so thu tu ke tiep cho ma co dang {prefix}{soThuTu}.
+     * @param prefix     phan dau co dinh, vd "GV" hoac "SV2025"
+     * @param padDigits  do dai phan so (zero-pad)
+     */
+    private String nextIdWithPrefix(String prefix, int padDigits) {
+        String maxMa = nguoiDungRepo.findMaxMaNguoiDungByPrefix(prefix);
+        int next = 1;
+        if (maxMa != null && maxMa.length() > prefix.length()) {
+            try {
+                next = Integer.parseInt(maxMa.substring(prefix.length())) + 1;
+            } catch (NumberFormatException e) {
+                // Record cu co dinh dang khac - fallback ve 1 va log canh bao
+                log.warn("Khong parse duoc suffix cua ma '{}' (prefix='{}'), fallback=1",
+                        maxMa, prefix);
+            }
+        }
+        return String.format("%s%0" + padDigits + "d", prefix, next);
     }
 
     @Override

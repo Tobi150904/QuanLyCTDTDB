@@ -81,7 +81,7 @@ public class NguoiDungController {
         }
         try {
             nguoiDungService.create(dto);
-            ra.addFlashAttribute("successMsg", "Tao nguoi dung thanh cong!");
+            ra.addFlashAttribute("successMsg", "Tạo người dùng thành công!");
         } catch (Exception e) {
             ra.addFlashAttribute("errorMsg", e.getMessage());
         }
@@ -143,7 +143,7 @@ public class NguoiDungController {
         }
         try {
             nguoiDungService.update(ma, dto);
-            ra.addFlashAttribute("successMsg", "Cap nhat thanh cong!");
+            ra.addFlashAttribute("successMsg", "Cập nhật thành công!");
         } catch (Exception e) {
             ra.addFlashAttribute("errorMsg", e.getMessage());
         }
@@ -155,7 +155,7 @@ public class NguoiDungController {
     public String toggle(@PathVariable String ma, RedirectAttributes ra) {
         try {
             nguoiDungService.toggleTrangThai(ma);
-            ra.addFlashAttribute("successMsg", "Cap nhat trang thai thanh cong!");
+            ra.addFlashAttribute("successMsg", "Cập nhật trạng thái thành công!");
         } catch (Exception e) {
             ra.addFlashAttribute("errorMsg", e.getMessage());
         }
