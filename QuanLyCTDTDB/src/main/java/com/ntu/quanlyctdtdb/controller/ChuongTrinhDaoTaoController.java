@@ -21,9 +21,21 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+/**
+ * Controller quan ly CTDT.
+ * Role (docs/03 §"SO DO TONG HOP QUYEN" + §WF-04.*):
+ *   - PDT        : R  (theo doi tien do BCN/CNHP tao CTDT)
+ *   - TTDTXS     : RW (phe duyet CTDT)
+ *   - CNHP/BCN   : RW (BCN tao CTDT, them HP, nop duyet)
+ *   - ADMIN      : RW
+ *   - GiangVien  : R  (GV thuoc BCN can xem CTDT minh quan ly)
+ *   - SinhVien   : R  (xem khung CTDT minh dang theo hoc)
+ * Class-level cho doc, write-level qua @PreAuthorize method-level.
+ */
 @Controller
 @RequestMapping("/ctdt")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('PDT','TTDTXS','CNHP','ADMIN','GIANG_VIEN','SINH_VIEN')")
 public class ChuongTrinhDaoTaoController {
 
     private final ChuongTrinhDaoTaoService ctdtService;
@@ -40,6 +52,9 @@ public class ChuongTrinhDaoTaoController {
         return "ctdt/danh-sach";
     }
 
+    // Tao / sua / quan ly HP trong CTDT la cua BCN (CNHP), TTDTXS, PDT, ADMIN.
+    // GV/SV chi duoc READ — chan writes bang @PreAuthorize method-level.
+    @PreAuthorize("hasAnyRole('PDT','TTDTXS','CNHP','ADMIN')")
     @GetMapping("/them")
     public String themForm(Model model) {
         model.addAttribute("ctdtDTO", new ChuongTrinhDaoTaoDTO());
@@ -47,6 +62,7 @@ public class ChuongTrinhDaoTaoController {
         return "ctdt/form";
     }
 
+    @PreAuthorize("hasAnyRole('PDT','TTDTXS','CNHP','ADMIN')")
     @PostMapping("/them")
     public String them(@Valid @ModelAttribute("ctdtDTO") ChuongTrinhDaoTaoDTO dto,
                         BindingResult br,
@@ -73,6 +89,7 @@ public class ChuongTrinhDaoTaoController {
         return "redirect:/ctdt";
     }
 
+    @PreAuthorize("hasAnyRole('PDT','TTDTXS','CNHP','ADMIN')")
     @GetMapping("/sua/{ma}")
     public String suaForm(@PathVariable String ma, Model model) {
         ChuongTrinhDaoTao ctdt = ctdtService.findById(ma);
@@ -85,6 +102,7 @@ public class ChuongTrinhDaoTaoController {
         return "ctdt/form";
     }
 
+    @PreAuthorize("hasAnyRole('PDT','TTDTXS','CNHP','ADMIN')")
     @PostMapping("/sua/{ma}")
     public String sua(@PathVariable String ma,
                        @Valid @ModelAttribute("ctdtDTO") ChuongTrinhDaoTaoDTO dto,
@@ -141,6 +159,7 @@ public class ChuongTrinhDaoTaoController {
     }
 
     /* ====================== BCN: THEM / XOA THANH VIEN ====================== */
+    @PreAuthorize("hasAnyRole('PDT','TTDTXS','CNHP','ADMIN')")
     @PostMapping("/chi-tiet/{ma}/bcn/them")
     public String themBcn(@PathVariable String ma,
                            @Valid @ModelAttribute BcnThanhVienDTO dto,
@@ -159,6 +178,7 @@ public class ChuongTrinhDaoTaoController {
         return "redirect:/ctdt/chi-tiet/" + ma;
     }
 
+    @PreAuthorize("hasAnyRole('PDT','TTDTXS','CNHP','ADMIN')")
     @PostMapping("/chi-tiet/{ma}/bcn/xoa")
     public String xoaBcn(@PathVariable String ma,
                           @RequestParam String maGV,
@@ -173,6 +193,7 @@ public class ChuongTrinhDaoTaoController {
         return "redirect:/ctdt/chi-tiet/" + ma;
     }
 
+    @PreAuthorize("hasAnyRole('PDT','TTDTXS','CNHP','ADMIN')")
     @PostMapping("/chi-tiet/{ma}/them-hp")
     public String themHocPhan(@PathVariable String ma,
                                @Valid @ModelAttribute CtdtHocPhanDTO dto,
@@ -191,6 +212,7 @@ public class ChuongTrinhDaoTaoController {
         return "redirect:/ctdt/chi-tiet/" + ma;
     }
 
+    @PreAuthorize("hasAnyRole('PDT','TTDTXS','CNHP','ADMIN')")
     @PostMapping("/chi-tiet/{ma}/xoa-hp/{maHP}")
     public String xoaHocPhan(@PathVariable String ma, @PathVariable String maHP,
                               RedirectAttributes ra) {

@@ -20,9 +20,21 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+/**
+ * Controller quan ly Hoc Phan.
+ * Role (docs/03 §"SO DO TONG HOP QUYEN" + §WF-03.*):
+ *   - CNHP       : RW (tao/sua/gui-duyet, quan ly doi ngu GV)
+ *   - TTDTXS     : W duyet/tu choi + R toan bo
+ *   - PDT        : R  (theo doi qua trinh tao HP cua cac CNHP)
+ *   - ADMIN      : RW (super-user)
+ *   - GiangVien  : R  (xem cac HP minh day / HP cua CTDT lien quan)
+ *   - SinhVien   : R  (tra cuu thong tin HP truoc khi dang ky)
+ * Class-level cho doc, method-level chan writes theo dung matrix.
+ */
 @Controller
 @RequestMapping("/hoc-phan")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('PDT','TTDTXS','CNHP','ADMIN','GIANG_VIEN','SINH_VIEN')")
 public class HocPhanController {
 
     private final HocPhanService hocPhanService;
@@ -42,6 +54,9 @@ public class HocPhanController {
     }
 
     /* ====================== THEM MOI ====================== */
+    // Tao + sua + upload de cuong la nghiep vu cua CNHP (TTDTXS/ADMIN co the
+    // can thiep khi can). SV/GV/PDT chi READ — phai chan 403 o day.
+    @PreAuthorize("hasAnyRole('CNHP','TTDTXS','ADMIN')")
     @GetMapping("/them")
     public String themForm(Model model) {
         model.addAttribute("hocPhanDTO", new HocPhanDTO());
@@ -51,6 +66,7 @@ public class HocPhanController {
         return "hoc-phan/form";
     }
 
+    @PreAuthorize("hasAnyRole('CNHP','TTDTXS','ADMIN')")
     @PostMapping("/them")
     public String them(@Valid @ModelAttribute HocPhanDTO dto,
                         BindingResult br,
@@ -77,6 +93,7 @@ public class HocPhanController {
     }
 
     /* ====================== CHINH SUA ====================== */
+    @PreAuthorize("hasAnyRole('CNHP','TTDTXS','ADMIN')")
     @GetMapping("/sua/{ma}")
     public String suaForm(@PathVariable String ma, Model model) {
         HocPhan hp = hocPhanService.findById(ma);
@@ -93,6 +110,7 @@ public class HocPhanController {
         return "hoc-phan/form";
     }
 
+    @PreAuthorize("hasAnyRole('CNHP','TTDTXS','ADMIN')")
     @PostMapping("/sua/{ma}")
     public String sua(@PathVariable String ma,
                        @Valid @ModelAttribute HocPhanDTO dto,
@@ -119,6 +137,7 @@ public class HocPhanController {
     }
 
     /* ====================== GUI CHO DUYET ====================== */
+    @PreAuthorize("hasAnyRole('CNHP','TTDTXS','ADMIN')")
     @PostMapping("/gui-cho-duyet/{ma}")
     public String guiChoDuyet(@PathVariable String ma, RedirectAttributes ra) {
         try {
@@ -165,6 +184,7 @@ public class HocPhanController {
     }
 
     /* ====================== TOGGLE ====================== */
+    @PreAuthorize("hasAnyRole('CNHP','TTDTXS','ADMIN')")
     @PostMapping("/toggle/{ma}")
     public String toggle(@PathVariable String ma, RedirectAttributes ra) {
         try {
@@ -189,6 +209,9 @@ public class HocPhanController {
     }
 
     /* ====================== DOI NGU GV CUA HP ====================== */
+    // Quan ly doi ngu: CNHP, TTDTXS, PDT, ADMIN (docs/03 WF-03.2).
+    // PDT co quyen them GV vao doi ngu de ho tro CNHP khi can.
+    @PreAuthorize("hasAnyRole('PDT','CNHP','TTDTXS','ADMIN')")
     @PostMapping("/chi-tiet/{ma}/doi-ngu/them")
     public String themDoiNgu(@PathVariable String ma,
                               @Valid @ModelAttribute DoiNguGvDTO dto,
@@ -209,6 +232,7 @@ public class HocPhanController {
         return "redirect:/hoc-phan/chi-tiet/" + ma;
     }
 
+    @PreAuthorize("hasAnyRole('PDT','CNHP','TTDTXS','ADMIN')")
     @PostMapping("/chi-tiet/{ma}/doi-ngu/toggle")
     public String toggleDoiNgu(@PathVariable String ma,
                                 @RequestParam String maGV,
@@ -222,6 +246,7 @@ public class HocPhanController {
         return "redirect:/hoc-phan/chi-tiet/" + ma;
     }
 
+    @PreAuthorize("hasAnyRole('PDT','CNHP','TTDTXS','ADMIN')")
     @PostMapping("/chi-tiet/{ma}/doi-ngu/xoa")
     public String xoaDoiNgu(@PathVariable String ma,
                              @RequestParam String maGV,

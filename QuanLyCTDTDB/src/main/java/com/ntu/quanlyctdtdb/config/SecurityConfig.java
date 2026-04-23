@@ -81,39 +81,75 @@ public class SecurityConfig {
                 // Uploads: chi authenticated moi xem
                 .requestMatchers("/uploads/**").authenticated()
 
-                // Quan ly Nguoi Dung
-                .requestMatchers("/nguoi-dung/**").hasAnyRole("PDT", "ADMIN")
+                // ============================================================
+                // URL-level authorization — OUTER GATE.
+                // Nguyen tac (bam sat docs/03_WORKFLOW.md §"SO DO TONG HOP QUYEN"):
+                //   (1) O tang URL, CHI kiem tra "role nao duoc vao khu vuc nay".
+                //       Tat ca role co it nhat R (read) deu duoc di qua day.
+                //   (2) Phan biet R vs RW (ai sua, ai duyet) chuyen ve lop Controller
+                //       bang @PreAuthorize method-level — tranh bung no requestMatchers
+                //       va khoi phai split GET/POST o day.
+                //   (3) Admin luon hien o moi ruleset (super-user).
+                // Tham khao them: 00_MASTER_REFERENCE.md §4 (8 roles) va
+                //                 08_REVIEW_REPORT.md P0-1 (Phase 5 templates chua co).
+                // ============================================================
 
-                // Quan ly Doanh Nghiep, Hoc Ky, Lop Hanh Chinh
+                // Nguoi Dung: PDT(RW), TTDTXS(R), ADMIN(RW)
+                //   Truoc day TTDTXS bi block toan bo -> khong xem duoc user list de
+                //   lam bao cao. Nay cho duyet tra cuu, chan writes o Controller.
+                .requestMatchers("/nguoi-dung/**")
+                    .hasAnyRole("PDT", "TTDTXS", "ADMIN")
+
+                // Quan ly Doanh Nghiep / Hoc Ky / Lop Hanh Chinh: PDT, TTDTXS, ADMIN (RW)
                 .requestMatchers("/doanh-nghiep/**").hasAnyRole("PDT", "TTDTXS", "ADMIN")
                 .requestMatchers("/hoc-ky/**").hasAnyRole("PDT", "TTDTXS", "ADMIN")
                 .requestMatchers("/lop-hanh-chinh/**").hasAnyRole("PDT", "TTDTXS", "ADMIN")
 
-                // Quan ly Hoc Phan
-                .requestMatchers("/hoc-phan/**").hasAnyRole("CNHP", "TTDTXS", "ADMIN")
+                // Hoc Phan: CNHP(RW), TTDTXS(W duyet/tu choi), PDT(R), ADMIN, GV(R), SV(R).
+                //   SV can xem HP de tra cuu mon hoc, GV can xem HP minh day,
+                //   PDT theo doi tien do tao HP. Writes chan bang @PreAuthorize
+                //   o HocPhanController (class + method).
+                .requestMatchers("/hoc-phan/**")
+                    .hasAnyRole("PDT", "TTDTXS", "CNHP", "ADMIN",
+                                "GIANG_VIEN", "SINH_VIEN")
 
-                // CTDT
-                .requestMatchers("/ctdt/**").hasAnyRole("PDT", "TTDTXS", "CNHP", "ADMIN")
+                // CTDT: PDT(R), TTDTXS(RW), CNHP/BCN(RW), GV(R), SV(R), ADMIN.
+                //   Docs matrix cho PDT=R, TTDTXS=RW, CNHP=RW. Mo rong cho GV/SV
+                //   xem khung CTDT minh hoc / day.
+                .requestMatchers("/ctdt/**")
+                    .hasAnyRole("PDT", "TTDTXS", "CNHP", "ADMIN",
+                                "GIANG_VIEN", "SINH_VIEN")
 
-                // Lop Hoc Phan
+                // Lop Hoc Phan: PDT(RW), TTDTXS(RW), CNHP(RW), GV(R lop minh day),
+                //   SV(R lop minh hoc), ADMIN.
+                //   SV truoc day bi chan — nay mo de xem thoi khoa bieu.
                 .requestMatchers("/lop-hoc-phan/**")
-                    .hasAnyRole("PDT", "TTDTXS", "CNHP", "ADMIN", "GIANG_VIEN")
+                    .hasAnyRole("PDT", "TTDTXS", "CNHP", "ADMIN",
+                                "GIANG_VIEN", "SINH_VIEN")
 
-                // Danh Gia / Canh Bao
+                // Danh Gia / Canh Bao: GV(RW cho lop day), CVHT(RW canh bao SV
+                //   lop HC), SV(R nhan xet minh nhan), ADMIN.
+                //   [Phase 4 — chua co controller/template. URL rule san sang
+                //    cho khi module duoc build xong.]
                 .requestMatchers("/danh-gia/**")
-                    .hasAnyRole("GIANG_VIEN", "CVHT", "ADMIN")
+                    .hasAnyRole("GIANG_VIEN", "CVHT", "SINH_VIEN", "ADMIN")
 
-                // Kien Tap
+                // Kien Tap: TTDTXS(RW), CNHP(RW), GV(W nhan-xet-gv), DN(W nhan-xet-dn),
+                //   SV(R dot minh tham gia), PDT(R theo doi), ADMIN.
                 .requestMatchers("/kien-tap/**")
-                    .hasAnyRole("TTDTXS", "CNHP", "ADMIN", "GIANG_VIEN", "DOANH_NGHIEP")
+                    .hasAnyRole("PDT", "TTDTXS", "CNHP", "ADMIN",
+                                "GIANG_VIEN", "DOANH_NGHIEP", "SINH_VIEN")
 
-                // Thuc Tap
+                // Thuc Tap: PDT(RW), TTDTXS(RW), GV(W ket-qua), CVHT(W ket-qua),
+                //   DN(W ket-qua), SV(R "cua-toi" + xem diem), ADMIN.
                 .requestMatchers("/thuc-tap/**")
                     .hasAnyRole("PDT", "TTDTXS", "ADMIN", "GIANG_VIEN", "CVHT",
                                 "DOANH_NGHIEP", "SINH_VIEN")
 
-                // Bao Cao
-                .requestMatchers("/bao-cao/**").hasAnyRole("PDT", "TTDTXS", "ADMIN")
+                // Bao Cao: PDT/TTDTXS/CNHP/ADMIN (R)
+                //   CNHP xuat bao cao lop HP minh quan ly -> add CNHP.
+                .requestMatchers("/bao-cao/**")
+                    .hasAnyRole("PDT", "TTDTXS", "CNHP", "ADMIN")
 
                 // Profile
                 .requestMatchers("/profile/**").authenticated()

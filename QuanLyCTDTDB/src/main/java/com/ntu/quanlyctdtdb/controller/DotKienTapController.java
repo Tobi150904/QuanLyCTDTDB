@@ -22,10 +22,22 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 /**
  * Controller cho DotKienTap. Quy tac day du: docs/03 WF-07.*
  * activeMenu = "kien-tap" tren moi GET handler.
+ *
+ * Role (docs/03 §"SO DO TONG HOP QUYEN" + §WF-07.*):
+ *   - TTDTXS, CNHP, ADMIN : RW (tao, duyet, quan ly SV, toggle DaThamGia)
+ *   - PDT                 : R  (theo doi tong hop)
+ *   - GiangVien           : R + W nhan-xet-gv (chi cho dot minh phu trach)
+ *   - DoanhNghiep         : R + W nhan-xet-dn (chi cho dot tai DN minh)
+ *   - SinhVien            : R  dot minh tham gia (GET /kien-tap/chi-tiet/{id})
+ * Class-level cho doc, write-level qua @PreAuthorize method-level.
+ *
+ * [Phase 5 — P0-1 docs/08] Templates kien-tap/ chua ton tai. URL rule va
+ * controller guards san sang cho khi module duoc hoan thien.
  */
 @Controller
 @RequestMapping("/kien-tap")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('PDT','TTDTXS','CNHP','ADMIN','GIANG_VIEN','DOANH_NGHIEP','SINH_VIEN')")
 public class DotKienTapController {
 
     private final DotKienTapService dotKTService;
@@ -45,6 +57,7 @@ public class DotKienTapController {
         return "kien-tap/danh-sach";
     }
 
+    @PreAuthorize("hasAnyRole('TTDTXS','CNHP','ADMIN')")
     @GetMapping("/them")
     public String themForm(Model model) {
         model.addAttribute("dotKTDTO", new DotKienTapDTO());
@@ -53,6 +66,7 @@ public class DotKienTapController {
         return "kien-tap/form";
     }
 
+    @PreAuthorize("hasAnyRole('TTDTXS','CNHP','ADMIN')")
     @PostMapping("/them")
     public String them(@Valid @ModelAttribute("dotKTDTO") DotKienTapDTO dto,
                        BindingResult br,
@@ -75,6 +89,7 @@ public class DotKienTapController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('TTDTXS','CNHP','ADMIN')")
     @GetMapping("/sua/{id}")
     public String suaForm(@PathVariable Integer id, Model model) {
         DotKienTap dot = dotKTService.findById(id);
@@ -95,6 +110,7 @@ public class DotKienTapController {
         return "kien-tap/form";
     }
 
+    @PreAuthorize("hasAnyRole('TTDTXS','CNHP','ADMIN')")
     @PostMapping("/sua/{id}")
     public String sua(@PathVariable Integer id,
                       @Valid @ModelAttribute("dotKTDTO") DotKienTapDTO dto,
@@ -142,6 +158,7 @@ public class DotKienTapController {
     // STATE TRANSITIONS
     // =========================================================================
 
+    @PreAuthorize("hasAnyRole('TTDTXS','CNHP','ADMIN')")
     @PostMapping("/gui-phe-duyet/{id}")
     public String guiPheDuyet(@PathVariable Integer id, RedirectAttributes ra) {
         try {
@@ -169,6 +186,7 @@ public class DotKienTapController {
         return "redirect:/kien-tap/chi-tiet/" + id;
     }
 
+    @PreAuthorize("hasAnyRole('TTDTXS','CNHP','ADMIN')")
     @PostMapping("/hoan-thanh/{id}")
     public String hoanThanh(@PathVariable Integer id, RedirectAttributes ra) {
         try {
@@ -180,6 +198,7 @@ public class DotKienTapController {
         return "redirect:/kien-tap/chi-tiet/" + id;
     }
 
+    @PreAuthorize("hasAnyRole('TTDTXS','CNHP','ADMIN')")
     @PostMapping("/huy/{id}")
     public String huy(@PathVariable Integer id, RedirectAttributes ra) {
         try {
@@ -195,6 +214,7 @@ public class DotKienTapController {
     // WF-07.2: Toggle DaThamGia
     // =========================================================================
 
+    @PreAuthorize("hasAnyRole('TTDTXS','CNHP','ADMIN')")
     @PostMapping("/chi-tiet/{id}/sv/{maSV}/danh-dau")
     public String capNhatDaThamGia(@PathVariable Integer id,
                                    @PathVariable String maSV,
@@ -214,6 +234,7 @@ public class DotKienTapController {
     // WF-07.3: Dong bo danh sach SV
     // =========================================================================
 
+    @PreAuthorize("hasAnyRole('TTDTXS','CNHP','ADMIN')")
     @PostMapping("/chi-tiet/{id}/dong-bo")
     public String dongBo(@PathVariable Integer id, RedirectAttributes ra) {
         try {

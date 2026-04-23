@@ -14,6 +14,7 @@ import com.ntu.quanlyctdtdb.repository.HocPhanRepository;
 import com.ntu.quanlyctdtdb.service.LopHocPhanService;
 import com.ntu.quanlyctdtdb.util.HocKyUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -25,9 +26,18 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * Controller quan ly Lop Hoc Phan.
+ * Role (docs/03 §"SO DO TONG HOP QUYEN" + §WF-05.*):
+ *   - PDT, TTDTXS, CNHP, ADMIN : RW (tao hang loat, phan cong GV, quan ly SV)
+ *   - GiangVien                : R  lop minh duoc phan cong + W "canh-bao-sv"
+ *   - SinhVien                 : R  lop minh dang ky (xem thoi khoa bieu, diem)
+ * Class-level cho doc, write-level qua @PreAuthorize method-level.
+ */
 @Controller
 @RequestMapping("/lop-hoc-phan")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('PDT','TTDTXS','CNHP','ADMIN','GIANG_VIEN','SINH_VIEN')")
 public class LopHocPhanController {
 
     private final LopHocPhanService lopHPService;
@@ -127,6 +137,7 @@ public class LopHocPhanController {
      * chinh so lop moi ky (vd ky nay tuyen it SV thi mo 2 lop, ky sau
      * tuyen nhieu mo 4 lop) ma khong can sua {@code CtdtHocPhan.soLopDuKien}.
      */
+    @PreAuthorize("hasAnyRole('PDT','TTDTXS','CNHP','ADMIN')")
     @PostMapping("/tao-hang-loat")
     public String taoHangLoat(@RequestParam String maCTDT,
                                @RequestParam String maHocKy,
@@ -164,6 +175,7 @@ public class LopHocPhanController {
      * (MTW-03.3 BUOC 3), neu GV khong thuoc doi ngu: van cho phep gan
      * nhung hien {@code warningMsg} — KHONG throw chan cung.
      */
+    @PreAuthorize("hasAnyRole('PDT','TTDTXS','CNHP','ADMIN')")
     @PostMapping("/phan-cong")
     public String phanCong(@RequestParam String maCTDT,
                             @RequestParam String maHocPhan,
@@ -208,7 +220,8 @@ public class LopHocPhanController {
         return "lop-hoc-phan/chi-tiet";
     }
 
-    /** Dang ky SV vao lop */
+    /** Dang ky SV vao lop. Chi BCN/TTDTXS/PDT/ADMIN (docs/03 WF-05.2). */
+    @PreAuthorize("hasAnyRole('PDT','TTDTXS','CNHP','ADMIN')")
     @PostMapping("/dang-ky-sv")
     public String dangKySV(@RequestParam String maCTDT,
                              @RequestParam String maHocPhan,
@@ -227,7 +240,8 @@ public class LopHocPhanController {
                "&maHocPhan=" + maHocPhan + "&maHocKy=" + maHocKy + "&maLop=" + maLop;
     }
 
-    /** Canh bao SV */
+    /** Canh bao SV. Mo cho GV (nguoi day lop) + BCN/TTDTXS/CNHP/ADMIN. */
+    @PreAuthorize("hasAnyRole('PDT','TTDTXS','CNHP','ADMIN','GIANG_VIEN')")
     @PostMapping("/canh-bao-sv")
     public String canhBaoSV(@RequestParam String maCTDT,
                               @RequestParam String maHocPhan,

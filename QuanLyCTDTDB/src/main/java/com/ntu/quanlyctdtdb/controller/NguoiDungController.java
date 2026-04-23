@@ -16,6 +16,7 @@ import org.springframework.beans.propertyeditors.StringTrimmerEditor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -28,9 +29,22 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Controller quan ly Nguoi Dung.
+ * Role (docs/03 §"SO DO TONG HOP QUYEN"):
+ *   - PDT     : RW (CRUD, import Excel, khoa/mo khoa)
+ *   - TTDTXS  : R  (chi xem — phuc vu bao cao, theo doi)
+ *   - ADMIN   : RW (super-user)
+ * Class-level cho phep ca 3 role vao module. Write-level endpoint (them,
+ * sua, xoa, toggle, import) duoc chan them bang @PreAuthorize method-level
+ * chi cho PDT + ADMIN. TTDTXS co the browse nhung khong nhin thay nut "Them"
+ * / "Sua" trong template (ca sidebar da dung sec:authorize + nut da dung
+ * sec:authorize).
+ */
 @Controller
 @RequestMapping("/nguoi-dung")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('PDT','TTDTXS','ADMIN')")
 public class NguoiDungController {
 
     private static final String ACTIVE_MENU = "nguoi-dung";
@@ -71,6 +85,7 @@ public class NguoiDungController {
     }
 
     /* ====================== THEM MOI ====================== */
+    @PreAuthorize("hasAnyRole('PDT','ADMIN')")
     @GetMapping("/them")
     public String themForm(Model model) {
         model.addAttribute("nguoiDungDTO", new NguoiDungDTO());
@@ -82,6 +97,7 @@ public class NguoiDungController {
         return "nguoi-dung/form";
     }
 
+    @PreAuthorize("hasAnyRole('PDT','ADMIN')")
     @PostMapping("/them")
     public String them(@Valid @ModelAttribute NguoiDungDTO dto,
                         BindingResult br,
@@ -105,6 +121,7 @@ public class NguoiDungController {
     }
 
     /* ====================== CHINH SUA ====================== */
+    @PreAuthorize("hasAnyRole('PDT','ADMIN')")
     @GetMapping("/sua/{ma}")
     public String suaForm(@PathVariable String ma, Model model) {
         NguoiDung nd = nguoiDungService.findByIdWithRoles(ma);
@@ -143,6 +160,7 @@ public class NguoiDungController {
         return "nguoi-dung/form";
     }
 
+    @PreAuthorize("hasAnyRole('PDT','ADMIN')")
     @PostMapping("/sua/{ma}")
     public String sua(@PathVariable String ma,
                        @Valid @ModelAttribute NguoiDungDTO dto,
@@ -167,6 +185,7 @@ public class NguoiDungController {
     }
 
     /* ====================== TOGGLE TRANG THAI ====================== */
+    @PreAuthorize("hasAnyRole('PDT','ADMIN')")
     @PostMapping("/toggle/{ma}")
     public String toggle(@PathVariable String ma, RedirectAttributes ra) {
         try {
@@ -179,12 +198,14 @@ public class NguoiDungController {
     }
 
     /* ====================== IMPORT EXCEL ====================== */
+    @PreAuthorize("hasAnyRole('PDT','ADMIN')")
     @GetMapping("/import")
     public String importForm(Model model) {
         model.addAttribute("activeMenu", ACTIVE_MENU);
         return "nguoi-dung/import";
     }
 
+    @PreAuthorize("hasAnyRole('PDT','ADMIN')")
     @PostMapping("/import")
     public String importExcel(@RequestParam("file") MultipartFile file,
                                RedirectAttributes ra) {
@@ -234,6 +255,7 @@ public class NguoiDungController {
      *    phan, GV dang phu trach hoc phan...). Service se throw
      *    BusinessException voi thong bao cu the.
      */
+    @PreAuthorize("hasAnyRole('PDT','ADMIN')")
     @PostMapping("/xoa/{ma}")
     public String xoa(@PathVariable String ma,
                        Authentication auth,
