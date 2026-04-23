@@ -9,8 +9,12 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 /**
  * Trung tam xu ly exception cho toan bo ung dung.
@@ -96,6 +100,22 @@ public class GlobalExceptionHandler {
         model.addAttribute("errorMsg", "Trang bạn yêu cầu không tồn tại.");
         model.addAttribute("statusCode", 404);
         return "error/404";
+    }
+
+    /**
+     * Xu ly rieng {@link NoResourceFoundException} (Spring MVC 6.1+) cho cac
+     * request static khong ton tai (vd: {@code /favicon.ico}, {@code /apple-touch-icon.png}).
+     * Truoc day bi handleGeneral() bat va log ERROR kem full stack trace moi
+     * lan browser auto-fetch favicon, khien log bi spam va app co ve "bi loi nang".
+     *
+     * <p>O day chi tra ve 404 voi body rong va log DEBUG (khong stacktrace).
+     */
+    @ExceptionHandler(NoResourceFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ResponseEntity<Void> handleNoStaticResource(NoResourceFoundException ex,
+                                                        HttpServletRequest req) {
+        log.debug("[NoResource] {} (path={})", ex.getResourcePath(), req.getRequestURI());
+        return ResponseEntity.notFound().build();
     }
 
     @ExceptionHandler(Exception.class)

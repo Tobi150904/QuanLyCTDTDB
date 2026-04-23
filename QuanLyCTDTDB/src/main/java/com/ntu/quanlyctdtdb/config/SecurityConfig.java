@@ -57,6 +57,11 @@ public class SecurityConfig {
                 // Public resources
                 .requestMatchers("/login", "/403", "/error").permitAll()
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
+                // Favicon + robots: browser auto-fetch, khong can auth.
+                // Neu khong permit, Spring Security redirect -> /login -> browser
+                // retry -> infinite log spam. Them o day de dep.
+                .requestMatchers("/favicon.ico", "/robots.txt", "/apple-touch-icon*.png")
+                    .permitAll()
                 // Uploads: chi authenticated moi xem
                 .requestMatchers("/uploads/**").authenticated()
 
