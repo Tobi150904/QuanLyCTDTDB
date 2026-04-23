@@ -100,13 +100,26 @@ public class HocKyNamHocServiceImpl implements HocKyNamHocService {
             tenHocKy = buildTenHocKy(dto.getHocKyThu(), dto.getNamBatDau(), dto.getNamKetThuc());
         }
 
-        // FIX: Luon quy dinh trang thai dua tren ngay bat dau/ket thuc so voi
-        // ngay hien tai - tranh case user chon sai trong form (vi du HK-2025
-        // co ngay bat dau 01/02/2026 - 01/06/2026 nhung user chon SapDienRa
-        // trong khi hom nay da 23/04/2026). Neu user co ban chat da pick
-        // trang thai "DangDienRa" hoac "DaKetThuc" nhung ngay khong khop thi
-        // he thong vuon dung dates la source of truth.
-        TrangThaiHocKy trangThai = deriveStatus(dto.getNgayBatDau(), dto.getNgayKetThuc());
+        // Quy tac: trang thai PHAI khop voi ngay bat dau/ket thuc so voi hom
+        // nay. Neu user chon sai (vd chon "Da Ket Thuc" trong khi ngay ket
+        // thuc lai o tuong lai) -> throw BusinessException de UI hien thi loi
+        // va user quay lai form sua; KHONG duoc silent-override.
+        TrangThaiHocKy derived = deriveStatus(dto.getNgayBatDau(), dto.getNgayKetThuc());
+        TrangThaiHocKy chosen  = dto.getTrangThai();
+        TrangThaiHocKy trangThai;
+        if (chosen == null) {
+            trangThai = derived;
+        } else if (chosen != derived) {
+            throw new BusinessException(
+                    "Trang thai \"" + trangThaiLabel(chosen)
+                    + "\" khong khop voi khoang ngay da nhap (" + dto.getNgayBatDau()
+                    + " - " + dto.getNgayKetThuc()
+                    + "). Hom nay la " + LocalDate.now()
+                    + ", trang thai hop le phai la \"" + trangThaiLabel(derived)
+                    + "\". Hay chon lai trang thai hoac dieu chinh ngay.");
+        } else {
+            trangThai = chosen;
+        }
         if (trangThai == TrangThaiHocKy.DangDienRa) {
             // Tu dong dong HK cu dang DangDienRa (neu co) truoc khi kich hoat HK moi.
             autoCloseOtherActive(null);
@@ -141,14 +154,30 @@ public class HocKyNamHocServiceImpl implements HocKyNamHocService {
                     "Khong duoc doi Ma Hoc Ky. Neu can, hay xoa va tao moi.");
         }
 
-        // FIX: trang thai luon duoc suy tu ngay bat dau/ket thuc - tranh
-        // user set tay nhung sai voi realities (xem comment tuong tu trong
-        // create()). Giu ngoai le: HK da DaKetThuc thi KHONG tu dong "hoi
-        // sinh" khi ngay bat dau/ket thuc bi doi - van coi nhu da ket thuc.
+        // Quy tac (update):
+        //   - HK da DaKetThuc -> immutable ve trang thai (final state).
+        //   - Con lai: trang thai user chon PHAI khop derive(dates). Khong khop
+        //     -> throw BusinessException de UI hien thi va bat user sua lai
+        //     (ro rang la chinh sua ngay hay chon lai trang thai).
         TrangThaiHocKy cu = e.getTrangThai();
-        TrangThaiHocKy moi = cu == TrangThaiHocKy.DaKetThuc
-                ? TrangThaiHocKy.DaKetThuc
-                : deriveStatus(dto.getNgayBatDau(), dto.getNgayKetThuc());
+        TrangThaiHocKy derivedUpd = deriveStatus(dto.getNgayBatDau(), dto.getNgayKetThuc());
+        TrangThaiHocKy chosenUpd  = dto.getTrangThai();
+        TrangThaiHocKy moi;
+        if (cu == TrangThaiHocKy.DaKetThuc) {
+            moi = TrangThaiHocKy.DaKetThuc;
+        } else if (chosenUpd == null) {
+            moi = derivedUpd;
+        } else if (chosenUpd != derivedUpd) {
+            throw new BusinessException(
+                    "Trang thai \"" + trangThaiLabel(chosenUpd)
+                    + "\" khong khop voi khoang ngay da nhap (" + dto.getNgayBatDau()
+                    + " - " + dto.getNgayKetThuc()
+                    + "). Hom nay la " + LocalDate.now()
+                    + ", trang thai hop le phai la \"" + trangThaiLabel(derivedUpd)
+                    + "\". Hay chon lai trang thai hoac dieu chinh ngay.");
+        } else {
+            moi = chosenUpd;
+        }
 
         if (moi == TrangThaiHocKy.DangDienRa && cu != TrangThaiHocKy.DangDienRa) {
             autoCloseOtherActive(maHocKy);
@@ -224,6 +253,16 @@ public class HocKyNamHocServiceImpl implements HocKyNamHocService {
                     h.setTrangThai(TrangThaiHocKy.DaKetThuc);
                     hocKyRepo.save(h);
                 });
+    }
+
+    /** Label tieng Viet cho message loi (khop voi option text trong form). */
+    private String trangThaiLabel(TrangThaiHocKy t) {
+        if (t == null) return "";
+        return switch (t) {
+            case SapDienRa   -> "Sap Dien Ra";
+            case DangDienRa  -> "Dang Dien Ra";
+            case DaKetThuc   -> "Da Ket Thuc";
+        };
     }
 
     /**

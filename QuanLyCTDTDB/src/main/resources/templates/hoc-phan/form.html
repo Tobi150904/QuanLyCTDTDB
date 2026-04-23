@@ -31,9 +31,9 @@
 
     <div class="row justify-content-center">
         <div class="col-lg-9">
-            <!-- Banner loi: hien thi loi validation / exception truc tiep tren
-                 form (thay vi chi hien sau khi redirect). Truoc day user
-                 khong nhan duoc phan hoi nen tuong "khong tao duoc HP". -->
+            <!-- Banner loi (non-field errors / exception tu service).
+                 Dung th:if ${errorMsg} o ngoai form VI errorMsg la ModelAttribute
+                 thuong, KHONG phai form-binding - duoc phep render o day. -->
             <div th:if="${errorMsg}"
                  class="alert alert-danger d-flex align-items-start" role="alert">
                 <i class="bi bi-exclamation-triangle-fill me-2 mt-1"></i>
@@ -42,20 +42,24 @@
                     <span th:text="${errorMsg}"></span>
                 </div>
             </div>
-            <div th:if="${#fields.hasErrors('*')}"
-                 class="alert alert-warning d-flex align-items-start" role="alert">
-                <i class="bi bi-info-circle-fill me-2 mt-1"></i>
-                <div>
-                    <strong class="d-block">Vui long kiem tra lai cac truong sau:</strong>
-                    <ul class="mb-0">
-                        <li th:each="err : ${#fields.allErrors()}" th:text="${err}"></li>
-                    </ul>
-                </div>
-            </div>
 
             <form th:action="${isEdit} ? @{/hoc-phan/sua/{ma}(ma=${hocPhanDTO.maHocPhan})} : @{/hoc-phan/them}"
                   th:object="${hocPhanDTO}"
                   method="post" enctype="multipart/form-data" novalidate>
+
+                <!-- Banner loi validation: BAT BUOC nam BEN TRONG <form th:object>
+                     vi #fields.hasErrors('*') can binding context cua th:object.
+                     Dat o dau form de user nhin thay ngay. -->
+                <div th:if="${#fields.hasErrors('*')}"
+                     class="alert alert-warning d-flex align-items-start" role="alert">
+                    <i class="bi bi-info-circle-fill me-2 mt-1"></i>
+                    <div>
+                        <strong class="d-block">Vui long kiem tra lai cac truong sau:</strong>
+                        <ul class="mb-0">
+                            <li th:each="err : ${#fields.allErrors()}" th:text="${err}"></li>
+                        </ul>
+                    </div>
+                </div>
 
                 <div class="card mb-3">
                     <div class="card-header">

@@ -73,8 +73,14 @@ public class HocKyNamHocController {
             ra.addFlashAttribute("successMsg",
                     "Tao hoc ky " + saved.getMaHocKy() + " thanh cong!");
         } catch (Exception e) {
-            ra.addFlashAttribute("errorMsg", e.getMessage());
-            return "redirect:/hoc-ky/them";
+            // Re-render form (KHONG redirect) de giu nguyen input va hien thi
+            // loi tu service (vi du: trang thai khong khop voi ngay). Neu redirect
+            // thi toan bo gia tri form se mat va user phai nhap lai tu dau.
+            model.addAttribute("errorMsg", e.getMessage());
+            model.addAttribute("trangThaiList", TrangThaiHocKy.values());
+            model.addAttribute("isEdit", false);
+            model.addAttribute("activeMenu", ACTIVE_MENU);
+            return "hoc-ky/form";
         }
         return "redirect:/hoc-ky";
     }
@@ -115,7 +121,12 @@ public class HocKyNamHocController {
             service.update(ma, dto);
             ra.addFlashAttribute("successMsg", "Cap nhat hoc ky " + ma + " thanh cong!");
         } catch (Exception e) {
-            ra.addFlashAttribute("errorMsg", e.getMessage());
+            // Tuong tu them(): re-render form giu input + hien errorMsg.
+            model.addAttribute("errorMsg", e.getMessage());
+            model.addAttribute("trangThaiList", TrangThaiHocKy.values());
+            model.addAttribute("isEdit", true);
+            model.addAttribute("activeMenu", ACTIVE_MENU);
+            return "hoc-ky/form";
         }
         return "redirect:/hoc-ky";
     }

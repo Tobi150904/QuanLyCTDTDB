@@ -102,12 +102,18 @@ public class HocPhanController {
                 hocPhanService.uploadDeCuong(hp.getMaHocPhan(), path);
             }
             ra.addFlashAttribute("successMsg", "Tao hoc phan thanh cong! Cho phe duyet.");
+            return "redirect:/hoc-phan";
         } catch (Exception e) {
+            // Re-render form (KHONG redirect) de user thay loi ngay tren trang
+            // nhap + khong phai nhap lai toan bo. Log stack trace de dev truy vet.
             log.error("Loi khi tao HocPhan dto={}: {}", dto, e.getMessage(), e);
-            ra.addFlashAttribute("errorMsg",
+            model.addAttribute("errorMsg",
                     e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName());
+            model.addAttribute("loaiHPList", LoaiHocPhan.values());
+            model.addAttribute("giangVienList", giangVienRepo.findAllFetchNguoiDung());
+            model.addAttribute("isEdit", false);
+            return "hoc-phan/form";
         }
-        return "redirect:/hoc-phan";
     }
 
     /* ====================== CHINH SUA ====================== */

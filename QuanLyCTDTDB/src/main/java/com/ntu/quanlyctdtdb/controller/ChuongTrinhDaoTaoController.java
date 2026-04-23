@@ -12,6 +12,7 @@ import com.ntu.quanlyctdtdb.service.ChuongTrinhDaoTaoService;
 import com.ntu.quanlyctdtdb.util.FileStorageUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -32,6 +33,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
  *   - SinhVien   : R  (xem khung CTDT minh dang theo hoc)
  * Class-level cho doc, write-level qua @PreAuthorize method-level.
  */
+@Slf4j
 @Controller
 @RequestMapping("/ctdt")
 @RequiredArgsConstructor
@@ -69,7 +71,10 @@ public class ChuongTrinhDaoTaoController {
                         @RequestParam(value = "fileWord", required = false) MultipartFile file,
                         @AuthenticationPrincipal CustomUserDetails ud,
                         Model model, RedirectAttributes ra) {
+        log.info("POST /ctdt/them dto={}", dto);
         if (br.hasErrors()) {
+            log.warn("Validation errors khi tao CTDT: {}",
+                    br.getAllErrors().stream().map(o -> o.getDefaultMessage()).toList());
             model.addAttribute("isEdit", false);
             return "ctdt/form";
         }
@@ -83,10 +88,18 @@ public class ChuongTrinhDaoTaoController {
                 ctdtService.updateFileWord(ctdt.getMaCTDT(), path);
             }
             ra.addFlashAttribute("successMsg", "Tao CTDT thanh cong!");
+            return "redirect:/ctdt";
         } catch (Exception e) {
-            ra.addFlashAttribute("errorMsg", e.getMessage());
+            // Log ro nguyen nhan (stack trace) + re-render form de user thay loi
+            // va khong bi mat input (truoc day bi redirect + flash: neu flash bi
+            // drop sau 1 redirect hoac session thay doi, user khong biet tai sao
+            // "khong tao duoc CTDT, khong co thong bao").
+            log.error("Loi khi tao CTDT dto={}: {}", dto, e.getMessage(), e);
+            model.addAttribute("errorMsg",
+                    e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName());
+            model.addAttribute("isEdit", false);
+            return "ctdt/form";
         }
-        return "redirect:/ctdt";
     }
 
     @PreAuthorize("hasAnyRole('PDT','TTDTXS','CNHP','ADMIN')")
@@ -109,7 +122,10 @@ public class ChuongTrinhDaoTaoController {
                        BindingResult br,
                        @RequestParam(value = "fileWord", required = false) MultipartFile file,
                        Model model, RedirectAttributes ra) {
+        log.info("POST /ctdt/sua/{} dto={}", ma, dto);
         if (br.hasErrors()) {
+            log.warn("Validation errors khi sua CTDT {}: {}", ma,
+                    br.getAllErrors().stream().map(o -> o.getDefaultMessage()).toList());
             model.addAttribute("isEdit", true);
             return "ctdt/form";
         }
@@ -120,10 +136,14 @@ public class ChuongTrinhDaoTaoController {
                 ctdtService.updateFileWord(ma, path);
             }
             ra.addFlashAttribute("successMsg", "Cap nhat CTDT thanh cong!");
+            return "redirect:/ctdt";
         } catch (Exception e) {
-            ra.addFlashAttribute("errorMsg", e.getMessage());
+            log.error("Loi khi sua CTDT {} dto={}: {}", ma, dto, e.getMessage(), e);
+            model.addAttribute("errorMsg",
+                    e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName());
+            model.addAttribute("isEdit", true);
+            return "ctdt/form";
         }
-        return "redirect:/ctdt";
     }
 
     // Phe duyet CTDT: chi TTDTXS hoac ADMIN moi co quyen (docs/02 §4, review P0-4).

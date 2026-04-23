@@ -44,9 +44,33 @@
                     </h6>
                 </div>
                 <div class="card-body p-4">
+                    <!-- Banner loi tu service (exception / business rule). Dat
+                         truoc form de user nhin thay ngay va KHONG mat input. -->
+                    <div th:if="${errorMsg}"
+                         class="alert alert-danger d-flex align-items-start" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2 mt-1"></i>
+                        <div>
+                            <strong class="d-block">Khong the luu CTDT</strong>
+                            <span th:text="${errorMsg}"></span>
+                        </div>
+                    </div>
+
                     <form th:action="${isEdit} ? @{'/ctdt/sua/' + ${ctdtDTO.maCTDT}} : @{/ctdt/them}"
                           method="post" enctype="multipart/form-data" th:object="${ctdtDTO}"
                           class="needs-validation" novalidate>
+
+                        <!-- Loi validation (binding) - phai nam BEN TRONG form vi
+                             #fields.* can binding context cua th:object. -->
+                        <div th:if="${#fields.hasErrors('*')}"
+                             class="alert alert-warning d-flex align-items-start" role="alert">
+                            <i class="bi bi-info-circle-fill me-2 mt-1"></i>
+                            <div>
+                                <strong class="d-block">Vui long kiem tra lai:</strong>
+                                <ul class="mb-0">
+                                    <li th:each="err : ${#fields.allErrors()}" th:text="${err}"></li>
+                                </ul>
+                            </div>
+                        </div>
 
                         <div class="row g-3">
                             <!-- Mã CTĐT -->
