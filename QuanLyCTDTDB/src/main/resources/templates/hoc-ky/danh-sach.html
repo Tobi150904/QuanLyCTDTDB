@@ -139,23 +139,13 @@
                                        aria-label="Chỉnh sửa học kỳ">
                                         <i class="bi bi-pencil"></i>
                                     </a>
-                                    <!-- Kich Hoat: SapDienRa -> DangDienRa -->
-                                    <form th:if="${hk.trangThai.name() == 'SapDienRa'}"
-                                          th:action="@{/hoc-ky/doi-trang-thai/{ma}(ma=${hk.maHocKy})}"
-                                          method="post" class="d-inline m-0"
-                                          sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
-                                        <input type="hidden" name="moi" value="DangDienRa">
-                                        <input type="hidden"
-                                               th:name="${_csrf.parameterName}"
-                                               th:value="${_csrf.token}">
-                                        <button class="btn btn-sm btn-outline-success"
-                                                data-bs-toggle="tooltip"
-                                                data-bs-title="Kích Hoạt Học Kỳ"
-                                                aria-label="Kích hoạt học kỳ">
-                                            <i class="bi bi-play"></i>
-                                        </button>
-                                    </form>
-                                    <!-- Ket thuc: DangDienRa -> DaKetThuc -->
+                                    <!-- Nut "Kich Hoat" thu cong da bi bo:
+                                         trang thai HK giờ duoc derive tu ngay bat
+                                         dau / ket thuc va auto-resync moi lan mo
+                                         trang danh sach (xem HocKyNamHocServiceImpl.resyncStatuses).
+                                         Neu user muon kich hoat som, chi can sua
+                                         ngay bat dau trong form. -->
+                                    <!-- Ket thuc som: DangDienRa -> DaKetThuc -->
                                     <form th:if="${hk.trangThai.name() == 'DangDienRa'}"
                                           th:action="@{/hoc-ky/doi-trang-thai/{ma}(ma=${hk.maHocKy})}"
                                           method="post" class="d-inline m-0"

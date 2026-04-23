@@ -18,6 +18,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -47,6 +48,23 @@ public class ChuongTrinhDaoTaoController {
 
     @ModelAttribute("activeMenu")
     public String activeMenu() { return "ctdt"; }
+
+    /**
+     * Ngan Spring bind field {@code fileWord} vao DTO.
+     *
+     * Ly do: {@link ChuongTrinhDaoTaoDTO#fileWord} la {@code String} (luu
+     * duong dan file sau khi upload), nhung form HTML chua
+     * {@code <input type="file" name="fileWord">} nam trong
+     * {@code <form th:object="ctdtDTO">}. Neu khong disallow, Spring se co
+     * gang convert {@code MultipartFile -> String} va throw
+     * {@code ConversionNotSupportedException}. File thuc te van duoc doc
+     * qua {@code @RequestParam("fileWord") MultipartFile} - khong bi anh
+     * huong.
+     */
+    @InitBinder("ctdtDTO")
+    public void initCtdtBinder(WebDataBinder binder) {
+        binder.setDisallowedFields("fileWord");
+    }
 
     @GetMapping
     public String danhSach(Model model) {

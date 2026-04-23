@@ -17,6 +17,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -46,6 +47,22 @@ public class HocPhanController {
 
     @ModelAttribute("activeMenu")
     public String activeMenu() { return "hoc-phan"; }
+
+    /**
+     * NGAN Spring bind field {@code fileDeCuong} vao DTO.
+     *
+     * Ly do: {@link HocPhanDTO#fileDeCuong} la {@code String} (luu duong dan
+     * file sau khi upload), nhung o form HTML, {@code <input type="file"
+     * name="fileDeCuong">} nam BEN TRONG {@code <form th:object="hocPhanDTO">}
+     * nen Spring MVC se co gang convert {@code MultipartFile -> String} va
+     * throw {@code ConversionNotSupportedException}. File thuc su duoc doc
+     * qua {@code @RequestParam("fileDeCuong") MultipartFile} - khong anh
+     * huong boi setDisallowedFields.
+     */
+    @InitBinder("hocPhanDTO")
+    public void initHocPhanBinder(WebDataBinder binder) {
+        binder.setDisallowedFields("fileDeCuong");
+    }
 
     /* ====================== DANH SACH ====================== */
     @GetMapping

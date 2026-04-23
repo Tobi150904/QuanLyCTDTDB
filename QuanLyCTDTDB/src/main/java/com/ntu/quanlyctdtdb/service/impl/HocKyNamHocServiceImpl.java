@@ -51,15 +51,17 @@ public class HocKyNamHocServiceImpl implements HocKyNamHocService {
 
     /**
      * Dong bo trang thai cua tat ca HK theo ngay hien tai. Quy tac:
-     *  - today < ngayBatDau           -&gt; SapDienRa
-     *  - ngayBatDau &lt;= today &lt;= ngayKetThuc -&gt; DangDienRa
-     *  - today &gt; ngayKetThuc         -&gt; DaKetThuc
-     * State {@code DaKetThuc} la final: da dong thi giu nguyen du ngay co
-     * bi doi (hanh vi nay match logic trong {@link #update}).
+     *  - today < ngayBatDau                     -&gt; SapDienRa
+     *  - ngayBatDau &lt;= today &lt;= ngayKetThuc      -&gt; DangDienRa
+     *  - today &gt; ngayKetThuc                   -&gt; DaKetThuc
+     *
+     * Update 2026-04: khong con skip DaKetThuc. Neu admin sua ngay ket thuc
+     * cua 1 HK da dong sang tuong lai, sync nay se tu "revive" no thanh
+     * DangDienRa / SapDienRa tuong ung - khop voi update() vua sua.
      */
     private void resyncStatuses() {
         hocKyRepo.findAll().forEach(h -> {
-            if (h.getTrangThai() == TrangThaiHocKy.DaKetThuc) return;
+            if (h.getNgayBatDau() == null || h.getNgayKetThuc() == null) return;
             TrangThaiHocKy expected = deriveStatus(h.getNgayBatDau(), h.getNgayKetThuc());
             if (expected != h.getTrangThai()) {
                 h.setTrangThai(expected);
@@ -154,18 +156,18 @@ public class HocKyNamHocServiceImpl implements HocKyNamHocService {
                     "Khong duoc doi Ma Hoc Ky. Neu can, hay xoa va tao moi.");
         }
 
-        // Quy tac (update):
-        //   - HK da DaKetThuc -> immutable ve trang thai (final state).
-        //   - Con lai: trang thai user chon PHAI khop derive(dates). Khong khop
-        //     -> throw BusinessException de UI hien thi va bat user sua lai
-        //     (ro rang la chinh sua ngay hay chon lai trang thai).
+        // Quy tac (update) - source of truth la ngay:
+        //   - Trang thai user chon PHAI khop derive(dates). Khong khop -> throw.
+        //   - Neu user khong gui trang thai (null) -> dung derive.
+        //   - HK DaKetThuc VAN co the bi "revive" neu user sua ngay ket thuc
+        //     sang tuong lai VA chon lai trang thai tuong ung. Truoc day code
+        //     hardcode cu==DaKetThuc -> moi=DaKetThuc lam user khong the sua
+        //     bat ki dieu gi co y nghia tren HK da dong.
         TrangThaiHocKy cu = e.getTrangThai();
         TrangThaiHocKy derivedUpd = deriveStatus(dto.getNgayBatDau(), dto.getNgayKetThuc());
         TrangThaiHocKy chosenUpd  = dto.getTrangThai();
         TrangThaiHocKy moi;
-        if (cu == TrangThaiHocKy.DaKetThuc) {
-            moi = TrangThaiHocKy.DaKetThuc;
-        } else if (chosenUpd == null) {
+        if (chosenUpd == null) {
             moi = derivedUpd;
         } else if (chosenUpd != derivedUpd) {
             throw new BusinessException(
@@ -197,14 +199,52 @@ public class HocKyNamHocServiceImpl implements HocKyNamHocService {
     @Override
     public HocKyNamHoc doiTrangThai(String maHocKy, TrangThaiHocKy moi) {
         HocKyNamHoc e = findById(maHocKy);
-        if (e.getTrangThai() == TrangThaiHocKy.DaKetThuc && moi != TrangThaiHocKy.DaKetThuc) {
-            throw new BusinessException("Hoc ky da ket thuc, khong the chuyen trang thai.");
+        TrangThaiHocKy cu = e.getTrangThai();
+
+        // Khong duoc chuyen HK DaKetThuc nguoc tro lai - final state.
+        if (cu == TrangThaiHocKy.DaKetThuc && moi != TrangThaiHocKy.DaKetThuc) {
+            throw new BusinessException(
+                    "Hoc ky " + maHocKy + " da ket thuc. Muon hoi sinh, hay vao "
+                    + "\"Sua\" de dieu chinh ngay ket thuc sang tuong lai.");
         }
-        if (moi == TrangThaiHocKy.DangDienRa && e.getTrangThai() != TrangThaiHocKy.DangDienRa) {
-            // Roadmap §3.1: Khi chuyen 1 HK sang DangDienRa, tu dong chuyen HK truoc
-            // ve DaKetThuc thay vi throw lam block user flow.
-            autoCloseOtherActive(maHocKy);
+
+        // Kich hoat (SapDienRa -> DangDienRa): CHI duoc phep khi hom nay da
+        // vao khoang [ngayBatDau, ngayKetThuc]. Truoc day thieu check nay nen
+        // user bam Kich hoat 1 HK Sap Dien Ra (today < ngayBatDau) van thanh
+        // cong + tu dong dong HK Dang Dien Ra khac -> sai nghiep vu.
+        if (moi == TrangThaiHocKy.DangDienRa) {
+            LocalDate today = LocalDate.now();
+            if (e.getNgayBatDau() == null || e.getNgayKetThuc() == null) {
+                throw new BusinessException(
+                        "Hoc ky " + maHocKy + " chua co ngay bat dau / ngay ket thuc, "
+                        + "khong the kich hoat.");
+            }
+            if (today.isBefore(e.getNgayBatDau())) {
+                throw new BusinessException(
+                        "Chua the kich hoat hoc ky " + maHocKy + ": ngay bat dau la "
+                        + e.getNgayBatDau() + " (hom nay " + today + ").");
+            }
+            if (today.isAfter(e.getNgayKetThuc())) {
+                throw new BusinessException(
+                        "Khong the kich hoat hoc ky " + maHocKy + ": ngay ket thuc ("
+                        + e.getNgayKetThuc() + ") da qua. Hay tao HK moi hoac sua ngay.");
+            }
+            if (cu != TrangThaiHocKy.DangDienRa) {
+                // Roadmap §3.1: tu dong chuyen HK khac dang DangDienRa ve
+                // DaKetThuc de dam bao toi da 1 HK active cung luc.
+                autoCloseOtherActive(maHocKy);
+            }
         }
+
+        // Ket thuc som (DangDienRa -> DaKetThuc): cho phep nhung chi khi HK
+        // thuc su dang DienRa. Giu nguyen hanh vi cu.
+        if (moi == TrangThaiHocKy.DaKetThuc && cu != TrangThaiHocKy.DangDienRa
+                && cu != TrangThaiHocKy.DaKetThuc) {
+            throw new BusinessException(
+                    "Chi duoc ket thuc hoc ky dang \"Dang Dien Ra\". HK "
+                    + maHocKy + " hien dang \"" + trangThaiLabel(cu) + "\".");
+        }
+
         e.setTrangThai(moi);
         return hocKyRepo.save(e);
     }
