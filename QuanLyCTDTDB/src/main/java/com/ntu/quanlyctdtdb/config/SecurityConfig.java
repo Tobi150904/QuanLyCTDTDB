@@ -15,6 +15,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
 
 @Configuration
@@ -68,7 +70,35 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        // ============================================================
+        // CSRF token repository: COOKIE thay vi SESSION.
+        //
+        // Ly do: khi logout (session bi invalidate), user duoc redirect sang
+        // /login?logout. Thymeleaf render login.html co khoi <style> inline
+        // ~360 dong -> response buffer 8KB cua Tomcat auto-commit TRUOC khi
+        // <form th:action> duoc xu ly. Luc SpringActionTagProcessor chay, nó
+        // goi CsrfRequestDataValueProcessor -> HttpSessionCsrfTokenRepository
+        // .saveToken() -> request.getSession(true). Vi session cu da invalid
+        // va response da commit -> "Cannot create a session after the response
+        // has been committed" -> template crash, user ket luu ly.
+        //
+        // Dung CookieCsrfTokenRepository: token luu trong cookie XSRF-TOKEN,
+        // khong can session -> render login page xa may dong cung an toan.
+        // withHttpOnlyFalse() de tuong thich voi frontend framework/JS neu
+        // sau nay co SPA call - khong anh huong form-hidden input hien tai.
+        // CsrfTokenRequestAttributeHandler (thay cho XorCsrfTokenRequestAttributeHandler
+        // mac dinh): giu _csrf.token raw -> phu hop voi cach
+        // template render "<input type='hidden' th:value='${_csrf.token}'>".
+        // ============================================================
+        CookieCsrfTokenRepository csrfRepo = CookieCsrfTokenRepository.withHttpOnlyFalse();
+        CsrfTokenRequestAttributeHandler csrfHandler = new CsrfTokenRequestAttributeHandler();
+        csrfHandler.setCsrfRequestAttributeName(null);
+
         http
+            .csrf(csrf -> csrf
+                .csrfTokenRepository(csrfRepo)
+                .csrfTokenRequestHandler(csrfHandler)
+            )
             .authorizeHttpRequests(auth -> auth
                 // Public resources
                 .requestMatchers("/login", "/403", "/error").permitAll()
@@ -171,7 +201,10 @@ public class SecurityConfig {
                 .logoutUrl("/logout")
                 .logoutSuccessUrl("/login?logout")
                 .invalidateHttpSession(true)
-                .deleteCookies("JSESSIONID")
+                // Xoa ca JSESSIONID (session-based auth) va XSRF-TOKEN (csrf
+                // cookie). Khong xoa XSRF-TOKEN thi cookie cu van con, lan
+                // login sau se dung token cu -> FE framework co the mismatch.
+                .deleteCookies("JSESSIONID", "XSRF-TOKEN")
                 .permitAll()
             )
             .exceptionHandling(ex -> ex
