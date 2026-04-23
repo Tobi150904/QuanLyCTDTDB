@@ -250,24 +250,34 @@
                     </div>
                 </div>
 
-                <!-- Section: Vai Tro -->
-                <h6 class="section-label">Vai Trò Nghiệp Vụ (Có Thể Chọn Nhiều)</h6>
-                <div class="row g-2 mb-4">
-                    <div class="col-auto" th:each="vt : ${vaiTroList}">
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input"
-                                   type="checkbox"
-                                   th:id="'vt_' + ${vt.name()}"
-                                   name="vaiTros"
-                                   th:value="${vt.name()}"
-                                   th:checked="${nguoiDungDTO.vaiTros != null and nguoiDungDTO.vaiTros.contains(vt)}">
-                            <label class="form-check-label"
-                                   th:for="'vt_' + ${vt.name()}"
-                                   th:with="v=${vt.name()}"
-                                   th:text="${v == 'PDT'    ? 'PDT — Phòng Đào Tạo'              :
-                                             (v == 'TTDTXS' ? 'TTDTXS — Trung Tâm Đào Tạo Xuất Sắc' :
-                                             (v == 'CVHT'   ? 'CVHT — Cố Vấn Học Tập'              :
-                                             (v == 'CNHP'   ? 'CNHP — Chủ Nhiệm Học Phần'          : v)))}"></label>
+                <!-- Section: Vai Tro Nghiep Vu
+                     Chi hien khi LoaiNguoiDung = GiangVien. Sinh Vien / Doanh
+                     Nghiep / Admin khong co vai tro nghiep vu (ho co role
+                     mac dinh qua LoaiNguoiDung — xem CustomUserDetails).
+                     JS toggleExtraFields() se show/hide div nay. -->
+                <div id="vaiTroSection" class="d-none">
+                    <h6 class="section-label">Vai Trò Nghiệp Vụ (Có Thể Chọn Nhiều)</h6>
+                    <p class="text-muted small mb-2">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Các vai trò này chỉ áp dụng cho Giảng Viên (PDT, TTDTXS, CVHT, CNHP).
+                    </p>
+                    <div class="row g-2 mb-4">
+                        <div class="col-auto" th:each="vt : ${vaiTroList}">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input"
+                                       type="checkbox"
+                                       th:id="'vt_' + ${vt.name()}"
+                                       name="vaiTros"
+                                       th:value="${vt.name()}"
+                                       th:checked="${nguoiDungDTO.vaiTros != null and nguoiDungDTO.vaiTros.contains(vt)}">
+                                <label class="form-check-label"
+                                       th:for="'vt_' + ${vt.name()}"
+                                       th:with="v=${vt.name()}"
+                                       th:text="${v == 'PDT'    ? 'PDT — Phòng Đào Tạo'              :
+                                                 (v == 'TTDTXS' ? 'TTDTXS — Trung Tâm Đào Tạo Xuất Sắc' :
+                                                 (v == 'CVHT'   ? 'CVHT — Cố Vấn Học Tập'              :
+                                                 (v == 'CNHP'   ? 'CNHP — Chủ Nhiệm Học Phần'          : v)))}"></label>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -299,11 +309,14 @@
     function toggleExtraFields() {
         var sel = document.getElementById('loaiNguoiDung');
         var loai = sel ? sel.value : currentLoai;
-        var gvFields = document.getElementById('giangVienFields');
-        var svFields = document.getElementById('sinhVienFields');
+        var gvFields     = document.getElementById('giangVienFields');
+        var svFields     = document.getElementById('sinhVienFields');
+        var vaiTroBlock  = document.getElementById('vaiTroSection');
 
-        if (gvFields) gvFields.classList.toggle('d-none', loai !== 'GiangVien');
-        if (svFields) svFields.classList.toggle('d-none', loai !== 'SinhVien');
+        if (gvFields)    gvFields.classList.toggle('d-none', loai !== 'GiangVien');
+        if (svFields)    svFields.classList.toggle('d-none', loai !== 'SinhVien');
+        // Vai tro nghiep vu chi ap dung cho Giang Vien.
+        if (vaiTroBlock) vaiTroBlock.classList.toggle('d-none', loai !== 'GiangVien');
     }
 
     // Khoi tao khi load trang

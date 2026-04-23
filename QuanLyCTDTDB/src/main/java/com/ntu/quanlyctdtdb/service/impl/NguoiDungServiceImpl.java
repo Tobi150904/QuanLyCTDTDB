@@ -112,8 +112,16 @@ public class NguoiDungServiceImpl implements NguoiDungService {
             sinhVienRepo.save(sv);
         }
 
-        // Them vai tro nghiep vu
-        if (dto.getVaiTros() != null) {
+        // Them vai tro nghiep vu.
+        // RANG BUOC NGHIEP VU: cac VaiTro (PDT, TTDTXS, CVHT, CNHP) chi ap dung
+        // cho GIANG VIEN. Sinh vien & doanh nghiep tu dong co ROLE_SINH_VIEN /
+        // ROLE_DOANH_NGHIEP thong qua LoaiNguoiDung (xem CustomUserDetails).
+        // Admin tu du quyen, khong can vai tro nghiep vu. Neu form lo gui
+        // checkbox VaiTro cho SV/DN/Admin, ta lang le bo qua thay vi ghi lech
+        // du lieu vao NhomNguoiDung (defensive — UI da hide section nhung
+        // attacker van co the POST truc tiep).
+        if (dto.getVaiTros() != null && !dto.getVaiTros().isEmpty()
+                && dto.getLoaiNguoiDung() == LoaiNguoiDung.GiangVien) {
             for (VaiTro vaiTro : dto.getVaiTros()) {
                 NhomNguoiDungId id = new NhomNguoiDungId(ma, vaiTro);
                 if (!nhomNguoiDungRepo.existsById(id)) {
@@ -122,6 +130,10 @@ public class NguoiDungServiceImpl implements NguoiDungService {
                     nhomNguoiDungRepo.save(nhom);
                 }
             }
+        } else if (dto.getVaiTros() != null && !dto.getVaiTros().isEmpty()) {
+            log.warn("Bo qua {} vai tro nghiep vu gan cho NguoiDung={} (loai={}): "
+                    + "VaiTro chi danh cho GiangVien.",
+                    dto.getVaiTros().size(), ma, dto.getLoaiNguoiDung());
         }
 
         return nd;
@@ -172,14 +184,23 @@ public class NguoiDungServiceImpl implements NguoiDungService {
             });
         }
 
-        // Cap nhat VaiTro: xoa cu, them moi
+        // Cap nhat VaiTro: chi giang vien moi duoc gan vai tro nghiep vu.
+        // Voi SV/DN/Admin, dam bao bang NhomNguoiDung cua ho luon rong —
+        // xoa het record cu, khong tao moi. Ngan truong hop user chuyen
+        // LoaiNguoiDung (tuy nhien hien form khoa LoaiNguoiDung khi edit,
+        // clause nay giu an toan du phong).
         nhomNguoiDungRepo.deleteByNguoiDung_MaNguoiDung(ma);
-        if (dto.getVaiTros() != null) {
+        if (dto.getVaiTros() != null && !dto.getVaiTros().isEmpty()
+                && nd.getLoaiNguoiDung() == LoaiNguoiDung.GiangVien) {
             for (VaiTro vaiTro : dto.getVaiTros()) {
                 NhomNguoiDungId id = new NhomNguoiDungId(ma, vaiTro);
                 NhomNguoiDung nhom = NhomNguoiDung.builder().id(id).nguoiDung(nd).build();
                 nhomNguoiDungRepo.save(nhom);
             }
+        } else if (dto.getVaiTros() != null && !dto.getVaiTros().isEmpty()) {
+            log.warn("Bo qua {} vai tro nghiep vu gan cho NguoiDung={} (loai={}) khi update: "
+                    + "VaiTro chi danh cho GiangVien.",
+                    dto.getVaiTros().size(), ma, nd.getLoaiNguoiDung());
         }
 
         return nguoiDungRepo.save(nd);
