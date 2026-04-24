@@ -1,756 +1,870 @@
-# 05 · UI Design System — Hệ Thống Quản Lý Đào Tạo Xuất Sắc
+# 05 · UI Design System
 
-> Tài liệu design-authority cho toàn bộ giao diện Thymeleaf của hệ thống.
-> Bất kỳ thay đổi thị giác nào (màu sắc, typography, layout, component, tương tác)
-> **phải được cập nhật ở file này TRƯỚC**, sau đó mới thực thi trong code. Mục tiêu:
-> đảm bảo UX nhất quán, có tính kế thừa, và dễ bảo trì cho một sản phẩm nội bộ
-> vận hành liên tục trong môi trường production của nhà trường.
+> **Document owner:** Design Authority · **Stack:** Thymeleaf · Bootstrap 5.3 · Bootstrap Icons · Inter · Custom CSS tokens (`static/css/main.css`) · Spring Security Extras
 >
-> Stack áp dụng: Thymeleaf · Spring Security Extras · Bootstrap 5.3 · Bootstrap Icons ·
-> Inter (Google Fonts) · CSS custom properties trong `static/css/main.css`.
+> **Scope:** Là nguồn chân lý (single source of truth) cho mọi quyết định thị giác và hành vi tương tác của toàn bộ giao diện. Mọi thay đổi UI phải được cập nhật ở file này **trước**, sau đó mới triển khai trong code.
+>
+> **Audience:** Developer fullstack, reviewer PR, QA, và thành viên mới onboarding dự án.
 
 ---
 
-## 1 · Design Principles
+## Mục lục
 
-Hệ thống phục vụ cán bộ phòng Đào Tạo, trưởng Bộ môn, chủ nhiệm Học phần, Cố vấn
-học tập, Giảng viên, Sinh viên và đại diện Doanh nghiệp. Giao diện cần **trung
-tính về cảm xúc, dày dặn về thông tin, và nhanh trong thao tác**. 5 nguyên tắc nền
-tảng:
-
-1. **Clarity over cleverness** — Dùng ngôn ngữ hiển thị rõ ràng, không ẩn dụ.
-   Mọi trạng thái phải được gắn nhãn. Không để người dùng phải đoán.
-2. **3-click rule** — Mọi nghiệp vụ chính (mở lớp, phân công, phê duyệt, cảnh
-   báo SV) phải đạt được trong tối đa 3 thao tác tính từ Dashboard.
-3. **Density-first, whitespace-balanced** — Giao diện dành cho người dùng làm
-   việc hàng ngày: ưu tiên hiển thị nhiều dòng/bảng trong một viewport, nhưng
-   giữ padding dòng ≥ 10px để không mỏi mắt.
-4. **Progressive disclosure** — Thông tin thứ cấp (tooltip, hint, modal xác
-   nhận) chỉ xuất hiện khi cần. Form dài luôn được chia section.
-5. **Predictable feedback loop** — Mọi action POST đều phải trả về flash
-   message (`successMsg` / `errorMsg` / `warningMsg`) và/hoặc redirect về
-   trang danh sách có trạng thái cập nhật. Không có thao tác "im lặng".
-
----
-
-## 2 · Color System
-
-Hệ thống chỉ dùng **5 tone chính** (primary, accent, surface, text, border), các
-trạng thái bổ sung mượn từ Bootstrap nhưng luôn override qua CSS variable để
-đồng bộ.
-
-### 2.1 Design tokens
-
-| Token             | Giá trị    | Vai trò                                                          |
-|-------------------|------------|------------------------------------------------------------------|
-| `--primary`       | `#1e3a5f`  | Brand primary — navbar, card header, button chính                |
-| `--primary-lt`    | `#2d5f9e`  | Hover/link active, icon stat card, focus ring                    |
-| `--primary-dk`    | `#172d4a`  | Gradient navbar, modal header                                    |
-| `--accent`        | `#e8a020`  | Border-left title, border-left stat card, huy hiệu cảnh báo      |
-| `--accent-lt`     | `#f4b944`  | Highlight icon thương hiệu trong navbar                          |
-| `--surface`       | `#f4f6f9`  | Nền body, nền page                                               |
-| `--surface-alt`   | `#eef2f7`  | Nền table head, code inline                                      |
-| `--surface-card`  | `#ffffff`  | Nền card, modal, sidebar                                         |
-| `--surface-hover` | `#f0f4fa`  | Nền hover sidebar link, hover row                                |
-| `--text-main`     | `#212529`  | Văn bản chính                                                    |
-| `--text-muted`    | `#6c757d`  | Văn bản phụ, label bảng                                          |
-| `--text-subtle`   | `#8a94a6`  | Placeholder, icon empty state, metadata                          |
-| `--border-color`  | `#e5e9f0`  | Đường kẻ mặc định                                                |
-| `--border-strong` | `#d7dde6`  | Border input, scrollbar thumb                                    |
-| `--radius-sm`     | `6px`      | Button, input, badge nhỏ                                         |
-| `--radius-md`     | `10px`     | Card, modal, avatar lớn                                          |
-| `--radius-lg`     | `14px`     | Dialog quan trọng, hero panel                                    |
-| `--shadow-sm`     | —          | Shadow default cho card                                          |
-| `--shadow-md`     | —          | Card hover, dropdown                                             |
-| `--shadow-lg`     | —          | Modal, sidebar mobile                                            |
-| `--transition`    | `180ms`    | Motion tiêu chuẩn (ease `cubic-bezier(0.4,0,0.2,1)`)             |
-
-Trạng thái (semantic) lấy lại từ Bootstrap nhưng chuẩn hoá qua alert/badge:
-
-| Ý nghĩa       | Màu mặc định | Lớp badge              | Lớp alert        |
-|---------------|--------------|------------------------|------------------|
-| Success       | `#198754`    | `badge bg-success`     | `alert-success`  |
-| Info          | `#0dcaf0`    | `badge bg-info text-dark` | `alert-info` |
-| Warning       | `#ffc107`    | `badge bg-warning text-dark` | `alert-warning` |
-| Danger        | `#dc3545`    | `badge bg-danger`      | `alert-danger`   |
-
-### 2.2 Usage rules (bắt buộc)
-
-- **Chỉ được gán màu qua token** (`var(--primary)`), không hard-code HEX trong
-  template hoặc inline style.
-- Navbar + card header chính: nền `--primary` (hoặc gradient `--primary` →
-  `--primary-dk` cho navbar/modal header).
-- Page title: text `--primary`, `border-left: 3px solid var(--accent)`.
-- Sidebar link `active`: nền `rgba(45, 95, 158, 0.10)`, text `--primary`, pseudo
-  element `::before` 3px `--accent` làm chỉ thị.
-- Stat card: `border-left: 4px solid var(--accent)`, icon `--primary-lt`.
-- **Không dùng `bg-primary` mặc định của Bootstrap (`#0d6efd`)** — đã override
-  trong `main.css` về `--primary`.
-- **Không dùng gradient ngoài navbar và modal header** để tránh nhiễu thị giác.
+0. [Triết lý thiết kế](#0--triết-lý-thiết-kế)
+1. [Design principles](#1--design-principles)
+2. [Design tokens](#2--design-tokens)
+3. [Color system](#3--color-system)
+4. [Typography](#4--typography)
+5. [Spacing & Layout grid](#5--spacing--layout-grid)
+6. [Elevation & Radius](#6--elevation--radius)
+7. [Iconography & Media](#7--iconography--media)
+8. [Motion & Transitions](#8--motion--transitions)
+9. [Component library](#9--component-library)
+10. [Page templates](#10--page-templates)
+11. [State patterns](#11--state-patterns)
+12. [Role-based UI matrix](#12--role-based-ui-matrix)
+13. [Module UX blueprints](#13--module-ux-blueprints)
+14. [Accessibility](#14--accessibility)
+15. [Responsive breakpoints](#15--responsive-breakpoints)
+16. [Content & Voice](#16--content--voice)
+17. [Feedback contract](#17--feedback-contract)
+18. [Implementation checklist](#18--implementation-checklist)
 
 ---
 
-## 3 · Typography
+## 0 · Triết lý thiết kế
 
-Font system: **Inter** (primary) + fallback hệ thống. Load qua Google Fonts
-trong `templates/layout/base.html`.
+Hệ thống phục vụ **8 nhóm người dùng** (PDT, TTDTXS, CNHP, CVHT, Giảng viên, Sinh viên, Doanh nghiệp, Admin) làm việc liên tục trong môi trường học vụ. Giao diện phải đáp ứng ba đặc tính cốt lõi:
 
-```
-font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-```
+| Đặc tính | Hệ quả thiết kế |
+|---|---|
+| **Institutional** — phong cách cơ quan, không "app thời trang" | Palette trầm, typography sạch, không gradient rực rỡ, icon line-weight đều |
+| **Information-dense** — người dùng nhập/tra hàng chục bản ghi/ngày | Bảng compact, filter panel luôn hiện, không thu gọn menu chính |
+| **Deterministic** — không có thao tác "im lặng" | Mọi POST đều feedback bằng flash message; destructive action luôn có confirm modal |
 
-### 3.1 Type scale
-
-| Role                  | Size        | Weight | Line-height | Color            | Ghi chú                               |
-|-----------------------|-------------|--------|-------------|------------------|----------------------------------------|
-| Page title (`.page-title`, h4) | 1.25 rem | 600 | 1.2         | `--primary`      | border-left accent + padding-left 14px |
-| Page subtitle (`.page-subtitle`) | 0.72 rem | 600 | 1.2       | `--text-subtle`  | uppercase + letter-spacing 1px         |
-| Card header           | 0.92 rem    | 500    | 1.3         | `#fff`           | trong header có nền primary            |
-| Section label (h6, form group) | 0.78 rem | 600 | 1.3       | `--text-muted`   | uppercase + letter-spacing 0.5px       |
-| Body text             | 0.9 rem     | 400    | 1.6         | `--text-main`    | mặc định body                          |
-| Table header          | 0.72 rem    | 600    | 1.3         | `--text-muted`   | uppercase + nền `--surface-alt`        |
-| Table body            | 0.875 rem   | 400    | 1.4         | `--text-main`    |                                        |
-| Form label            | 0.875 rem   | 500    | 1.3         | `--text-main`    |                                        |
-| Button                | 0.875 rem   | 500    | 1.2         | —                |                                        |
-| Badge                 | 0.72 rem    | 600    | 1           | theo loại        | letter-spacing 0.3px                   |
-| Inline code           | 0.78 rem    | 500    | 1           | `--primary-dk`   | nền `--surface-alt`, radius 6px        |
-
-### 3.2 Quy ước viết
-
-- **Tiêu đề** dùng Title Case tiếng Việt có dấu (`Danh Sách Lớp Học Phần`).
-- **Label form** dùng capitalize đầu dòng (`Mã Sinh Viên`), kèm `*` màu danger
-  khi bắt buộc.
-- **Nội dung thoại tới người dùng** (flash message, empty state, tooltip):
-  câu đầy đủ, kết thúc bằng dấu chấm.
-- **Không dùng ALL CAPS** cho nội dung, chỉ dùng cho label nhỏ
-  (section header, table header) kết hợp letter-spacing để dễ đọc.
+> "**Boring on purpose.**" Thiết kế không cố gây ấn tượng — nó cố biến mất để người dùng tập trung vào dữ liệu.
 
 ---
 
-## 4 · Layout Blueprint
+## 1 · Design principles
 
-```
-┌────────────────────────────────────────────────────────────────┐
-│ NAVBAR  (fixed-top · 60px · gradient primary)                  │
-│  [Brand]                                         [User ▼]      │
-├──────────┬─────────────────────────────────────────────────────┤
-│ SIDEBAR  │ MAIN CONTENT                                        │
-│ 248px    │  ├─ Breadcrumb  (mọi trang trừ login + dashboard)   │
-│ fixed    │  ├─ Page Header (kicker + title + CTA)              │
-│ surface  │  ├─ Flash Messages                                  │
-│ -card    │  ├─ Filter / Toolbar                                │
-│          │  ├─ Content (card · table · form · timeline)        │
-│          │  └─ Pagination / Footer action                      │
-└──────────┴─────────────────────────────────────────────────────┘
-```
-
-### 4.1 Quy định bắt buộc
-
-- **Sidebar**: cố định trái 248 px trên desktop (`lg ≥ 992px`), chuyển thành
-  **offcanvas** (transform translateX) trên mobile. Menu chia section theo role
-  thông qua `sec:authorize`.
-- **Navbar**: cao 60 px, chỉ chứa brand + avatar + dropdown (Hồ sơ, Đăng xuất).
-  Không dùng navbar để điều hướng nghiệp vụ — navigation tập trung ở sidebar.
-- **Main content**: padding 24 px, `margin-left: var(--sidebar-width)`, fade-in
-  200 ms khi route chuyển trang.
-- **Breadcrumb**: dưới navbar, ngay trên page header. Tối đa 3 cấp.
-- **Page header**: kicker (module) + title (h4 `.page-title`) + cụm CTA bên
-  phải (cách nhau `gap-2`).
-- **Toolbar / Filter**: đặt trong 1 `card` riêng TRƯỚC bảng dữ liệu. Filter
-  dạng combobox + search + button `Tra Cứu`.
-- Mobile (< 992 px): sidebar trượt vào bằng overlay `.sidebar-overlay.show`.
+1. **Clarity over cleverness** — Gọi tên trạng thái bằng từ nguyên bản tiếng Việt (`Đang Diễn Ra`, `Chờ Duyệt`). Tránh ẩn dụ (`Pipeline`, `Flow`).
+2. **3-click rule** — Mọi nghiệp vụ chính phải hoàn tất trong ≤ 3 thao tác tính từ Dashboard.
+3. **Density-first, whitespace-balanced** — Ưu tiên hiển thị nhiều dòng/bảng; nhưng `padding-y` của cell ≥ 10px để không mỏi mắt.
+4. **Progressive disclosure** — Form dài phải chia section; action phụ đẩy vào dropdown; detail đẩy vào modal/off-canvas.
+5. **Predictable feedback** — Mọi action phải kết thúc bằng một trong: flash banner · toast · re-render form với `errorMsg` · redirect + highlight row mới.
+6. **Forgiveness by default** — Không bao giờ xóa ngay; luôn confirm modal. Lỗi validation không xóa input của user.
+7. **Least privilege visible** — User không có quyền thì không thấy action button (qua `sec:authorize`), thay vì thấy rồi bị chặn.
 
 ---
 
-## 5 · Component Library
+## 2 · Design tokens
 
-Mọi component đều triển khai dưới dạng mẫu Thymeleaf / class utility trong
-`main.css`. Khi cần tạo biến thể mới, **ưu tiên mở rộng class có sẵn** hơn viết
-inline style.
+Tất cả token được định nghĩa trong `static/css/main.css → :root`. **Nguyên tắc sử dụng: luôn gọi qua `var(--token)`, không hard-code HEX trong Thymeleaf template.**
 
-### 5.1 Page Header
+### 2.1 Token reference
 
-```html
-<div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
-    <div>
-        <p class="page-subtitle">Module / Phân hệ</p>
-        <h4 class="page-title mb-0">Tên Trang</h4>
-    </div>
-    <div class="d-flex gap-2">
-        <a th:href="@{/module/them}" class="btn btn-primary">
-            <i class="bi bi-plus-lg me-1"></i>Thêm Mới
-        </a>
-    </div>
-</div>
+| Token | Giá trị | Vai trò chính |
+|---|---|---|
+| **Brand** | | |
+| `--primary` | `#1e3a5f` | Navbar, card header, button primary |
+| `--primary-lt` | `#2d5f9e` | Link, hover, focus ring, icon stat |
+| `--primary-dk` | `#172d4a` | Navbar gradient stop, modal header |
+| `--accent` | `#e8a020` | Border-left title/stat, huy hiệu cảnh báo |
+| `--accent-lt` | `#f4b944` | Icon thương hiệu navbar, highlight |
+| **Surface** | | |
+| `--surface` | `#f4f6f9` | Body/page background |
+| `--surface-alt` | `#eef2f7` | Table header, code inline, toolbar filter |
+| `--surface-card` | `#ffffff` | Card, modal, sidebar |
+| `--surface-hover` | `#f0f4fa` | Hover sidebar, hover row |
+| **Text** | | |
+| `--text-main` | `#212529` | Body text |
+| `--text-muted` | `#6c757d` | Label phụ, metadata |
+| `--text-subtle` | `#8a94a6` | Placeholder, icon empty state |
+| **Border** | | |
+| `--border-color` | `#e5e9f0` | Kẻ mặc định |
+| `--border-strong` | `#d7dde6` | Input border, scrollbar thumb |
+| **Radius** | | |
+| `--radius-sm` | `6px` | Button, input, badge |
+| `--radius-md` | `10px` | Card, modal, avatar lớn |
+| `--radius-lg` | `14px` | Dialog quan trọng, hero panel |
+| **Elevation** | | |
+| `--shadow-sm` | — | Card default |
+| `--shadow-md` | — | Card hover, dropdown |
+| `--shadow-lg` | — | Modal, offcanvas |
+| **Motion** | | |
+| `--transition` | `180ms cubic-bezier(.4,0,.2,1)` | Chuẩn toàn hệ |
+| **Layout** | | |
+| `--sidebar-width` | `248px` | Sidebar desktop |
+| `--navbar-height` | `60px` | Top navbar fixed |
+
+### 2.2 Thêm token mới — quy trình
+
+1. Đề xuất tên token (kebab-case, namespace `--<group>-<role>`).
+2. Cập nhật `:root` trong `main.css` + bảng trên.
+3. Ghi chú lý do vào changelog cuối file (mục 19).
+4. PR phải ghi rõ "touches design token".
+
+---
+
+## 3 · Color system
+
+### 3.1 Semantic mapping
+
+| Ý nghĩa | Foreground | Badge | Alert | Ví dụ |
+|---|---|---|---|---|
+| **Success** | `#198754` | `badge bg-success` | `alert-success` | Tạo thành công, Kích hoạt |
+| **Info** | `#0dcaf0` | `badge bg-info text-dark` | `alert-info` | Hint, ghi chú |
+| **Warning** | `#ffc107` | `badge bg-warning text-dark` | `alert-warning` | Chờ duyệt, sắp hết hạn |
+| **Danger** | `#dc3545` | `badge bg-danger` | `alert-danger` | Xóa, cảnh báo SV, từ chối |
+| **Neutral** | `#6c757d` | `badge bg-secondary` | `alert-secondary` | Nháp, không xác định |
+
+### 3.2 Status color grammar (áp dụng toàn hệ)
+
+| Trạng thái nghiệp vụ | Màu | Icon |
+|---|---|---|
+| `Sắp Diễn Ra` | `bg-info text-dark` | `bi-clock` |
+| `Đang Diễn Ra` | `bg-success` | `bi-play-circle` |
+| `Đã Kết Thúc` | `bg-secondary` | `bi-check-circle` |
+| `Chờ Duyệt` | `bg-warning text-dark` | `bi-hourglass-split` |
+| `Đã Duyệt` | `bg-success` | `bi-patch-check` |
+| `Từ Chối` | `bg-danger` | `bi-x-octagon` |
+| `Bắt Buộc` (HP) | `bg-primary` | `bi-star-fill` |
+| `Tự Chọn` (HP) | `bg-secondary` | `bi-star` |
+| `Cảnh Báo` (SV) | `bg-danger` | `bi-exclamation-triangle-fill` |
+
+### 3.3 Rules
+
+- **Không dùng purple/violet** ở bất kỳ đâu — không hợp brand.
+- **Gradient** chỉ dùng cho navbar (`--primary → --primary-dk`). Nơi khác cấm.
+- Text trên nền màu: luôn chọn `text-white` hoặc `text-dark` theo WCAG AA (contrast ≥ 4.5:1).
+- Background của card **luôn** là `--surface-card`; không tô màu khác trừ empty-state panel.
+
+---
+
+## 4 · Typography
+
+### 4.1 Stack
+
+```css
+font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+font-size: 0.9rem;  /* 14.4px base */
+line-height: 1.55;
 ```
 
-### 5.2 Card
+Inter load qua `<link>` Google Fonts trong `layout/base.html`. **Chỉ một font family** cho toàn hệ.
 
-```html
-<div class="card mb-4">
-    <div class="card-header">
-        <span class="fw-semibold">
-            <i class="bi bi-card-list me-2"></i>Tiêu đề card
-        </span>
-    </div>
-    <div class="card-body">
-        ...
-    </div>
-</div>
+### 4.2 Scale
+
+| Cấp | Class/Token | Size | Weight | Line-height | Usage |
+|---|---|---|---|---|---|
+| **Display** | `.display-6` | `1.75rem` | 600 | 1.2 | Trang đăng nhập, hero empty-state |
+| **H1 / Page title** | `<h1>` với `.page-title` | `1.375rem` | 600 | 1.3 | Tiêu đề trang, border-left `--accent` 4px |
+| **H2 / Section** | `<h2>` / `.card-header strong` | `1.0625rem` | 600 | 1.4 | Header card, section trong form |
+| **H3 / Subsection** | `<h3>` | `0.9375rem` | 600 | 1.4 | Nhóm field trong form dài |
+| **Body** | default | `0.9rem` | 400 | 1.55 | Text chính |
+| **Small / Meta** | `.small`, `<small>` | `0.8125rem` | 400 | 1.4 | Metadata, helper text |
+| **Code / ID** | `<code>` | `0.8125rem` | 500 | 1.4 | Mã CTDT, mã HP, mã SV |
+| **Caption** | `.form-text` | `0.75rem` | 400 | 1.4 | Ghi chú dưới input |
+
+### 4.3 Rules
+
+- Không dùng `text-decoration: underline` trên link nội bộ; chỉ dùng hover color change.
+- Không dùng `font-style: italic` cho body; chỉ cho metadata phụ (timestamp, tác giả).
+- Weight chỉ có: `400` (regular), `500` (medium — label), `600` (semibold — heading). **Không dùng 700/800.**
+- Tiêu đề luôn dùng `text-balance` hoặc `text-pretty` để tránh orphan line.
+
+---
+
+## 5 · Spacing & Layout grid
+
+### 5.1 Spacing scale (theo Bootstrap utility)
+
+| Token | Pixel | Dùng cho |
+|---|---|---|
+| `0` | 0 | — |
+| `1` | 4px | Gap giữa icon và text trong button |
+| `2` | 8px | Gap nhỏ giữa badge, gap trong flex |
+| `3` | 16px | Gap giữa card, section margin |
+| `4` | 24px | `card-body` padding dọc, gap giữa title và content |
+| `5` | 48px | Khoảng cách page top, giữa hero và content |
+
+**Nguyên tắc:** luôn dùng utility class (`p-3`, `gap-3`, `mt-4`), không dùng arbitrary value (`p-[17px]`).
+
+### 5.2 Layout grid (desktop ≥ 992px)
+
+```
+┌───────────────────────────────────────────────────────────────┐
+│  NAVBAR (60px, fixed-top, z-1040)                             │
+├──────────┬────────────────────────────────────────────────────┤
+│          │                                                    │
+│ SIDEBAR  │   MAIN CONTENT (fluid container, max-width 1400px) │
+│ (248px   │                                                    │
+│  fixed)  │   ┌──────────────────────────────────────────────┐ │
+│          │   │ PAGE HEADER (title + actions)                │ │
+│          │   ├──────────────────────────────────────────────┤ │
+│          │   │ FILTER TOOLBAR (sticky trong list view)      │ │
+│          │   ├──────────────────────────────────────────────┤ │
+│          │   │ CONTENT CARDS / TABLE                         │ │
+│          │   └──────────────────────────────────────────────┘ │
+└──────────┴────────────────────────────────────────────────────┘
 ```
 
-- Card mặc định: nền trắng, border `--border-color`, shadow-sm, radius
-  `--radius-md`, header gradient nhẹ `--primary`.
-- **Sub-card** (card bên trong filter hoặc modal): override card-header
-  `bg-white` (header trắng) để tránh xung đột thị giác.
-- **Không dùng** `card-header bg-success`/`bg-warning` trực tiếp, nếu cần
-  phân loại, dùng badge bên cạnh tiêu đề card.
+- **Mobile (< 992px):** sidebar thu vào offcanvas, toggle bằng nút hamburger ở navbar.
+- **Table hẹp hơn 768px:** wrap trong `.table-responsive`; không ép breakpoint responsive table.
 
-### 5.3 Stat Card (dashboard + tổng quan module)
+### 5.3 Nguyên tắc layout
 
-```html
-<div class="stat-card">
-    <div class="stat-card-icon"><i class="bi bi-mortarboard"></i></div>
-    <div>
-        <div class="stat-card-value">124</div>
-        <div class="stat-card-label">Chương trình đào tạo</div>
-    </div>
-</div>
+- **Luôn** dùng `flex` cho layout 1 chiều, `grid` cho 2 chiều phức tạp.
+- **Không** dùng `space-*` cho spacing giữa children — luôn dùng `gap-*`.
+- **Không** mix `margin` + `gap` trên cùng một element.
+- Card luôn dùng `mb-3` hoặc `mb-4` để tạo rhythm dọc, không dùng `margin-top`.
+
+---
+
+## 6 · Elevation & Radius
+
+### 6.1 Elevation hierarchy (thứ tự từ thấp đến cao)
+
+| Level | Shadow token | Usage |
+|---|---|---|
+| 0 (flat) | — | Background, section không nổi |
+| 1 | `--shadow-sm` | Card mặc định, filter toolbar |
+| 2 | `--shadow-md` | Card khi hover, dropdown menu |
+| 3 | `--shadow-lg` | Modal, offcanvas, toast |
+
+### 6.2 Radius map
+
+- `--radius-sm` (6px): input, button, badge, select, tag
+- `--radius-md` (10px): card, alert, modal body, avatar 64×64+
+- `--radius-lg` (14px): dialog xác nhận quan trọng (xóa cấp cao), hero panel
+
+**Không** dùng `border-radius: 50%` trừ avatar và icon tròn. Button pill (`rounded-pill`) chỉ dùng cho filter chip.
+
+---
+
+## 7 · Iconography & Media
+
+### 7.1 Icon set
+
+- **Bộ duy nhất:** Bootstrap Icons 1.11 (`bi-*`).
+- **Size:** `16px` trong inline text; `20px` trong button; `24px` trong stat card; `40px` trong empty state.
+- **Màu:** kế thừa từ parent (`currentColor`); chỉ override khi đứng độc lập (ví dụ stat card dùng `--primary-lt`).
+- **Không** dùng emoji thay icon. **Không** trộn 2 icon set.
+
+### 7.2 Icon conventions
+
+| Hành động / Khái niệm | Icon |
+|---|---|
+| Tạo mới | `bi-plus-circle` / `bi-plus-lg` |
+| Sửa | `bi-pencil` |
+| Xóa | `bi-trash` |
+| Xem chi tiết | `bi-eye` |
+| Khóa / Mở khóa | `bi-lock` / `bi-unlock` |
+| Duyệt | `bi-check2-circle` |
+| Từ chối | `bi-x-circle` |
+| Tải xuống | `bi-download` |
+| Tải lên | `bi-upload` |
+| Tìm kiếm | `bi-search` |
+| Lọc | `bi-funnel` |
+| Cài đặt | `bi-gear` |
+| Đăng xuất | `bi-box-arrow-right` |
+| CTDT | `bi-mortarboard` |
+| Học phần | `bi-book` |
+| Lớp học phần | `bi-collection` |
+| Học kỳ | `bi-calendar-event` |
+| Người dùng | `bi-people` |
+| Dashboard | `bi-speedometer2` |
+
+### 7.3 Media
+
+- Ảnh đại diện (avatar): placeholder từ chữ cái đầu tên, nền `--primary` + text trắng nếu chưa upload.
+- Icon decoration lớn trong empty state: 1 icon Bootstrap, opacity 0.35, size 80–96px.
+- **Cấm** abstract shapes / gradient blob / SVG hand-drawn làm filler.
+
+---
+
+## 8 · Motion & Transitions
+
+### 8.1 Duration & easing
+
+- **Standard:** `180ms cubic-bezier(.4, 0, .2, 1)` (token `--transition`).
+- **Quick** (feedback nhỏ, hover): `120ms ease`.
+- **Slow** (dialog enter/exit): `240ms cubic-bezier(.4, 0, .2, 1)`.
+
+### 8.2 What animates
+
+| Element | Property | Duration |
+|---|---|---|
+| Button / Link hover | `background-color`, `color` | 120ms |
+| Card hover | `box-shadow`, `transform: translateY(-1px)` | 180ms |
+| Sidebar link hover | `background-color`, `padding-left` | 180ms |
+| Modal enter | `opacity` + `transform: scale(.98→1)` | 240ms |
+| Toast / flash | `opacity` + `translateY(-8px→0)` | 180ms |
+
+### 8.3 What NEVER animates
+
+- Layout shifts lớn (đừng animate `width`/`height` của sidebar).
+- Color của text body khi hover row (đổi background là đủ).
+- Page transition (Thymeleaf server-rendered, không SPA).
+- Loading spinner tự chế — **dùng Bootstrap `.spinner-border`**.
+
+---
+
+## 9 · Component library
+
+### 9.1 Navbar (top, fixed)
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  🎓 Quản Lý Đào Tạo  ·  Trường XYZ     [🔔] [👤 User ▾]    │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-- Grid: `col-12 col-sm-6 col-xl-3` trên dashboard.
-- Có thể bọc `<a>` bên ngoài để tạo card điều hướng (nhấn chuyển trang).
-- Biến thể theo màu (success / warning / danger / info / teal / purple):
-  class prefix `.stat-card.variant-*`. Nếu dùng ≥ 3 trang, **nâng lên
-  `main.css`**; nếu dùng 1 trang, khai báo trong `<style>` cục bộ.
+- Height: `60px`, `position: fixed-top`, `z-index: 1040`.
+- Background: gradient `--primary → --primary-dk`.
+- Brand: `bi-mortarboard-fill` màu `--accent-lt` + tên hệ thống.
+- Right cluster: notification bell (badge số lượng), user menu dropdown (avatar + tên + role + link Profile/Logout).
 
-### 5.4 Table
+### 9.2 Sidebar (left, fixed)
+
+- Width: `248px`, background `--surface-card`, border-right `--border-color`.
+- Section header: uppercase, `--text-subtle`, `letter-spacing: 0.05em`, `font-size: 0.75rem`.
+- Link item: padding `10px 16px`, icon 16px + margin-right 10px.
+- State **active**: background `--surface-hover`, border-left `3px solid --primary-lt`, font-weight 600.
+- State **hover**: background `--surface-hover`, `padding-left: +2px`.
+- Hiển thị theo role qua `sec:authorize` — **không** hiện item mà user không click được.
+
+### 9.3 Card
 
 ```html
-<div class="table-responsive">
-    <table class="table table-hover table-bordered align-middle mb-0">
-        <thead>
-            <tr>
-                <th style="width:50px;">STT</th>
-                <th>Cột A</th>
-                <th class="text-center">Trạng Thái</th>
-                <th class="text-center" style="width:150px;">Thao Tác</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr th:if="${#lists.isEmpty(items)}">
-                <td colspan="4" class="text-center py-5">...</td>
-            </tr>
-            <tr th:each="item, stat : ${items}">
-                <td class="text-muted" th:text="${stat.index + 1}"></td>
-                ...
-            </tr>
-        </tbody>
-    </table>
-</div>
+<article class="card">
+  <header class="card-header">
+    <strong><i class="bi bi-collection me-2"></i>Tiêu đề</strong>
+    <span class="badge bg-light text-dark">12 mục</span>
+  </header>
+  <div class="card-body">...</div>
+  <footer class="card-footer bg-transparent small text-muted">...</footer>
+</article>
 ```
 
-- **Tối đa 20 dòng / trang** + pagination.
-- Luôn có search/filter ở card phía trên table.
-- Cột `Thao Tác` dùng icon-only button + tooltip, tránh chữ dài.
-- Sticky header: áp dụng cho bảng dài > 40 dòng (màn hình tra cứu nhanh).
-- Không hiển thị `null` / `undefined` — fallback `'--'`.
+- Radius: `--radius-md`, shadow `--shadow-sm`, border `1px solid --border-color`.
+- Header: `bg-transparent` + `font-weight: 600`. **Không** tô màu đậm.
+- Hover (chỉ card dẫn đến detail): `translateY(-1px)` + shadow lên `--shadow-md`.
 
-### 5.5 Form
+### 9.4 Table
+
+- Class mặc định: `table table-hover align-middle`.
+- Header: `background: var(--surface-alt)`, uppercase, font-size `0.75rem`, `letter-spacing: 0.03em`.
+- Cell: `padding: 10px 12px`, vertical-align middle.
+- Row hover: `background: var(--surface-hover)`.
+- Zebra: **không** dùng striping trừ trang thống kê dày đặc.
+- Action cluster cuối dòng: `btn-group-sm` với icon-only buttons + tooltip.
+
+### 9.5 Button
+
+| Loại | Class | Usage |
+|---|---|---|
+| Primary | `btn btn-primary` | Action chính của trang (Tạo mới, Lưu) — **tối đa 1 mỗi section** |
+| Secondary outline | `btn btn-outline-secondary` | Hủy, Quay lại |
+| Danger | `btn btn-danger` | Xác nhận xóa (trong modal) |
+| Danger outline | `btn btn-outline-danger` | Icon xóa trong row |
+| Icon-only | `btn btn-sm btn-outline-*` | Action cluster — **bắt buộc** có `data-bs-toggle="tooltip"` + `aria-label` |
+| Link | `btn btn-link` | Action ngữ nghĩa nhẹ (xem thêm, bỏ qua) |
+
+**Sizing:** default cho action chính, `btn-sm` cho action trong table row.
+
+### 9.6 Form
 
 ```html
-<form th:action="@{/url}" method="post" novalidate>
-    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+<form th:object="${dto}" novalidate>
+  <!-- Error banners (non-field) -->
+  <div th:if="${errorMsg}" class="alert alert-danger">...</div>
 
-    <div class="form-floating mb-3">
-        <input type="text" class="form-control" id="hoTen" name="hoTen"
-               th:value="${item?.hoTen}" placeholder="Họ Tên" required>
-        <label for="hoTen">Họ Tên <span class="text-danger">*</span></label>
-        <div class="invalid-feedback">Vui lòng nhập họ tên.</div>
-    </div>
+  <!-- Validation summary (field) — BẮT BUỘC trong form th:object -->
+  <div th:if="${#fields.hasErrors('*')}" class="alert alert-warning">...</div>
 
-    <div class="mb-3">
-        <label for="ghiChu" class="form-label fw-medium">Ghi Chú</label>
-        <textarea class="form-control" id="ghiChu" name="ghiChu" rows="3"
-                  th:text="${item?.ghiChu}"></textarea>
+  <!-- Section -->
+  <fieldset class="mb-4">
+    <legend class="fs-6 fw-semibold text-uppercase text-muted">Thông Tin Chung</legend>
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label">Tên Học Phần <span class="text-danger">*</span></label>
+        <input th:field="*{tenHocPhan}" class="form-control"
+               th:classappend="${#fields.hasErrors('tenHocPhan')} ? ' is-invalid'"/>
+        <div class="invalid-feedback" th:errors="*{tenHocPhan}"></div>
+        <small class="form-text text-muted">Ví dụ: Lập Trình Hướng Đối Tượng</small>
+      </div>
     </div>
+  </fieldset>
 
-    <div class="mb-3">
-        <label for="file" class="form-label fw-medium">File Đính Kèm</label>
-        <input type="file" class="form-control" id="file" name="file"
-               accept=".pdf,.doc,.docx,.xlsx,.xls">
-        <div class="form-text">Chấp nhận: PDF, DOC, DOCX, XLSX. Tối đa 20 MB.</div>
-    </div>
-
-    <div class="d-flex gap-2 justify-content-end">
-        <a th:href="@{/url}" class="btn btn-outline-secondary">Huỷ</a>
-        <button type="submit" class="btn btn-primary" onclick="showLoading(this)">
-            <span class="spinner-border spinner-border-sm d-none me-1"></span>
-            <i class="bi bi-save me-1"></i>Lưu
-        </button>
-    </div>
+  <div class="d-flex justify-content-end gap-2">
+    <a class="btn btn-outline-secondary">Hủy</a>
+    <button class="btn btn-primary">Lưu</button>
+  </div>
 </form>
 ```
 
-- Form card nghiệp vụ chính: `max-width: 800px`, căn giữa.
-- Inline text/select/date: ưu tiên `form-floating`. Textarea dùng label thường.
-- Mọi field bắt buộc có `*` màu danger sau label + `invalid-feedback`.
-- CSRF token: **bắt buộc** trên mọi form POST.
-- Button submit gắn `showLoading(this)` để vô hiệu hoá trong lúc chờ server —
-  tránh double-submit.
+**Quy tắc:**
+- Label luôn có dấu `*` đỏ cho trường bắt buộc.
+- Validation error hiển thị ngay dưới input qua `.invalid-feedback`.
+- Helper text `.form-text` cho ví dụ/giới hạn.
+- Nút action cuối: phải đặt ở **dưới-phải**, Hủy trước Lưu.
+- **Cấm** disable nút Lưu cho đến khi validate client-side — để user submit rồi show error.
+- Form có file upload: `@InitBinder` disallow field `String` trùng tên với `@RequestParam MultipartFile`.
 
-### 5.6 Buttons
+### 9.7 Badge
 
-| Hành động                 | Class tương ứng                     | Ghi chú                                   |
-|---------------------------|-------------------------------------|-------------------------------------------|
-| Tạo mới / Lưu              | `btn btn-primary`                   | Mặc định override `--primary`             |
-| Huỷ / Quay lại             | `btn btn-outline-secondary`         |                                           |
-| Xoá                        | `btn btn-outline-danger`            | Phải gọi `confirmDelete(...)` trước submit|
-| Phê duyệt                  | `btn btn-success`                   |                                           |
-| Từ chối                    | `btn btn-outline-danger`            |                                           |
-| Nộp lên duyệt              | `btn btn-warning text-dark`         |                                           |
-| Export Excel               | `btn btn-outline-success`           | Icon `bi-file-earmark-excel`              |
-| Import Excel               | `btn btn-outline-primary`           | Icon `bi-upload`                          |
-| Hành động trong table      | `btn btn-sm btn-outline-*`          | Icon-only + tooltip                       |
-| Tác vụ nguy hiểm trong modal | `btn btn-danger`                  | Modal confirm bắt buộc                    |
+- Radius: `--radius-sm`, padding `4px 8px`, font-size `0.75rem`, font-weight 500.
+- Không dùng icon bên trong badge trừ status (ví dụ `bi-check` trong `Đã Duyệt`).
+- Status badge trong table: bọc trong `<span class="badge">`, không `<div>`.
 
-### 5.7 Badges trạng thái
+### 9.8 Modal
 
-Mapping chuẩn (áp dụng cho mọi entity có enum trạng thái):
-
-| Trạng thái nghiệp vụ                   | Class                          |
-|----------------------------------------|--------------------------------|
-| `BanNhap`, `ChuanBi`                   | `badge bg-secondary`           |
-| `ChoDuyet`                             | `badge bg-warning text-dark`   |
-| `DaDuyet`                              | `badge bg-success` hoặc `bg-info text-dark` (DotKienTap) |
-| `DangThucHien`, `DangDienRa`, `DangMo` | `badge bg-primary` hoặc `bg-success` (LopHocPhan) |
-| `DaThucHien`                           | `badge bg-success`             |
-| `DaKetThuc`, `DaDong`                  | `badge bg-dark` / `bg-secondary` |
-| `DangThucTap`                          | `badge bg-info text-dark`      |
-| `TuChoi`, `DaHuy`                      | `badge bg-danger`              |
-| `DaPhanCong` (DanhSachSV…)             | `badge bg-secondary`           |
-
-Với dữ liệu boolean dạng "đã tham gia / đã cảnh báo": dùng cặp `bg-success` /
-`bg-warning text-dark`.
-
-### 5.8 Flash Messages
-
-Đặt NGAY sau breadcrumb (trước khi vào content block). Tự đóng sau 4 giây qua
-`.auto-dismiss` trong `main.js`.
-
-```html
-<div th:if="${successMsg}" class="alert alert-success alert-dismissible fade show auto-dismiss" role="alert">
-    <i class="bi bi-check-circle-fill me-2"></i>
-    <span th:text="${successMsg}"></span>
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-</div>
-<div th:if="${warningMsg}" class="alert alert-warning alert-dismissible fade show auto-dismiss" role="alert">
-    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-    <span th:text="${warningMsg}"></span>
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-</div>
-<div th:if="${errorMsg}" class="alert alert-danger alert-dismissible fade show auto-dismiss" role="alert">
-    <i class="bi bi-x-octagon-fill me-2"></i>
-    <span th:text="${errorMsg}"></span>
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-</div>
+```
+┌────────────────────────────────────────────┐
+│ ⚠️  Xác Nhận Xóa                      [✕]  │  <- header: --primary-dk, text white
+├────────────────────────────────────────────┤
+│  Bạn có chắc chắn muốn xóa học phần        │
+│  LTHDT101 - Lập Trình Hướng Đối Tượng?     │
+│                                            │
+│  Hành động này KHÔNG thể hoàn tác.         │  <- text-danger small
+├────────────────────────────────────────────┤
+│                      [ Hủy ] [ Xóa ]       │  <- btn-outline-secondary + btn-danger
+└────────────────────────────────────────────┘
 ```
 
-- 4 loại: `success` (hành động hoàn tất), `info` (thông tin trung tính),
-  `warning` (soft-check không chặn), `danger` (thất bại).
-- Luôn có icon Bootstrap Icons đi kèm.
+- Size: `modal-md` default, `modal-lg` cho form phức tạp, `modal-xl` cho wizard.
+- Backdrop: luôn click-to-close trừ modal đang xử lý POST.
+- Destructive confirm: bắt buộc có icon cảnh báo `bi-exclamation-triangle-fill` + dòng "không thể hoàn tác".
 
-### 5.9 Empty State
+### 9.9 Alert (flash + inline)
 
-```html
-<tr th:if="${#lists.isEmpty(items)}">
-    <td colspan="6" class="text-center py-5">
-        <i class="bi bi-inbox display-4 text-muted d-block mb-3"></i>
-        <p class="text-muted mb-3">Chưa có dữ liệu nào.</p>
-        <a th:href="@{/url/them}" class="btn btn-primary">
-            <i class="bi bi-plus-lg me-1"></i>Thêm Mới
-        </a>
-    </td>
-</tr>
+| Variant | Icon | Dùng cho |
+|---|---|---|
+| `alert-success` | `bi-check-circle-fill` | Tạo/cập nhật thành công |
+| `alert-danger` | `bi-exclamation-triangle-fill` | Exception, lỗi business |
+| `alert-warning` | `bi-exclamation-circle-fill` | Chờ duyệt, gần hết hạn |
+| `alert-info` | `bi-info-circle-fill` | Hint, hướng dẫn |
+
+Flash alert (render trong `layout/base.html`) auto-dismiss sau 5s. Inline alert (trong form) **không** auto-dismiss.
+
+### 9.10 Empty state
+
+```
+┌───────────────────────────────────────────┐
+│                                           │
+│                  📋                        │  <- icon 80px, opacity 0.35
+│                                           │
+│        Chưa có học phần nào                │  <- h3
+│        Bắt đầu bằng cách tạo học phần     │  <- text-muted
+│        đầu tiên cho chương trình đào tạo. │
+│                                           │
+│           [ + Tạo Học Phần ]              │  <- btn-primary, nếu có quyền
+│                                           │
+└───────────────────────────────────────────┘
 ```
 
-- Luôn có **icon + mô tả + CTA** (trừ trường hợp không có hành động tạo mới
-  tương ứng role).
-- Khi empty-state trong card chiếm nguyên thân, dùng class `.empty-state`.
+- Padding dọc: 64px.
+- Text-align: center.
+- Icon: 1 icon Bootstrap cỡ lớn, màu `--text-subtle`.
+- CTA: chỉ 1, và chỉ hiển thị nếu user có quyền tạo.
 
-### 5.10 Modal
+### 9.11 Skeleton loader
 
-- Dùng cho: xác nhận xoá, form ngắn (≤ 3 field), xem nhanh chi tiết 1 entity.
-- **Không** dùng modal cho form > 5 field — chuyển sang trang riêng.
-- Header gradient primary, body padding 20px, footer: `Huỷ` bên trái
-  (outline-secondary), button chính bên phải (primary / success / danger).
+**Không** dùng skeleton — hệ thống server-rendered, trang load < 300ms trong LAN. Dùng `.spinner-border` nhỏ nếu có fetch AJAX (ví dụ tìm kiếm giảng viên).
 
-### 5.11 Loading Feedback
+### 9.12 Pagination
 
-```html
-<button type="submit" class="btn btn-primary" onclick="showLoading(this)">
-    <span class="spinner-border spinner-border-sm d-none me-1"></span>
-    <i class="bi bi-save me-1"></i>Lưu
-</button>
-```
+- Dùng Bootstrap `.pagination` size default.
+- Luôn hiện: First · Prev · [page numbers] · Next · Last.
+- Page size selector bên phải: 10 / 25 / 50 / 100.
+- Hiển thị "Hiển thị X–Y trong tổng Z bản ghi" bên trái.
 
-- `showLoading(btn)` trong `main.js` disable button, ẩn icon, hiện spinner.
-- Tự re-enable sau 15 s fallback (đề phòng network lỗi).
+### 9.13 Breadcrumb
 
-### 5.12 Utility classes dùng chung
-
-Tái sử dụng thay vì viết inline style. Các class được đăng ký trong `main.css`:
-
-| Class                       | Công dụng                                                                 |
-|-----------------------------|---------------------------------------------------------------------------|
-| `.page-title`               | H4 primary + border-left accent                                           |
-| `.page-subtitle`            | Kicker uppercase phía trên title                                          |
-| `.stat-card`                | Base stat card (card + shadow + hover translate)                          |
-| `.stat-card-icon`           | Icon tròn 44×44 bên trái                                                  |
-| `.stat-card-value`          | Số liệu lớn (1.75 rem · 700 · primary)                                    |
-| `.stat-card-label`          | Label mô tả nhỏ phía dưới                                                 |
-| `.info-row` + `.info-label` | Bảng 2 cột key/value trong trang chi tiết                                 |
-| `.empty-state`              | Wrapper cho empty state full-card                                         |
-| `.sidebar-section-header`   | Ký hiệu section trong sidebar (uppercase · muted)                         |
-| `.search-bar`               | Wrapper input-group focus unified                                         |
-| `.soft-divider`             | Đường kẻ 1 px màu subtle                                                  |
-
-Biến thể scoped (dashboard quick actions, login panel) vẫn giữ trong `<style>`
-của trang tương ứng, nhưng một khi đã dùng ở ≥ 3 trang thì **nâng lên**
-`main.css`.
+- Chỉ xuất hiện ở chi tiết (depth ≥ 2).
+- Separator: `bi-chevron-right`.
+- Item cuối: `aria-current="page"`, không click được, màu `--text-muted`.
 
 ---
 
-## 6 · Sidebar Navigation
+## 10 · Page templates
 
-```html
-<!-- Mục đơn -->
-<li class="nav-item">
-    <a class="nav-link"
-       th:href="@{/url}"
-       th:classappend="${activeMenu == 'ten-menu'} ? ' active' : ''">
-        <i class="bi bi-icon-name"></i>
-        <span>Tên Menu</span>
-    </a>
-</li>
+### 10.1 Dashboard
 
-<!-- Mục có submenu -->
-<li class="nav-item">
-    <a class="nav-link d-flex align-items-center"
-       href="#submenu-id" data-bs-toggle="collapse"
-       th:classappend="${activeMenu != null and activeMenu.startsWith('ten-module')} ? '' : ' collapsed'">
-        <i class="bi bi-icon-name"></i>
-        <span>Tên Menu</span>
-        <i class="bi bi-chevron-down ms-auto"></i>
-    </a>
-    <div class="collapse" id="submenu-id"
-         th:classappend="${activeMenu != null and activeMenu.startsWith('ten-module')} ? ' show' : ''">
-        <ul class="nav flex-column ps-4">
-            <li class="nav-item">
-                <a class="nav-link" th:href="@{/url}">Sub item</a>
-            </li>
-        </ul>
-    </div>
-</li>
+```
+┌─ Page header ────────────────────────────────────────────┐
+│ Xin chào, [Tên] · Vai trò: [Role]    [Chu kỳ: HK1-2025]  │
+└──────────────────────────────────────────────────────────┘
+┌─ Stat cards (4 cột) ─────────────────────────────────────┐
+│ [CTDT: 12] [HP đã duyệt: 148] [Lớp đang mở: 32] [SV...]  │
+└──────────────────────────────────────────────────────────┘
+┌─ Widget 2 cột ───────────────────────────────────────────┐
+│ ┌─ Việc cần làm ──────┐ ┌─ Hoạt động gần đây ──────────┐ │
+│ │ · 3 HP chờ duyệt    │ │ · PDT duyệt HP LTHDT101      │ │
+│ │ · 2 LHP chưa GV     │ │ · CNHP tạo HP mới            │ │
+│ └──────────────────────┘ └──────────────────────────────┘ │
+└──────────────────────────────────────────────────────────┘
 ```
 
-### 6.1 Menu theo vai trò
+- Stat card: số lớn (2.25rem, weight 600), label phía dưới, icon góc trên phải với màu `--primary-lt`, border-left `4px solid --accent`.
+- Widget: height tự động, không fix; có "Xem tất cả" link ở footer.
 
-| Vai trò              | Menu hiển thị (gộp `sec:authorize`)                                 |
-|----------------------|----------------------------------------------------------------------|
-| `ADMIN`, `PDT`       | Dashboard · Người Dùng · Doanh Nghiệp · Học Kỳ · Báo Cáo             |
-| `TTDTXS`             | Dashboard · CTĐT · Lớp Học Phần · Đợt Kiến Tập / Thực Tập · Báo Cáo  |
-| `CNHP` (Chủ nhiệm HP) | Học Phần · Đội ngũ GV · Lớp Học Phần của HP                         |
-| `BCN` (Trưởng BM)    | CTĐT · Lớp Học Phần                                                  |
-| `GIANG_VIEN`         | Lớp Học Phần của tôi · Đánh giá SV · Tài liệu                        |
-| `CVHT`               | Cảnh báo SV                                                           |
-| `SINH_VIEN`          | Lịch Học · Kết Quả                                                    |
-| `DOANH_NGHIEP`       | Kiến Tập · Thực Tập (của tôi)                                         |
+### 10.2 List view (trang danh sách)
 
-**Bắt buộc**: Mỗi GET controller phải `model.addAttribute("activeMenu", "<slug>")`
-để item active được highlight (CSS có chỉ thị 3 px accent bên trái).
+```
+┌─ Page header ────────────────────────────────────────────┐
+│ Học Phần                       [ + Tạo Học Phần ]        │
+│ Quản lý danh sách học phần trong toàn trường.            │
+└──────────────────────────────────────────────────────────┘
+┌─ Filter toolbar (sticky, --surface-alt) ─────────────────┐
+│ 🔍 [Tìm kiếm...]  [Loại HP ▾] [Trạng thái ▾] [Đặt lại]   │
+└──────────────────────────────────────────────────────────┘
+┌─ Table card ─────────────────────────────────────────────┐
+│ ┌──┬────────┬──────────────┬────┬──────┬──────┬────────┐ │
+│ │☐ │ Mã HP  │ Tên HP       │ TC │ Loại │ TT   │ Actions│ │
+│ ├──┼────────┼──────────────┼────┼──────┼──────┼────────┤ │
+│ │☐ │ LTHDT1 │ Lập Trình... │ 3  │ BB   │ 🟢   │ 👁 ✏ 🗑│ │
+│ └──┴────────┴──────────────┴────┴──────┴──────┴────────┘ │
+│ Hiển thị 1–25 / 148       [1] 2 3 ... [50/page ▾]       │
+└──────────────────────────────────────────────────────────┘
+```
+
+- Filter toolbar: `sticky top-0` khi scroll, background `--surface-alt`.
+- Bulk action bar (xuất hiện khi ≥ 1 row selected): fixed-bottom, với các nút "Duyệt hàng loạt", "Xuất Excel", "Hủy".
+
+### 10.3 Detail view
+
+```
+┌─ Breadcrumb ─────────────────────────────────────────────┐
+│ Dashboard › Học Phần › LTHDT101                          │
+└──────────────────────────────────────────────────────────┘
+┌─ Hero header ────────────────────────────────────────────┐
+│ LTHDT101 · Lập Trình Hướng Đối Tượng      [🟢 Đã Duyệt]  │
+│ 3 TC · Bắt Buộc · Khoa CNTT              [✏ Sửa] [🗑]   │
+└──────────────────────────────────────────────────────────┘
+┌─ Tabs ───────────────────────────────────────────────────┐
+│ [Tổng quan] [CTĐT đang dùng] [Lớp đã mở] [Đề cương] [Log]│
+└──────────────────────────────────────────────────────────┘
+┌─ Tab content (grid 2 cột) ───────────────────────────────┐
+│ ┌─ Thông tin chung ───┐ ┌─ Thống kê ──────────────────┐ │
+│ │ Mã: LTHDT101        │ │ Lớp đang mở: 3              │ │
+│ │ Tên: ...            │ │ SV đang học: 142            │ │
+│ └──────────────────────┘ └──────────────────────────────┘ │
+└──────────────────────────────────────────────────────────┘
+```
+
+### 10.4 Form view
+
+Chia thành fieldset theo section, mỗi fieldset có `<legend>` uppercase. Nút action dưới cùng, fixed-bottom trên mobile.
+
+### 10.5 Wizard (multi-step)
+
+Dành cho: Tạo CTDT (4 bước), Tạo lớp hàng loạt (3 bước), Đăng ký kiến tập (3 bước).
+
+```
+[①━Thông tin━━②━━Học phần━━③━━Xem lại━━④━━Hoàn tất]
+   done         active         todo         todo
+```
+
+- Step indicator: circle 32px, border 2px, số bên trong.
+- State: `done` (nền `--primary`, check icon), `active` (nền `--primary`, border `--accent`), `todo` (nền transparent, border `--border-strong`).
+- Nút: `[← Quay lại]` trái, `[Tiếp →]` / `[Hoàn tất]` phải.
+- **Back** không làm mất data các bước trước (server session hoặc hidden inputs).
 
 ---
 
-## 7 · Breadcrumb
+## 11 · State patterns
 
-Bắt buộc ở mọi trang (trừ `/login` và `/dashboard`), tối đa 3 cấp:
+Mọi màn hình phải có đủ các state sau:
 
-```html
-<nav aria-label="breadcrumb" class="mb-3">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item">
-            <a th:href="@{/dashboard}" class="text-decoration-none">
-                <i class="bi bi-house-door me-1"></i>Trang Chủ
-            </a>
-        </li>
-        <li class="breadcrumb-item">
-            <a th:href="@{/nguoi-dung}" class="text-decoration-none">Người Dùng</a>
-        </li>
-        <li class="breadcrumb-item active" aria-current="page">Chi Tiết</li>
-    </ol>
-</nav>
+| State | Trigger | UI |
+|---|---|---|
+| **Loading** | Request > 300ms | Spinner-border nhỏ cạnh label, disable submit |
+| **Empty** | Không có dữ liệu | Empty state (9.10) với CTA nếu user có quyền |
+| **Error** | Exception hoặc business rule | Alert banner + re-render form giữ nguyên input |
+| **Success** | Save thành công | Redirect + flash `successMsg` + highlight row mới (class `.row-just-created` 3s) |
+| **Forbidden** | Thiếu quyền | Redirect về `/error/403` với icon và CTA "Về dashboard" |
+| **Not found** | URL sai / bản ghi đã xóa | `/error/404` với icon và CTA "Về danh sách" |
+| **Confirming** | Trước destructive action | Modal xác nhận, nút Xóa màu `btn-danger` |
+| **Read-only** | User không có quyền sửa | Ẩn action cluster, form input `readonly` + banner `alert-info` |
+
+---
+
+## 12 · Role-based UI matrix
+
+| Menu / Feature | PDT | TTDTXS | CNHP | CVHT | GV | SV | DN | Admin |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| Dashboard | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| **Đào tạo** | | | | | | | | |
+| Chương Trình Đào Tạo (R) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | ✓ |
+| CTDT (W — Tạo/Sửa/Xóa/Duyệt) | ✓ | ✓ | ✓ | — | — | — | — | ✓ |
+| Học Phần (R) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | ✓ |
+| Học Phần (W) | — | ✓ | ✓ | — | — | — | — | ✓ |
+| Lớp Học Phần (R) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | ✓ |
+| Lớp Học Phần (W) | ✓ | ✓ | ✓ | — | GV chỉ lớp mình | — | — | ✓ |
+| Học Kỳ (R/W) | ✓ | ✓ | — | — | — | — | — | ✓ |
+| Lớp Hành Chính | ✓ | ✓ | — | ✓ | — | — | — | ✓ |
+| **Con Người** | | | | | | | | |
+| Người Dùng (list/R) | ✓ | ✓ | — | — | — | — | — | ✓ |
+| Người Dùng (W) | — | — | — | — | — | — | — | ✓ |
+| Hồ sơ cá nhân | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| **Đánh Giá** | | | | | | | | |
+| Điểm của tôi | — | — | — | — | — | ✓ | — | — |
+| Nhập điểm | — | — | — | — | ✓ | — | — | ✓ |
+| Cảnh báo học vụ | ✓ | — | — | ✓ | — | — | — | ✓ |
+| **Kiến Tập & Thực Tập** | | | | | | | | |
+| Đợt kiến tập/thực tập | ✓ | ✓ | — | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Tạo đợt | ✓ | ✓ | — | — | — | — | — | ✓ |
+| Đăng ký | — | — | — | — | — | ✓ | — | — |
+| Chấm điểm | — | — | — | — | ✓ | — | ✓ (nhận xét) | ✓ |
+| Doanh nghiệp (CRUD) | — | ✓ | — | — | — | — | — | ✓ |
+
+**Nguyên tắc:**
+- `R` = read, hiện menu + list + detail, ẩn mọi nút W.
+- `W` = write, hiện nút Tạo/Sửa/Xóa/Duyệt.
+- Menu hiện/ẩn qua `sec:authorize` trong `layout/base.html`.
+- Action button trong list/detail hiện/ẩn qua `sec:authorize` inline.
+- Method-level `@PreAuthorize` ở Controller là **last line of defense** — bắt buộc có dù UI đã ẩn.
+
+---
+
+## 13 · Module UX blueprints
+
+### 13.1 Chương Trình Đào Tạo
+
+**List:** filter theo khoa + khóa + trạng thái duyệt. Mỗi row: mã CTDT, tên, khóa, số HP, trạng thái, actions.
+
+**Detail:** tab `Tổng quan` / `Khung chương trình (8 kỳ)` / `HP theo kỳ` / `File Word` / `Lịch sử duyệt`.
+
+**Flow tạo CTDT (wizard 4 bước):**
+1. Thông tin chung (mã, tên, khóa, số TC tối thiểu).
+2. Khung kỳ (chọn kỳ, gán HP bắt buộc / tự chọn, số lớp dự kiến).
+3. Xem lại (bảng tổng hợp HP × kỳ).
+4. Tải file Word + gửi duyệt.
+
+### 13.2 Học Phần
+
+**List:** card view tùy chọn (toggle grid/list), filter theo loại + trạng thái + khoa chủ quản.
+
+**Detail:** card hero + tabs `Tổng quan` / `CTDT đang sử dụng` / `Lớp đã mở` / `File đề cương (preview PDF)` / `Giảng viên đủ điều kiện`.
+
+**State đặc biệt:**
+- `Chờ Duyệt`: banner warning trên đầu trang + nút "Duyệt" / "Từ chối" cho PDT.
+- `Từ Chối`: banner danger kèm lý do từ chối (multi-line text area).
+
+### 13.3 Lớp Học Phần
+
+**Filter 2 chiều bắt buộc:** CTDT × Học Kỳ.
+
+**3 chế độ hiển thị:**
+1. **Chỉ HK** → bảng "Kế hoạch mở lớp toàn trường" (nhóm theo CTDT, mỗi CTDT hiện kỳ quy đổi).
+2. **CTDT + HK** → bảng "HP dự kiến" + "Tạo hàng loạt" wizard.
+3. **Không filter** → bảng lớp đã mở (full list).
+
+### 13.4 Học Kỳ
+
+**List:** table theo thứ tự ngày bắt đầu giảm dần, row active (`Đang Diễn Ra`) có background nhạt `--accent-lt / 20%`.
+
+**Form:**
+- Ngày bắt đầu / kết thúc là nguồn chân lý cho trạng thái.
+- Field trạng thái có hint giải thích quy tắc derive.
+- Validation: nếu trạng thái chọn khác derived status → throw `BusinessException` với message rõ.
+
+### 13.5 Người Dùng
+
+**List:** tab theo loại (`Sinh Viên` / `Giảng Viên` / `Cán Bộ` / `Doanh Nghiệp`), mỗi tab có filter riêng.
+
+**Row actions:** icon-only `btn-group-sm`: Xem · Sửa · Khóa/Mở khóa · Xóa. **Tất cả** đồng bộ icon-only (không mix text+icon).
+
+**Detail:** tab động theo loại user:
+- SV: `Hồ sơ` / `Lớp hành chính` / `Điểm theo kỳ` / `Cảnh báo` / `Đăng ký KT-TT`.
+- GV: `Hồ sơ` / `HP đủ điều kiện dạy` / `Lớp đang dạy` / `Nhận xét sinh viên`.
+
+### 13.6 Đánh Giá
+
+**SV xem điểm:** bảng theo HK giảm dần, cột `Mã HP · Tên HP · TC · Điểm QT · Điểm TH · Điểm Tổng · Trạng thái`. GPA tổng hiển thị ở header.
+
+**GV nhập điểm:** view "Nhập điểm lớp" — bảng có SV × cột điểm, inline edit, nút "Lưu Nháp" + "Công Bố".
+
+**CVHT cảnh báo:** danh sách SV có GPA < 2.0 hoặc nợ ≥ 2 HP, sort theo mức nghiêm trọng.
+
+### 13.7 Kiến Tập & Thực Tập
+
+**Đợt:** list các đợt theo HK, mỗi đợt có: số SV đăng ký / tối đa, DN tham gia, trạng thái.
+
+**Đăng ký (SV):** chọn đợt → chọn DN (nếu được phép) → xác nhận → trạng thái `Chờ CVHT duyệt`.
+
+**Chấm điểm (GV + DN):** form chia 2 section "Nhận xét DN" (read-only cho GV) + "Điểm GV".
+
+---
+
+## 14 · Accessibility
+
+### 14.1 Contrast (WCAG 2.1 AA)
+
+- Text trên nền: ratio ≥ 4.5:1. Text cỡ ≥ 18pt hoặc ≥ 14pt bold: ratio ≥ 3:1.
+- Icon-only button: phải có `aria-label` và tooltip.
+- Link không được phân biệt chỉ bằng màu — phải có underline hoặc icon.
+
+### 14.2 Keyboard
+
+- Tab order: tuyến tính theo DOM, không dùng `tabindex > 0`.
+- Focus ring: visible, dùng `--primary-lt` outline 2px.
+- Modal: trap focus, `Esc` đóng modal.
+- Dropdown/menu: `↑↓` điều hướng, `Enter` chọn, `Esc` đóng.
+
+### 14.3 Semantic
+
+- Dùng `<main>`, `<nav>`, `<header>`, `<aside>` đúng ngữ nghĩa.
+- Icon decoration (`bi-*`) trong nút có text: `aria-hidden="true"`.
+- Table phức tạp: `<caption>`, `<th scope="col">` / `scope="row"`.
+- Form label: luôn gắn `<label for="...">`, không dùng placeholder thay label.
+
+### 14.4 ARIA
+
+- `aria-live="polite"` cho flash alert container.
+- `aria-current="page"` cho sidebar link active.
+- `aria-expanded` cho dropdown toggle.
+- `role="alert"` cho inline error message.
+
+---
+
+## 15 · Responsive breakpoints
+
+Theo Bootstrap 5.3, viết mobile-first:
+
+| Breakpoint | Width | Hành vi |
+|---|---|---|
+| `xs` | < 576px | Sidebar offcanvas, stat card stack 1 cột, table scroll ngang |
+| `sm` | ≥ 576px | Stat card 2 cột, toolbar wrap |
+| `md` | ≥ 768px | Stat card 2 cột, form 2 cột |
+| `lg` | ≥ 992px | Sidebar cố định, stat card 4 cột, desktop layout đầy đủ |
+| `xl` | ≥ 1200px | Max container 1400px, filter toolbar không wrap |
+| `xxl` | ≥ 1400px | — |
+
+**Nguyên tắc:**
+- Không có horizontal scroll ở viewport ≥ `md` trừ table.
+- Touch target ≥ 44×44px trên mobile (tăng padding button).
+- Modal trên mobile: `fullscreen` cho form phức tạp, `bottom sheet` cho confirm đơn giản.
+
+---
+
+## 16 · Content & Voice
+
+### 16.1 Ngữ điệu
+
+- **Lịch sự, trung tính, ngắn gọn.** Không dùng "bạn", thay bằng động từ trực tiếp: "Chọn học kỳ" thay vì "Bạn hãy chọn học kỳ".
+- Không dùng viết hoa toàn bộ trừ `MÃ HP`, `CTDT`, `HK`.
+- Không có dấu cảm thán (`!`). Thông báo thành công dùng dấu chấm: "Đã tạo học phần LTHDT101."
+
+### 16.2 Error message format
+
+```
+[Tên nghiệp vụ] [không thể | bị từ chối] [lý do cụ thể] [gợi ý khắc phục].
+```
+
+Ví dụ:
+- ✓ "Không thể kích hoạt học kỳ HK1-2025: ngày bắt đầu là 01/09/2025 (hôm nay 15/06/2025). Hãy chờ đến ngày bắt đầu hoặc chỉnh ngày."
+- ✗ "Error: invalid state transition."
+
+### 16.3 Labels
+
+| Dùng | Không dùng |
+|---|---|
+| Mã Học Phần | Ma HP, HP Code |
+| Ngày Bắt Đầu | Start Date, Ngày BD |
+| Giảng Viên | Teacher, GV (trừ trong table header nơi cần ngắn) |
+| Đang Diễn Ra | Active, Current |
+
+### 16.4 Button text
+
+- Động từ + danh từ: "Tạo Học Phần", "Duyệt Lớp", "Hủy Đăng Ký".
+- Không dùng "OK" / "Submit" / "Go".
+
+---
+
+## 17 · Feedback contract
+
+Mọi action POST **bắt buộc** tuân theo một trong 4 mô hình feedback:
+
+### 17.1 Success-redirect (CRUD thành công)
+
+```
+POST /resource/them  →  redirect:/resource
+                         + flash successMsg "Đã tạo {id}."
+                         + row mới có class .row-just-created (highlight 3s)
+```
+
+### 17.2 Error-rerender (validation / business fail)
+
+```
+POST /resource/them  →  return "resource/form"
+                         + model.errorMsg = e.getMessage()
+                         + giữ nguyên input của user (bind lại th:object)
+                         + log.error stack trace ở server
+```
+
+**Cấm** redirect + flash errorMsg vì flash có thể drop và user mất toàn bộ input.
+
+### 17.3 Toast (inline action, không rời trang)
+
+```
+AJAX POST /resource/{id}/action  →  JSON { ok: true, msg: "..." }
+                                    → Toast góc dưới phải, auto-dismiss 4s
+```
+
+Dùng cho: toggle yêu thích, quick-approve trong bulk view.
+
+### 17.4 Confirm-then-act (destructive)
+
+```
+Click [Xóa]  →  Modal xác nhận
+             →  Nút [Xóa] = btn-danger
+             →  Nếu OK: submit form ẩn → success-redirect (17.1)
 ```
 
 ---
 
-## 8 · Thymeleaf Patterns
+## 18 · Implementation checklist
 
-### 8.1 Badge trạng thái enum (PascalCase Java)
+### 18.1 Mỗi page mới
 
-Enum Java trong project dùng PascalCase (`DaDuyet`, `ChoDuyet`, `ChuanBi`…),
-**không phải** `UPPER_SNAKE_CASE`. `enum.name()` trả về tên Java gốc. Mọi so
-sánh trong Thymeleaf phải đúng PascalCase.
+- [ ] Có `activeMenu` đúng key để sidebar highlight.
+- [ ] Có page title (`<h1>` hoặc `.page-title`) với border-left `--accent`.
+- [ ] Có breadcrumb nếu depth ≥ 2.
+- [ ] Tất cả hard-coded color đã thay bằng `var(--token)`.
+- [ ] Tất cả icon là `bi-*`.
+- [ ] Mọi button icon-only có `data-bs-toggle="tooltip"` + `aria-label`.
+- [ ] Form có validation inline + banner errorMsg.
+- [ ] Có empty state khi list rỗng.
+- [ ] Responsive check ở 375px, 768px, 1280px.
 
-```html
-<!-- CTDT / HocPhan -->
-<span th:with="tt=${ctdt.trangThai}"
-      th:class="${tt.name() == 'DaDuyet'} ? 'badge bg-success' :
-               (${tt.name() == 'ChoDuyet'} ? 'badge bg-warning text-dark' :
-               (${tt.name() == 'DaHuy'} ? 'badge bg-danger' : 'badge bg-secondary'))"
-      th:text="${tt.name()}">
-</span>
+### 18.2 Mỗi component mới
 
-<!-- DotKienTap -->
-<span th:with="tt=${dot.trangThai}"
-      th:class="${tt.name() == 'DaDuyet'} ? 'badge bg-info text-dark' :
-               (${tt.name() == 'DaThucHien'} ? 'badge bg-success' :
-               (${tt.name() == 'ChoDuyet'} ? 'badge bg-warning text-dark' :
-               (${tt.name() == 'DaHuy'} ? 'badge bg-danger' : 'badge bg-secondary')))"
-      th:text="${tt.name()}">
-</span>
+- [ ] Documented trong section 9 của file này **trước** khi code.
+- [ ] Dùng token, không magic number.
+- [ ] Có đủ 4 state: default / hover / active / disabled.
+- [ ] Keyboard accessible (Tab, Enter, Esc).
+- [ ] Screen reader test với `aria-*`.
 
-<!-- DotThucTap: 6 trạng thái, DaHuy phải hiển thị đỏ -->
-<span th:with="tt=${dot.trangThai}"
-      th:class="${tt.name() == 'DaHuy'} ? 'badge bg-danger' :
-               (${tt.name() == 'DaKetThuc'} ? 'badge bg-secondary' :
-               (${tt.name() == 'DangThucHien'} ? 'badge bg-success' :
-               (${tt.name() == 'DaDuyet'} ? 'badge bg-info text-dark' :
-               (${tt.name() == 'ChoDuyet'} ? 'badge bg-warning text-dark' : 'badge bg-light text-dark'))))"
-      th:text="${tt.name()}">
-</span>
-```
+### 18.3 Mỗi PR UI
 
-### 8.2 Nút xoá kèm xác nhận
-
-```html
-<form th:action="@{/url/{ma}/xoa(ma=${item.ma})}" method="post"
-      onsubmit="return confirmDelete(this, event, 'tên item này')">
-    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-    <button type="submit" class="btn btn-sm btn-outline-danger"
-            data-bs-toggle="tooltip" data-bs-title="Xoá">
-        <i class="bi bi-trash3"></i>
-    </button>
-</form>
-```
-
-### 8.3 Format ngày tháng
-
-```html
-<td th:text="${item.ngayTao != null ? #temporals.format(item.ngayTao, 'dd/MM/yyyy') : '--'}"></td>
-<td th:text="${item.thoiGian != null ? #temporals.format(item.thoiGian, 'dd/MM/yyyy HH:mm') : '--'}"></td>
-```
-
-### 8.4 Pagination chuẩn
-
-```html
-<nav th:if="${page != null and page.totalPages > 1}" class="mt-3">
-    <ul class="pagination pagination-sm justify-content-end mb-0">
-        <li class="page-item" th:classappend="${page.first} ? 'disabled'">
-            <a class="page-link"
-               th:href="@{/url(page=${page.number - 1}, size=${page.size}, keyword=${keyword})}">
-                <i class="bi bi-chevron-left"></i>
-            </a>
-        </li>
-        <li class="page-item" th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}"
-            th:classappend="${i == page.number} ? 'active'">
-            <a class="page-link"
-               th:href="@{/url(page=${i}, size=${page.size}, keyword=${keyword})}"
-               th:text="${i + 1}">1</a>
-        </li>
-        <li class="page-item" th:classappend="${page.last} ? 'disabled'">
-            <a class="page-link"
-               th:href="@{/url(page=${page.number + 1}, size=${page.size}, keyword=${keyword})}">
-                <i class="bi bi-chevron-right"></i>
-            </a>
-        </li>
-    </ul>
-</nav>
-```
-
-### 8.5 CSRF (bắt buộc trong mọi form POST)
-
-```html
-<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-```
-
-### 8.6 `sec:authorize` theo role
-
-```html
-<div sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">...</div>
-<div sec:authorize="hasRole('GIANG_VIEN')">...</div>
-<div sec:authorize="hasRole('ADMIN')">...</div>
-```
-
-Role key → quyền: xem `docs/03_WORKFLOW.md` phần "MA TRAN PHAN QUYEN".
+- [ ] Screenshot before/after đính kèm.
+- [ ] Nếu touches design token: ghi vào changelog (section 19).
+- [ ] Nếu touches role visibility: cập nhật section 12.
+- [ ] QA pass ở desktop Chrome/Firefox + mobile Chrome.
 
 ---
 
-## 9 · Interaction Patterns
+## 19 · Changelog
 
-### 9.1 Filter / Search
-
-- Filter luôn nằm trong 1 card độc lập phía trên table/list.
-- Khi có nhiều field filter tuỳ chọn (ví dụ: `CTĐT`, `Học Kỳ` ở trang Lớp Học
-  Phần), cho phép logic **OR** giữa các field — user chỉ cần nhập 1 trong các
-  field để tra cứu. Hiển thị gợi ý: *"Chọn ít nhất một tiêu chí."*
-- Khi chỉ có 1 search box: bắt buộc có `keyword` và giữ state qua query string
-  để pagination hoạt động đúng.
-
-### 9.2 Batch / Mass action
-
-- Dùng modal với pre-filled default value từ nguồn dữ liệu gốc (ví dụ: tạo
-  hàng loạt lớp học phần — pre-fill số lớp từ `CtdtHocPhan.soLopDuKien`).
-- Thể hiện rõ "idempotent" trong tooltip / alert: re-run không phá dữ liệu
-  hiện tại.
-- Trả về thông báo chính xác: số bản ghi được tạo thêm vs số bản ghi đã bỏ qua.
-
-### 9.3 Soft-check vs Hard-check
-
-- **Hard-check** (chặn cứng): kiểm tra FK tồn tại, ràng buộc ký tự, trạng thái
-  sai workflow. Trả về `errorMsg` + giữ nguyên form input (model attribute).
-- **Soft-check** (cảnh báo mềm): kiểm tra nghiệp vụ có rủi ro nhưng vẫn cho
-  phép (ví dụ: phân công GV ngoài đội ngũ HP). Trả về `warningMsg` mô tả rõ
-  lý do + hướng dẫn khắc phục.
-
-### 9.4 Toast / Auto-dismiss
-
-- Flash message `auto-dismiss` đóng sau 4 s.
-- Toast (Bootstrap `toast`) dành cho thông báo real-time không liên quan đến
-  submit form (ví dụ: notification email đã gửi).
-
-### 9.5 Destructive action
-
-- Bắt buộc đi qua modal xác nhận (`confirmDelete` helper).
-- Nội dung modal phải: tên item + hậu quả không thể hoàn tác + hai nút rõ
-  ràng (`Huỷ` vs `Xoá`).
-- **Không** dùng `alert()` / `confirm()` JavaScript thuần cho action chính —
-  chỉ dùng fallback khi modal chưa render.
+| Ngày | Tác giả | Thay đổi |
+|---|---|---|
+| 2026-04-24 | Design Authority | Rebuild toàn bộ thành tài liệu production-grade; bổ sung section 10 (Page templates), 11 (State patterns), 12 (Role-based UI matrix), 13 (Module blueprints), 17 (Feedback contract), 18 (Checklist). |
+| 2025-12-01 | Initial | Tạo file v1 với token + palette + typography cơ bản. |
 
 ---
 
-## 10 · Model Attribute Contract
-
-Để template và controller giao tiếp đồng nhất, mọi `Model.addAttribute` tuân
-theo bảng dưới. Tên attribute là **key cố định**, controller không được đổi.
-
-| Attribute      | Kiểu Java           | Mục đích                                                |
-|----------------|---------------------|---------------------------------------------------------|
-| `page`         | `Page<T>`           | Kết quả phân trang                                      |
-| `item`         | Entity / DTO        | Object đang xem / sửa chi tiết                          |
-| `items`        | `List<T>`           | Danh sách đơn giản (không phân trang)                   |
-| `listX`        | `List<T>`           | Option list cho select (vd: `listHocPhan`, `listGV`)    |
-| `successMsg`   | `String`            | Flash thành công (`RedirectAttributes`)                 |
-| `errorMsg`     | `String`            | Flash thất bại                                          |
-| `warningMsg`   | `String`            | Flash cảnh báo mềm (soft-check)                         |
-| `activeMenu`   | `String`            | Slug menu đang active trong sidebar                     |
-| `keyword`      | `String`            | Giá trị ô search hiện tại (giữ state qua pagination)    |
-| `currentUser`  | `CustomUserDetails` | User đang đăng nhập (inject từ `@AuthenticationPrincipal`) |
-
-Flash message: **luôn** thêm qua `RedirectAttributes.addFlashAttribute(...)`
-rồi `redirect:`, không dùng `model.addAttribute` cho thông báo sau POST.
-
----
-
-## 11 · Accessibility (a11y) checklist
-
-Hệ thống không phải là trang công cộng WCAG, nhưng phải đủ khả năng hỗ trợ
-người dùng nội bộ có khiếm thị nhẹ / thao tác bàn phím. Mọi PR UI phải đạt:
-
-- [x] Mỗi `<input>` / `<select>` có `<label>` liên kết qua `for` / `id`.
-- [x] Icon-only button có `data-bs-title` (tooltip) hoặc `aria-label`.
-- [x] Nút đóng modal / alert có nội dung (`btn-close` có text ẩn `.visually-hidden`
-      hoặc tooltip).
-- [x] Contrast ratio text/nền ≥ 4.5 : 1 cho body, ≥ 3 : 1 cho heading.
-- [x] Focus ring rõ ràng trên mọi control (dùng chung CSS focus-visible trong
-      `main.css`, 3 px `rgba(45, 95, 158, 0.22)`).
-- [x] Table có `<thead>` đúng ngữ nghĩa; bảng dữ liệu có `scope="col"` khi
-      phức tạp.
-- [x] Flash alert có `role="alert"`.
-
----
-
-## 12 · Performance & Hardening
-
-- **`open-in-view = false`**: mọi association được `LEFT JOIN FETCH` trong
-  repository tương ứng. Tránh `LazyInitializationException` khi render
-  Thymeleaf.
-- **Không trộn icon library**: chỉ dùng `bi bi-*` (Bootstrap Icons).
-- **Không import** font-family khác Inter — giảm FOUT / network.
-- **CSP-friendly**: không inline `<script>` với thông tin nhạy cảm; JS dùng
-  chung đặt ở `main.js`.
-- **No `@ResponseBody` trong MVC controller** — controller MVC chỉ return
-  view name hoặc `redirect:`.
-- **Sanitise output**: luôn dùng `th:text` (escape); `th:utext` chỉ dùng cho
-  nội dung đã được whitelist / trust.
-- **Upload file**: kiểm tra extension ở frontend (`accept`) **và** validation
-  bắt buộc ở service layer (size, MIME).
-
----
-
-## 13 · DO / DON'T
-
-### DO
-
-- Mọi template extends `layout/base.html` qua `layout:decorate`.
-- Mọi trang có breadcrumb (trừ login và dashboard).
-- Mọi table có empty-state khi không có dữ liệu.
-- Mọi form POST có CSRF token.
-- Mọi nút xoá có `confirmDelete(...)` trước submit.
-- `activeMenu` được truyền từ controller trong mọi GET handler.
-- Trạng thái hiển thị qua badge theo bảng §5.7.
-
-### DON'T
-
-- Không dùng inline style (tất cả quy về `main.css` hoặc class utility).
-- Không dùng màu Bootstrap default trực tiếp — luôn đi qua token.
-- Không để text `null` / `undefined` lọt ra UI (fallback `'--'`).
-- Không dùng `alert()` / `confirm()` JS thuần cho action chính.
-- Không mix icon từ nhiều library (Font Awesome / Material / etc.).
-- Không đặt button submit floating giữa trang — luôn ở cuối form.
-- Không dùng `@ResponseBody` cho view MVC.
-- Không để `LazyInitializationException` xảy ra trong render (sửa ở service
-  layer bằng `@Transactional(readOnly = true)` + `JOIN FETCH`).
-
----
-
-## 14 · Login Page
-
-Login có layout độc lập (`brand-panel` bên trái + `form-panel` bên phải) và
-**không** decorate `layout/base.html`. Class CSS đặt scoped trong
-`templates/auth/login.html`:
-
-- `.login-shell` — grid 2 cột (brand | form)
-- `.brand-panel` — nền gradient primary + minh hoạ brand + `brand-feature-list`
-- `.form-panel` — nền `--surface`, form đăng nhập
-- `.btn-login` — full-width, shadow primary hover
-
-Lý do tách rời: login là surface public (trước authentication), yêu cầu
-branding rõ ràng và không có navbar/sidebar.
-
----
-
-## 15 · Versioning & Change Log
-
-Mọi thay đổi design token (color / radius / shadow / typography) phải kèm theo
-ghi chú version trong đầu file `main.css` và cập nhật bảng dưới:
-
-| Version | Ngày        | Nội dung chính                                                   |
-|---------|-------------|------------------------------------------------------------------|
-| v1      | 2025-Q4     | Design system khởi tạo: palette, component, Thymeleaf patterns   |
-| v2      | 2026-Q1     | Tokens `--primary-600`, `--text-primary/muted`, `--radius-card`  |
-| v3      | 2026-Q2     | Rewrite production-grade: a11y checklist, interaction patterns,  |
-|         |             | filter OR-logic cho Lớp Học Phần, model attribute contract       |
-
-Nguyên tắc: **không breaking change** với template đang có. Mọi deprecation
-phải có path di cư trong ≥ 1 release.
+> **Ghi chú cho developer:** Khi bạn tự hỏi "component/màu/khoảng cách này dùng cái nào?", nếu câu trả lời không nằm trong file này, **đừng tự quyết định** — đề xuất bổ sung vào file trước, sau đó mới implement. Điều đó đảm bảo hệ thống UI không bị drift theo thời gian.
