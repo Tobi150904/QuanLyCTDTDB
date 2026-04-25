@@ -69,9 +69,12 @@
     <!-- Flash messages da duoc render boi layout/base.html -->
 
 
-    <!-- Filter -->
-    <div class="card mb-4">
-        <div class="card-body py-3">
+    <!-- Filter toolbar -->
+    <div class="filter-toolbar">
+        <p class="filter-toolbar-title">
+            <i class="bi bi-funnel"></i>Bộ Lọc Lớp Hành Chính
+        </p>
+        <div>
             <form th:action="@{/lop-hanh-chinh}" method="get" class="row g-2 align-items-end">
                 <div class="col-md-5">
                     <div class="input-group search-bar">
@@ -145,7 +148,7 @@
                                    class="text-decoration-none fw-medium"
                                    th:text="${lop.tenLop}"></a>
                             </td>
-                            <td><span class="badge bg-info text-dark" th:text="'K' + ${lop.khoaHoc}"></span></td>
+                            <td><span class="chip chip-primary" th:text="'K' + ${lop.khoaHoc}"></span></td>
                             <td class="small text-muted"
                                 th:text="${lop.chuongTrinhDaoTao != null ? lop.chuongTrinhDaoTao.maCTDT : '--'}">--</td>
                             <td class="small">
@@ -153,7 +156,7 @@
                                 <span th:unless="${lop.coVan != null}" class="text-muted fst-italic">Chưa phân công</span>
                             </td>
                             <td class="text-center">
-                                <div class="d-flex gap-1 justify-content-center">
+                                <div class="action-cluster">
                                     <a th:href="@{/lop-hanh-chinh/chi-tiet/{ma}(ma=${lop.maLopHC})}"
                                        class="btn btn-sm btn-outline-secondary"
                                        data-bs-toggle="tooltip" data-bs-title="Chi Tiết">

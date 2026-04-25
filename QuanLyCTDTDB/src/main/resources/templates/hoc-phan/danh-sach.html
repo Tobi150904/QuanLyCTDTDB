@@ -32,27 +32,32 @@
 
     <!-- Flash messages da duoc render boi layout/base.html -->
 
-
-    <div class="card mb-4">
-        <div class="card-body py-3">
-            <form th:action="@{/hoc-phan}" method="get" class="row g-2">
-                <div class="col-md-8">
-                    <div class="input-group search-bar">
-                        <span class="input-group-text"><i class="bi bi-search"></i></span>
-                        <input type="text" name="keyword" th:value="${keyword}"
-                               class="form-control" placeholder="Tìm theo mã hoặc tên học phần...">
-                    </div>
+    <!-- Filter toolbar (dedicated visual identity) -->
+    <div class="filter-toolbar">
+        <p class="filter-toolbar-title">
+            <i class="bi bi-funnel"></i>Bộ Lọc Học Phần
+        </p>
+        <form th:action="@{/hoc-phan}" method="get" class="row g-2 align-items-end">
+            <div class="col-md-8">
+                <div class="input-group search-bar">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text" name="keyword" th:value="${keyword}"
+                           class="form-control"
+                           placeholder="Tìm theo mã, tên học phần hoặc chủ nhiệm HP..."
+                           aria-label="Từ khoá tìm kiếm học phần">
                 </div>
-                <div class="col-auto">
-                    <button class="btn btn-primary btn-sm">
-                        <i class="bi bi-search me-1"></i>Tìm
-                    </button>
-                    <a th:href="@{/hoc-phan}" class="btn btn-outline-secondary btn-sm ms-1">
-                        <i class="bi bi-x-lg"></i>
-                    </a>
-                </div>
-            </form>
-        </div>
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-primary btn-sm">
+                    <i class="bi bi-search me-1"></i>Tìm Kiếm
+                </button>
+                <a th:href="@{/hoc-phan}" class="btn btn-outline-secondary btn-sm ms-1"
+                   data-bs-toggle="tooltip" data-bs-title="Xoá bộ lọc"
+                   aria-label="Xoá bộ lọc">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+            </div>
+        </form>
     </div>
 
     <div class="card">
@@ -119,14 +124,18 @@
                                       class="text-muted small">--</span>
                             </td>
                             <td>
-                                <span class="badge"
-                                      th:classappend="${hp.trangThai?.name() == 'DaDuyet'} ? 'bg-success' :
-                                                     (${hp.trangThai?.name() == 'ChoDuyet'} ? 'bg-warning text-dark' : 'bg-secondary')"
-                                      th:text="${hp.trangThai?.name() == 'DaDuyet' ? 'Đã Duyệt' :
-                                               (hp.trangThai?.name() == 'ChoDuyet' ? 'Chờ Duyệt' : 'Bản Nháp')}">--</span>
+                                <span class="status-pill"
+                                      th:with="s=${hp.trangThai?.name()}"
+                                      th:classappend="${s == 'DaDuyet'  ? 'tone-success'  :
+                                                       (s == 'ChoDuyet' ? 'tone-warning' :
+                                                                          'tone-neutral')}">
+                                    <span class="pill-dot" aria-hidden="true"></span>
+                                    <span th:text="${s == 'DaDuyet'  ? 'Đã Duyệt' :
+                                                   (s == 'ChoDuyet' ? 'Chờ Duyệt' : 'Bản Nháp')}">--</span>
+                                </span>
                             </td>
                             <td class="text-center">
-                                <div class="d-flex gap-1 justify-content-center flex-wrap">
+                                <div class="action-cluster">
                                     <a th:href="@{/hoc-phan/chi-tiet/{ma}(ma=${hp.maHocPhan})}"
                                        class="btn btn-sm btn-outline-secondary"
                                        data-bs-toggle="tooltip" data-bs-title="Chi Tiết">

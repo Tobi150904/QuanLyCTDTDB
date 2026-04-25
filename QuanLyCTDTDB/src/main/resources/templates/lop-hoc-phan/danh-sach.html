@@ -31,13 +31,11 @@
 
 
     <!-- FILTER + TẠO HÀNG LOẠT -->
-    <div class="card mb-4">
-        <div class="card-header bg-white">
-            <span class="fw-semibold">
-                <i class="bi bi-funnel me-2"></i>Lọc Theo CTĐT Hoặc Học Kỳ
-            </span>
-        </div>
-        <div class="card-body">
+    <div class="filter-toolbar">
+        <p class="filter-toolbar-title">
+            <i class="bi bi-funnel"></i>Lọc Theo CTĐT Hoặc Học Kỳ
+        </p>
+        <div>
             <p class="text-muted small mb-3 mb-md-2">
                 <i class="bi bi-info-circle me-1"></i>
                 Chọn <strong>ít nhất một</strong> tiêu chí để tra cứu. Có thể lọc chỉ theo CTĐT
@@ -328,10 +326,10 @@
         <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
             <span class="fw-semibold">
                 <i class="bi bi-collection me-2"></i>Danh Sách Lớp Học Phần
-                <small class="text-white-50 ms-1" th:if="${onlyCTDT}">
+                <small class="text-muted ms-1 fw-normal" th:if="${onlyCTDT}">
                     (Tất cả các kỳ của CTĐT)
                 </small>
-                <small class="text-white-50 ms-1" th:if="${onlyHocKy}">
+                <small class="text-muted ms-1 fw-normal" th:if="${onlyHocKy}">
                     (Toàn trường trong Học Kỳ)
                 </small>
             </span>
@@ -401,12 +399,14 @@
                                       th:text="${(lhp.siSoThucTe ?: 0) + '/' + lhp.siSoToiDa}">0/0</span>
                             </td>
                             <td>
-                                <span class="badge"
-                                      th:classappend="${lhp.trangThai?.name() == 'DangMo'} ? 'bg-success' : 'bg-secondary'"
-                                      th:text="${lhp.trangThai?.name() == 'DangMo' ? 'Đang Mở' : 'Đã Đóng'}">--</span>
+                                <span class="status-pill"
+                                      th:classappend="${lhp.trangThai?.name() == 'DangMo'} ? 'tone-success' : 'tone-neutral'">
+                                    <span class="pill-dot" aria-hidden="true"></span>
+                                    <span th:text="${lhp.trangThai?.name() == 'DangMo' ? 'Đang Mở' : 'Đã Đóng'}">--</span>
+                                </span>
                             </td>
                             <td class="text-center">
-                                <div class="d-flex gap-1 justify-content-center flex-wrap">
+                                <div class="action-cluster">
                                     <a th:href="@{/lop-hoc-phan/chi-tiet(maCTDT=${lhp.id.maCTDT},maHocPhan=${lhp.id.maHocPhan},maHocKy=${lhp.id.maHocKy},maLop=${lhp.id.maLopHocPhan})}"
                                        class="btn btn-sm btn-outline-secondary"
                                        data-bs-toggle="tooltip" data-bs-title="Chi tiết">

@@ -108,11 +108,12 @@
                                 </div>
                             </td>
                         </tr>
-                        <tr th:each="hk, stat : ${hocKyList}">
+                        <tr th:each="hk, stat : ${hocKyList}"
+                            th:classappend="${hk.trangThai.name() == 'DangDienRa'} ? 'row-active-hk'">
                             <td class="text-muted" th:text="${stat.index + 1}">1</td>
                             <td><code th:text="${hk.maHocKy}"></code></td>
                             <td class="text-center">
-                                <span class="badge bg-primary"
+                                <span class="chip chip-primary"
                                       th:text="${hk.hocKyThu == 3 ? 'HK Hè' : 'HK ' + hk.hocKyThu}">HK 1</span>
                             </td>
                             <td th:text="${hk.namBatDau} + ' - ' + ${hk.namKetThuc}">--</td>
@@ -123,15 +124,17 @@
                                 th:text="${hk.ngayKetThuc != null ?
                                     #temporals.format(hk.ngayKetThuc, 'dd/MM/yyyy') : '--'}">--</td>
                             <td>
-                                <span class="badge"
+                                <span class="status-pill"
                                       th:with="s=${hk.trangThai.name()}"
-                                      th:classappend="${s == 'DangDienRa' ? 'bg-success' :
-                                                      (s == 'SapDienRa'  ? 'bg-info text-dark' : 'bg-secondary')}"
-                                      th:text="${s == 'DangDienRa' ? 'Đang Diễn Ra' :
-                                               (s == 'SapDienRa'  ? 'Sắp Diễn Ra'  : 'Đã Kết Thúc')}">--</span>
+                                      th:classappend="${s == 'DangDienRa' ? 'tone-success' :
+                                                      (s == 'SapDienRa'  ? 'tone-info'    : 'tone-neutral')}">
+                                    <span class="pill-dot" aria-hidden="true"></span>
+                                    <span th:text="${s == 'DangDienRa' ? 'Đang Diễn Ra' :
+                                                   (s == 'SapDienRa'  ? 'Sắp Diễn Ra'  : 'Đã Kết Thúc')}">--</span>
+                                </span>
                             </td>
                             <td class="text-center">
-                                <div class="d-flex gap-1 justify-content-center">
+                                <div class="action-cluster">
                                     <a th:href="@{/hoc-ky/sua/{ma}(ma=${hk.maHocKy})}"
                                        class="btn btn-sm btn-outline-primary"
                                        sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')"

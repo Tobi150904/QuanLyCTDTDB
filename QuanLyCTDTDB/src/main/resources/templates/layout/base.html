@@ -29,6 +29,9 @@
 </head>
 <body>
 
+<!-- Accessibility: skip directly to main content (visible on keyboard focus) -->
+<a th:href="@{#mainContent}" class="skip-link">Bỏ qua điều hướng, đến nội dung chính</a>
+
 <!-- ===================== NAVBAR ===================== -->
 <nav class="navbar navbar-expand-lg navbar-dark fixed-top" id="mainNavbar">
     <div class="container-fluid px-3">
@@ -296,10 +299,11 @@
 </nav>
 
 <!-- ===================== MAIN CONTENT ===================== -->
-<main class="main-content" id="mainContent">
+<main class="main-content" id="mainContent" tabindex="-1">
     <div class="container-fluid py-4 px-4">
 
-        <!-- Flash Messages -->
+        <!-- Flash Messages (live region: screen readers thong bao tu dong) -->
+        <div aria-live="polite" aria-atomic="true">
         <div th:if="${successMsg}"
              class="alert alert-success alert-dismissible fade show auto-dismiss"
              role="alert">
@@ -332,6 +336,8 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert"
                     aria-label="Đóng"></button>
         </div>
+        </div>
+        <!-- /aria-live region -->
 
         <!-- Page Content -->
         <div layout:fragment="content">

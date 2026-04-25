@@ -15,93 +15,122 @@
         </ol>
     </nav>
 
-    <div class="d-flex justify-content-between align-items-start mb-4">
-        <div>
-            <p class="page-subtitle">Học Phần</p>
-            <h4 class="page-title" th:text="${hocPhan.maHocPhan + ' — ' + hocPhan.tenHocPhan}">--</h4>
+    <!-- Detail hero header -->
+    <section class="detail-hero">
+        <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start">
+            <div style="min-width: 240px; flex: 1 1 60%;">
+                <p class="detail-hero-eyebrow">Đào Tạo / Học Phần</p>
+                <h1 class="detail-hero-title" th:text="${hocPhan.tenHocPhan}">Tên Học Phần</h1>
+                <div class="detail-hero-meta">
+                    <span><code th:text="${hocPhan.maHocPhan}">CS101</code></span>
+                    <span><i class="bi bi-bookmark-star"></i>
+                        <strong th:text="${hocPhan.soTinChi}">3</strong>&nbsp;Tín Chỉ</span>
+                    <span th:if="${hocPhan.loaiHocPhan != null}"
+                          th:with="l=${hocPhan.loaiHocPhan.name()}">
+                        <i class="bi bi-tag"></i>
+                        <span th:text="${l == 'LyThuyet'  ? 'Lý Thuyết' :
+                                       (l == 'ThucHanh' ? 'Thực Hành' :
+                                       (l == 'DoAn'     ? 'Đồ Án'     :
+                                       (l == 'ThucTap'  ? 'Thực Tập'  :
+                                       (l == 'KienTap'  ? 'Kiến Tập'  : '--'))))}">--</span>
+                    </span>
+                    <span class="status-pill"
+                          th:with="s=${hocPhan.trangThai?.name()}"
+                          th:classappend="${s == 'DaDuyet'  ? 'tone-success' :
+                                           (s == 'ChoDuyet' ? 'tone-warning' : 'tone-neutral')}"
+                          style="background: rgba(255,255,255,0.95);">
+                        <span class="pill-dot" aria-hidden="true"></span>
+                        <span th:text="${s == 'DaDuyet' ? 'Đã Duyệt' :
+                                       (s == 'ChoDuyet' ? 'Chờ Duyệt' : 'Bản Nháp')}">--</span>
+                    </span>
+                </div>
+            </div>
+            <div class="detail-hero-actions">
+                <a th:href="@{/hoc-phan/sua/{ma}(ma=${hocPhan.maHocPhan})}"
+                   class="btn btn-light btn-sm"
+                   th:if="${hocPhan.trangThai?.name() != 'DaDuyet'}">
+                    <i class="bi bi-pencil me-1"></i>Sửa
+                </a>
+                <a th:href="@{/hoc-phan}" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i>Quay Lại
+                </a>
+            </div>
         </div>
-        <a th:href="@{/hoc-phan}" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-arrow-left me-1"></i>Quay Lại
-        </a>
-    </div>
+    </section>
 
     <div class="card">
-        <div class="card-header"><i class="bi bi-info-circle me-2"></i>Thông Tin Chi Tiết</div>
+        <div class="card-header">
+            <i class="bi bi-info-circle"></i>
+            <span class="fw-semibold">Thông Tin Chi Tiết</span>
+        </div>
         <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    <table class="table table-borderless mb-0">
-                        <tbody>
-                            <tr class="info-row">
-                                <td class="info-label">Mã HP</td>
-                                <td><code th:text="${hocPhan.maHocPhan}"></code></td>
-                            </tr>
-                            <tr class="info-row">
-                                <td class="info-label">Tên HP</td>
-                                <td class="fw-semibold" th:text="${hocPhan.tenHocPhan}"></td>
-                            </tr>
-                            <tr class="info-row">
-                                <td class="info-label">Số Tín Chỉ</td>
-                                <td><span class="badge bg-primary" th:text="${hocPhan.soTinChi}">0</span></td>
-                            </tr>
-                            <tr class="info-row">
-                                <td class="info-label">Loại HP</td>
-                                <td th:with="l=${hocPhan.loaiHocPhan?.name()}"
-                                    th:text="${l == 'LyThuyet'  ? 'Lý Thuyết'  :
-                                              (l == 'ThucHanh' ? 'Thực Hành' :
-                                              (l == 'DoAn'     ? 'Đồ Án'     :
-                                              (l == 'ThucTap'  ? 'Thực Tập'  :
-                                              (l == 'KienTap'  ? 'Kiến Tập'  : '--'))))}">--</td>
-                            </tr>
-                        </tbody>
-                    </table>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-item-label">Mã Học Phần</span>
+                    <span class="info-item-value"><code th:text="${hocPhan.maHocPhan}"></code></span>
                 </div>
-                <div class="col-md-6">
-                    <table class="table table-borderless mb-0">
-                        <tbody>
-                            <tr class="info-row">
-                                <td class="info-label">Chủ Nhiệm HP</td>
-                                <td>
-                                    <span th:if="${hocPhan.chuNhiemHP != null}">
-                                        <code th:text="${hocPhan.chuNhiemHP.maGV}"></code>
-                                        &nbsp;—&nbsp;
-                                        <span class="fw-medium"
-                                              th:text="${hocPhan.chuNhiemHP.hoTen}">--</span>
-                                    </span>
-                                    <span th:unless="${hocPhan.chuNhiemHP != null}"
-                                          class="text-muted">Chưa phân công</span>
-                                </td>
-                            </tr>
-                            <tr class="info-row">
-                                <td class="info-label">Trạng Thái</td>
-                                <td>
-                                    <span class="badge"
-                                          th:classappend="${hocPhan.trangThai?.name() == 'DaDuyet'} ? 'bg-success' :
-                                                         (${hocPhan.trangThai?.name() == 'ChoDuyet'} ? 'bg-warning text-dark' : 'bg-secondary')"
-                                          th:text="${hocPhan.trangThai?.name() == 'DaDuyet' ? 'Đã Duyệt' :
-                                                   (hocPhan.trangThai?.name() == 'ChoDuyet' ? 'Chờ Duyệt' : 'Bản Nháp')}">--</span>
-                                </td>
-                            </tr>
-                            <tr class="info-row">
-                                <td class="info-label">Đề Cương</td>
-                                <td>
-                                    <a th:if="${hocPhan.fileDeCuong != null and !hocPhan.fileDeCuong.isEmpty()}"
-                                       th:href="@{'/uploads/' + ${hocPhan.fileDeCuong}}"
-                                       target="_blank" class="text-decoration-none">
-                                        <i class="bi bi-file-earmark-pdf me-1"></i>Xem File
-                                    </a>
-                                    <span th:unless="${hocPhan.fileDeCuong != null and !hocPhan.fileDeCuong.isEmpty()}"
-                                          class="text-muted">Chưa có</span>
-                                </td>
-                            </tr>
-                            <tr class="info-row">
-                                <td class="info-label">Cập Nhật</td>
-                                <td class="small text-muted"
-                                    th:text="${hocPhan.updatedAt != null ?
-                                        #temporals.format(hocPhan.updatedAt, 'dd/MM/yyyy HH:mm') : '--'}">--</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div class="info-item">
+                    <span class="info-item-label">Tên Học Phần</span>
+                    <span class="info-item-value fw-semibold" th:text="${hocPhan.tenHocPhan}"></span>
+                </div>
+                <div class="info-item">
+                    <span class="info-item-label">Số Tín Chỉ</span>
+                    <span class="info-item-value">
+                        <span class="chip chip-primary" th:text="${hocPhan.soTinChi} + ' TC'">0 TC</span>
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-item-label">Loại Học Phần</span>
+                    <span class="info-item-value"
+                          th:with="l=${hocPhan.loaiHocPhan?.name()}"
+                          th:text="${l == 'LyThuyet'  ? 'Lý Thuyết'  :
+                                    (l == 'ThucHanh' ? 'Thực Hành' :
+                                    (l == 'DoAn'     ? 'Đồ Án'     :
+                                    (l == 'ThucTap'  ? 'Thực Tập'  :
+                                    (l == 'KienTap'  ? 'Kiến Tập'  : '--'))))}">--</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-item-label">Chủ Nhiệm HP</span>
+                    <span class="info-item-value">
+                        <span th:if="${hocPhan.chuNhiemHP != null}">
+                            <code th:text="${hocPhan.chuNhiemHP.maGV}"></code>
+                            <span class="fw-medium"
+                                  th:text="' — ' + ${hocPhan.chuNhiemHP.hoTen}">--</span>
+                        </span>
+                        <span th:unless="${hocPhan.chuNhiemHP != null}"
+                              class="text-muted fst-italic">Chưa phân công</span>
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-item-label">Trạng Thái</span>
+                    <span class="info-item-value">
+                        <span class="status-pill"
+                              th:with="s=${hocPhan.trangThai?.name()}"
+                              th:classappend="${s == 'DaDuyet'  ? 'tone-success' :
+                                               (s == 'ChoDuyet' ? 'tone-warning' : 'tone-neutral')}">
+                            <span class="pill-dot" aria-hidden="true"></span>
+                            <span th:text="${s == 'DaDuyet' ? 'Đã Duyệt' :
+                                           (s == 'ChoDuyet' ? 'Chờ Duyệt' : 'Bản Nháp')}">--</span>
+                        </span>
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-item-label">Đề Cương Chi Tiết</span>
+                    <span class="info-item-value">
+                        <a th:if="${hocPhan.fileDeCuong != null and !hocPhan.fileDeCuong.isEmpty()}"
+                           th:href="@{'/uploads/' + ${hocPhan.fileDeCuong}}"
+                           target="_blank" class="text-decoration-none">
+                            <i class="bi bi-file-earmark-pdf me-1"></i>Xem file đề cương
+                        </a>
+                        <span th:unless="${hocPhan.fileDeCuong != null and !hocPhan.fileDeCuong.isEmpty()}"
+                              class="text-muted fst-italic">Chưa có</span>
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-item-label">Cập Nhật Gần Nhất</span>
+                    <span class="info-item-value text-muted"
+                          th:text="${hocPhan.updatedAt != null ?
+                              #temporals.format(hocPhan.updatedAt, 'dd/MM/yyyy HH:mm') : '--'}">--</span>
                 </div>
             </div>
         </div>

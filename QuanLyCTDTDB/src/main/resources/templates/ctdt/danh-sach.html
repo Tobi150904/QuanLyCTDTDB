@@ -59,13 +59,16 @@
                             <td class="small text-muted"
                                 th:text="${ctdt.nguoiTao != null ? ctdt.nguoiTao.hoTen : '--'}"></td>
                             <td>
-                                <span class="badge"
-                                      th:classappend="${ctdt.trangThai.name() == 'DaDuyet'} ? 'bg-success' :
-                                                     (${ctdt.trangThai.name() == 'ChoDuyet'} ? 'bg-warning text-dark' :
-                                                     (${ctdt.trangThai.name() == 'BanNhap'} ? 'bg-secondary' : 'bg-danger'))"
-                                      th:text="${ctdt.trangThai.name() == 'DaDuyet' ? 'Đã Duyệt' :
-                                               (ctdt.trangThai.name() == 'ChoDuyet' ? 'Chờ Duyệt' :
-                                               (ctdt.trangThai.name() == 'BanNhap' ? 'Bản Nháp' : 'Đã Hủy'))}">--</span>
+                                <span class="status-pill"
+                                      th:with="s=${ctdt.trangThai.name()}"
+                                      th:classappend="${s == 'DaDuyet'  ? 'tone-success'  :
+                                                       (s == 'ChoDuyet' ? 'tone-warning'  :
+                                                       (s == 'BanNhap'  ? 'tone-neutral' : 'tone-danger'))}">
+                                    <span class="pill-dot" aria-hidden="true"></span>
+                                    <span th:text="${s == 'DaDuyet'  ? 'Đã Duyệt' :
+                                                   (s == 'ChoDuyet' ? 'Chờ Duyệt' :
+                                                   (s == 'BanNhap'  ? 'Bản Nháp' : 'Đã Hủy'))}">--</span>
+                                </span>
                             </td>
                             <td class="text-muted small" th:text="${ctdt.ngayDuyet != null ?
                                 #temporals.format(ctdt.ngayDuyet, 'dd/MM/yyyy') : '--'}"></td>
@@ -97,9 +100,16 @@
                             </td>
                         </tr>
                         <tr th:if="${#lists.isEmpty(danhSach)}">
-                            <td colspan="8" class="text-center text-muted py-5">
-                                <i class="bi bi-inbox display-6 d-block mb-2 opacity-50"></i>
-                                Chưa có chương trình đào tạo nào.
+                            <td colspan="8">
+                                <div class="empty-state">
+                                    <i class="bi bi-journal-bookmark"></i>
+                                    <p>Chưa có chương trình đào tạo nào.</p>
+                                    <a sec:authorize="hasAnyRole('PDT','ADMIN')"
+                                       th:href="@{/ctdt/them}"
+                                       class="btn btn-primary btn-sm">
+                                        <i class="bi bi-plus-lg me-1"></i>Tạo CTĐT Đầu Tiên
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                     </tbody>

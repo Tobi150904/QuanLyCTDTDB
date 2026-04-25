@@ -175,13 +175,14 @@
                                       class="text-muted">--</span>
                             </td>
                             <td>
-                                <span class="badge"
-                                      th:classappend="${dn.trangThai.name() == 'DangHopTac'} ? 'bg-success' : 'bg-secondary'"
-                                      th:text="${dn.trangThai.name() == 'DangHopTac' ? 'Đang Hợp Tác' : 'Tạm Ngưng'}">
+                                <span class="status-pill"
+                                      th:classappend="${dn.trangThai.name() == 'DangHopTac'} ? 'tone-success' : 'tone-neutral'">
+                                    <span class="pill-dot" aria-hidden="true"></span>
+                                    <span th:text="${dn.trangThai.name() == 'DangHopTac' ? 'Đang Hợp Tác' : 'Tạm Ngưng'}">--</span>
                                 </span>
                             </td>
                             <td class="text-center">
-                                <div class="d-flex gap-1 justify-content-center">
+                                <div class="action-cluster">
                                     <a th:href="@{/doanh-nghiep/chi-tiet/{ma}(ma=${dn.maDoanhNghiep})}"
                                        class="btn btn-sm btn-outline-secondary"
                                        data-bs-toggle="tooltip" data-bs-title="Chi Tiết"

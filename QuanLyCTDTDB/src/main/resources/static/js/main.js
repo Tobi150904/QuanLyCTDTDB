@@ -51,6 +51,11 @@ document.addEventListener('DOMContentLoaded', function () {
         if (href && currentPath.startsWith(href) && href !== '/dashboard') {
             link.classList.add('active');
         }
+        // A11y: them aria-current cho link active (ke ca neu Thymeleaf da set
+        // class 'active' qua activeMenu — tranh phai sua tat ca template)
+        if (link.classList.contains('active')) {
+            link.setAttribute('aria-current', 'page');
+        }
     });
 
 });

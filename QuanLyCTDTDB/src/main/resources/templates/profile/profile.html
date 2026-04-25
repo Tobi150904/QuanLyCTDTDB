@@ -25,6 +25,35 @@
         <h4 class="page-title">Hồ Sơ Cá Nhân</h4>
     </div>
 
+    <!-- Hero block: avatar + basic info -->
+    <section class="detail-hero" aria-labelledby="profileHeroName">
+        <div class="d-flex flex-wrap gap-4 align-items-center">
+            <div class="profile-avatar"
+                 th:text="${nguoiDung.hoTen != null and !nguoiDung.hoTen.isEmpty() ?
+                          #strings.toUpperCase(#strings.substring(nguoiDung.hoTen, 0, 1)) : 'U'}"
+                 aria-hidden="true">U</div>
+            <div class="flex-grow-1" style="min-width: 220px;">
+                <p class="detail-hero-eyebrow mb-1">Hồ Sơ Cá Nhân</p>
+                <h1 class="detail-hero-title mb-2" id="profileHeroName"
+                    th:text="${nguoiDung.hoTen}">Người Dùng</h1>
+                <div class="detail-hero-meta">
+                    <span><i class="bi bi-person"></i>
+                        <code th:text="${nguoiDung.tenDangNhap}">user</code></span>
+                    <span><i class="bi bi-envelope"></i>
+                        <span th:text="${nguoiDung.email}">email@ntu.edu.vn</span></span>
+                    <span th:if="${nguoiDung.loaiNguoiDung != null}"
+                          th:with="v=${nguoiDung.loaiNguoiDung.name()}">
+                        <i class="bi bi-shield-check"></i>
+                        <span th:text="${v == 'Admin'       ? 'Quản Trị Viên' :
+                                        (v == 'GiangVien'  ? 'Giảng Viên'    :
+                                        (v == 'SinhVien'   ? 'Sinh Viên'     :
+                                        (v == 'DoanhNghiep' ? 'Doanh Nghiệp' : v)))}">Vai trò</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <div class="row g-4">
         <!-- Left: Thong tin ca nhan -->
         <div class="col-lg-6">

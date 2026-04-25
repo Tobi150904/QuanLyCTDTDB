@@ -200,12 +200,16 @@
                             </td>
                             <td>
                                 <span th:if="${nd.trangThaiTK}"
-                                      class="badge bg-success">Hoạt Động</span>
+                                      class="status-pill tone-success">
+                                    <span class="pill-dot" aria-hidden="true"></span>Hoạt Động
+                                </span>
                                 <span th:unless="${nd.trangThaiTK}"
-                                      class="badge bg-danger">Đã Khoá</span>
+                                      class="status-pill tone-danger">
+                                    <i class="bi bi-lock-fill" aria-hidden="true"></i>Đã Khoá
+                                </span>
                             </td>
                             <td class="text-center">
-                                <div class="d-inline-flex align-items-center gap-1">
+                                <div class="action-cluster">
                                     <!-- Xem chi tiết -->
                                     <a th:href="@{/nguoi-dung/chi-tiet/{ma}(ma=${nd.maNguoiDung})}"
                                        class="btn btn-sm btn-outline-secondary"
