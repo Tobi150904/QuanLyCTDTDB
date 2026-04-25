@@ -60,8 +60,11 @@ BUOC 2 — Nguoi dung nhap TenDangNhap + MatKhau, submit POST /login
           TTDTXS  -> ROLE_TTDTXS
           CVHT    -> ROLE_CVHT
           CNHP    -> ROLE_CNHP
-     7. CustomAuthenticationProvider: BCrypt.matches(password, hash)
-        Neu sai: redirect /login?error
+     7. DaoAuthenticationProvider (Spring Security standard):
+        - UserDetailsServiceImpl.loadUserByUsername() tra ve CustomUserDetails
+        - CustomUserDetails.getAuthorities() tra ve list GrantedAuthority tu NhomNguoiDung
+        - PasswordEncoder.matches(password, hash) xac thuc via BCryptPasswordEncoder
+        - Neu sai: redirect /login?error
 
 BUOC 3 — Dang nhap thanh cong
   -> Spring Security tao HttpSession, luu SecurityContext

@@ -89,7 +89,9 @@ Dot review 2026-Q2 phat hien va fix 6 bug code, cap nhat docs va checklist.
 | `HocKyNamHocService` + impl            | [x] CRUD + doiTrangThai + delete guard                |
 | `HocKyNamHocController`                | [x] `/hoc-ky` (7 endpoint)                            |
 | Templates                              | [x] `hoc-ky/{danh-sach,form}.html`                    |
-| Nghiep vu                              | [x] Auto-close HK cu khi kich hoat HK moi (fix B5)    |
+| Nghiep vu                              | [x] Auto-close HK cu khi active HK moi (batch 4)      |
+|                                        | [x] Status auto-derive tu ngay + validate (batch 4)   |
+|                                        | [x] Kich hoat status logic -> chuyển sang deriveStatus |
 
 ### 3.2 Lop Hanh Chinh [x]
 
@@ -170,6 +172,37 @@ Dot review 2026-Q2 phat hien va fix 6 bug code, cap nhat docs va checklist.
 - Thiet ke dac biet: bo truc tiep `@ManyToOne` den `HocPhan`/`HocKy` trong
   `LopHocPhan` (tranh Hibernate 7 duplicate column error tren EmbeddedId 4 cot);
   template nhan `hocPhanMap` tu controller de render tenHocPhan.
+
+---
+
+## PHASE 3.X — BATCH 4 (2026-Q2 Hotfix: HK status machine + file upload + form error UX)
+
+- [x] **HK status auto-derive + validation**:
+  - [x] `deriveStatus(ngayBatDau, ngayKetThuc)`: compute TrangThai tu ngay hien tai.
+  - [x] `create()` + `update()`: throw BusinessException neu state khong khop ngay.
+  - [x] `doiTrangThai()`: validate (today >= ngayBatDau AND today <= ngayKetThuc).
+  - [x] `update()`: cho phep "revive" HK DaKetThuc neu sua ngay sang tuong lai.
+  - [x] `resyncStatuses()`: auto-sync moi lan `findAll()` — handle admin back-dating.
+  - [x] UI: xoa nut "Kich hoat" (status tu-derive), update form hint ve 3 rule.
+
+- [x] **File upload binding fix** (`@InitBinder`):
+  - [x] `HocPhanController.initHocPhanBinder()` disallow `fileDeCuong`.
+  - [x] `ChuongTrinhDaoTaoController.initCtdtBinder()` disallow `fileWord`.
+  - [x] Root cause: Spring co gang convert `MultipartFile -> String`.
+
+- [x] **Form POST error UX** (re-render on error):
+  - [x] `#fields.hasErrors('*')` BAT BUOC trong `<form th:object>` (binding context).
+  - [x] `errorMsg` (non-binding) ngoai form, render qua `layout/base.html`.
+  - [x] Controller catch -> `model.addAttribute("errorMsg", ...)` -> return form template.
+
+- [x] **Sidebar RBAC expansion** (GV + SV read access):
+  - [x] Sidebar section "Dao Tao" + menu Hoc Phan / CTDT / Lop Hoc Phan mo cho GV/SV (read-only).
+  - [x] Writes chan qua `@PreAuthorize` method-level + inline `sec:authorize` button.
+
+- [x] **Other**:
+  - [x] NguoiDung chi-tiet: fix LazyInit `sv.getLopHanhChinh()`.
+  - [x] Logout alert: xoa param.logout (thay bang successMsg).
+  - [x] Edit button: icon-only `bi-pencil` (dong bo 4 icon action).
 
 ---
 

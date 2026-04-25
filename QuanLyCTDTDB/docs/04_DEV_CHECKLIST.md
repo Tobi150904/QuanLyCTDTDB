@@ -200,8 +200,9 @@ Toan bo 5 module P1 (HocKy, LopHanhChinh, HocPhan, CTDT, LopHocPhan) da:
       `lop-hoc-phan`) + module `nguoi-dung` + layout `base.html` (menu sidebar,
       navbar, modal). Map enum `LoaiHocPhan`, `LoaiNguoiDung`, `VaiTro` sang nhan
       tieng Viet truc tiep trong Thymeleaf.
-- [x] **Fix nut "Chinh Sua" nguoi dung**: doi tu icon-only sang nut co label
-      "Sua" + `bi-pencil-square`, mo rong cot Thao Tac `110px -> 170px`.
+- [x] **Fix nut "Chinh Sua" nguoi dung**: doi tu nut co label "Sua" + `bi-pencil-square`
+      + cot 110px -> icon-only `bi-pencil` (174px) de dong bo voi 3 nut hanh dong
+      khac (Xem/Khoa/Xoa) theo batch 4.
 - [x] **Fix field sai o `nguoi-dung/form.html`**: `lhc.tenLopHC` -> `lhc.tenLop`
       (khop entity `LopHanhChinh`).
 - [x] **Refresh seed v2** `scripts/02_seed_data.sql`:
@@ -266,6 +267,40 @@ Toan bo 5 module P1 (HocKy, LopHanhChinh, HocPhan, CTDT, LopHocPhan) da:
     template render bi LazyInitException voi `open-in-view=false`).
   - `SinhVienRepository.findByLopFetch` JOIN FETCH NguoiDung
     -> trang chi-tiet Lop Hanh Chinh hien duoc danh sach SV kem ho ten.
+
+### Fix 2026-Q2 batch 4 (HK auto-derive + file upload @InitBinder + form error UX + sidebar RBAC)
+
+- [x] **HK status auto-derive + validation**:
+  - [x] `deriveStatus(ngayBatDau, ngayKetThuc)`: compute TrangThai tu dates, khong user input.
+  - [x] `create()` + `update()`: throw BusinessException neu user chon trang thai sai voi ngay.
+  - [x] `doiTrangThai()`: chi cho phep when (today >= ngayBatDau AND today <= ngayKetThuc).
+  - [x] `update()`: cho phep "revive" HK DaKetThuc neu admin sua ngay sang tuong lai.
+  - [x] `resyncStatuses()` call tren `findAll()` — tuong thich admin back-date ngay.
+  - [x] UI: xoa nut "Kich Hoat" khoi danh-sach (status tu-derive tu ngay).
+  - [x] Form hint: them huong dan 3 rule derive status + canh bao chi 1 HK active.
+
+- [x] **File upload binding fix** (`@InitBinder` disallow):
+  - [x] `HocPhanController.initHocPhanBinder()`: disallow `fileDeCuong` field.
+  - [x] `ChuongTrinhDaoTaoController.initCtdtBinder()`: disallow `fileWord` field.
+  - [x] Root cause: Spring co gang convert `MultipartFile -> String` -> ConversionNotSupportedException.
+  - [x] File van duoc nhan qua `@RequestParam MultipartFile` (khong anh huong).
+
+- [x] **Form POST error UX** (never redirect on error):
+  - [x] `#fields.hasErrors('*')` BAT BUOC nam BEN TRONG `<form th:object>` (binding context).
+  - [x] `errorMsg` (non-binding) co the nam ngoai, render qua `layout/base.html` global block.
+  - [x] Controller catch exception -> `model.addAttribute("errorMsg", ...)` -> return form (KHONG redirect).
+  - [x] Giu nguyen input, hien loi tuc khi, user sua va submit lai.
+
+- [x] **Sidebar RBAC expansion** (read access cho GV + SV):
+  - [x] Sidebar section "Dao Tao" nay hien cho PDT/TTDTXS/CNHP/ADMIN/GV/SV (truoc chi PDT/TTDTXS/CNHP/ADMIN).
+  - [x] Menu items Hoc Phan / CTDT / Lop Hoc Phan mo `sec:authorize` cho GV + SV xem (read-only).
+  - [x] Writes van bi chan qua `@PreAuthorize` method-level + inline `sec:authorize` button Tao/Sua/Xoa.
+  - [x] Template danh-sach hien thi duoc, chi button action bi ẩn.
+
+- [x] **Other fixes**:
+  - [x] NguoiDung chi-tiet: fix LazyInit `sv.getLopHanhChinh()` -> repo.findByIdFetch().
+  - [x] Login logout alert: xoa param.logout alert (thay bang successMsg tu backend).
+  - [x] Edit button: icon-only `bi-pencil` (dong bo voi 3 icon Xem/Khoa/Xoa).
 
 ### Fix 2026-Q2 (dot review Phase 3)
 

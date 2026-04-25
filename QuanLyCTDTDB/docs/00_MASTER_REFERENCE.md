@@ -135,6 +135,8 @@ com.ntu.quanlyctdtdb/
 | Enum class            | Values                                                      | Dung trong bang              |
 |-----------------------|-------------------------------------------------------------|------------------------------|
 | TrangThaiHocKy        | SapDienRa, DangDienRa, DaKetThuc                           | HocKyNamHoc                  |
+|                       | **BATCH 4**: Status auto-derive tu `deriveStatus(ngayBatDau, ngayKetThuc)` |                              |
+|                       | khong user input. DoiTrangThai() validate before accept. |                              |
 | LoaiNguoiDung         | Admin, GiangVien, SinhVien, DoanhNghiep                    | NguoiDung                    |
 | VaiTro                | PDT, TTDTXS, CVHT, CNHP                                    | NhomNguoiDung                |
 | TrangThaiCTDT         | BanNhap, ChoDuyet, DaDuyet, DaHuy                          | ChuongTrinhDaoTao            |

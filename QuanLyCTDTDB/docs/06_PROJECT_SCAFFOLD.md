@@ -159,17 +159,23 @@ HTTP -> Spring Security Filter Chain (SecurityConfig)
          vi du: admin -> { ROLE_ADMIN }
                 tran.van.an -> { ROLE_GIANG_VIEN, ROLE_PDT, ROLE_TTDTXS }
 
-URL rules (SecurityConfig.filterChain) — cap nhat Phase 3:
+URL rules (SecurityConfig.filterChain) — cap nhat Phase 3 + batch 4:
     /login, /css/**, /js/**, /webjars/**, /uploads/**        -> permitAll
     /nguoi-dung/**          -> hasAnyRole('PDT','TTDTXS','ADMIN')
     /doanh-nghiep/**        -> hasAnyRole('PDT','TTDTXS','ADMIN')
     /hoc-ky/**              -> hasAnyRole('PDT','TTDTXS','ADMIN')
     /lop-hanh-chinh/**      -> hasAnyRole('PDT','TTDTXS','ADMIN')
-    /hoc-phan/**            -> hasAnyRole('CNHP','TTDTXS','PDT','ADMIN')
-    /ctdt/**                -> hasAnyRole('CNHP','TTDTXS','PDT','ADMIN')
-    /lop-hoc-phan/**        -> hasAnyRole('CNHP','TTDTXS','PDT','GIANG_VIEN','ADMIN')
-    /kien-tap/**            -> hasAnyRole('CNHP','TTDTXS','PDT','ADMIN')
-    /thuc-tap/**            -> hasAnyRole('PDT','TTDTXS','ADMIN','GIANG_VIEN','SINH_VIEN','DOANH_NGHIEP')
+    /hoc-phan/**            -> hasAnyRole('PDT','TTDTXS','CNHP','ADMIN',
+                                         'GIANG_VIEN','SINH_VIEN')          [BATCH 4]
+    /ctdt/**                -> hasAnyRole('PDT','TTDTXS','CNHP','ADMIN',
+                                         'GIANG_VIEN','SINH_VIEN')          [BATCH 4]
+    /lop-hoc-phan/**        -> hasAnyRole('PDT','TTDTXS','CNHP','ADMIN',
+                                         'GIANG_VIEN','SINH_VIEN')          [BATCH 4]
+    /kien-tap/**            -> hasAnyRole('PDT','TTDTXS','CNHP','ADMIN',
+                                         'GIANG_VIEN','DOANH_NGHIEP','SINH_VIEN')
+    /thuc-tap/**            -> hasAnyRole('PDT','TTDTXS','ADMIN','GIANG_VIEN',
+                                         'CVHT','DOANH_NGHIEP','SINH_VIEN')
+    /danh-gia/**            -> hasAnyRole('GIANG_VIEN','CVHT','SINH_VIEN','ADMIN')
     authenticated mac dinh                                    -> /profile, /dashboard
 ```
 
@@ -226,16 +232,31 @@ URL rules (SecurityConfig.filterChain) — cap nhat Phase 3:
      truoc khi gan. GV khong thuoc doi ngu van duoc gan, nhung flash warningMsg.
 4. **HocKyThu filter + per-HP SoLop override**:
    - `LopHocPhanServiceImpl.taoLopHocPhanChoCTDT(maCTDT, maHocKy, soLopOverride)`:
-     parse chu so sau "HK" trong maHocKy + chi tao lop cho HP co hocKyThu trung.
-   - Fix bug truoc day: chon bat ky ky nao cung tao het tat ca HP.
-5. **Ke Hoach Mo Lop UI**:
-   - `LopHocPhanController.danhSach` them `hpDuKien` + `daMoCount` vao model.
-   - Card "Ke Hoach Mo Lop" hien trong `lop-hoc-phan/danh-sach.html` (badge Da/Chua mo).
-   - Modal tao-hang-loat pre-fill SoLop, cho user chinh per-HP.
-6. **Fix LazyInit chi-tiet HP + chi-tiet Lop HC**:
-   - `HocPhanRepository.findByIdFetch` JOIN FETCH ChuNhiemHP + NguoiDung.
-   - `SinhVienRepository.findByLopFetch` JOIN FETCH NguoiDung.
 
+### 2026-Q2 batch 4 — HK status auto-derive + file upload @InitBinder + UI RBAC expansion + form error UX
+1. **HocKy status machine**:
+   - `deriveStatus(ngayBatDau, ngayKetThuc)`: auto-compute TrangThai theo ngay hien tai.
+   - `doiTrangThai()`: validate - throw BusinessException neu state khong khop ngay.
+   - `update()`: cho phep "revive" HK DaKetThuc neu admin sua ngay sang tuong lai.
+   - `resyncStatuses()` call moi lan `findAll()` - tuong thich với đôi khi admin back-date ngay.
+   - UI: xoa nut "Kich Hoat" khoi danh-sach (status tu-derive, khong can user action).
+2. **File upload binding fix** (`@InitBinder`):
+   - `HocPhanController`: disallow `fileDeCuong` field binding -> Spring khong co gang convert `MultipartFile -> String`.
+   - `ChuongTrinhDaoTaoController`: disallow `fileWord` field binding.
+   - File vẫn được nhận qua `@RequestParam MultipartFile` — unaffected.
+3. **Form POST error UX**:
+   - **Never redirect on validation/business error** — re-render form, giu input, show `errorMsg`.
+   - `#fields.hasErrors('*')` phải nằm **BEN TRONG** `<form th:object>` (binding context requirement).
+   - `errorMsg` (non-binding) có thể nằm ngoài form, được render qua `layout/base.html` global block.
+   - Controller: Catch exception -> `model.addAttribute("errorMsg", ...)` -> return form template (KHÔNG redirect).
+4. **Sidebar RBAC expansion** (sidebar menu chi hien voi role phu hop):
+   - Before: GV/SV bi ẩn Học Phần, CTDT, Lớp Học Phần.
+   - After: Mở `sec:authorize` cho GV + SV xem (read-only). Writes vẫn bị chặn qua `@PreAuthorize` method-level + inline `sec:authorize` trên button Tạo/Sửa/Xóa.
+   - Sidebar section "Đào Tạo" bây giờ hiện cho PDT/TTDTXS/CNHP/ADMIN/GV/SV (trước chỉ 4 role đầu).
+5. **Other fixes**:
+   - NguoiDung chi-tiet: fix LazyInit `sv.getLopHanhChinh()` -> fetch qua repo.
+   - Logout alert dedup: bỏ `param.logout` alert ngoài form login.html (thừa vì backend đã set successMsg).
+   - Edit button: đổi từ "Sửa" text sang icon-only `bi-pencil` để đồng bộ với 3 nút hành động khác (Xem/Khóa/Xóa).
 ---
 
 ## 6. Quy uoc scaffold cho cac module con lai
