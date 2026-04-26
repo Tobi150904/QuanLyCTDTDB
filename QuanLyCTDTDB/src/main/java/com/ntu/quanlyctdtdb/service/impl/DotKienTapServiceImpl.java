@@ -46,13 +46,16 @@ public class DotKienTapServiceImpl implements DotKienTapService {
     @Override
     @Transactional(readOnly = true)
     public List<DotKienTap> findAll() {
-        return dotKTRepo.findAll();
+        // Phase 4: dung findAllFetchAll() de tranh LazyInitException
+        // khi template render lop/hocKy/gv/dn (OSIV=false).
+        return dotKTRepo.findAllFetchAll();
     }
 
     @Override
     @Transactional(readOnly = true)
     public DotKienTap findById(Integer id) {
-        return dotKTRepo.findById(id)
+        // Phase 4: full graph cho chi-tiet (audit panel can nguoiTao/nguoiDuyet).
+        return dotKTRepo.findByIdFetchAll(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "DotKienTap", "MaDotKT", id == null ? "null" : id.toString()));
     }
@@ -60,7 +63,8 @@ public class DotKienTapServiceImpl implements DotKienTapService {
     @Override
     @Transactional(readOnly = true)
     public List<DanhSachSvKienTap> findDanhSachSVKienTap(Integer maDotKT) {
-        return dsSvKTRepo.findById_MaDotKT(maDotKT);
+        // Phase 4: bang SV kem hoTen + lop -> need fetch.
+        return dsSvKTRepo.findById_MaDotKTFetchSV(maDotKT);
     }
 
     // =========================================================================

@@ -35,13 +35,15 @@ public class DotThucTapServiceImpl implements DotThucTapService {
     @Override
     @Transactional(readOnly = true)
     public List<DotThucTap> findAll() {
-        return dotTTRepo.findAll();
+        // Phase 4: fetch ctdtHocPhan/hocPhan/hocKy de render list page.
+        return dotTTRepo.findAllFetchAll();
     }
 
     @Override
     @Transactional(readOnly = true)
     public DotThucTap findById(Integer id) {
-        return dotTTRepo.findById(id)
+        // Phase 4: full graph cho chi-tiet.
+        return dotTTRepo.findByIdFetchAll(id)
                 .orElseThrow(() -> new ResourceNotFoundException("DotThucTap", "MaDotTT", id.toString()));
     }
 
@@ -174,7 +176,8 @@ public class DotThucTapServiceImpl implements DotThucTapService {
     @Override
     @Transactional(readOnly = true)
     public List<DanhSachThucTap> findDanhSachSV(Integer maDotTT) {
-        return dsTTRepo.findByDotThucTap_MaDotTT(maDotTT);
+        // Phase 4: render hoTen + lop + DN -> need fetch.
+        return dsTTRepo.findByDotThucTap_MaDotTTFetchSV(maDotTT);
     }
 
     @Override
