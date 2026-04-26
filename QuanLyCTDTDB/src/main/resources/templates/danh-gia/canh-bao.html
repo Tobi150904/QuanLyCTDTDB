@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/base}">
+<head><title>Cảnh Báo Sinh Viên</title></head>
+<body>
+<div layout:fragment="content"
+     th:with="tong=${#lists.size(canhBaoList)}">
+
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a th:href="@{/dashboard}" class="text-decoration-none">
+                    <i class="bi bi-house-door me-1"></i>Trang Chủ
+                </a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">Cảnh Báo Sinh Viên</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
+        <div>
+            <p class="page-subtitle">Đánh Giá &amp; Cảnh Báo</p>
+            <h4 class="page-title mb-0">Cảnh Báo Sinh Viên</h4>
+        </div>
+        <span class="badge bg-light text-dark fs-6 px-3 py-2"
+              th:if="${filterMode == 'CVHT'}">
+            <i class="bi bi-funnel me-1"></i>Lọc: lớp do bạn phụ trách
+        </span>
+        <span class="badge bg-light text-dark fs-6 px-3 py-2"
+              th:if="${filterMode == 'TAT_CA'}">
+            <i class="bi bi-globe me-1"></i>Toàn trường
+        </span>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-4">
+            <div class="stat-card variant-info">
+                <div class="stat-card-icon"><i class="bi bi-collection"></i></div>
+                <div>
+                    <div class="stat-card-value" th:text="${tong}">0</div>
+                    <div class="stat-card-label">Tổng Cảnh Báo</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4">
+            <div class="stat-card variant-warning">
+                <div class="stat-card-icon"><i class="bi bi-hourglass-split"></i></div>
+                <div>
+                    <div class="stat-card-value" th:text="${soChuaXuLy}">0</div>
+                    <div class="stat-card-label">Chưa Xử Lý</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="stat-card variant-success">
+                <div class="stat-card-icon"><i class="bi bi-check2-circle"></i></div>
+                <div>
+                    <div class="stat-card-value" th:text="${soDaXuLy}">0</div>
+                    <div class="stat-card-label">Đã Xử Lý</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:if="${filterMode == 'CVHT'}"
+         class="alert alert-info d-flex align-items-start" role="alert">
+        <i class="bi bi-info-circle-fill me-2 mt-1"></i>
+        <div class="small">
+            Bạn chỉ thấy cảnh báo của các sinh viên thuộc lớp hành chính do bạn
+            phụ trách. Khi nhập <strong>Kết Quả Xử Lý</strong>, cảnh báo sẽ
+            chuyển sang trạng thái "Đã Xử Lý" nhưng vẫn lưu lịch sử để theo dõi.
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span class="fw-semibold">
+                <i class="bi bi-exclamation-triangle me-2"></i>Danh Sách Cảnh Báo
+            </span>
+            <span class="badge bg-light text-dark"
+                  th:text="'Tổng: ' + ${tong}">0</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width:50px;">STT</th>
+                            <th>Sinh Viên</th>
+                            <th>Lớp HC</th>
+                            <th>Học Phần</th>
+                            <th>Học Kỳ</th>
+                            <th>Nhận Xét Của GV</th>
+                            <th class="text-center" style="width:120px;">Trạng Thái</th>
+                            <th class="text-end" style="width:160px;">Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(canhBaoList)}">
+                            <td colspan="8">
+                                <div class="empty-state">
+                                    <i class="bi bi-emoji-smile"></i>
+                                    <p>Không có cảnh báo nào.</p>
+                                    <small class="text-muted d-block">
+                                        Tất cả sinh viên đang trong tình trạng học tập bình thường.
+                                    </small>
+                                </div>
+                            </td>
+                        </tr>
+                        <th:block th:each="cb, stat : ${canhBaoList}"
+                                  th:with="hp=${hocPhanMap.get(cb.id.maHocPhan)},
+                                           daXuLy=${cb.ketQuaXuLy != null and !#strings.isEmpty(cb.ketQuaXuLy)}">
+                            <tr>
+                                <td class="text-muted" th:text="${stat.index + 1}">1</td>
+                                <td>
+                                    <div class="fw-medium"
+                                         th:text="${cb.sinhVien != null and cb.sinhVien.nguoiDung != null
+                                            ? cb.sinhVien.nguoiDung.hoTen
+                                            : cb.id.maSV}">--</div>
+                                    <code class="small text-muted" th:text="${cb.id.maSV}">--</code>
+                                </td>
+                                <td class="small">
+                                    <span th:if="${cb.sinhVien != null and cb.sinhVien.lopHanhChinh != null}"
+                                          th:text="${cb.sinhVien.lopHanhChinh.maLopHC}">--</span>
+                                    <span th:unless="${cb.sinhVien != null and cb.sinhVien.lopHanhChinh != null}"
+                                          class="text-muted fst-italic">--</span>
+                                </td>
+                                <td class="small">
+                                    <code th:text="${cb.id.maHocPhan}">--</code>
+                                    <span class="text-muted ms-1"
+                                          th:if="${hp != null}"
+                                          th:text="'— ' + ${hp.tenHocPhan}">--</span>
+                                </td>
+                                <td class="small text-muted">
+                                    <code th:text="${cb.id.maHocKy}">--</code>
+                                </td>
+                                <td class="small"
+                                    th:text="${cb.nhanXet != null and !#strings.isEmpty(cb.nhanXet)
+                                                ? cb.nhanXet : '—'}">--</td>
+                                <td class="text-center">
+                                    <span th:if="${daXuLy}" class="status-pill tone-success">
+                                        <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+                                        Đã Xử Lý
+                                    </span>
+                                    <span th:unless="${daXuLy}" class="status-pill tone-warning">
+                                        <i class="bi bi-hourglass-split" aria-hidden="true"></i>
+                                        Chưa Xử Lý
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <button class="btn btn-sm"
+                                            th:classappend="${daXuLy} ? 'btn-outline-secondary' : 'btn-primary'"
+                                            sec:authorize="hasAnyRole('CVHT','PDT','ADMIN')"
+                                            data-bs-toggle="collapse"
+                                            th:data-bs-target="'#xuly-' + ${stat.index}"
+                                            aria-expanded="false">
+                                        <i class="bi"
+                                           th:classappend="${daXuLy} ? 'bi-eye' : 'bi-pencil-square'"></i>
+                                        <span class="ms-1"
+                                              th:text="${daXuLy} ? 'Xem' : 'Xử Lý'">--</span>
+                                    </button>
+                                </td>
+                            </tr>
+                            <!-- Inline collapse: form xu ly -->
+                            <tr class="bg-body-tertiary"
+                                sec:authorize="hasAnyRole('CVHT','PDT','ADMIN')">
+                                <td colspan="8" class="p-0 border-0">
+                                    <div class="collapse" th:id="'xuly-' + ${stat.index}">
+                                        <form th:action="@{/danh-gia/canh-bao/xu-ly}" method="post"
+                                              class="p-3">
+                                            <input type="hidden" th:name="${_csrf.parameterName}"
+                                                                  th:value="${_csrf.token}">
+                                            <input type="hidden" name="maCTDT"    th:value="${cb.id.maCTDT}">
+                                            <input type="hidden" name="maHocPhan" th:value="${cb.id.maHocPhan}">
+                                            <input type="hidden" name="maHocKy"   th:value="${cb.id.maHocKy}">
+                                            <input type="hidden" name="maLop"     th:value="${cb.id.maLopHocPhan}">
+                                            <input type="hidden" name="maSV"      th:value="${cb.id.maSV}">
+
+                                            <div class="row g-2 align-items-end">
+                                                <div class="col-md-9">
+                                                    <label class="form-label small fw-medium mb-1"
+                                                           th:for="'kq-' + ${stat.index}">
+                                                        Kết Quả Xử Lý <span class="text-danger">*</span>
+                                                    </label>
+                                                    <textarea class="form-control form-control-sm"
+                                                              th:id="'kq-' + ${stat.index}"
+                                                              name="ketQuaXuLy" rows="2"
+                                                              placeholder="Mô tả biện pháp đã thực hiện..."
+                                                              th:text="${cb.ketQuaXuLy}"
+                                                              th:required="${!daXuLy}"></textarea>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <button type="submit" class="btn btn-sm btn-primary w-100">
+                                                        <i class="bi bi-save me-1"></i>
+                                                        <span th:text="${daXuLy} ? 'Cập Nhật' : 'Lưu Xử Lý'">--</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        </th:block>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

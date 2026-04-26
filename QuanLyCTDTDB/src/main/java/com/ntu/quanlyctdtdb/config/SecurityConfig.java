@@ -157,12 +157,15 @@ public class SecurityConfig {
                     .hasAnyRole("PDT", "TTDTXS", "CNHP", "ADMIN",
                                 "GIANG_VIEN", "SINH_VIEN")
 
-                // Danh Gia / Canh Bao: GV(RW cho lop day), CVHT(RW canh bao SV
-                //   lop HC), SV(R nhan xet minh nhan), ADMIN.
-                //   [Phase 4 — chua co controller/template. URL rule san sang
-                //    cho khi module duoc build xong.]
+                // Danh Gia / Canh Bao [Phase 4]:
+                //   GV   : RW cho lop minh day (nhap nhan xet, danh dau canh bao).
+                //   CVHT : RW xu ly canh bao cua lop hanh chinh minh phu trach.
+                //   SV   : R  xem nhan xet/canh bao ve minh.
+                //   PDT  : R  view tat ca canh bao toan truong (giam sat hoc vu).
+                //   ADMIN: RW (super-user).
+                //   Writes (POST nhan-xet/xu-ly) chan them o Controller @PreAuthorize.
                 .requestMatchers("/danh-gia/**")
-                    .hasAnyRole("GIANG_VIEN", "CVHT", "SINH_VIEN", "ADMIN")
+                    .hasAnyRole("GIANG_VIEN", "CVHT", "SINH_VIEN", "PDT", "ADMIN")
 
                 // Kien Tap: TTDTXS(RW), CNHP(RW), GV(W nhan-xet-gv), DN(W nhan-xet-dn),
                 //   SV(R dot minh tham gia), PDT(R theo doi), ADMIN.

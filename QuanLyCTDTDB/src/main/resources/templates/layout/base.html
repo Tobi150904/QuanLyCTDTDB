@@ -51,19 +51,16 @@
 
         <!-- Right: User + Logout -->
         <div class="ms-auto d-flex align-items-center gap-2">
-            <!--/* [PHASE 4 — DanhGia & CanhBao]
-                 An tam den khi xay xong module Danh Gia (xem docs/07_ROADMAP.md
-                 Phase 4). Controller /danh-gia/canh-bao chua ton tai -> click se
-                 roi 404/500. Bo cap <!-/* ... *-/--> (bo dau gach) de bat lai.
+            <!-- Phase 4: Quick access cho CVHT toi danh sach canh bao chua xu ly. -->
             <div sec:authorize="hasRole('CVHT')" class="d-none d-sm-block">
                 <a th:href="@{/danh-gia/canh-bao}"
-                   class="btn btn-sm btn-warning text-dark position-relative"
+                   class="btn btn-sm btn-warning text-dark"
+                   data-bs-toggle="tooltip" data-bs-title="Cảnh báo sinh viên cần xử lý"
                    aria-label="Cảnh báo sinh viên">
                     <i class="bi bi-bell-fill"></i>
                     <span class="visually-hidden">Cảnh báo</span>
                 </a>
             </div>
-            */-->
 
             <!-- User dropdown -->
             <div class="dropdown">
@@ -216,38 +213,35 @@
                 </a>
             </li>
 
-            <!--/* ========================================================
-                 [PHASE 4 — DanhGia & CanhBao]
-                 Khoi DANH GIA chua co controller/template (xem docs/07
-                 §Phase 4). Bat lai bang cach bo cap <!-/* ... *-/--> sau
-                 khi build xong DanhGiaController.
-            =========================================================
-
-            <!- ---- ĐÁNH GIÁ ---- ->
+            <!-- ---- ĐÁNH GIÁ ----
+                 Phase 4: templates da san sang (danh-gia/{index,nhan-xet,canh-bao}.html).
+                 Backend service DanhGia + repo JOIN FETCH cho OSIV=false.
+                 - GV/SV thay menu "Đánh Giá Sinh Viên" -> /danh-gia (router theo role).
+                 - CVHT/PDT/ADMIN thay them "Cảnh Báo Sinh Viên" -> /danh-gia/canh-bao. -->
             <li class="sidebar-section-header"
-                sec:authorize="hasAnyRole('GIANG_VIEN','CVHT','ADMIN')">
+                sec:authorize="hasAnyRole('GIANG_VIEN','CVHT','SINH_VIEN','PDT','ADMIN')">
                 <span>Đánh Giá</span>
             </li>
 
             <li class="nav-item"
-                sec:authorize="hasAnyRole('GIANG_VIEN','CVHT','ADMIN')">
+                sec:authorize="hasAnyRole('GIANG_VIEN','SINH_VIEN','ADMIN')">
                 <a class="nav-link"
                    th:href="@{/danh-gia}"
                    th:classappend="${activeMenu == 'danh-gia'} ? ' active' : ''">
                     <i class="bi bi-clipboard-check me-2"></i>
-                    <span>Đánh Giá Sinh Viên</span>
+                    <span sec:authorize="hasRole('SINH_VIEN')">Nhận Xét Của Tôi</span>
+                    <span sec:authorize="!hasRole('SINH_VIEN')">Đánh Giá Sinh Viên</span>
                 </a>
             </li>
 
-            <li class="nav-item" sec:authorize="hasRole('CVHT')">
+            <li class="nav-item" sec:authorize="hasAnyRole('CVHT','PDT','ADMIN')">
                 <a class="nav-link"
                    th:href="@{/danh-gia/canh-bao}"
-                   th:classappend="${activeMenu == 'canh-bao'} ? ' active' : ''">
+                   th:classappend="${activeMenu == 'danh-gia'} ? ' active' : ''">
                     <i class="bi bi-exclamation-triangle me-2"></i>
                     <span>Cảnh Báo Sinh Viên</span>
                 </a>
             </li>
-            */-->
 
             <!-- ---- KIẾN TẬP / THỰC TẬP ----
                  Phase 5: templates da san sang (kien-tap/{danh-sach,form,chi-tiet}.html

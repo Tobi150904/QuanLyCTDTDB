@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/base}">
+<head><title>Đánh Giá Sinh Viên</title></head>
+<body>
+<div layout:fragment="content">
+
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a th:href="@{/dashboard}" class="text-decoration-none">
+                    <i class="bi bi-house-door me-1"></i>Trang Chủ
+                </a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">Đánh Giá</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
+        <div>
+            <p class="page-subtitle">Đánh Giá &amp; Cảnh Báo</p>
+            <h4 class="page-title mb-0"
+                th:text="${vaiTro == 'GV'} ? 'Lớp Học Phần Đang Dạy'
+                                            : 'Nhận Xét &amp; Cảnh Báo Của Tôi'">--</h4>
+        </div>
+        <a th:if="${vaiTro == 'GV'}"
+           sec:authorize="hasAnyRole('CVHT','PDT','ADMIN')"
+           th:href="@{/danh-gia/canh-bao}" class="btn btn-outline-warning btn-sm">
+            <i class="bi bi-bell me-1"></i>Xem Cảnh Báo
+        </a>
+    </div>
+
+    <!-- ============================================================
+         GV VIEW — Lop dang day + so canh bao
+    ============================================================ -->
+    <div th:if="${vaiTro == 'GV'}"
+         th:with="tongLop=${#lists.size(lopList)},
+                  tongCanhBao=${canhBaoMap.values().?[#this > 0].size()}">
+
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-4">
+                <div class="stat-card variant-info">
+                    <div class="stat-card-icon"><i class="bi bi-collection"></i></div>
+                    <div>
+                        <div class="stat-card-value" th:text="${tongLop}">0</div>
+                        <div class="stat-card-label">Lớp Đang Dạy</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4">
+                <div class="stat-card variant-warning">
+                    <div class="stat-card-icon"><i class="bi bi-exclamation-triangle"></i></div>
+                    <div>
+                        <div class="stat-card-value" th:text="${tongCanhBao}">0</div>
+                        <div class="stat-card-label">Lớp Có Cảnh Báo</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-4">
+                <div class="stat-card variant-teal">
+                    <div class="stat-card-icon"><i class="bi bi-clipboard-check"></i></div>
+                    <div>
+                        <div class="stat-card-value">
+                            <i class="bi bi-arrow-right-short"></i>
+                        </div>
+                        <div class="stat-card-label">Click 1 lớp để nhập nhận xét</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span class="fw-semibold">
+                    <i class="bi bi-collection me-2"></i>Danh Sách Lớp Học Phần
+                </span>
+                <span class="badge bg-light text-dark"
+                      th:text="'Tổng: ' + ${tongLop}">0</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width:50px;">STT</th>
+                                <th>CTĐT</th>
+                                <th>Mã HP</th>
+                                <th>Tên Học Phần</th>
+                                <th>Học Kỳ</th>
+                                <th class="text-center">Nhóm</th>
+                                <th class="text-center">Sĩ Số</th>
+                                <th class="text-center">Cảnh Báo</th>
+                                <th class="text-end" style="width:160px;">Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${#lists.isEmpty(lopList)}">
+                                <td colspan="9">
+                                    <div class="empty-state">
+                                        <i class="bi bi-collection"></i>
+                                        <p>Bạn chưa được phân công dạy lớp nào.</p>
+                                        <small class="text-muted d-block">
+                                            Liên hệ Phòng Đào Tạo để được phân công lớp học phần.
+                                        </small>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:each="lhp, stat : ${lopList}"
+                                th:with="hp=${hocPhanMap.get(lhp.id.maHocPhan)},
+                                         soCB=${canhBaoMap.get(lhp.id.maCTDT + '|' + lhp.id.maHocPhan + '|' + lhp.id.maHocKy + '|' + lhp.id.maLopHocPhan)}">
+                                <td class="text-muted" th:text="${stat.index + 1}">1</td>
+                                <td><code th:text="${lhp.id.maCTDT}">--</code></td>
+                                <td><code th:text="${lhp.id.maHocPhan}">--</code></td>
+                                <td class="fw-medium"
+                                    th:text="${hp != null ? hp.tenHocPhan : '--'}">--</td>
+                                <td><code th:text="${lhp.id.maHocKy}">--</code></td>
+                                <td class="text-center">
+                                    <span class="badge bg-light text-dark"
+                                          th:text="'N' + ${lhp.id.maLopHocPhan}">N1</span>
+                                </td>
+                                <td class="text-center small"
+                                    th:text="${(lhp.siSoThucTe ?: 0) + '/' + (lhp.siSoToiDa ?: 0)}">0/0</td>
+                                <td class="text-center">
+                                    <span th:if="${soCB != null and soCB > 0}"
+                                          class="status-pill tone-warning">
+                                        <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+                                        <span th:text="${soCB}">0</span>
+                                    </span>
+                                    <span th:unless="${soCB != null and soCB > 0}"
+                                          class="text-muted small">0</span>
+                                </td>
+                                <td class="text-end">
+                                    <a th:href="@{/danh-gia/lop(maCTDT=${lhp.id.maCTDT},
+                                                                  maHocPhan=${lhp.id.maHocPhan},
+                                                                  maHocKy=${lhp.id.maHocKy},
+                                                                  maLop=${lhp.id.maLopHocPhan})}"
+                                       class="btn btn-sm btn-primary">
+                                        <i class="bi bi-pencil-square me-1"></i>Nhập Nhận Xét
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         SV VIEW — Nhan xet ve toi
+    ============================================================ -->
+    <div th:if="${vaiTro == 'SV'}"
+         th:with="tong=${#lists.size(nhanXetList)},
+                  soCB=${#lists.size(nhanXetList.?[daCanhBao])}">
+
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-4">
+                <div class="stat-card variant-info">
+                    <div class="stat-card-icon"><i class="bi bi-chat-square-text"></i></div>
+                    <div>
+                        <div class="stat-card-value" th:text="${tong}">0</div>
+                        <div class="stat-card-label">Tổng Nhận Xét</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4">
+                <div class="stat-card variant-warning">
+                    <div class="stat-card-icon"><i class="bi bi-exclamation-triangle"></i></div>
+                    <div>
+                        <div class="stat-card-value" th:text="${soCB}">0</div>
+                        <div class="stat-card-label">Số Lần Bị Cảnh Báo</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-4">
+                <div class="stat-card variant-success">
+                    <div class="stat-card-icon"><i class="bi bi-person-check"></i></div>
+                    <div>
+                        <div class="stat-card-value"
+                             th:text="${sinhVien != null ? (sinhVien.maSV) : '--'}">--</div>
+                        <div class="stat-card-label">Mã Sinh Viên</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span class="fw-semibold">
+                    <i class="bi bi-chat-square-text me-2"></i>Lịch Sử Nhận Xét
+                </span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width:50px;">STT</th>
+                                <th>Học Kỳ</th>
+                                <th>Mã HP</th>
+                                <th>Tên Học Phần</th>
+                                <th class="text-center">Nhóm</th>
+                                <th>Nhận Xét</th>
+                                <th class="text-center">Trạng Thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${#lists.isEmpty(nhanXetList)}">
+                                <td colspan="7">
+                                    <div class="empty-state">
+                                        <i class="bi bi-chat-left"></i>
+                                        <p>Chưa có nhận xét nào.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:each="nx, stat : ${nhanXetList}"
+                                th:with="hp=${hocPhanMap.get(nx.id.maHocPhan)}">
+                                <td class="text-muted" th:text="${stat.index + 1}">1</td>
+                                <td><code th:text="${nx.id.maHocKy}">--</code></td>
+                                <td><code th:text="${nx.id.maHocPhan}">--</code></td>
+                                <td th:text="${hp != null ? hp.tenHocPhan : '--'}">--</td>
+                                <td class="text-center">
+                                    <span class="badge bg-light text-dark"
+                                          th:text="'N' + ${nx.id.maLopHocPhan}">N1</span>
+                                </td>
+                                <td class="small"
+                                    th:text="${nx.nhanXet != null and !#strings.isEmpty(nx.nhanXet)
+                                                ? nx.nhanXet : '--'}">--</td>
+                                <td class="text-center">
+                                    <span th:if="${nx.daCanhBao}" class="status-pill tone-warning">
+                                        <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+                                        Cảnh Báo
+                                    </span>
+                                    <span th:unless="${nx.daCanhBao}" class="status-pill tone-success">
+                                        <span class="pill-dot" aria-hidden="true"></span>
+                                        Bình Thường
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>
