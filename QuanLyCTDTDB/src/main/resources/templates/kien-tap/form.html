@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title th:text="${dotId != null} ? 'Chỉnh Sửa Đợt Kiến Tập' : 'Tạo Đợt Kiến Tập'">Đợt Kiến Tập</title>
+</head>
+<body>
+<div layout:fragment="content">
+
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a th:href="@{/dashboard}">Trang Chủ</a></li>
+            <li class="breadcrumb-item"><a th:href="@{/kien-tap}">Kiến Tập</a></li>
+            <li class="breadcrumb-item active"
+                th:text="${dotId != null} ? 'Chỉnh sửa' : 'Thêm mới'">Thêm mới</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <p class="page-subtitle">Kiến Tập &amp; Thực Tập</p>
+            <h4 class="page-title"
+                th:text="${dotId != null} ? 'Chỉnh Sửa Đợt Kiến Tập' : 'Tạo Đợt Kiến Tập Mới'">Tạo Đợt Kiến Tập Mới</h4>
+        </div>
+        <a th:href="@{/kien-tap}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>Quay Lại
+        </a>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+
+            <!-- Banner loi non-field (exception tu service / flash) -->
+            <div th:if="${errorMsg}"
+                 class="alert alert-danger d-flex align-items-start" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2 mt-1"></i>
+                <div>
+                    <strong class="d-block">Không thể lưu đợt kiến tập</strong>
+                    <span th:text="${errorMsg}"></span>
+                </div>
+            </div>
+
+            <form th:action="${dotId != null} ? @{/kien-tap/sua/{id}(id=${dotId})} : @{/kien-tap/them}"
+                  th:object="${dotKTDTO}"
+                  method="post" enctype="multipart/form-data" novalidate>
+
+                <!-- Banner loi validation: BAT BUOC nam BEN TRONG <form th:object>
+                     vi #fields.hasErrors('*') can binding context cua th:object. -->
+                <div th:if="${#fields.hasErrors('*')}"
+                     class="alert alert-warning d-flex align-items-start" role="alert">
+                    <i class="bi bi-info-circle-fill me-2 mt-1"></i>
+                    <div>
+                        <strong class="d-block">Vui lòng kiểm tra lại các trường sau:</strong>
+                        <ul class="mb-0">
+                            <li th:each="err : ${#fields.allErrors()}" th:text="${err}"></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Section 1: Thong Tin Co Ban -->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <i class="bi bi-info-circle"></i>
+                        <span class="fw-semibold">Thông Tin Cơ Bản</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control"
+                                           id="tenDotKT" th:field="*{tenDotKT}"
+                                           placeholder="VD: Kiến tập Khoá 64 - HK1 2024-2025">
+                                    <label for="tenDotKT">Tên Đợt Kiến Tập <span class="text-danger">*</span></label>
+                                    <div class="invalid-feedback d-block"
+                                         th:if="${#fields.hasErrors('tenDotKT')}"
+                                         th:errors="*{tenDotKT}"></div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <select class="form-select" id="maLopHC"
+                                            th:field="*{maLopHC}"
+                                            th:disabled="${dotId != null}">
+                                        <option value="">-- Chọn Lớp --</option>
+                                        <option th:each="lhc : ${lopHCList}"
+                                                th:value="${lhc.maLopHC}"
+                                                th:text="${lhc.maLopHC + ' — ' + lhc.tenLop}"></option>
+                                    </select>
+                                    <label for="maLopHC">Lớp Hành Chính <span class="text-danger">*</span></label>
+                                    <div class="invalid-feedback d-block"
+                                         th:if="${#fields.hasErrors('maLopHC')}"
+                                         th:errors="*{maLopHC}"></div>
+                                </div>
+                                <small class="text-muted" th:if="${dotId != null}">
+                                    <i class="bi bi-lock me-1"></i>Không thể đổi lớp sau khi đã tạo (đã auto-add SV).
+                                </small>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <select class="form-select" id="maHocKy"
+                                            th:field="*{maHocKy}">
+                                        <option value="">-- Chọn Học Kỳ --</option>
+                                        <option th:each="hk : ${hocKyList}"
+                                                th:value="${hk.maHocKy}"
+                                                th:text="${hk.maHocKy + ' — ' + hk.tenHocKy}"></option>
+                                    </select>
+                                    <label for="maHocKy">Học Kỳ <span class="text-danger">*</span></label>
+                                    <div class="invalid-feedback d-block"
+                                         th:if="${#fields.hasErrors('maHocKy')}"
+                                         th:errors="*{maHocKy}"></div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    <input type="date" class="form-control"
+                                           id="thoiGian" th:field="*{thoiGian}">
+                                    <label for="thoiGian">Thời Gian Diễn Ra</label>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    <select class="form-select" id="maGVPhuTrach"
+                                            th:field="*{maGVPhuTrach}">
+                                        <option value="">-- Không chọn --</option>
+                                        <option th:each="gv : ${giangVienList}"
+                                                th:value="${gv.maGV}"
+                                                th:text="${gv.maGV + ' — ' + gv.hoTen}"></option>
+                                    </select>
+                                    <label for="maGVPhuTrach">GV Phụ Trách</label>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    <select class="form-select" id="maDoanhNghiep"
+                                            th:field="*{maDoanhNghiep}">
+                                        <option value="">-- Chọn Doanh Nghiệp --</option>
+                                        <option th:each="dn : ${doanhNghiepList}"
+                                                th:value="${dn.maDoanhNghiep}"
+                                                th:text="${dn.maDoanhNghiep + ' — ' + dn.tenDoanhNghiep}"></option>
+                                    </select>
+                                    <label for="maDoanhNghiep">Doanh Nghiệp <span class="text-danger">*</span></label>
+                                    <div class="invalid-feedback d-block"
+                                         th:if="${#fields.hasErrors('maDoanhNghiep')}"
+                                         th:errors="*{maDoanhNghiep}"></div>
+                                </div>
+                                <small class="text-muted">
+                                    <i class="bi bi-info-circle me-1"></i>Chỉ hiển thị DN đang hợp tác.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2: Kinh Phi -->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <i class="bi bi-cash-coin"></i>
+                        <span class="fw-semibold">Kinh Phí</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="number" step="0.01" min="0"
+                                           class="form-control"
+                                           id="kinhPhiChung" th:field="*{kinhPhiChung}"
+                                           placeholder="0">
+                                    <label for="kinhPhiChung">Kinh Phí Chung (VNĐ)</label>
+                                </div>
+                                <small class="text-muted">Chi phí toàn đợt (xe, lễ tân, ấn phẩm…)</small>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="number" step="0.01" min="0"
+                                           class="form-control"
+                                           id="kinhPhiTungSV" th:field="*{kinhPhiTungSV}"
+                                           placeholder="0">
+                                    <label for="kinhPhiTungSV">Kinh Phí / SV (VNĐ)</label>
+                                </div>
+                                <small class="text-muted">Mức thu hoặc hỗ trợ trên mỗi sinh viên.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 3: Minh Chung -->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <i class="bi bi-paperclip"></i>
+                        <span class="fw-semibold">Minh Chứng</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label for="fileMinhChung" class="form-label">
+                                    <i class="bi bi-file-earmark-arrow-up me-1"></i>File Minh Chứng
+                                </label>
+                                <input type="file" class="form-control"
+                                       id="fileMinhChung" name="fileMinhChung"
+                                       accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                                <small class="text-muted">Để trống nếu không đổi file hiện tại. Chấp nhận PDF, Word, ảnh.</small>
+                            </div>
+
+                            <div class="col-12" th:if="${dotFile != null and !#strings.isEmpty(dotFile)}">
+                                <div class="alert alert-info d-flex align-items-center mb-0" role="alert">
+                                    <i class="bi bi-paperclip me-2"></i>
+                                    <span class="me-2">File hiện có:</span>
+                                    <a th:href="@{'/uploads/' + ${dotFile}}" target="_blank"
+                                       class="text-decoration-none fw-medium"
+                                       th:text="${dotFile}">file.pdf</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a th:href="@{/kien-tap}" class="btn btn-outline-secondary">Huỷ</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save me-1"></i>
+                        <span th:text="${dotId != null} ? 'Cập Nhật' : 'Tạo Mới'">Tạo Mới</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

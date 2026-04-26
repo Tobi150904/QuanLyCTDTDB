@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/base}">
+<head><title>Chi Tiết Đợt Thực Tập</title></head>
+<body>
+<div layout:fragment="content"
+     th:with="s=${dot.trangThai?.name()},
+              ctdtHP=${dot.ctdtHocPhan}">
+
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a th:href="@{/dashboard}">Trang Chủ</a></li>
+            <li class="breadcrumb-item"><a th:href="@{/thuc-tap}">Thực Tập</a></li>
+            <li class="breadcrumb-item active" th:text="${'#' + dot.maDotTT}">--</li>
+        </ol>
+    </nav>
+
+    <!-- DETAIL HERO -->
+    <section class="detail-hero">
+        <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start">
+            <div style="min-width: 240px; flex: 1 1 60%;">
+                <p class="detail-hero-eyebrow">Kiến Tập &amp; Thực Tập / Đợt Thực Tập</p>
+                <h1 class="detail-hero-title" th:text="${dot.tenDotTT}">Tên Đợt</h1>
+                <div class="detail-hero-meta">
+                    <span><code th:text="${'TT' + dot.maDotTT}">TT1</code></span>
+                    <span th:if="${ctdtHP != null and ctdtHP.chuongTrinhDaoTao != null}">
+                        <i class="bi bi-mortarboard"></i>CTĐT
+                        <code th:text="${ctdtHP.chuongTrinhDaoTao.maCTDT}">--</code>
+                    </span>
+                    <span th:if="${ctdtHP != null and ctdtHP.hocPhan != null}">
+                        <i class="bi bi-journal-text"></i>HP
+                        <code th:text="${ctdtHP.hocPhan.maHocPhan}">--</code>
+                    </span>
+                    <span th:if="${dot.hocKy != null}">
+                        <i class="bi bi-calendar3"></i>
+                        <span th:text="${dot.hocKy.tenHocKy}">--</span>
+                    </span>
+                    <span class="status-pill"
+                          th:classappend="${s == 'DaDuyet' or s == 'DaKetThuc' ? 'tone-success' :
+                                          (s == 'ChoDuyet'      ? 'tone-warning' :
+                                          (s == 'DangThucHien'  ? 'tone-info'    :
+                                          (s == 'DaHuy'         ? 'tone-danger'  : 'tone-neutral')))}"
+                          style="background: rgba(255,255,255,0.95);">
+                        <span class="pill-dot" aria-hidden="true"></span>
+                        <span th:text="${s == 'ChuanBi'      ? 'Chuẩn Bị'        :
+                                       (s == 'ChoDuyet'     ? 'Chờ Duyệt'       :
+                                       (s == 'DaDuyet'      ? 'Đã Duyệt'        :
+                                       (s == 'DangThucHien' ? 'Đang Thực Hiện'  :
+                                       (s == 'DaKetThuc'    ? 'Đã Kết Thúc'     :
+                                       (s == 'DaHuy'        ? 'Đã Huỷ'          : '--')))))}">--</span>
+                    </span>
+                </div>
+            </div>
+            <div class="detail-hero-actions">
+                <a sec:authorize="hasAnyRole('TTDTXS','ADMIN')"
+                   th:if="${s == 'ChuanBi' or s == 'ChoDuyet' or s == 'DaDuyet'}"
+                   th:href="@{/thuc-tap/sua/{id}(id=${dot.maDotTT})}"
+                   class="btn btn-light btn-sm">
+                    <i class="bi bi-pencil me-1"></i>Sửa
+                </a>
+                <a th:href="@{/thuc-tap}" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i>Quay Lại
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- STATE-TRANSITION ACTION CLUSTER -->
+    <div class="card mb-4"
+         th:if="${s == 'ChuanBi' or s == 'ChoDuyet'}">
+        <div class="card-header">
+            <i class="bi bi-arrow-repeat"></i>
+            <span class="fw-semibold">Thao Tác Trạng Thái</span>
+        </div>
+        <div class="card-body">
+            <div class="d-flex flex-wrap gap-2">
+
+                <!-- ChuanBi -> ChoDuyet -->
+                <form th:if="${s == 'ChuanBi'}"
+                      th:action="@{/thuc-tap/gui-phe-duyet/{id}(id=${dot.maDotTT})}"
+                      method="post" class="d-inline m-0"
+                      sec:authorize="hasAnyRole('TTDTXS','ADMIN')">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <button class="btn btn-sm btn-info text-white">
+                        <i class="bi bi-send me-1"></i>Gửi Phê Duyệt
+                    </button>
+                </form>
+
+                <!-- ChoDuyet -> DaDuyet -->
+                <form th:if="${s == 'ChoDuyet'}"
+                      th:action="@{/thuc-tap/phe-duyet/{id}(id=${dot.maDotTT})}"
+                      method="post" class="d-inline m-0"
+                      sec:authorize="hasAnyRole('TTDTXS','ADMIN')"
+                      onsubmit="return confirm('Phê duyệt đợt thực tập này?')">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <button class="btn btn-sm btn-success">
+                        <i class="bi bi-check-lg me-1"></i>Phê Duyệt
+                    </button>
+                </form>
+            </div>
+            <!-- Phase 5 placeholder: chua co endpoint bat-dau / ket-thuc / huy
+                 trong DotThucTapController. Khi them endpoint, render them
+                 button DangThucHien / DaKetThuc / DaHuy o day. -->
+        </div>
+    </div>
+
+    <!-- THONG TIN DOT -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="bi bi-info-circle"></i>
+            <span class="fw-semibold">Thông Tin Đợt</span>
+        </div>
+        <div class="card-body">
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-item-label">Mã Đợt</span>
+                    <span class="info-item-value"><code th:text="${'TT' + dot.maDotTT}"></code></span>
+                </div>
+                <div class="info-item">
+                    <span class="info-item-label">Tên Đợt</span>
+                    <span class="info-item-value fw-semibold" th:text="${dot.tenDotTT}">--</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-item-label">Chương Trình Đào Tạo</span>
+                    <span class="info-item-value">
+                        <span th:if="${ctdtHP != null and ctdtHP.chuongTrinhDaoTao != null}"
+                              th:text="${ctdtHP.chuongTrinhDaoTao.maCTDT + ' — ' + ctdtHP.chuongTrinhDaoTao.tenCTDT}">--</span>
+                        <span th:unless="${ctdtHP != null and ctdtHP.chuongTrinhDaoTao != null}"
+                              class="text-muted fst-italic">--</span>
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-item-label">Học Phần</span>
+                    <span class="info-item-value">
+                        <span th:if="${ctdtHP != null and ctdtHP.hocPhan != null}"
+                              th:text="${ctdtHP.hocPhan.maHocPhan + ' — ' + ctdtHP.hocPhan.tenHocPhan}">--</span>
+                        <span th:unless="${ctdtHP != null and ctdtHP.hocPhan != null}"
+                              class="text-muted fst-italic">--</span>
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-item-label">Học Kỳ</span>
+                    <span class="info-item-value">
+                        <span th:if="${dot.hocKy != null}"
+                              th:text="${dot.hocKy.maHocKy + ' — ' + dot.hocKy.tenHocKy}">--</span>
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-item-label">Ngày Bắt Đầu</span>
+                    <span class="info-item-value"
+                          th:text="${dot.ngayBatDau != null ?
+                              #temporals.format(dot.ngayBatDau, 'dd/MM/yyyy') : '--'}">--</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-item-label">Ngày Kết Thúc</span>
+                    <span class="info-item-value"
+                          th:text="${dot.ngayKetThuc != null ?
+                              #temporals.format(dot.ngayKetThuc, 'dd/MM/yyyy') : '--'}">--</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-item-label">Người Tạo</span>
+                    <span class="info-item-value"
+                          th:text="${dot.nguoiTao != null ? dot.nguoiTao.hoTen : '--'}">--</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-item-label">Người Duyệt</span>
+                    <span class="info-item-value">
+                        <span th:if="${dot.nguoiDuyet != null}">
+                            <span th:text="${dot.nguoiDuyet.hoTen}">--</span>
+                            <small class="text-muted d-block"
+                                   th:if="${dot.ngayDuyet != null}"
+                                   th:text="${#temporals.format(dot.ngayDuyet, 'dd/MM/yyyy HH:mm')}">--</small>
+                        </span>
+                        <span th:unless="${dot.nguoiDuyet != null}"
+                              class="text-muted fst-italic">Chưa duyệt</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- IMPORT RESULT (flash sau khi POST /them-sv) -->
+    <div th:if="${importResult}" class="card mb-4">
+        <div class="card-header">
+            <i class="bi bi-clipboard-data me-2"></i>
+            <span class="fw-semibold">Kết Quả Phân Công</span>
+        </div>
+        <div class="card-body">
+            <div class="row g-3 mb-2">
+                <div class="col-sm-6">
+                    <div class="stat-card variant-success">
+                        <div class="stat-card-icon"><i class="bi bi-check-circle"></i></div>
+                        <div>
+                            <div class="stat-card-value" th:text="${importResult['success']}">0</div>
+                            <div class="stat-card-label">Thành Công</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6" th:if="${importResult['errors'] != null}">
+                    <div class="stat-card variant-warning">
+                        <div class="stat-card-icon"><i class="bi bi-x-circle"></i></div>
+                        <div>
+                            <div class="stat-card-value"
+                                 th:text="${#lists.size(importResult['errors'])}">0</div>
+                            <div class="stat-card-label">Mã SV Lỗi</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div th:if="${importResult['errors'] != null and !#lists.isEmpty(importResult['errors'])}"
+                 class="alert alert-danger mb-0" role="alert">
+                <p class="fw-medium mb-2">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>Chi Tiết Lỗi:
+                </p>
+                <ul class="mb-0 ps-3 small">
+                    <li th:each="err : ${importResult['errors']}" th:text="${err}"></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- DANH SACH SV -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span class="fw-semibold">
+                        <i class="bi bi-people me-2"></i>Phân Công Sinh Viên
+                    </span>
+                    <span class="badge bg-light text-dark"
+                          th:text="'Tổng: ' + ${#lists.size(danhSachSV)}">0</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th style="width:50px;">STT</th>
+                                    <th>Mã SV</th>
+                                    <th>Họ Tên</th>
+                                    <th>Lớp</th>
+                                    <th>Loại TT</th>
+                                    <th>Doanh Nghiệp</th>
+                                    <th>Trạng Thái</th>
+                                    <th class="text-center"
+                                        sec:authorize="hasAnyRole('TTDTXS','CNHP','ADMIN','GIANG_VIEN')"
+                                        style="width:140px;">Cập Nhật</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:if="${#lists.isEmpty(danhSachSV)}">
+                                    <td colspan="8">
+                                        <div class="empty-state">
+                                            <i class="bi bi-person-x"></i>
+                                            <p>Chưa có sinh viên nào được phân công.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr th:each="ds, stat : ${danhSachSV}">
+                                    <td class="text-muted" th:text="${stat.index + 1}">1</td>
+                                    <td><code th:text="${ds.sinhVien.maSV}"></code></td>
+                                    <td class="fw-medium"
+                                        th:text="${ds.sinhVien.nguoiDung != null
+                                            ? ds.sinhVien.nguoiDung.hoTen
+                                            : ds.sinhVien.maSV}">--</td>
+                                    <td class="small text-muted"
+                                        th:text="${ds.sinhVien.lopHanhChinh != null
+                                            ? ds.sinhVien.lopHanhChinh.maLopHC : '--'}">--</td>
+                                    <td class="small">
+                                        <span class="chip"
+                                              th:with="lt=${ds.loaiThucTap?.name()}"
+                                              th:classappend="${lt == 'Truong' ? 'chip-primary' : 'chip-primary'}"
+                                              th:text="${lt == 'Truong'      ? 'Tại Trường'  :
+                                                       (lt == 'DoanhNghiep' ? 'Tại DN'      : '--')}">--</span>
+                                    </td>
+                                    <td class="small"
+                                        th:text="${ds.doanhNghiep != null
+                                            ? ds.doanhNghiep.tenDoanhNghiep : '--'}">--</td>
+                                    <td>
+                                        <span class="status-pill"
+                                              th:with="t=${ds.trangThai?.name()}"
+                                              th:classappend="${t == 'DaKetThuc'  ? 'tone-success' :
+                                                              (t == 'DangThucTap' ? 'tone-info'    :
+                                                              (t == 'DaHuy'       ? 'tone-danger'  : 'tone-neutral'))}">
+                                            <span class="pill-dot" aria-hidden="true"></span>
+                                            <span th:text="${t == 'DaPhanCong'  ? 'Đã Phân Công' :
+                                                           (t == 'DangThucTap' ? 'Đang Thực Tập' :
+                                                           (t == 'DaKetThuc'   ? 'Đã Kết Thúc'   :
+                                                           (t == 'DaHuy'       ? 'Đã Huỷ'        : '--')))}">--</span>
+                                        </span>
+                                    </td>
+                                    <td class="text-center"
+                                        sec:authorize="hasAnyRole('TTDTXS','CNHP','ADMIN','GIANG_VIEN')">
+                                        <button class="btn btn-sm btn-outline-primary"
+                                                data-bs-toggle="collapse"
+                                                th:data-bs-target="'#collapseKQ-' + ${ds.maThucTap}"
+                                                aria-expanded="false">
+                                            <i class="bi bi-pencil me-1"></i>Cập Nhật
+                                        </button>
+                                    </td>
+                                </tr>
+                                <!-- Inline collapse row: form Cap nhat ket qua -->
+                                <tr class="bg-body-tertiary"
+                                    th:each="ds : ${danhSachSV}"
+                                    sec:authorize="hasAnyRole('TTDTXS','CNHP','ADMIN','GIANG_VIEN')">
+                                    <td colspan="8" class="p-0 border-0">
+                                        <div class="collapse"
+                                             th:id="'collapseKQ-' + ${ds.maThucTap}">
+                                            <form th:action="@{/thuc-tap/chi-tiet/{id}/cap-nhat-kq/{maDS}
+                                                              (id=${dot.maDotTT}, maDS=${ds.maThucTap})}"
+                                                  method="post" class="p-3">
+                                                <input type="hidden" th:name="${_csrf.parameterName}"
+                                                                      th:value="${_csrf.token}">
+                                                <div class="row g-2 align-items-end">
+                                                    <div class="col-md-3">
+                                                        <label class="form-label small fw-medium mb-1">
+                                                            Loại Thực Tập
+                                                        </label>
+                                                        <select class="form-select form-select-sm"
+                                                                name="loaiThucTap">
+                                                            <option value="">-- Giữ nguyên --</option>
+                                                            <option value="Truong"
+                                                                    th:selected="${ds.loaiThucTap?.name() == 'Truong'}">
+                                                                Tại Trường
+                                                            </option>
+                                                            <option value="DoanhNghiep"
+                                                                    th:selected="${ds.loaiThucTap?.name() == 'DoanhNghiep'}">
+                                                                Tại Doanh Nghiệp
+                                                            </option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label class="form-label small fw-medium mb-1">
+                                                            Doanh Nghiệp (nếu có)
+                                                        </label>
+                                                        <input type="text" class="form-control form-control-sm"
+                                                               name="maDoanhNghiep"
+                                                               th:value="${ds.doanhNghiep != null ? ds.doanhNghiep.maDoanhNghiep : ''}"
+                                                               placeholder="Mã DN, để trống nếu thực tập tại trường">
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <label class="form-label small fw-medium mb-1">
+                                                            Nhận xét
+                                                        </label>
+                                                        <input type="text" class="form-control form-control-sm"
+                                                               name="nhanXet"
+                                                               placeholder="Nhận xét ngắn...">
+                                                    </div>
+                                                    <div class="col-md-2">
+                                                        <button type="submit"
+                                                                class="btn btn-sm btn-primary w-100">
+                                                            <i class="bi bi-save me-1"></i>Lưu
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SIDEBAR: THEM SV (form input) -->
+        <div class="col-lg-4"
+             sec:authorize="hasAnyRole('TTDTXS','CNHP','ADMIN')">
+            <div class="card sticky-top" style="top: 1rem;">
+                <div class="card-header">
+                    <i class="bi bi-person-plus"></i>
+                    <span class="fw-semibold">Thêm Sinh Viên</span>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/thuc-tap/chi-tiet/{id}/them-sv(id=${dot.maDotTT})}"
+                          method="post">
+                        <input type="hidden" th:name="${_csrf.parameterName}"
+                                              th:value="${_csrf.token}">
+                        <div class="mb-3">
+                            <label for="maSVList" class="form-label fw-medium small">
+                                Danh Sách Mã SV <span class="text-danger">*</span>
+                            </label>
+                            <textarea class="form-control" id="maSVList" name="maSVList"
+                                      rows="6"
+                                      placeholder="SV001, SV002&#10;SV003&#10;SV004"
+                                      required></textarea>
+                            <small class="text-muted">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Cách nhau bằng dấu phẩy hoặc xuống dòng.
+                            </small>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100"
+                                th:disabled="${s == 'DaHuy' or s == 'DaKetThuc'}">
+                            <i class="bi bi-plus-lg me-1"></i>Phân Công
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

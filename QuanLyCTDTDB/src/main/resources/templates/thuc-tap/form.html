@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title th:text="${dotId != null} ? 'Chỉnh Sửa Đợt Thực Tập' : 'Tạo Đợt Thực Tập'">Đợt Thực Tập</title>
+</head>
+<body>
+<div layout:fragment="content">
+
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a th:href="@{/dashboard}">Trang Chủ</a></li>
+            <li class="breadcrumb-item"><a th:href="@{/thuc-tap}">Thực Tập</a></li>
+            <li class="breadcrumb-item active"
+                th:text="${dotId != null} ? 'Chỉnh sửa' : 'Thêm mới'">Thêm mới</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <p class="page-subtitle">Kiến Tập &amp; Thực Tập</p>
+            <h4 class="page-title"
+                th:text="${dotId != null} ? 'Chỉnh Sửa Đợt Thực Tập' : 'Tạo Đợt Thực Tập Mới'">Tạo Đợt Thực Tập Mới</h4>
+        </div>
+        <a th:href="@{/thuc-tap}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>Quay Lại
+        </a>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+
+            <div th:if="${errorMsg}"
+                 class="alert alert-danger d-flex align-items-start" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2 mt-1"></i>
+                <div>
+                    <strong class="d-block">Không thể lưu đợt thực tập</strong>
+                    <span th:text="${errorMsg}"></span>
+                </div>
+            </div>
+
+            <form th:action="${dotId != null} ? @{/thuc-tap/sua/{id}(id=${dotId})} : @{/thuc-tap/them}"
+                  th:object="${dotTTDTO}"
+                  method="post" novalidate>
+
+                <div th:if="${#fields.hasErrors('*')}"
+                     class="alert alert-warning d-flex align-items-start" role="alert">
+                    <i class="bi bi-info-circle-fill me-2 mt-1"></i>
+                    <div>
+                        <strong class="d-block">Vui lòng kiểm tra lại các trường sau:</strong>
+                        <ul class="mb-0">
+                            <li th:each="err : ${#fields.allErrors()}" th:text="${err}"></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <i class="bi bi-info-circle"></i>
+                        <span class="fw-semibold">Thông Tin Đợt Thực Tập</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control"
+                                           id="tenDotTT" th:field="*{tenDotTT}"
+                                           placeholder="VD: Thực tập tốt nghiệp Khoá 62 - HK1 2024-2025">
+                                    <label for="tenDotTT">Tên Đợt Thực Tập <span class="text-danger">*</span></label>
+                                    <div class="invalid-feedback d-block"
+                                         th:if="${#fields.hasErrors('tenDotTT')}"
+                                         th:errors="*{tenDotTT}"></div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <select class="form-select" id="maCTDT"
+                                            th:field="*{maCTDT}"
+                                            th:disabled="${dotId != null}">
+                                        <option value="">-- Chọn CTĐT --</option>
+                                        <option th:each="ctdt : ${ctdtList}"
+                                                th:value="${ctdt.maCTDT}"
+                                                th:text="${ctdt.maCTDT + ' — ' + ctdt.tenCTDT}"></option>
+                                    </select>
+                                    <label for="maCTDT">Chương Trình Đào Tạo <span class="text-danger">*</span></label>
+                                    <div class="invalid-feedback d-block"
+                                         th:if="${#fields.hasErrors('maCTDT')}"
+                                         th:errors="*{maCTDT}"></div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <select class="form-select" id="maHocPhan"
+                                            th:field="*{maHocPhan}"
+                                            th:disabled="${dotId != null}">
+                                        <option value="">-- Chọn Học Phần --</option>
+                                        <option th:each="hp : ${hocPhanList}"
+                                                th:value="${hp.maHocPhan}"
+                                                th:text="${hp.maHocPhan + ' — ' + hp.tenHocPhan}"></option>
+                                    </select>
+                                    <label for="maHocPhan">Học Phần <span class="text-danger">*</span></label>
+                                    <div class="invalid-feedback d-block"
+                                         th:if="${#fields.hasErrors('maHocPhan')}"
+                                         th:errors="*{maHocPhan}"></div>
+                                </div>
+                                <small class="text-muted">
+                                    <i class="bi bi-info-circle me-1"></i>Chỉ hiển thị HP đã được duyệt. HP phải nằm trong CTĐT đã chọn.
+                                </small>
+                            </div>
+
+                            <div class="col-md-12">
+                                <div class="form-floating">
+                                    <select class="form-select" id="maHocKy"
+                                            th:field="*{maHocKy}">
+                                        <option value="">-- Chọn Học Kỳ --</option>
+                                        <option th:each="hk : ${hocKyList}"
+                                                th:value="${hk.maHocKy}"
+                                                th:text="${hk.maHocKy + ' — ' + hk.tenHocKy}"></option>
+                                    </select>
+                                    <label for="maHocKy">Học Kỳ <span class="text-danger">*</span></label>
+                                    <div class="invalid-feedback d-block"
+                                         th:if="${#fields.hasErrors('maHocKy')}"
+                                         th:errors="*{maHocKy}"></div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="date" class="form-control"
+                                           id="ngayBatDau" th:field="*{ngayBatDau}">
+                                    <label for="ngayBatDau">Ngày Bắt Đầu</label>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="date" class="form-control"
+                                           id="ngayKetThuc" th:field="*{ngayKetThuc}">
+                                    <label for="ngayKetThuc">Ngày Kết Thúc</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a th:href="@{/thuc-tap}" class="btn btn-outline-secondary">Huỷ</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save me-1"></i>
+                        <span th:text="${dotId != null} ? 'Cập Nhật' : 'Tạo Mới'">Tạo Mới</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/base}">
+<head><title>Quản Lý Thực Tập</title></head>
+<body>
+<div layout:fragment="content"
+     th:with="cntTong=${#lists.size(danhSach)},
+              cntCB=${#lists.size(danhSach.?[trangThai != null and trangThai.name() == 'ChuanBi'])},
+              cntDD=${#lists.size(danhSach.?[trangThai != null and trangThai.name() == 'DaDuyet'])},
+              cntDTH=${#lists.size(danhSach.?[trangThai != null and trangThai.name() == 'DangThucHien'])},
+              cntDKT=${#lists.size(danhSach.?[trangThai != null and trangThai.name() == 'DaKetThuc'])}">
+
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a th:href="@{/dashboard}" class="text-decoration-none">
+                    <i class="bi bi-house-door me-1"></i>Trang Chủ
+                </a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">Thực Tập</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
+        <div>
+            <p class="page-subtitle">Kiến Tập &amp; Thực Tập</p>
+            <h4 class="page-title mb-0">Quản Lý Đợt Thực Tập</h4>
+        </div>
+        <a th:href="@{/thuc-tap/them}" class="btn btn-primary btn-sm"
+           sec:authorize="hasAnyRole('TTDTXS','ADMIN')">
+            <i class="bi bi-plus-lg me-1"></i>Tạo Đợt Thực Tập
+        </a>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md">
+            <div class="stat-card variant-info">
+                <div class="stat-card-icon"><i class="bi bi-collection"></i></div>
+                <div>
+                    <div class="stat-card-value" th:text="${cntTong}">0</div>
+                    <div class="stat-card-label">Tổng Đợt</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md">
+            <div class="stat-card">
+                <div class="stat-card-icon"><i class="bi bi-pencil-square"></i></div>
+                <div>
+                    <div class="stat-card-value" th:text="${cntCB}">0</div>
+                    <div class="stat-card-label">Chuẩn Bị</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md">
+            <div class="stat-card variant-success">
+                <div class="stat-card-icon"><i class="bi bi-check2-circle"></i></div>
+                <div>
+                    <div class="stat-card-value" th:text="${cntDD}">0</div>
+                    <div class="stat-card-label">Đã Duyệt</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md">
+            <div class="stat-card variant-orange">
+                <div class="stat-card-icon"><i class="bi bi-play-circle"></i></div>
+                <div>
+                    <div class="stat-card-value" th:text="${cntDTH}">0</div>
+                    <div class="stat-card-label">Đang Thực Hiện</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md">
+            <div class="stat-card variant-teal">
+                <div class="stat-card-icon"><i class="bi bi-flag-fill"></i></div>
+                <div>
+                    <div class="stat-card-value" th:text="${cntDKT}">0</div>
+                    <div class="stat-card-label">Đã Kết Thúc</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span class="fw-semibold">
+                <i class="bi bi-building-check me-2"></i>Danh Sách Đợt Thực Tập
+            </span>
+            <span class="badge bg-light text-dark"
+                  th:text="'Tổng: ' + ${cntTong}">0</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width:50px;">STT</th>
+                            <th>Tên Đợt</th>
+                            <th>CTĐT</th>
+                            <th>Học Phần</th>
+                            <th>Học Kỳ</th>
+                            <th>Bắt Đầu</th>
+                            <th>Kết Thúc</th>
+                            <th>Trạng Thái</th>
+                            <th class="text-center" style="width:140px;">Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(danhSach)}">
+                            <td colspan="9">
+                                <div class="empty-state">
+                                    <i class="bi bi-building-check"></i>
+                                    <p>Chưa có đợt thực tập nào.</p>
+                                    <a th:href="@{/thuc-tap/them}" class="btn btn-primary btn-sm"
+                                       sec:authorize="hasAnyRole('TTDTXS','ADMIN')">
+                                        <i class="bi bi-plus-lg me-1"></i>Tạo Đợt Thực Tập Đầu Tiên
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:each="dot, stat : ${danhSach}"
+                            th:with="ctdtHP=${dot.ctdtHocPhan}">
+                            <td class="text-muted" th:text="${stat.index + 1}">1</td>
+                            <td>
+                                <a th:href="@{/thuc-tap/chi-tiet/{id}(id=${dot.maDotTT})}"
+                                   class="text-decoration-none fw-medium"
+                                   th:text="${dot.tenDotTT}">--</a>
+                            </td>
+                            <td class="small">
+                                <code th:if="${ctdtHP != null and ctdtHP.chuongTrinhDaoTao != null}"
+                                      th:text="${ctdtHP.chuongTrinhDaoTao.maCTDT}">--</code>
+                                <span th:unless="${ctdtHP != null and ctdtHP.chuongTrinhDaoTao != null}"
+                                      class="text-muted fst-italic">--</span>
+                            </td>
+                            <td class="small">
+                                <span th:if="${ctdtHP != null and ctdtHP.hocPhan != null}">
+                                    <code th:text="${ctdtHP.hocPhan.maHocPhan}">--</code>
+                                    <span class="text-muted ms-1"
+                                          th:text="${'— ' + ctdtHP.hocPhan.tenHocPhan}">--</span>
+                                </span>
+                                <span th:unless="${ctdtHP != null and ctdtHP.hocPhan != null}"
+                                      class="text-muted fst-italic">--</span>
+                            </td>
+                            <td class="small">
+                                <code th:if="${dot.hocKy != null}"
+                                      th:text="${dot.hocKy.maHocKy}">--</code>
+                                <span th:unless="${dot.hocKy != null}"
+                                      class="text-muted fst-italic">--</span>
+                            </td>
+                            <td class="small text-muted"
+                                th:text="${dot.ngayBatDau != null ?
+                                    #temporals.format(dot.ngayBatDau, 'dd/MM/yyyy') : '--'}">--</td>
+                            <td class="small text-muted"
+                                th:text="${dot.ngayKetThuc != null ?
+                                    #temporals.format(dot.ngayKetThuc, 'dd/MM/yyyy') : '--'}">--</td>
+                            <td>
+                                <span class="status-pill"
+                                      th:with="s=${dot.trangThai?.name()}"
+                                      th:classappend="${s == 'DaDuyet' or s == 'DaKetThuc' ? 'tone-success' :
+                                                      (s == 'ChoDuyet'      ? 'tone-warning' :
+                                                      (s == 'DangThucHien'  ? 'tone-info'    :
+                                                      (s == 'DaHuy'         ? 'tone-danger'  : 'tone-neutral')))}">
+                                    <span class="pill-dot" aria-hidden="true"></span>
+                                    <span th:text="${s == 'ChuanBi'      ? 'Chuẩn Bị'        :
+                                                   (s == 'ChoDuyet'     ? 'Chờ Duyệt'       :
+                                                   (s == 'DaDuyet'      ? 'Đã Duyệt'        :
+                                                   (s == 'DangThucHien' ? 'Đang Thực Hiện'  :
+                                                   (s == 'DaKetThuc'    ? 'Đã Kết Thúc'     :
+                                                   (s == 'DaHuy'        ? 'Đã Huỷ'          : '--')))))}">--</span>
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <div class="action-cluster">
+                                    <a th:href="@{/thuc-tap/chi-tiet/{id}(id=${dot.maDotTT})}"
+                                       class="btn btn-sm btn-outline-secondary"
+                                       data-bs-toggle="tooltip" data-bs-title="Chi Tiết"
+                                       aria-label="Xem chi tiết">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a th:if="${dot.trangThai != null
+                                            and dot.trangThai.name() != 'DaHuy'
+                                            and dot.trangThai.name() != 'DaKetThuc'
+                                            and dot.trangThai.name() != 'DangThucHien'}"
+                                       th:href="@{/thuc-tap/sua/{id}(id=${dot.maDotTT})}"
+                                       class="btn btn-sm btn-outline-primary"
+                                       sec:authorize="hasAnyRole('TTDTXS','ADMIN')"
+                                       data-bs-toggle="tooltip" data-bs-title="Chỉnh sửa"
+                                       aria-label="Chỉnh sửa">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

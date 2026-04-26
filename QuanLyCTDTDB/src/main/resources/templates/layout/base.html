@@ -217,14 +217,10 @@
             </li>
 
             <!--/* ========================================================
-                 [PHASE 4/5/6 — DanhGia / KienTap-ThucTap / BaoCao]
-                 An toan bo section sidebar den khi cac module duoc xay xong:
-                  - Phase 4: DanhGia + CanhBao   (chua co controller/template)
-                  - Phase 5: KienTap + ThucTap   (co controller + service nhung
-                             thieu templates -> click se TemplateInputException)
-                  - Phase 6: BaoCao              (chua co controller/template)
-                 Xem docs/07_ROADMAP.md. Khi template san sang, bo cap
-                 <!-/* ... *-/--> (bo dau gach) de bat lai.
+                 [PHASE 4 — DanhGia & CanhBao]
+                 Khoi DANH GIA chua co controller/template (xem docs/07
+                 §Phase 4). Bat lai bang cach bo cap <!-/* ... *-/--> sau
+                 khi build xong DanhGiaController.
             =========================================================
 
             <!- ---- ĐÁNH GIÁ ---- ->
@@ -251,8 +247,12 @@
                     <span>Cảnh Báo Sinh Viên</span>
                 </a>
             </li>
+            */-->
 
-            <!- ---- KIẾN TẬP / THỰC TẬP ---- ->
+            <!-- ---- KIẾN TẬP / THỰC TẬP ----
+                 Phase 5: templates da san sang (kien-tap/{danh-sach,form,chi-tiet}.html
+                 + thuc-tap/{danh-sach,form,chi-tiet}.html). Backend repo da co
+                 JOIN FETCH cho OSIV=false. -->
             <li class="sidebar-section-header"
                 sec:authorize="hasAnyRole('PDT','TTDTXS','CNHP','ADMIN','GIANG_VIEN','DOANH_NGHIEP')">
                 <span>Kiến Tập &amp; Thực Tập</span>
@@ -277,6 +277,12 @@
                     <span>Thực Tập</span>
                 </a>
             </li>
+
+            <!--/* ========================================================
+                 [PHASE 6 — BaoCao]
+                 Module BaoCao chua co controller/template. Bat lai sau
+                 khi build BaoCaoController.
+            =========================================================
 
             <!- ---- BÁO CÁO ---- ->
             <li class="sidebar-section-header"
