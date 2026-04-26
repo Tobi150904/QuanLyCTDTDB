@@ -44,7 +44,11 @@ public interface DanhGiaService {
      */
     List<DanhSachSvLopHocPhan> findCanhBaoChoCvht(String maGV);
 
-    /** Tat ca canh bao trong he thong (PDT/ADMIN view, khong loc theo CVHT). */
+    /**
+     * Tat ca canh bao trong he thong (PDT/ADMIN view, khong loc theo CVHT).
+     * Tra ve CA chua xu ly + da xu ly de stat-card "Da Xu Ly" co so lieu
+     * va PDT/ADMIN co the audit lich su.
+     */
     List<DanhSachSvLopHocPhan> findCanhBaoTatCa();
 
     /**

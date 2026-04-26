@@ -100,4 +100,27 @@ public interface DanhSachSvLopHocPhanRepository extends JpaRepository<DanhSachSv
                  d.updatedAt DESC
         """)
     List<DanhSachSvLopHocPhan> findCanhBaoByCoVan(@Param("maGV") String maGV);
+
+    /**
+     * Phase 4 — Toan bo canh bao trong he thong (chua + da xu ly).
+     * Dung cho PDT / ADMIN view "/danh-gia/canh-bao": yeu cau giam sat
+     * tat ca canh bao da xay ra, khong chi loc theo trang thai xu ly.
+     * <p>Truoc day controller goi {@link #findCanhBaoChuaXuLy()} cho ca CVHT
+     * va PDT — gay sai lech thong ke (soDaXuLy luon = 0, mat lich su).
+     * Tach query mới nay de PDT/ADMIN co cai nhin day du.
+     * <p>Sap xep: chua xu ly len truoc (uu tien xem xet), sau do moi den
+     * cac canh bao da xu ly (theo {@code updatedAt} giam dan).
+     */
+    @Query("""
+        SELECT d FROM DanhSachSvLopHocPhan d
+        LEFT JOIN FETCH d.sinhVien sv
+        LEFT JOIN FETCH sv.nguoiDung
+        LEFT JOIN FETCH sv.lopHanhChinh lhc
+        LEFT JOIN FETCH lhc.coVan gv
+        LEFT JOIN FETCH gv.nguoiDung
+        WHERE d.daCanhBao = true
+        ORDER BY (CASE WHEN d.ketQuaXuLy IS NULL OR d.ketQuaXuLy = '' THEN 0 ELSE 1 END),
+                 d.updatedAt DESC
+        """)
+    List<DanhSachSvLopHocPhan> findCanhBaoToanBo();
 }

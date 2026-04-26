@@ -1,11 +1,14 @@
 package com.ntu.quanlyctdtdb.controller;
 
 import com.ntu.quanlyctdtdb.dto.DotThucTapDTO;
-import com.ntu.quanlyctdtdb.security.CustomUserDetails;
-import com.ntu.quanlyctdtdb.service.DotThucTapService;
+import com.ntu.quanlyctdtdb.entity.DotThucTap;
+import com.ntu.quanlyctdtdb.enums.LoaiThucTap;
 import com.ntu.quanlyctdtdb.repository.ChuongTrinhDaoTaoRepository;
+import com.ntu.quanlyctdtdb.repository.DoanhNghiepRepository;
 import com.ntu.quanlyctdtdb.repository.HocKyNamHocRepository;
 import com.ntu.quanlyctdtdb.repository.HocPhanRepository;
+import com.ntu.quanlyctdtdb.security.CustomUserDetails;
+import com.ntu.quanlyctdtdb.service.DotThucTapService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,15 +22,37 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Controller cho DotThucTap. Quy tac day du: docs/03 §WF-08.*
+ *
+ * <p>Role (docs/03 §"SO DO TONG HOP QUYEN"):</p>
+ * <ul>
+ *   <li>PDT, TTDTXS, ADMIN: RW (tao, sua, gui duyet, them SV).</li>
+ *   <li>TTDTXS, ADMIN: phe duyet rieng.</li>
+ *   <li>GV, CVHT, DN: W cap-nhat-kq (cho SV minh phu trach), R chi-tiet.</li>
+ *   <li>SV: R chi-tiet (dot minh tham gia).</li>
+ * </ul>
+ *
+ * <p>Class-level @PreAuthorize chan tat ca request den /thuc-tap/** chi cho
+ * cac role co tham chieu nghiep vu. Method-level fine-grained guard:</p>
+ * <ul>
+ *   <li>Tao/sua/gui-duyet/them-sv : PDT, TTDTXS, ADMIN.</li>
+ *   <li>Phe duyet                : TTDTXS, ADMIN.</li>
+ *   <li>Cap nhat ket qua          : PDT, TTDTXS, ADMIN, GIANG_VIEN, CVHT, DOANH_NGHIEP.</li>
+ *   <li>Danh sach + chi tiet      : tat ca role tren + SINH_VIEN (read).</li>
+ * </ul>
+ */
 @Controller
 @RequestMapping("/thuc-tap")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('PDT','TTDTXS','ADMIN','GIANG_VIEN','CVHT','DOANH_NGHIEP','SINH_VIEN')")
 public class DotThucTapController {
 
     private final DotThucTapService dotTTService;
     private final ChuongTrinhDaoTaoRepository ctdtRepo;
     private final HocPhanRepository hocPhanRepo;
     private final HocKyNamHocRepository hocKyRepo;
+    private final DoanhNghiepRepository doanhNghiepRepo;
 
     @GetMapping
     public String danhSach(Model model) {
@@ -36,6 +61,7 @@ public class DotThucTapController {
         return "thuc-tap/danh-sach";
     }
 
+    @PreAuthorize("hasAnyRole('PDT','TTDTXS','ADMIN')")
     @GetMapping("/them")
     public String themForm(Model model) {
         model.addAttribute("dotTTDTO", new DotThucTapDTO());
@@ -44,8 +70,9 @@ public class DotThucTapController {
         return "thuc-tap/form";
     }
 
+    @PreAuthorize("hasAnyRole('PDT','TTDTXS','ADMIN')")
     @PostMapping("/them")
-    public String them(@Valid @ModelAttribute DotThucTapDTO dto,
+    public String them(@Valid @ModelAttribute("dotTTDTO") DotThucTapDTO dto,
                         BindingResult br,
                         @AuthenticationPrincipal CustomUserDetails ud,
                         Model model, RedirectAttributes ra) {
@@ -55,14 +82,21 @@ public class DotThucTapController {
             return "thuc-tap/form";
         }
         try {
-            dotTTService.create(dto, ud.getMaNguoiDung());
-            ra.addFlashAttribute("successMsg", "Da tao dot thuc tap.");
+            // Bug fix Phase 5.2: redirect ve chi-tiet de user thay form import
+            // SV ngay sau khi tao — truoc day chi redirect ve list mat 1 cu nhip.
+            DotThucTap saved = dotTTService.create(dto, ud.getMaNguoiDung());
+            ra.addFlashAttribute("successMsg",
+                    "Da tao dot thuc tap. Tiep tuc them sinh vien o phan ben duoi.");
+            return "redirect:/thuc-tap/chi-tiet/" + saved.getMaDotTT();
         } catch (Exception e) {
             ra.addFlashAttribute("errorMsg", e.getMessage());
+            // Re-render form de user khong mat input — giu errorMsg trong flash
+            // de banner alert hien thi.
+            return "redirect:/thuc-tap/them";
         }
-        return "redirect:/thuc-tap";
     }
 
+    @PreAuthorize("hasAnyRole('PDT','TTDTXS','ADMIN')")
     @GetMapping("/sua/{id}")
     public String suaForm(@PathVariable Integer id, Model model) {
         var dot = dotTTService.findById(id);

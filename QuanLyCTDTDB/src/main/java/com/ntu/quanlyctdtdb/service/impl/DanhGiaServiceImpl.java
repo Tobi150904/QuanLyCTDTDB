@@ -84,7 +84,10 @@ public class DanhGiaServiceImpl implements DanhGiaService {
     @Override
     @Transactional(readOnly = true)
     public List<DanhSachSvLopHocPhan> findCanhBaoTatCa() {
-        return dssvRepo.findCanhBaoChuaXuLy();
+        // Bug fix Phase 4: PDT/ADMIN can xem CA da xu ly + chua xu ly de
+        // co cai nhin tong hop. Truoc day goi findCanhBaoChuaXuLy()
+        // -> stat-card "Da Xu Ly" luon = 0 va mat lich su giam sat.
+        return dssvRepo.findCanhBaoToanBo();
     }
 
     // ---------------- WRITE ----------------
