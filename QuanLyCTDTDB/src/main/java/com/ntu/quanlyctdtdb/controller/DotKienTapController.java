@@ -81,7 +81,7 @@ public class DotKienTapController {
         try {
             DotKienTap saved = dotKTService.create(dto, fileMinhChung, ud.getMaNguoiDung());
             ra.addFlashAttribute("successMsg",
-                    "Tao dot kien tap thanh cong! Da tu dong them sinh vien DangHoc cua lop vao danh sach.");
+                    "Da tao dot kien tap. He thong tu dong them sinh vien DangHoc cua lop vao danh sach.");
             return "redirect:/kien-tap/chi-tiet/" + saved.getMaDotKT();
         } catch (Exception e) {
             ra.addFlashAttribute("errorMsg", e.getMessage());
@@ -125,7 +125,7 @@ public class DotKienTapController {
         }
         try {
             dotKTService.update(id, dto, fileMinhChung);
-            ra.addFlashAttribute("successMsg", "Cap nhat dot kien tap thanh cong!");
+            ra.addFlashAttribute("successMsg", "Da cap nhat dot kien tap.");
         } catch (Exception e) {
             ra.addFlashAttribute("errorMsg", e.getMessage());
         }
@@ -163,7 +163,7 @@ public class DotKienTapController {
     public String guiPheDuyet(@PathVariable Integer id, RedirectAttributes ra) {
         try {
             dotKTService.guiPheDuyet(id);
-            ra.addFlashAttribute("successMsg", "Da gui yeu cau phe duyet!");
+            ra.addFlashAttribute("successMsg", "Da gui yeu cau phe duyet.");
         } catch (Exception e) {
             ra.addFlashAttribute("errorMsg", e.getMessage());
         }
@@ -179,7 +179,7 @@ public class DotKienTapController {
                            RedirectAttributes ra) {
         try {
             dotKTService.pheduyet(id, ud.getMaNguoiDung());
-            ra.addFlashAttribute("successMsg", "Phe duyet dot kien tap thanh cong!");
+            ra.addFlashAttribute("successMsg", "Da phe duyet dot kien tap.");
         } catch (Exception e) {
             ra.addFlashAttribute("errorMsg", e.getMessage());
         }

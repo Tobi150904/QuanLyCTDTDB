@@ -9,6 +9,7 @@
 <div layout:fragment="content"
      th:with="cntTong=${#lists.size(danhSach)},
               cntCB=${#lists.size(danhSach.?[trangThai != null and trangThai.name() == 'ChuanBi'])},
+              cntCD=${#lists.size(danhSach.?[trangThai != null and trangThai.name() == 'ChoDuyet'])},
               cntDD=${#lists.size(danhSach.?[trangThai != null and trangThai.name() == 'DaDuyet'])},
               cntDTH=${#lists.size(danhSach.?[trangThai != null and trangThai.name() == 'DangThucHien'])},
               cntDKT=${#lists.size(danhSach.?[trangThai != null and trangThai.name() == 'DaKetThuc'])}">
@@ -35,8 +36,10 @@
         </a>
     </div>
 
+    <!-- 6 stat cards (Tong + 5 trang thai) — col-6 col-md-4 col-xl auto-flex
+         de fit het tren XL ma van wrap dep tren md. -->
     <div class="row g-3 mb-4">
-        <div class="col-6 col-md">
+        <div class="col-6 col-md-4 col-xl">
             <div class="stat-card variant-info">
                 <div class="stat-card-icon"><i class="bi bi-collection"></i></div>
                 <div>
@@ -45,7 +48,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-6 col-md">
+        <div class="col-6 col-md-4 col-xl">
             <div class="stat-card">
                 <div class="stat-card-icon"><i class="bi bi-pencil-square"></i></div>
                 <div>
@@ -54,7 +57,16 @@
                 </div>
             </div>
         </div>
-        <div class="col-6 col-md">
+        <div class="col-6 col-md-4 col-xl">
+            <div class="stat-card variant-warning">
+                <div class="stat-card-icon"><i class="bi bi-hourglass-split"></i></div>
+                <div>
+                    <div class="stat-card-value" th:text="${cntCD}">0</div>
+                    <div class="stat-card-label">Chờ Duyệt</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl">
             <div class="stat-card variant-success">
                 <div class="stat-card-icon"><i class="bi bi-check2-circle"></i></div>
                 <div>
@@ -63,7 +75,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-6 col-md">
+        <div class="col-6 col-md-4 col-xl">
             <div class="stat-card variant-orange">
                 <div class="stat-card-icon"><i class="bi bi-play-circle"></i></div>
                 <div>
@@ -72,7 +84,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-6 col-md">
+        <div class="col-6 col-md-4 col-xl">
             <div class="stat-card variant-teal">
                 <div class="stat-card-icon"><i class="bi bi-flag-fill"></i></div>
                 <div>

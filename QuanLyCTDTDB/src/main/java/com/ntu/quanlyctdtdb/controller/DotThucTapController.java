@@ -32,6 +32,7 @@ public class DotThucTapController {
     @GetMapping
     public String danhSach(Model model) {
         model.addAttribute("danhSach", dotTTService.findAll());
+        model.addAttribute("activeMenu", "thuc-tap");
         return "thuc-tap/danh-sach";
     }
 
@@ -39,6 +40,7 @@ public class DotThucTapController {
     public String themForm(Model model) {
         model.addAttribute("dotTTDTO", new DotThucTapDTO());
         populateModel(model);
+        model.addAttribute("activeMenu", "thuc-tap");
         return "thuc-tap/form";
     }
 
@@ -49,11 +51,12 @@ public class DotThucTapController {
                         Model model, RedirectAttributes ra) {
         if (br.hasErrors()) {
             populateModel(model);
+            model.addAttribute("activeMenu", "thuc-tap");
             return "thuc-tap/form";
         }
         try {
             dotTTService.create(dto, ud.getMaNguoiDung());
-            ra.addFlashAttribute("successMsg", "Tao dot thuc tap thanh cong!");
+            ra.addFlashAttribute("successMsg", "Da tao dot thuc tap.");
         } catch (Exception e) {
             ra.addFlashAttribute("errorMsg", e.getMessage());
         }
@@ -73,6 +76,7 @@ public class DotThucTapController {
         model.addAttribute("dotTTDTO", dto);
         model.addAttribute("dotId", id);
         populateModel(model);
+        model.addAttribute("activeMenu", "thuc-tap");
         return "thuc-tap/form";
     }
 
@@ -84,11 +88,12 @@ public class DotThucTapController {
         if (br.hasErrors()) {
             model.addAttribute("dotId", id);
             populateModel(model);
+            model.addAttribute("activeMenu", "thuc-tap");
             return "thuc-tap/form";
         }
         try {
             dotTTService.update(id, dto);
-            ra.addFlashAttribute("successMsg", "Cap nhat dot thuc tap thanh cong!");
+            ra.addFlashAttribute("successMsg", "Da cap nhat dot thuc tap.");
         } catch (Exception e) {
             ra.addFlashAttribute("errorMsg", e.getMessage());
         }
@@ -99,7 +104,7 @@ public class DotThucTapController {
     public String guiPheDuyet(@PathVariable Integer id, RedirectAttributes ra) {
         try {
             dotTTService.guiPheDuyet(id);
-            ra.addFlashAttribute("successMsg", "Da gui yeu cau phe duyet!");
+            ra.addFlashAttribute("successMsg", "Da gui yeu cau phe duyet.");
         } catch (Exception e) {
             ra.addFlashAttribute("errorMsg", e.getMessage());
         }
@@ -115,7 +120,7 @@ public class DotThucTapController {
                             RedirectAttributes ra) {
         try {
             dotTTService.pheduyet(id, ud.getMaNguoiDung());
-            ra.addFlashAttribute("successMsg", "Phe duyet dot thuc tap thanh cong!");
+            ra.addFlashAttribute("successMsg", "Da phe duyet dot thuc tap.");
         } catch (Exception e) {
             ra.addFlashAttribute("errorMsg", e.getMessage());
         }
@@ -126,6 +131,7 @@ public class DotThucTapController {
     public String chiTiet(@PathVariable Integer id, Model model) {
         model.addAttribute("dot", dotTTService.findById(id));
         model.addAttribute("danhSachSV", dotTTService.findDanhSachSV(id));
+        model.addAttribute("activeMenu", "thuc-tap");
         return "thuc-tap/chi-tiet";
     }
 
@@ -153,7 +159,7 @@ public class DotThucTapController {
                                   RedirectAttributes ra) {
         try {
             dotTTService.capNhatKetQua(maDanhSach, loaiThucTap, maDoanhNghiep, nhanXet);
-            ra.addFlashAttribute("successMsg", "Cap nhat ket qua thanh cong!");
+            ra.addFlashAttribute("successMsg", "Da cap nhat ket qua sinh vien.");
         } catch (Exception e) {
             ra.addFlashAttribute("errorMsg", e.getMessage());
         }

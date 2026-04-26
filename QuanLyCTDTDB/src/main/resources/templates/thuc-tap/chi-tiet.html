@@ -78,13 +78,13 @@
         <div class="card-body">
             <div class="d-flex flex-wrap gap-2">
 
-                <!-- ChuanBi -> ChoDuyet -->
+                <!-- ChuanBi -> ChoDuyet — mau warning theo §3.2 (Cho Duyet = warning) -->
                 <form th:if="${s == 'ChuanBi'}"
                       th:action="@{/thuc-tap/gui-phe-duyet/{id}(id=${dot.maDotTT})}"
                       method="post" class="d-inline m-0"
                       sec:authorize="hasAnyRole('TTDTXS','ADMIN')">
                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                    <button class="btn btn-sm btn-info text-white">
+                    <button class="btn btn-sm btn-warning text-dark">
                         <i class="bi bi-send me-1"></i>Gửi Phê Duyệt
                     </button>
                 </form>
@@ -271,11 +271,13 @@
                                         th:text="${ds.sinhVien.lopHanhChinh != null
                                             ? ds.sinhVien.lopHanhChinh.maLopHC : '--'}">--</td>
                                     <td class="small">
-                                        <span class="chip"
-                                              th:with="lt=${ds.loaiThucTap?.name()}"
-                                              th:classappend="${lt == 'Truong' ? 'chip-primary' : 'chip-primary'}"
-                                              th:text="${lt == 'Truong'      ? 'Tại Trường'  :
-                                                       (lt == 'DoanhNghiep' ? 'Tại DN'      : '--')}">--</span>
+                                        <span th:if="${ds.loaiThucTap != null}"
+                                              class="chip"
+                                              th:with="lt=${ds.loaiThucTap.name()}"
+                                              th:classappend="${lt == 'Truong' ? 'chip-primary' : 'chip-accent'}"
+                                              th:text="${lt == 'Truong' ? 'Tại Trường' : 'Tại DN'}">--</span>
+                                        <span th:unless="${ds.loaiThucTap != null}"
+                                              class="text-muted fst-italic small">--</span>
                                     </td>
                                     <td class="small"
                                         th:text="${ds.doanhNghiep != null
