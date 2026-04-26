@@ -57,7 +57,9 @@ Quan ly toan bo quy trinh dao tao xuat sac cua truong dai hoc, bao gom:
 ```
 com.ntu.quanlyctdtdb/
   config/          SecurityConfig, WebMvcConfig
-  controller/      1 controller per module (Auth, Dashboard, NguoiDung, Profile, HocPhan, CTDT, LopHocPhan, DotKienTap, DotThucTap)
+  controller/      1 controller per module (Auth, Dashboard, NguoiDung, Profile,
+                   HocKyNamHoc, LopHanhChinh, DoanhNghiep, HocPhan, CTDT,
+                   LopHocPhan, DotKienTap, DotThucTap, DanhGia)
   dto/             Data Transfer Objects (form binding + Excel import)
   entity/          20 JPA Entities + 7 @Embeddable Id classes
   enums/           15 enum types (state machines + kinds)
@@ -245,6 +247,25 @@ PDT import Excel phan cong (DanhSachThucTap): MaSV, LoaiThucTap, MaDoanhNghiep
 DN / GV / CVHT nhap KetQuaThucTap (Diem, NhanXet theo VaiTroThucTap)
   -> Upsert theo (MaThucTap, MaVaiTro) - 1 vai tro 1 ban ghi.
 PDT xuat bao cao Excel
+```
+
+### 6.6 Luong Danh Gia & Canh Bao Sinh Vien (Phase 4)
+```
+GV xem danh sach lop hoc phan minh dang day (GET /danh-gia)
+  -> Vao tung lop -> nhap NhanXet + DaCanhBao cho tung SV
+     (POST /danh-gia/nhan-xet/{maSV}/{maCTDT}/{maHocPhan}/{maHocKy}/{maLopHocPhan})
+  -> Rising-edge: chi gui email khi (DaCanhBao_old=false && new=true).
+     EmailService gui den LopHanhChinh.coVan.email cua SV (CVHT lop SV).
+     Subject: "[CANH BAO] SV {hoTen} - {tenHocPhan}".
+CVHT vao /danh-gia/canh-bao -> thay danh sach canh bao chua xu ly toan lop minh phu trach
+  -> Inline form xu ly: nhap KetQuaXuLy -> SET nguoiXuLy + ngayXuLy.
+  -> Ban ghi van giu DaCanhBao=1 (lich su, KHONG xoa).
+PDT/ADMIN cung vao /danh-gia/canh-bao thay TAT CA canh bao toan truong (giam sat).
+SV vao /danh-gia thay nhan xet + canh bao ve minh (read-only).
+RBAC:
+  - /danh-gia/nhan-xet/**         GV (currentUser == LopHocPhan.MaGiangVien)
+  - /danh-gia/canh-bao/**/xu-ly   CVHT (currentUser == LopHanhChinh.MaCoVan)
+                                  hoac PDT/ADMIN.
 ```
 
 ---
