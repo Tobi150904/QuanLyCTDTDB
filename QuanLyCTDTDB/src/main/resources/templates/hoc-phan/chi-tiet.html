@@ -46,9 +46,11 @@
                 </div>
             </div>
             <div class="detail-hero-actions">
-                <a th:href="@{/hoc-phan/sua/{ma}(ma=${hocPhan.maHocPhan})}"
-                   class="btn btn-light btn-sm"
-                   th:if="${hocPhan.trangThai?.name() != 'DaDuyet'}">
+                <!-- Match HocPhanController @PreAuthorize cho /hoc-phan/sua/** -->
+                <a sec:authorize="hasAnyRole('CNHP','TTDTXS','ADMIN')"
+                   th:if="${hocPhan.trangThai?.name() != 'DaDuyet'}"
+                   th:href="@{/hoc-phan/sua/{ma}(ma=${hocPhan.maHocPhan})}"
+                   class="btn btn-light btn-sm">
                     <i class="bi bi-pencil me-1"></i>Sửa
                 </a>
                 <a th:href="@{/hoc-phan}" class="btn btn-outline-light btn-sm">

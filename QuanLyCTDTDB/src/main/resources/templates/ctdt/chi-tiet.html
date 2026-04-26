@@ -30,9 +30,11 @@
                     <span><code th:text="${ctdt.maCTDT}">CTDT-K65</code></span>
                     <span><i class="bi bi-mortarboard"></i>Khóa
                         <strong th:text="${ctdt.khoa}">--</strong></span>
-                    <span th:if="${ctdt.tongTinChi != null}">
-                        <i class="bi bi-bookmark-star"></i>
-                        <strong th:text="${ctdt.tongTinChi}">0</strong>&nbsp;Tín Chỉ
+                    <!-- Entity ChuongTrinhDaoTao khong co field "tongTinChi" — hien thi
+                         so HP thay vi (collection da load san trong chiTiet()). -->
+                    <span th:if="${ctdt.ctdtHocPhans != null}">
+                        <i class="bi bi-list-check"></i>
+                        <strong th:text="${#lists.size(ctdt.ctdtHocPhans)}">0</strong>&nbsp;Học Phần
                     </span>
                     <span class="status-pill"
                           th:with="s=${ctdt.trangThai.name()}"
@@ -48,7 +50,8 @@
                 </div>
             </div>
             <div class="detail-hero-actions">
-                <a sec:authorize="hasAnyRole('PDT','ADMIN')"
+                <!-- Match ChuongTrinhDaoTaoController @PreAuthorize cho /ctdt/sua/** -->
+                <a sec:authorize="hasAnyRole('PDT','TTDTXS','CNHP','ADMIN')"
                    th:if="${ctdt.trangThai.name() != 'DaDuyet'}"
                    th:href="@{'/ctdt/sua/' + ${ctdt.maCTDT}}"
                    class="btn btn-light btn-sm">
