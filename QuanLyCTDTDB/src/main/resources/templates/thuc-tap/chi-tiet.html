@@ -247,7 +247,7 @@
                                     <th>Doanh Nghiệp</th>
                                     <th>Trạng Thái</th>
                                     <th class="text-center"
-                                        sec:authorize="hasAnyRole('TTDTXS','CNHP','ADMIN','GIANG_VIEN')"
+                                        sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN','GIANG_VIEN','CVHT','DOANH_NGHIEP')"
                                         style="width:140px;">Cập Nhật</th>
                                 </tr>
                             </thead>
@@ -260,7 +260,8 @@
                                         </div>
                                     </td>
                                 </tr>
-                                <tr th:each="ds, stat : ${danhSachSV}">
+                                <th:block th:each="ds, stat : ${danhSachSV}">
+                                <tr>
                                     <td class="text-muted" th:text="${stat.index + 1}">1</td>
                                     <td><code th:text="${ds.sinhVien.maSV}"></code></td>
                                     <td class="fw-medium"
@@ -296,7 +297,7 @@
                                         </span>
                                     </td>
                                     <td class="text-center"
-                                        sec:authorize="hasAnyRole('TTDTXS','CNHP','ADMIN','GIANG_VIEN')">
+                                        sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN','GIANG_VIEN','CVHT','DOANH_NGHIEP')">
                                         <button class="btn btn-sm btn-outline-primary"
                                                 data-bs-toggle="collapse"
                                                 th:data-bs-target="'#collapseKQ-' + ${ds.maThucTap}"
@@ -305,10 +306,9 @@
                                         </button>
                                     </td>
                                 </tr>
-                                <!-- Inline collapse row: form Cap nhat ket qua -->
+                                <!-- Inline collapse row: form Cap nhat ket qua (immediate sibling) -->
                                 <tr class="bg-body-tertiary"
-                                    th:each="ds : ${danhSachSV}"
-                                    sec:authorize="hasAnyRole('TTDTXS','CNHP','ADMIN','GIANG_VIEN')">
+                                    sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN','GIANG_VIEN','CVHT','DOANH_NGHIEP')">
                                     <td colspan="8" class="p-0 border-0">
                                         <div class="collapse"
                                              th:id="'collapseKQ-' + ${ds.maThucTap}">
@@ -339,10 +339,15 @@
                                                         <label class="form-label small fw-medium mb-1">
                                                             Doanh Nghiệp (nếu có)
                                                         </label>
-                                                        <input type="text" class="form-control form-control-sm"
-                                                               name="maDoanhNghiep"
-                                                               th:value="${ds.doanhNghiep != null ? ds.doanhNghiep.maDoanhNghiep : ''}"
-                                                               placeholder="Mã DN, để trống nếu thực tập tại trường">
+                                                        <select class="form-select form-select-sm"
+                                                                name="maDoanhNghiep">
+                                                            <option value="">-- Không / Tại trường --</option>
+                                                            <option th:each="dn : ${doanhNghiepList}"
+                                                                    th:value="${dn.maDoanhNghiep}"
+                                                                    th:selected="${ds.doanhNghiep != null
+                                                                                   and ds.doanhNghiep.maDoanhNghiep == dn.maDoanhNghiep}"
+                                                                    th:text="${dn.tenDoanhNghiep}">DN</option>
+                                                        </select>
                                                     </div>
                                                     <div class="col-md-3">
                                                         <label class="form-label small fw-medium mb-1">
@@ -363,6 +368,7 @@
                                         </div>
                                     </td>
                                 </tr>
+                                </th:block>
                             </tbody>
                         </table>
                     </div>
@@ -372,7 +378,7 @@
 
         <!-- SIDEBAR: THEM SV (form input) -->
         <div class="col-lg-4"
-             sec:authorize="hasAnyRole('TTDTXS','CNHP','ADMIN')">
+             sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
             <div class="card sticky-top" style="top: 1rem;">
                 <div class="card-header">
                     <i class="bi bi-person-plus"></i>
@@ -380,9 +386,39 @@
                 </div>
                 <div class="card-body">
                     <form th:action="@{/thuc-tap/chi-tiet/{id}/them-sv(id=${dot.maDotTT})}"
-                          method="post">
+                          method="post" id="themSvForm">
                         <input type="hidden" th:name="${_csrf.parameterName}"
                                               th:value="${_csrf.token}">
+
+                        <div class="mb-3">
+                            <label for="loaiThucTap" class="form-label fw-medium small">
+                                Loại Thực Tập <span class="text-danger">*</span>
+                            </label>
+                            <select id="loaiThucTap" name="loaiThucTap"
+                                    class="form-select form-select-sm"
+                                    onchange="document.getElementById('dnGroup').style.display = (this.value === 'DoanhNghiep') ? 'block' : 'none';">
+                                <option value="Truong" selected>Tại Trường</option>
+                                <option value="DoanhNghiep">Tại Doanh Nghiệp</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3" id="dnGroup" style="display:none;">
+                            <label for="maDoanhNghiep" class="form-label fw-medium small">
+                                Doanh Nghiệp Tiếp Nhận
+                            </label>
+                            <select id="maDoanhNghiep" name="maDoanhNghiep"
+                                    class="form-select form-select-sm">
+                                <option value="">-- Chọn DN --</option>
+                                <option th:each="dn : ${doanhNghiepList}"
+                                        th:value="${dn.maDoanhNghiep}"
+                                        th:text="${dn.tenDoanhNghiep}">DN</option>
+                            </select>
+                            <small class="text-muted">
+                                <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
+                                Áp dụng chung cho cả lô. Có thể chỉnh từng SV sau.
+                            </small>
+                        </div>
+
                         <div class="mb-3">
                             <label for="maSVList" class="form-label fw-medium small">
                                 Danh Sách Mã SV <span class="text-danger">*</span>
@@ -392,13 +428,13 @@
                                       placeholder="SV001, SV002&#10;SV003&#10;SV004"
                                       required></textarea>
                             <small class="text-muted">
-                                <i class="bi bi-info-circle me-1"></i>
-                                Cách nhau bằng dấu phẩy hoặc xuống dòng.
+                                <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
+                                Cách nhau bằng dấu phẩy, dấu chấm phẩy hoặc xuống dòng.
                             </small>
                         </div>
                         <button type="submit" class="btn btn-primary w-100"
                                 th:disabled="${s == 'DaHuy' or s == 'DaKetThuc'}">
-                            <i class="bi bi-plus-lg me-1"></i>Phân Công
+                            <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Phân Công
                         </button>
                     </form>
                 </div>

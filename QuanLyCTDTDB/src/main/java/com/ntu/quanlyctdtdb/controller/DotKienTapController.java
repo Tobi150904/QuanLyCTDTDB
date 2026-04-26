@@ -2,6 +2,7 @@ package com.ntu.quanlyctdtdb.controller;
 
 import com.ntu.quanlyctdtdb.dto.DotKienTapDTO;
 import com.ntu.quanlyctdtdb.entity.DotKienTap;
+import com.ntu.quanlyctdtdb.enums.TrangThaiDoanhNghiep;
 import com.ntu.quanlyctdtdb.repository.DoanhNghiepRepository;
 import com.ntu.quanlyctdtdb.repository.GiangVienRepository;
 import com.ntu.quanlyctdtdb.repository.HocKyNamHocRepository;
@@ -256,6 +257,9 @@ public class DotKienTapController {
     // WF-07.4: Nhan xet
     // =========================================================================
 
+    // Nhan xet GV: chi GIANG_VIEN moi co the goi (service co them double-check
+    // chinh xac la GV phu trach cua dot — defense-in-depth).
+    @PreAuthorize("hasAnyRole('GIANG_VIEN','ADMIN')")
     @PostMapping("/nhan-xet-gv/{id}")
     public String nhanXetGV(@PathVariable Integer id,
                             @RequestParam String nhanXet,
@@ -270,6 +274,8 @@ public class DotKienTapController {
         return "redirect:/kien-tap/chi-tiet/" + id;
     }
 
+    // Nhan xet DN: chi DOANH_NGHIEP moi co the goi.
+    @PreAuthorize("hasAnyRole('DOANH_NGHIEP','ADMIN')")
     @PostMapping("/nhan-xet-dn/{id}")
     public String nhanXetDN(@PathVariable Integer id,
                             @RequestParam String nhanXet,
@@ -292,11 +298,9 @@ public class DotKienTapController {
         model.addAttribute("lopHCList", lopHCRepo.findAll());
         model.addAttribute("hocKyList", hocKyRepo.findAllByOrderByNgayBatDauDesc());
         model.addAttribute("giangVienList", giangVienRepo.findAllFetchNguoiDung());
-        // Chi list DN DangHopTac - docs/02 §3.7
+        // Chi list DN DangHopTac - docs/02 §3.7. Su dung index query thay vi
+        // findAll().stream().filter() de tranh quet bang n+1 voi data lon.
         model.addAttribute("doanhNghiepList",
-                doanhNghiepRepo.findAll().stream()
-                        .filter(d -> d.getTrangThai() != null
-                                && d.getTrangThai().name().equals("DangHopTac"))
-                        .toList());
+                doanhNghiepRepo.findByTrangThai(TrangThaiDoanhNghiep.DangHopTac));
     }
 }

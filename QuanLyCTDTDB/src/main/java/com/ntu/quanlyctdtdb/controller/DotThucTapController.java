@@ -3,6 +3,7 @@ package com.ntu.quanlyctdtdb.controller;
 import com.ntu.quanlyctdtdb.dto.DotThucTapDTO;
 import com.ntu.quanlyctdtdb.entity.DotThucTap;
 import com.ntu.quanlyctdtdb.enums.LoaiThucTap;
+import com.ntu.quanlyctdtdb.enums.TrangThaiDoanhNghiep;
 import com.ntu.quanlyctdtdb.repository.ChuongTrinhDaoTaoRepository;
 import com.ntu.quanlyctdtdb.repository.DoanhNghiepRepository;
 import com.ntu.quanlyctdtdb.repository.HocKyNamHocRepository;
@@ -114,9 +115,10 @@ public class DotThucTapController {
         return "thuc-tap/form";
     }
 
+    @PreAuthorize("hasAnyRole('PDT','TTDTXS','ADMIN')")
     @PostMapping("/sua/{id}")
     public String sua(@PathVariable Integer id,
-                       @Valid @ModelAttribute DotThucTapDTO dto,
+                       @Valid @ModelAttribute("dotTTDTO") DotThucTapDTO dto,
                        BindingResult br,
                        Model model, RedirectAttributes ra) {
         if (br.hasErrors()) {
@@ -130,10 +132,12 @@ public class DotThucTapController {
             ra.addFlashAttribute("successMsg", "Da cap nhat dot thuc tap.");
         } catch (Exception e) {
             ra.addFlashAttribute("errorMsg", e.getMessage());
+            return "redirect:/thuc-tap/sua/" + id;
         }
-        return "redirect:/thuc-tap";
+        return "redirect:/thuc-tap/chi-tiet/" + id;
     }
 
+    @PreAuthorize("hasAnyRole('PDT','TTDTXS','ADMIN')")
     @PostMapping("/gui-phe-duyet/{id}")
     public String guiPheDuyet(@PathVariable Integer id, RedirectAttributes ra) {
         try {
@@ -142,7 +146,8 @@ public class DotThucTapController {
         } catch (Exception e) {
             ra.addFlashAttribute("errorMsg", e.getMessage());
         }
-        return "redirect:/thuc-tap";
+        // Stay on chi-tiet so user can see the new state immediately.
+        return "redirect:/thuc-tap/chi-tiet/" + id;
     }
 
     // Phe duyet dot thuc tap — chi TTDTXS hoac ADMIN (review P0-4).
@@ -158,25 +163,46 @@ public class DotThucTapController {
         } catch (Exception e) {
             ra.addFlashAttribute("errorMsg", e.getMessage());
         }
-        return "redirect:/thuc-tap";
+        // Sau phe duyet -> ve chi-tiet de TTDTXS thay status moi va next-step.
+        return "redirect:/thuc-tap/chi-tiet/" + id;
     }
 
     @GetMapping("/chi-tiet/{id}")
     public String chiTiet(@PathVariable Integer id, Model model) {
         model.addAttribute("dot", dotTTService.findById(id));
         model.addAttribute("danhSachSV", dotTTService.findDanhSachSV(id));
+        // DN list cho dropdown trong cap-nhat-kq + import — chi DN dang hop tac.
+        model.addAttribute("doanhNghiepList",
+                doanhNghiepRepo.findByTrangThai(TrangThaiDoanhNghiep.DangHopTac));
         model.addAttribute("activeMenu", "thuc-tap");
         return "thuc-tap/chi-tiet";
     }
 
+    @PreAuthorize("hasAnyRole('PDT','TTDTXS','ADMIN')")
     @PostMapping("/chi-tiet/{id}/them-sv")
     public String themSV(@PathVariable Integer id,
                           @RequestParam String maSVList,
+                          @RequestParam(required = false) String loaiThucTap,
+                          @RequestParam(required = false) String maDoanhNghiep,
                           RedirectAttributes ra) {
         try {
-            List<String> dsSV = Arrays.asList(maSVList.split("[,\\n]"));
-            var result = dotTTService.importSinhVien(id, dsSV.stream()
-                    .map(String::trim).filter(s -> !s.isBlank()).toList());
+            List<String> dsSV = Arrays.stream(maSVList.split("[,\\n;\\s]+"))
+                    .map(String::trim).filter(s -> !s.isBlank()).toList();
+            if (dsSV.isEmpty()) {
+                ra.addFlashAttribute("errorMsg", "Vui long nhap it nhat 1 ma sinh vien.");
+                return "redirect:/thuc-tap/chi-tiet/" + id;
+            }
+
+            // Default loai = Truong neu user khong chon. Truong hop chon
+            // DoanhNghiep ma quen chon DN -> service se loi (rang buoc nghiep vu).
+            LoaiThucTap loai = LoaiThucTap.Truong;
+            if (loaiThucTap != null && !loaiThucTap.isBlank()) {
+                try {
+                    loai = LoaiThucTap.valueOf(loaiThucTap.trim());
+                } catch (IllegalArgumentException ignore) { /* fallback Truong */ }
+            }
+
+            var result = dotTTService.importSinhVien(id, dsSV, loai, maDoanhNghiep);
             ra.addFlashAttribute("importResult", result);
         } catch (Exception e) {
             ra.addFlashAttribute("errorMsg", e.getMessage());
@@ -184,6 +210,9 @@ public class DotThucTapController {
         return "redirect:/thuc-tap/chi-tiet/" + id;
     }
 
+    // Per spec: PDT/TTDTXS/ADMIN cap nhat hang loat; GV/CVHT/DN cap nhat
+    // cho SV minh phu trach. Method-level @PreAuthorize chap nhan ca 6 role.
+    @PreAuthorize("hasAnyRole('PDT','TTDTXS','ADMIN','GIANG_VIEN','CVHT','DOANH_NGHIEP')")
     @PostMapping("/chi-tiet/{id}/cap-nhat-kq/{maDanhSach}")
     public String capNhatKetQua(@PathVariable Integer id,
                                   @PathVariable Integer maDanhSach,
@@ -204,5 +233,9 @@ public class DotThucTapController {
         model.addAttribute("ctdtList", ctdtRepo.findAll());
         model.addAttribute("hocPhanList", hocPhanRepo.findAllDaDuyet());
         model.addAttribute("hocKyList", hocKyRepo.findAllByOrderByNgayBatDauDesc());
+        // DN list cho form (truoc day chua co — gay form thieu dropdown
+        // khi muon set DN tiep nhan ngay khi tao dot). Chi load DN dang hop tac.
+        model.addAttribute("doanhNghiepList",
+                doanhNghiepRepo.findByTrangThai(TrangThaiDoanhNghiep.DangHopTac));
     }
 }

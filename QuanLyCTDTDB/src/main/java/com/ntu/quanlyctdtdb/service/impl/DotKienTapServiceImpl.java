@@ -87,6 +87,14 @@ public class DotKienTapServiceImpl implements DotKienTapService {
                     "Doanh nghiep '" + dn.getTenDoanhNghiep() + "' dang TamNgung hop tac, "
                     + "khong the tao dot kien tap voi DN nay.");
         }
+        // Validate kinh phi >= 0 ngay khi tao moi (defense-in-depth — DTO validation
+        // co the bi bypass neu controller bo @Valid).
+        if (dto.getKinhPhiChung() != null && dto.getKinhPhiChung().signum() < 0) {
+            throw new BusinessException("Kinh phi chung khong duoc am.");
+        }
+        if (dto.getKinhPhiTungSV() != null && dto.getKinhPhiTungSV().signum() < 0) {
+            throw new BusinessException("Kinh phi tung SV khong duoc am.");
+        }
 
         // 3. GV phu trach (optional luc tao)
         GiangVien gvPhuTrach = null;
@@ -191,12 +199,24 @@ public class DotKienTapServiceImpl implements DotKienTapService {
             dot.setDoanhNghiep(dn);
         }
 
-        // GV phu trach
-        if (dto.getMaGVPhuTrach() != null && !dto.getMaGVPhuTrach().isBlank()) {
+        // GV phu trach: cho phep CLEAR (gan null) khi user submit chuoi rong tu
+        // dropdown "-- Chua phan cong --". Bug truoc day: chi update khi co gia tri,
+        // user khong co cach nao bo GV neu da gan nham.
+        if (dto.getMaGVPhuTrach() == null || dto.getMaGVPhuTrach().isBlank()) {
+            dot.setGvPhuTrach(null);
+        } else {
             GiangVien gv = giangVienRepo.findById(dto.getMaGVPhuTrach())
                     .orElseThrow(() -> new ResourceNotFoundException(
                             "GiangVien", "MaGV", dto.getMaGVPhuTrach()));
             dot.setGvPhuTrach(gv);
+        }
+
+        // Validate kinh phi (neu dien): khong am — bao ve UI khoi de quy am.
+        if (dto.getKinhPhiChung() != null && dto.getKinhPhiChung().signum() < 0) {
+            throw new BusinessException("Kinh phi chung khong duoc am.");
+        }
+        if (dto.getKinhPhiTungSV() != null && dto.getKinhPhiTungSV().signum() < 0) {
+            throw new BusinessException("Kinh phi tung SV khong duoc am.");
         }
 
         // Luu file moi neu co
