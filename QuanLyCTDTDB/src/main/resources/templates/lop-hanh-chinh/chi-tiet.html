@@ -15,21 +15,35 @@
         </ol>
     </nav>
 
-    <div class="d-flex justify-content-between align-items-start mb-4">
-        <div>
-            <p class="page-subtitle">Lớp Hành Chính</p>
-            <h4 class="page-title" th:text="${lop.maLopHC} + ' — ' + ${lop.tenLop}">--</h4>
+    <!-- DETAIL HERO -->
+    <section class="detail-hero">
+        <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start">
+            <div style="min-width: 240px; flex: 1 1 60%;">
+                <p class="detail-hero-eyebrow">Quản Lý / Lớp Hành Chính</p>
+                <h1 class="detail-hero-title" th:text="${lop.tenLop}">Tên Lớp</h1>
+                <div class="detail-hero-meta">
+                    <span><code th:text="${lop.maLopHC}">--</code></span>
+                    <span><i class="bi bi-mortarboard"></i>Khoá
+                        <strong th:text="${lop.khoaHoc}">--</strong></span>
+                    <span th:if="${lop.chuongTrinhDaoTao != null}">
+                        <i class="bi bi-journal-text"></i>
+                        <span th:text="${lop.chuongTrinhDaoTao.maCTDT}">--</span>
+                    </span>
+                    <span><i class="bi bi-people"></i>
+                        <strong th:text="${#lists.size(sinhVienList)}">0</strong>&nbsp;SV</span>
+                </div>
+            </div>
+            <div class="detail-hero-actions">
+                <a th:href="@{/lop-hanh-chinh/sua/{ma}(ma=${lop.maLopHC})}"
+                   class="btn btn-light btn-sm">
+                    <i class="bi bi-pencil me-1"></i>Chỉnh Sửa
+                </a>
+                <a th:href="@{/lop-hanh-chinh}" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i>Quay Lại
+                </a>
+            </div>
         </div>
-        <div class="d-flex gap-2">
-            <a th:href="@{/lop-hanh-chinh/sua/{ma}(ma=${lop.maLopHC})}"
-               class="btn btn-primary btn-sm">
-                <i class="bi bi-pencil me-1"></i>Chỉnh Sửa
-            </a>
-            <a th:href="@{/lop-hanh-chinh}" class="btn btn-outline-secondary btn-sm">
-                <i class="bi bi-arrow-left me-1"></i>Quay Lại
-            </a>
-        </div>
-    </div>
+    </section>
 
     <!-- Flash messages da duoc render boi layout/base.html -->
 
@@ -37,49 +51,51 @@
     <div class="row g-4">
         <div class="col-lg-5">
             <div class="card">
-                <div class="card-header"><i class="bi bi-info-circle me-2"></i>Thông Tin Chung</div>
+                <div class="card-header">
+                    <i class="bi bi-info-circle"></i>
+                    <span class="fw-semibold">Thông Tin Chung</span>
+                </div>
                 <div class="card-body">
-                    <table class="table table-borderless mb-0">
-                        <tbody>
-                            <tr class="info-row">
-                                <td class="info-label">Mã Lớp</td>
-                                <td><code th:text="${lop.maLopHC}"></code></td>
-                            </tr>
-                            <tr class="info-row">
-                                <td class="info-label">Tên Lớp</td>
-                                <td class="fw-semibold" th:text="${lop.tenLop}"></td>
-                            </tr>
-                            <tr class="info-row">
-                                <td class="info-label">Khóa Học</td>
-                                <td>
-                                    <span class="badge bg-info text-dark"
-                                          th:text="'K' + ${lop.khoaHoc}"></span>
-                                </td>
-                            </tr>
-                            <tr class="info-row">
-                                <td class="info-label">CTĐT</td>
-                                <td>
-                                    <span th:if="${lop.chuongTrinhDaoTao != null}"
-                                          th:text="${lop.chuongTrinhDaoTao.maCTDT + ' - ' + lop.chuongTrinhDaoTao.tenCTDT}"></span>
-                                    <span th:unless="${lop.chuongTrinhDaoTao != null}" class="text-muted">--</span>
-                                </td>
-                            </tr>
-                            <tr class="info-row">
-                                <td class="info-label">Cố Vấn HT</td>
-                                <td>
-                                    <span th:if="${lop.coVan != null}" th:text="${lop.coVan.hoTen}"></span>
-                                    <span th:unless="${lop.coVan != null}" class="text-muted fst-italic">Chưa phân công</span>
-                                </td>
-                            </tr>
-                            <tr class="info-row">
-                                <td class="info-label">Số Sinh Viên</td>
-                                <td>
-                                    <span class="badge bg-primary"
-                                          th:text="${#lists.size(sinhVienList)}">0</span>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-item-label">Mã Lớp</span>
+                            <span class="info-item-value"><code th:text="${lop.maLopHC}"></code></span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-item-label">Tên Lớp</span>
+                            <span class="info-item-value fw-semibold" th:text="${lop.tenLop}"></span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-item-label">Khoá Học</span>
+                            <span class="info-item-value">
+                                <span class="chip chip-primary" th:text="'K' + ${lop.khoaHoc}"></span>
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-item-label">CTĐT</span>
+                            <span class="info-item-value">
+                                <span th:if="${lop.chuongTrinhDaoTao != null}"
+                                      th:text="${lop.chuongTrinhDaoTao.maCTDT + ' — ' + lop.chuongTrinhDaoTao.tenCTDT}"></span>
+                                <span th:unless="${lop.chuongTrinhDaoTao != null}"
+                                      class="text-muted fst-italic">Chưa gán</span>
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-item-label">Cố Vấn Học Tập</span>
+                            <span class="info-item-value">
+                                <span th:if="${lop.coVan != null}" th:text="${lop.coVan.hoTen}"></span>
+                                <span th:unless="${lop.coVan != null}"
+                                      class="text-muted fst-italic">Chưa phân công</span>
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-item-label">Số Sinh Viên</span>
+                            <span class="info-item-value">
+                                <span class="chip chip-primary"
+                                      th:text="${#lists.size(sinhVienList)} + ' sinh viên'">0</span>
+                            </span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -87,8 +103,8 @@
         <div class="col-lg-7">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <span><i class="bi bi-people me-2"></i>Danh Sách Sinh Viên</span>
-                    <span class="badge bg-secondary"
+                    <span class="fw-semibold"><i class="bi bi-people me-2"></i>Danh Sách Sinh Viên</span>
+                    <span class="badge bg-light"
                           th:text="'Tổng: ' + ${#lists.size(sinhVienList)}">0</span>
                 </div>
                 <div class="card-body p-0">
@@ -104,8 +120,11 @@
                             </thead>
                             <tbody>
                                 <tr th:if="${#lists.isEmpty(sinhVienList)}">
-                                    <td colspan="4" class="text-center text-muted py-4">
-                                        <i class="bi bi-person-x me-1"></i>Chưa có sinh viên.
+                                    <td colspan="4">
+                                        <div class="empty-state">
+                                            <i class="bi bi-person-x"></i>
+                                            <p>Chưa có sinh viên trong lớp này.</p>
+                                        </div>
                                     </td>
                                 </tr>
                                 <tr th:each="sv, stat : ${sinhVienList}">
@@ -113,9 +132,18 @@
                                     <td><code class="small" th:text="${sv.maSV}"></code></td>
                                     <td th:text="${sv.nguoiDung != null ? sv.nguoiDung.hoTen : '--'}">--</td>
                                     <td>
-                                        <span class="badge"
-                                              th:classappend="${sv.trangThaiSV != null and sv.trangThaiSV.name() == 'DangHoc'} ? 'bg-success' : 'bg-secondary'"
-                                              th:text="${sv.trangThaiSV != null ? sv.trangThaiSV.name() : '--'}">--</span>
+                                        <span class="status-pill"
+                                              th:with="t=${sv.trangThaiSV?.name()}"
+                                              th:classappend="${t == 'DangHoc'   ? 'tone-success'  :
+                                                              (t == 'BaoLuu'   ? 'tone-warning' :
+                                                              (t == 'TotNghiep' ? 'tone-info'    : 'tone-neutral'))}">
+                                            <span class="pill-dot" aria-hidden="true"></span>
+                                            <span th:text="${t == 'DangHoc'    ? 'Đang Học'   :
+                                                           (t == 'BaoLuu'    ? 'Bảo Lưu'   :
+                                                           (t == 'TotNghiep' ? 'Tốt Nghiệp' :
+                                                           (t == 'NghiHoc'   ? 'Nghỉ Học'   :
+                                                           (t == 'BiDuoi'    ? 'Bị Đuổi'    : (t ?: '--')))))}">--</span>
+                                        </span>
                                     </td>
                                 </tr>
                             </tbody>

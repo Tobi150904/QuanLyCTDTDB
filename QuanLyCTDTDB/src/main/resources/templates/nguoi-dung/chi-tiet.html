@@ -23,23 +23,46 @@
         </ol>
     </nav>
 
-    <!-- Page Header -->
-    <div class="d-flex justify-content-between align-items-start mb-4">
-        <div>
-            <p class="page-subtitle">Quản Trị / Người Dùng</p>
-            <h4 class="page-title" th:text="${nguoiDung.hoTen}">Chi Tiết</h4>
+    <!-- DETAIL HERO with avatar -->
+    <section class="detail-hero">
+        <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start">
+            <div class="d-flex flex-wrap gap-3 align-items-center"
+                 style="min-width: 240px; flex: 1 1 60%;">
+                <div class="profile-avatar"
+                     th:text="${nguoiDung.hoTen != null and !nguoiDung.hoTen.isEmpty() ?
+                              #strings.toUpperCase(#strings.substring(nguoiDung.hoTen, 0, 1)) : 'U'}"
+                     aria-hidden="true">U</div>
+                <div style="min-width: 200px;">
+                    <p class="detail-hero-eyebrow">Quản Trị / Người Dùng</p>
+                    <h1 class="detail-hero-title mb-2" th:text="${nguoiDung.hoTen}">Chi Tiết</h1>
+                    <div class="detail-hero-meta">
+                        <span><i class="bi bi-person"></i>
+                            <code th:text="${nguoiDung.tenDangNhap}">user</code></span>
+                        <span><i class="bi bi-envelope"></i>
+                            <span th:text="${nguoiDung.email}">email</span></span>
+                        <span class="status-pill"
+                              th:classappend="${nguoiDung.trangThaiTK} ? 'tone-success' : 'tone-danger'"
+                              style="background: rgba(255,255,255,0.95);">
+                            <span class="pill-dot" aria-hidden="true"
+                                  th:if="${nguoiDung.trangThaiTK}"></span>
+                            <i class="bi bi-lock-fill" aria-hidden="true"
+                               th:unless="${nguoiDung.trangThaiTK}"></i>
+                            <span th:text="${nguoiDung.trangThaiTK} ? 'Hoạt Động' : 'Đã Khoá'">--</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="detail-hero-actions">
+                <a th:href="@{/nguoi-dung/sua/{ma}(ma=${nguoiDung.maNguoiDung})}"
+                   class="btn btn-light btn-sm">
+                    <i class="bi bi-pencil-square me-1"></i>Chỉnh Sửa
+                </a>
+                <a th:href="@{/nguoi-dung}" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i>Quay Lại
+                </a>
+            </div>
         </div>
-        <div class="d-flex gap-2">
-            <a th:href="@{/nguoi-dung/sua/{ma}(ma=${nguoiDung.maNguoiDung})}"
-               class="btn btn-primary btn-sm"
-               aria-label="Chỉnh sửa người dùng">
-                <i class="bi bi-pencil-square me-1"></i>Chỉnh Sửa
-            </a>
-            <a th:href="@{/nguoi-dung}" class="btn btn-outline-secondary btn-sm">
-                <i class="bi bi-arrow-left me-1"></i>Quay Lại
-            </a>
-        </div>
-    </div>
+    </section>
 
     <div class="row g-4">
         <!-- Left: Thong tin nguoi dung -->
@@ -50,63 +73,62 @@
                     <span class="fw-semibold">Thông Tin Tài Khoản</span>
                 </div>
                 <div class="card-body">
-                    <table class="table table-borderless mb-0">
-                        <tbody>
-                            <tr class="info-row">
-                                <td class="info-label">Mã Người Dùng</td>
-                                <td><code th:text="${nguoiDung.maNguoiDung}"></code></td>
-                            </tr>
-                            <tr class="info-row">
-                                <td class="info-label">Tên Đăng Nhập</td>
-                                <td th:text="${nguoiDung.tenDangNhap}"></td>
-                            </tr>
-                            <tr class="info-row">
-                                <td class="info-label">Họ Tên</td>
-                                <td class="fw-semibold" th:text="${nguoiDung.hoTen}"></td>
-                            </tr>
-                            <tr class="info-row">
-                                <td class="info-label">Email</td>
-                                <td>
-                                    <a th:href="'mailto:' + ${nguoiDung.email}"
-                                       th:text="${nguoiDung.email}"
-                                       class="text-decoration-none"></a>
-                                </td>
-                            </tr>
-                            <tr class="info-row">
-                                <td class="info-label">Số Điện Thoại</td>
-                                <td th:text="${nguoiDung.soDienThoai ?: '--'}"></td>
-                            </tr>
-                            <tr class="info-row">
-                                <td class="info-label">Loại Người Dùng</td>
-                                <td>
-                                    <span class="badge"
-                                          th:classappend="${nguoiDung.loaiNguoiDung.name() == 'Admin'} ? 'bg-dark' :
-                                                         (${nguoiDung.loaiNguoiDung.name() == 'GiangVien'} ? 'bg-primary' :
-                                                         (${nguoiDung.loaiNguoiDung.name() == 'SinhVien'} ? 'bg-info text-dark' : 'bg-success'))"
-                                          th:text="${nguoiDung.loaiNguoiDung.name() == 'Admin'       ? 'Quản Trị Viên' :
-                                                   (nguoiDung.loaiNguoiDung.name() == 'GiangVien'  ? 'Giảng Viên'     :
-                                                   (nguoiDung.loaiNguoiDung.name() == 'SinhVien'   ? 'Sinh Viên'      :
-                                                   (nguoiDung.loaiNguoiDung.name() == 'DoanhNghiep' ? 'Doanh Nghiệp' : nguoiDung.loaiNguoiDung.name())))}"></span>
-                                </td>
-                            </tr>
-                            <tr class="info-row">
-                                <td class="info-label">Trạng Thái</td>
-                                <td>
-                                    <span th:if="${nguoiDung.trangThaiTK}" class="badge bg-success">
-                                        <i class="bi bi-check-circle-fill me-1"></i>Hoạt Động
-                                    </span>
-                                    <span th:unless="${nguoiDung.trangThaiTK}" class="badge bg-danger">
-                                        <i class="bi bi-lock-fill me-1"></i>Đã Khoá
-                                    </span>
-                                </td>
-                            </tr>
-                            <tr class="info-row">
-                                <td class="info-label">Tạo Lúc</td>
-                                <td class="text-muted" th:text="${nguoiDung.createdAt != null ?
-                                    #temporals.format(nguoiDung.createdAt, 'dd/MM/yyyy HH:mm') : '--'}"></td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-item-label">Mã Người Dùng</span>
+                            <span class="info-item-value"><code th:text="${nguoiDung.maNguoiDung}"></code></span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-item-label">Tên Đăng Nhập</span>
+                            <span class="info-item-value" th:text="${nguoiDung.tenDangNhap}"></span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-item-label">Họ Tên</span>
+                            <span class="info-item-value fw-semibold" th:text="${nguoiDung.hoTen}"></span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-item-label">Email</span>
+                            <span class="info-item-value">
+                                <a th:href="'mailto:' + ${nguoiDung.email}"
+                                   th:text="${nguoiDung.email}"
+                                   class="text-decoration-none"></a>
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-item-label">Số Điện Thoại</span>
+                            <span class="info-item-value" th:text="${nguoiDung.soDienThoai ?: '--'}"></span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-item-label">Loại Người Dùng</span>
+                            <span class="info-item-value">
+                                <span class="chip chip-primary"
+                                      th:with="l=${nguoiDung.loaiNguoiDung.name()}"
+                                      th:text="${l == 'Admin'       ? 'Quản Trị Viên' :
+                                                (l == 'GiangVien'  ? 'Giảng Viên'    :
+                                                (l == 'SinhVien'   ? 'Sinh Viên'     :
+                                                (l == 'DoanhNghiep' ? 'Doanh Nghiệp' : l)))}">--</span>
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-item-label">Trạng Thái</span>
+                            <span class="info-item-value">
+                                <span class="status-pill"
+                                      th:classappend="${nguoiDung.trangThaiTK} ? 'tone-success' : 'tone-danger'">
+                                    <span class="pill-dot" aria-hidden="true"
+                                          th:if="${nguoiDung.trangThaiTK}"></span>
+                                    <i class="bi bi-lock-fill" aria-hidden="true"
+                                       th:unless="${nguoiDung.trangThaiTK}"></i>
+                                    <span th:text="${nguoiDung.trangThaiTK} ? 'Hoạt Động' : 'Đã Khoá'"></span>
+                                </span>
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-item-label">Tạo Lúc</span>
+                            <span class="info-item-value text-muted"
+                                  th:text="${nguoiDung.createdAt != null ?
+                                  #temporals.format(nguoiDung.createdAt, 'dd/MM/yyyy HH:mm') : '--'}"></span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -123,49 +145,62 @@
                     <span class="fw-semibold">Thông Tin Sinh Viên</span>
                 </div>
                 <div class="card-body">
-                    <table class="table table-borderless mb-0">
-                        <tbody>
-                            <tr class="info-row">
-                                <td class="info-label">Mã Sinh Viên</td>
-                                <td><code th:text="${sinhVien.maSV}"></code></td>
-                            </tr>
-                            <tr class="info-row" th:if="${lopHanhChinh != null}">
-                                <td class="info-label">Lớp Hành Chính</td>
-                                <td>
-                                    <a th:href="@{/lop-hanh-chinh/chi-tiet/{ma}(ma=${lopHanhChinh.maLopHC})}"
-                                       class="text-decoration-none fw-medium">
-                                        <code th:text="${lopHanhChinh.maLopHC}"></code>
-                                        <span class="text-muted"> — </span>
-                                        <span th:text="${lopHanhChinh.tenLop}"></span>
-                                    </a>
-                                </td>
-                            </tr>
-                            <tr class="info-row" th:if="${lopHanhChinh == null}">
-                                <td class="info-label">Lớp Hành Chính</td>
-                                <td class="text-muted">
-                                    <i class="bi bi-exclamation-triangle me-1"></i>
-                                    Sinh viên chưa được gán lớp hành chính
-                                </td>
-                            </tr>
-                            <tr class="info-row" th:if="${lopHanhChinh != null and lopHanhChinh.khoaHoc != null}">
-                                <td class="info-label">Khoá</td>
-                                <td th:text="${lopHanhChinh.khoaHoc}">--</td>
-                            </tr>
-                            <tr class="info-row" th:if="${lopHanhChinh != null and lopHanhChinh.chuongTrinhDaoTao != null}">
-                                <td class="info-label">Chương Trình ĐT</td>
-                                <td>
-                                    <code th:text="${lopHanhChinh.chuongTrinhDaoTao.maCTDT}"></code>
-                                </td>
-                            </tr>
-                            <tr class="info-row">
-                                <td class="info-label">Trạng Thái Học Tập</td>
-                                <td>
-                                    <span class="badge bg-info text-dark"
-                                          th:text="${sinhVien.trangThaiSV}">--</span>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-item-label">Mã Sinh Viên</span>
+                            <span class="info-item-value"><code th:text="${sinhVien.maSV}"></code></span>
+                        </div>
+                        <div class="info-item" th:if="${lopHanhChinh != null}">
+                            <span class="info-item-label">Lớp Hành Chính</span>
+                            <span class="info-item-value">
+                                <a th:href="@{/lop-hanh-chinh/chi-tiet/{ma}(ma=${lopHanhChinh.maLopHC})}"
+                                   class="text-decoration-none fw-medium">
+                                    <code th:text="${lopHanhChinh.maLopHC}"></code>
+                                    <span class="text-muted"> — </span>
+                                    <span th:text="${lopHanhChinh.tenLop}"></span>
+                                </a>
+                            </span>
+                        </div>
+                        <div class="info-item" th:if="${lopHanhChinh == null}">
+                            <span class="info-item-label">Lớp Hành Chính</span>
+                            <span class="info-item-value text-muted fst-italic">
+                                <i class="bi bi-exclamation-triangle me-1"></i>
+                                Chưa được gán lớp
+                            </span>
+                        </div>
+                        <div class="info-item"
+                             th:if="${lopHanhChinh != null and lopHanhChinh.khoaHoc != null}">
+                            <span class="info-item-label">Khoá</span>
+                            <span class="info-item-value">
+                                <span class="chip chip-primary"
+                                      th:text="'K' + ${lopHanhChinh.khoaHoc}"></span>
+                            </span>
+                        </div>
+                        <div class="info-item"
+                             th:if="${lopHanhChinh != null and lopHanhChinh.chuongTrinhDaoTao != null}">
+                            <span class="info-item-label">Chương Trình ĐT</span>
+                            <span class="info-item-value">
+                                <code th:text="${lopHanhChinh.chuongTrinhDaoTao.maCTDT}"></code>
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-item-label">Trạng Thái Học Tập</span>
+                            <span class="info-item-value">
+                                <span class="status-pill"
+                                      th:with="t=${sinhVien.trangThaiSV?.name()}"
+                                      th:classappend="${t == 'DangHoc'    ? 'tone-success'  :
+                                                      (t == 'BaoLuu'    ? 'tone-warning' :
+                                                      (t == 'TotNghiep' ? 'tone-info'    : 'tone-neutral'))}">
+                                    <span class="pill-dot" aria-hidden="true"></span>
+                                    <span th:text="${t == 'DangHoc'    ? 'Đang Học'   :
+                                                   (t == 'BaoLuu'    ? 'Bảo Lưu'   :
+                                                   (t == 'TotNghiep' ? 'Tốt Nghiệp' :
+                                                   (t == 'NghiHoc'   ? 'Nghỉ Học'   :
+                                                   (t == 'BiDuoi'    ? 'Bị Đuổi'    : (t ?: '--')))))}">--</span>
+                                </span>
+                            </span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -176,33 +211,31 @@
                     <span class="fw-semibold">Thông Tin Giảng Viên</span>
                 </div>
                 <div class="card-body">
-                    <table class="table table-borderless mb-0">
-                        <tbody>
-                            <tr class="info-row">
-                                <td class="info-label">Mã Giảng Viên</td>
-                                <td><code th:text="${giangVien.maGV}"></code></td>
-                            </tr>
-                            <tr class="info-row">
-                                <td class="info-label">Học Hàm</td>
-                                <td th:text="${giangVien.hocHam ?: '--'}">--</td>
-                            </tr>
-                            <tr class="info-row">
-                                <td class="info-label">Học Vị</td>
-                                <td th:text="${giangVien.hocVi ?: '--'}">--</td>
-                            </tr>
-                            <tr class="info-row">
-                                <td class="info-label">Chuyên Ngành</td>
-                                <td th:text="${giangVien.chuyenNganh ?: '--'}">--</td>
-                            </tr>
-                            <tr class="info-row">
-                                <td class="info-label">Loại Giảng Viên</td>
-                                <td>
-                                    <span class="badge bg-primary"
-                                          th:text="${giangVien.loaiGiangVien}">--</span>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-item-label">Mã Giảng Viên</span>
+                            <span class="info-item-value"><code th:text="${giangVien.maGV}"></code></span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-item-label">Học Hàm</span>
+                            <span class="info-item-value" th:text="${giangVien.hocHam ?: '--'}">--</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-item-label">Học Vị</span>
+                            <span class="info-item-value" th:text="${giangVien.hocVi ?: '--'}">--</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-item-label">Chuyên Ngành</span>
+                            <span class="info-item-value" th:text="${giangVien.chuyenNganh ?: '--'}">--</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-item-label">Loại Giảng Viên</span>
+                            <span class="info-item-value">
+                                <span class="chip chip-primary"
+                                      th:text="${giangVien.loaiGiangVien}">--</span>
+                            </span>
+                        </div>
+                    </div>
                 </div>
             </div>
 

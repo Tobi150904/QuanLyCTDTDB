@@ -20,23 +20,33 @@
         </ol>
     </nav>
 
-    <!-- HEADER -->
-    <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
-        <div>
-            <p class="page-subtitle">Đào Tạo / Chi Tiết Lớp</p>
-            <h4 class="page-title mb-1">Chi Tiết Lớp Học Phần</h4>
-            <div class="text-muted small">
-                <span class="me-3">CTĐT: <code th:text="${lopId.maCTDT}"></code></span>
-                <span class="me-3">Học Phần: <code th:text="${lopId.maHocPhan}"></code></span>
-                <span class="me-3">Học Kỳ: <code th:text="${lopId.maHocKy}"></code></span>
-                <span>Nhóm: <code th:text="'N' + ${lopId.maLopHocPhan}"></code></span>
+    <!-- DETAIL HERO -->
+    <section class="detail-hero">
+        <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start">
+            <div style="min-width: 240px; flex: 1 1 60%;">
+                <p class="detail-hero-eyebrow">Đào Tạo / Lớp Học Phần</p>
+                <h1 class="detail-hero-title">
+                    Lớp Nhóm <span th:text="'N' + ${lopId.maLopHocPhan}">N1</span>
+                </h1>
+                <div class="detail-hero-meta">
+                    <span><i class="bi bi-mortarboard"></i>CTĐT
+                        <code th:text="${lopId.maCTDT}">--</code></span>
+                    <span><i class="bi bi-journal-text"></i>HP
+                        <code th:text="${lopId.maHocPhan}">--</code></span>
+                    <span><i class="bi bi-calendar3"></i>HK
+                        <code th:text="${lopId.maHocKy}">--</code></span>
+                    <span><i class="bi bi-people"></i>
+                        <strong th:text="${#lists.size(danhSachSV)}">0</strong>&nbsp;SV</span>
+                </div>
+            </div>
+            <div class="detail-hero-actions">
+                <a th:href="@{/lop-hoc-phan(maCTDT=${lopId.maCTDT},maHocKy=${lopId.maHocKy})}"
+                   class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i>Quay Lại
+                </a>
             </div>
         </div>
-        <a th:href="@{/lop-hoc-phan(maCTDT=${lopId.maCTDT},maHocKy=${lopId.maHocKy})}"
-           class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-arrow-left me-1"></i>Quay Lại
-        </a>
-    </div>
+    </section>
 
     <!-- Flash messages da duoc render boi layout/base.html -->
 
@@ -44,12 +54,12 @@
     <div class="row g-4">
         <!-- DS SV TRONG LỚP -->
         <div class="col-lg-8">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <span class="fw-semibold">
                         <i class="bi bi-people me-2"></i>Danh Sách Sinh Viên
                     </span>
-                    <span class="badge bg-secondary"
+                    <span class="badge bg-light"
                           th:text="'Tổng: ' + ${#lists.size(danhSachSV)}">0</span>
                 </div>
                 <div class="card-body p-0">
@@ -82,9 +92,15 @@
                                             ? ds.sinhVien.nguoiDung.hoTen
                                             : ds.sinhVien.maSV}">--</td>
                                     <td class="text-center">
-                                        <span class="badge"
-                                              th:classappend="${ds.daCanhBao} ? 'bg-warning text-dark' : 'bg-success'"
-                                              th:text="${ds.daCanhBao} ? 'Đã Cảnh Báo' : 'Bình Thường'">--</span>
+                                        <span class="status-pill"
+                                              th:classappend="${ds.daCanhBao} ? 'tone-warning' : 'tone-success'">
+                                            <span class="pill-dot" aria-hidden="true"
+                                                  th:unless="${ds.daCanhBao}"></span>
+                                            <i class="bi bi-exclamation-triangle-fill"
+                                               aria-hidden="true"
+                                               th:if="${ds.daCanhBao}"></i>
+                                            <span th:text="${ds.daCanhBao} ? 'Đã Cảnh Báo' : 'Bình Thường'">--</span>
+                                        </span>
                                     </td>
                                     <td class="small text-muted"
                                         th:text="${ds.nhanXet ?: '--'}">--</td>
@@ -159,11 +175,10 @@
 
         <!-- ĐĂNG KÝ SV -->
         <div class="col-lg-4" sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
-            <div class="card border-0 shadow-sm sticky-top" style="top: 1rem;">
-                <div class="card-header bg-white">
-                    <h6 class="mb-0 fw-semibold">
-                        <i class="bi bi-person-plus me-2"></i>Đăng Ký Sinh Viên
-                    </h6>
+            <div class="card sticky-top" style="top: 1rem;">
+                <div class="card-header">
+                    <i class="bi bi-person-plus"></i>
+                    <span class="fw-semibold">Đăng Ký Sinh Viên</span>
                 </div>
                 <div class="card-body">
                     <form th:action="@{/lop-hoc-phan/dang-ky-sv}" method="post">
