@@ -30,12 +30,45 @@
         <div class="card-body py-4 px-4 position-relative">
             <div class="d-flex align-items-center gap-3 flex-wrap">
                 <div class="welcome-avatar" aria-hidden="true">
-                    <i class="bi bi-person-circle"></i>
+                    <i class="bi bi-mortarboard-fill"></i>
                 </div>
-                <div class="flex-grow-1">
+                <div class="flex-grow-1" style="min-width:240px;">
+                    <!-- Role chip: hien thi vai tro nghiep vu chinh cua user -->
+                    <span class="welcome-role-chip" sec:authorize="hasRole('ADMIN')">
+                        <i class="bi bi-shield-fill-check" aria-hidden="true"></i>Quản Trị Viên
+                    </span>
+                    <span class="welcome-role-chip"
+                          sec:authorize="hasRole('PDT') and !hasRole('ADMIN')">
+                        <i class="bi bi-buildings" aria-hidden="true"></i>Phòng Đào Tạo
+                    </span>
+                    <span class="welcome-role-chip"
+                          sec:authorize="hasRole('TTDTXS') and !hasAnyRole('ADMIN','PDT')">
+                        <i class="bi bi-stars" aria-hidden="true"></i>TT Đào Tạo Xuất Sắc
+                    </span>
+                    <span class="welcome-role-chip"
+                          sec:authorize="hasRole('CNHP') and !hasAnyRole('ADMIN','PDT','TTDTXS')">
+                        <i class="bi bi-journal-bookmark-fill" aria-hidden="true"></i>Chủ Nhiệm Học Phần
+                    </span>
+                    <span class="welcome-role-chip"
+                          sec:authorize="hasRole('CVHT') and !hasAnyRole('ADMIN','PDT','TTDTXS','CNHP')">
+                        <i class="bi bi-person-hearts" aria-hidden="true"></i>Cố Vấn Học Tập
+                    </span>
+                    <span class="welcome-role-chip"
+                          sec:authorize="hasRole('GIANG_VIEN') and !hasAnyRole('ADMIN','PDT','TTDTXS','CNHP','CVHT')">
+                        <i class="bi bi-person-workspace" aria-hidden="true"></i>Giảng Viên
+                    </span>
+                    <span class="welcome-role-chip"
+                          sec:authorize="hasRole('SINH_VIEN')">
+                        <i class="bi bi-mortarboard" aria-hidden="true"></i>Sinh Viên
+                    </span>
+                    <span class="welcome-role-chip"
+                          sec:authorize="hasRole('DOANH_NGHIEP')">
+                        <i class="bi bi-building" aria-hidden="true"></i>Doanh Nghiệp
+                    </span>
+
                     <h5 class="mb-1 fw-semibold">
-                        Xin chào,
-                        <span sec:authentication="principal.hoTen">Người Dùng</span>!
+                        <span id="greetingPrefix">Xin chào</span>,
+                        <span sec:authentication="principal.hoTen">Người Dùng</span>
                     </h5>
                     <p class="mb-0 small" style="opacity:0.85;">
                         <i class="bi bi-clock me-1" aria-hidden="true"></i>
@@ -250,39 +283,46 @@
              aria-labelledby="sec-quick">
         <p class="page-subtitle mb-3" id="sec-quick">Thao Tác Nhanh</p>
         <div class="card">
-            <div class="card-body py-3">
-        <div class="d-flex flex-wrap gap-2">
-            <a sec:authorize="hasAnyRole('PDT','ADMIN')"
-               th:href="@{/nguoi-dung/them}"
-               class="btn btn-sm btn-outline-primary">
-                <i class="bi bi-person-plus me-1" aria-hidden="true"></i>Thêm Người Dùng
-            </a>
-            <a sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')"
-               th:href="@{/doanh-nghiep/them}"
-               class="btn btn-sm btn-outline-primary">
-                <i class="bi bi-building-add me-1" aria-hidden="true"></i>Thêm Doanh Nghiệp
-            </a>
-            <a sec:authorize="hasAnyRole('CNHP','TTDTXS','ADMIN')"
-               th:href="@{/hoc-phan/them}"
-               class="btn btn-sm btn-outline-primary">
-                <i class="bi bi-plus-circle me-1" aria-hidden="true"></i>Thêm Học Phần
-            </a>
-            <a sec:authorize="hasAnyRole('PDT','TTDTXS','CNHP','ADMIN')"
-               th:href="@{/ctdt/them}"
-               class="btn btn-sm btn-outline-primary">
-                <i class="bi bi-journal-plus me-1" aria-hidden="true"></i>Tạo CTĐT
-            </a>
-            <a sec:authorize="hasAnyRole('TTDTXS','CNHP','ADMIN')"
-               th:href="@{/kien-tap/them}"
-               class="btn btn-sm btn-outline-primary">
-                <i class="bi bi-briefcase me-1" aria-hidden="true"></i>Tạo Đợt Kiến Tập
-            </a>
-            <a sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')"
-               th:href="@{/bao-cao}"
-               class="btn btn-sm btn-outline-primary">
-                <i class="bi bi-bar-chart-line me-1" aria-hidden="true"></i>Xem Báo Cáo
-            </a>
-        </div>
+            <div class="card-header">
+                <i class="bi bi-lightning-charge-fill" aria-hidden="true"></i>
+                <span class="fw-semibold">Tác Vụ Phổ Biến</span>
+                <span class="text-muted small ms-auto d-none d-sm-inline">
+                    Chọn hành động để bắt đầu
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-wrap gap-2">
+                    <a sec:authorize="hasAnyRole('PDT','ADMIN')"
+                       th:href="@{/nguoi-dung/them}"
+                       class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-person-plus me-1" aria-hidden="true"></i>Thêm Người Dùng
+                    </a>
+                    <a sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')"
+                       th:href="@{/doanh-nghiep/them}"
+                       class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-building-add me-1" aria-hidden="true"></i>Thêm Doanh Nghiệp
+                    </a>
+                    <a sec:authorize="hasAnyRole('CNHP','TTDTXS','ADMIN')"
+                       th:href="@{/hoc-phan/them}"
+                       class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-plus-circle me-1" aria-hidden="true"></i>Thêm Học Phần
+                    </a>
+                    <a sec:authorize="hasAnyRole('PDT','TTDTXS','CNHP','ADMIN')"
+                       th:href="@{/ctdt/them}"
+                       class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-journal-plus me-1" aria-hidden="true"></i>Tạo CTĐT
+                    </a>
+                    <a sec:authorize="hasAnyRole('TTDTXS','CNHP','ADMIN')"
+                       th:href="@{/kien-tap/them}"
+                       class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-briefcase me-1" aria-hidden="true"></i>Tạo Đợt Kiến Tập
+                    </a>
+                    <a sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')"
+                       th:href="@{/hoc-ky}"
+                       class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-calendar-plus me-1" aria-hidden="true"></i>Quản Lý Học Kỳ
+                    </a>
+                </div>
             </div>
         </div>
     </section>
@@ -293,6 +333,8 @@
 <script>
     (function () {
         'use strict';
+
+        // Cap nhat dong ho realtime
         function updateDateTime() {
             var now = new Date();
             var opts = {
@@ -304,6 +346,16 @@
         }
         updateDateTime();
         setInterval(updateDateTime, 60000);
+
+        // Loi chao theo gio: sang/trua/chieu/toi
+        var prefix = document.getElementById('greetingPrefix');
+        if (prefix) {
+            var h = new Date().getHours();
+            if (h >= 5 && h < 11)       prefix.textContent = 'Chào buổi sáng';
+            else if (h >= 11 && h < 13) prefix.textContent = 'Chào buổi trưa';
+            else if (h >= 13 && h < 18) prefix.textContent = 'Chào buổi chiều';
+            else                        prefix.textContent = 'Chào buổi tối';
+        }
     })();
 </script>
 </th:block>

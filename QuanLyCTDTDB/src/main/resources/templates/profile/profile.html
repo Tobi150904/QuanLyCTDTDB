@@ -37,17 +37,21 @@
                 <h1 class="detail-hero-title mb-2" id="profileHeroName"
                     th:text="${nguoiDung.hoTen}">Người Dùng</h1>
                 <div class="detail-hero-meta">
-                    <span><i class="bi bi-person"></i>
+                    <span><i class="bi bi-person" aria-hidden="true"></i>
                         <code th:text="${nguoiDung.tenDangNhap}">user</code></span>
-                    <span><i class="bi bi-envelope"></i>
+                    <span><i class="bi bi-envelope" aria-hidden="true"></i>
                         <span th:text="${nguoiDung.email}">email@ntu.edu.vn</span></span>
                     <span th:if="${nguoiDung.loaiNguoiDung != null}"
                           th:with="v=${nguoiDung.loaiNguoiDung.name()}">
-                        <i class="bi bi-shield-check"></i>
+                        <i class="bi bi-shield-check" aria-hidden="true"></i>
                         <span th:text="${v == 'Admin'       ? 'Quản Trị Viên' :
                                         (v == 'GiangVien'  ? 'Giảng Viên'    :
                                         (v == 'SinhVien'   ? 'Sinh Viên'     :
                                         (v == 'DoanhNghiep' ? 'Doanh Nghiệp' : v)))}">Vai trò</span>
+                    </span>
+                    <span th:if="${nguoiDung.soDienThoai != null and !nguoiDung.soDienThoai.isEmpty()}">
+                        <i class="bi bi-telephone" aria-hidden="true"></i>
+                        <span th:text="${nguoiDung.soDienThoai}">SĐT</span>
                     </span>
                 </div>
             </div>
@@ -133,6 +137,11 @@
                         <input type="hidden"
                                th:name="${_csrf.parameterName}"
                                th:value="${_csrf.token}">
+
+                        <div class="alert alert-info small mb-3" role="note">
+                            <i class="bi bi-shield-lock me-1" aria-hidden="true"></i>
+                            <span>Vì lý do bảo mật, hãy chọn mật khẩu mạnh và không sử dụng cho các tài khoản khác.</span>
+                        </div>
 
                         <div class="mb-3">
                             <label for="matKhauCu" class="form-label fw-medium">

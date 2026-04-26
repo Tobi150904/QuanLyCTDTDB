@@ -8,9 +8,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title layout:title-pattern="$CONTENT_TITLE - Hệ Thống QLĐTXS">Hệ Thống QLĐTXS</title>
 
-    <!-- Google Fonts: Inter -->
+    <!-- Theme color (PWA / mobile chrome bar) -->
+    <meta name="theme-color" content="#0f2d52">
+    <meta name="color-scheme" content="light">
+
+    <!-- Google Fonts: Inter (body) + Plus Jakarta Sans (display) — dong bo trang dang nhap -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap"
           rel="stylesheet">
 
     <!-- Bootstrap 5.3 CSS -->
@@ -36,9 +41,15 @@
 <nav class="navbar navbar-expand-lg navbar-dark fixed-top" id="mainNavbar">
     <div class="container-fluid px-3">
         <!-- Brand -->
-        <a class="navbar-brand fw-bold d-flex align-items-center gap-2" th:href="@{/dashboard}">
-            <i class="bi bi-mortarboard-fill" style="font-size:1.3rem;"></i>
-            <span class="d-none d-sm-inline">Hệ Thống QLĐTXS</span>
+        <a class="navbar-brand fw-bold d-flex align-items-center gap-2" th:href="@{/dashboard}"
+           aria-label="Hệ thống quản lý đào tạo xuất sắc — về trang chủ">
+            <span class="navbar-brand-mark" aria-hidden="true">
+                <i class="bi bi-mortarboard-fill"></i>
+            </span>
+            <span class="d-none d-sm-flex flex-column lh-1">
+                <span class="navbar-brand-title">Hệ Thống QLĐTXS</span>
+                <small class="navbar-brand-sub d-none d-md-inline">Đào Tạo Xuất Sắc · ĐH Nha Trang</small>
+            </span>
             <span class="d-inline d-sm-none">QLĐTXS</span>
         </a>
 
@@ -345,6 +356,24 @@
         </div>
 
     </div>
+
+    <!-- ===================== FOOTER ===================== -->
+    <footer class="app-footer" role="contentinfo">
+        <div class="app-footer-inner">
+            <div class="app-footer-brand">
+                <i class="bi bi-mortarboard-fill" aria-hidden="true"></i>
+                <span>Hệ Thống Quản Lý Đào Tạo Xuất Sắc</span>
+            </div>
+            <div class="app-footer-meta">
+                <span><i class="bi bi-building me-1" aria-hidden="true"></i>
+                      Trường Đại Học Nha Trang</span>
+                <span class="app-footer-sep" aria-hidden="true">·</span>
+                <span>&copy; <span th:text="${#temporals != null ? #temporals.format(#temporals.createNow(), 'yyyy') : 2026}">2026</span> Phòng Đào Tạo</span>
+                <span class="app-footer-sep" aria-hidden="true">·</span>
+                <span>Phiên bản 1.0</span>
+            </div>
+        </div>
+    </footer>
 </main>
 
 <!-- Global Confirm Delete Modal -->
