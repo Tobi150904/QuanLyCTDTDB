@@ -274,9 +274,9 @@
                                     <td class="small">
                                         <span th:if="${ds.loaiThucTap != null}"
                                               class="chip"
-                                              th:with="lt=${ds.loaiThucTap.name()}"
-                                              th:classappend="${lt == 'Truong' ? 'chip-primary' : 'chip-accent'}"
-                                              th:text="${lt == 'Truong' ? 'Tại Trường' : 'Tại DN'}">--</span>
+                                              th:with="loaiTT=${ds.loaiThucTap.name()}"
+                                              th:classappend="${loaiTT == 'Truong' ? 'chip-primary' : 'chip-accent'}"
+                                              th:text="${loaiTT == 'Truong' ? 'Tại Trường' : 'Tại DN'}">--</span>
                                         <span th:unless="${ds.loaiThucTap != null}"
                                               class="text-muted fst-italic small">--</span>
                                     </td>

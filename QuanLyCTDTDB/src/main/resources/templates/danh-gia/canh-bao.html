@@ -80,12 +80,54 @@
             <span class="fw-semibold">
                 <i class="bi bi-exclamation-triangle me-2"></i>Danh Sách Cảnh Báo
             </span>
-            <span class="badge bg-light text-dark"
-                  th:text="'Tổng: ' + ${tong}">0</span>
+            <span class="badge bg-light text-dark">
+                <span id="cbHienThi" th:text="${tong}">0</span> / <span th:text="${tong}">0</span>
+            </span>
         </div>
+
+        <!-- Filter / Search toolbar (client-side filter) -->
+        <div class="card-body border-bottom py-3" th:if="${tong > 0}">
+            <div class="row g-2 align-items-end">
+                <div class="col-md-5">
+                    <label for="cbSearchInput" class="form-label small fw-medium mb-1">
+                        <i class="bi bi-search me-1"></i>Tìm kiếm
+                    </label>
+                    <input type="search" id="cbSearchInput"
+                           class="form-control form-control-sm"
+                           placeholder="Tên SV, mã SV, mã HP, lớp HC...">
+                </div>
+                <div class="col-md-3">
+                    <label for="cbStatusFilter" class="form-label small fw-medium mb-1">
+                        <i class="bi bi-funnel me-1"></i>Trạng thái
+                    </label>
+                    <select id="cbStatusFilter" class="form-select form-select-sm">
+                        <option value="">Tất cả</option>
+                        <option value="chua">Chưa xử lý</option>
+                        <option value="da">Đã xử lý</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="cbHocKyFilter" class="form-label small fw-medium mb-1">
+                        <i class="bi bi-calendar3 me-1"></i>Học kỳ
+                    </label>
+                    <select id="cbHocKyFilter" class="form-select form-select-sm">
+                        <option value="">Tất cả</option>
+                        <!-- Options auto-populate by JS -->
+                    </select>
+                </div>
+                <div class="col-md-1">
+                    <button type="button" id="cbResetFilter"
+                            class="btn btn-sm btn-outline-secondary w-100"
+                            title="Xoá bộ lọc">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+                <table class="table table-hover align-middle mb-0" id="cbTable">
                     <thead>
                         <tr>
                             <th style="width:50px;">STT</th>
@@ -110,10 +152,30 @@
                                 </div>
                             </td>
                         </tr>
+                        <tr id="cbEmptyFilter" class="d-none">
+                            <td colspan="8">
+                                <div class="empty-state">
+                                    <i class="bi bi-funnel"></i>
+                                    <p>Không có cảnh báo phù hợp với bộ lọc.</p>
+                                    <small class="text-muted d-block">
+                                        Thử xoá bộ lọc hoặc thay đổi từ khoá tìm kiếm.
+                                    </small>
+                                </div>
+                            </td>
+                        </tr>
                         <th:block th:each="cb, stat : ${canhBaoList}"
                                   th:with="hp=${hocPhanMap.get(cb.id.maHocPhan)},
                                            daXuLy=${cb.ketQuaXuLy != null and !#strings.isEmpty(cb.ketQuaXuLy)}">
-                            <tr>
+                            <tr class="cb-row"
+                                th:data-status="${daXuLy ? 'da' : 'chua'}"
+                                th:data-hocky="${cb.id.maHocKy}"
+                                th:data-search="${(cb.sinhVien != null and cb.sinhVien.nguoiDung != null
+                                                   ? cb.sinhVien.nguoiDung.hoTen : '') + ' '
+                                                + cb.id.maSV + ' '
+                                                + cb.id.maHocPhan + ' '
+                                                + (cb.sinhVien != null and cb.sinhVien.lopHanhChinh != null
+                                                   ? cb.sinhVien.lopHanhChinh.maLopHC : '') + ' '
+                                                + (hp != null ? hp.tenHocPhan : '')}">
                                 <td class="text-muted" th:text="${stat.index + 1}">1</td>
                                 <td>
                                     <div class="fw-medium"
@@ -165,7 +227,7 @@
                                 </td>
                             </tr>
                             <!-- Inline collapse: form xu ly -->
-                            <tr class="bg-body-tertiary"
+                            <tr class="bg-body-tertiary cb-row-collapse"
                                 sec:authorize="hasAnyRole('CVHT','PDT','ADMIN')">
                                 <td colspan="8" class="p-0 border-0">
                                     <div class="collapse" th:id="'xuly-' + ${stat.index}">
@@ -211,5 +273,82 @@
     </div>
 
 </div>
+
+<th:block layout:fragment="scripts">
+<script>
+(function() {
+    'use strict';
+    const searchInput = document.getElementById('cbSearchInput');
+    const statusFilter = document.getElementById('cbStatusFilter');
+    const hocKyFilter = document.getElementById('cbHocKyFilter');
+    const resetBtn = document.getElementById('cbResetFilter');
+    const counterEl = document.getElementById('cbHienThi');
+    const emptyRow = document.getElementById('cbEmptyFilter');
+    const rows = document.querySelectorAll('.cb-row');
+
+    if (!searchInput || rows.length === 0) return;
+
+    // Auto-populate hoc-ky options
+    const hocKySet = new Set();
+    rows.forEach(r => {
+        const hk = r.getAttribute('data-hocky');
+        if (hk) hocKySet.add(hk);
+    });
+    Array.from(hocKySet).sort().forEach(hk => {
+        const opt = document.createElement('option');
+        opt.value = hk;
+        opt.textContent = hk;
+        hocKyFilter.appendChild(opt);
+    });
+
+    function normalize(s) {
+        return (s || '').toString().toLowerCase()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .replace(/đ/g, 'd');
+    }
+
+    function applyFilter() {
+        const q = normalize(searchInput.value.trim());
+        const status = statusFilter.value;
+        const hocKy = hocKyFilter.value;
+        let visible = 0;
+
+        rows.forEach(row => {
+            const haystack = normalize(row.getAttribute('data-search'));
+            const rowStatus = row.getAttribute('data-status');
+            const rowHocKy = row.getAttribute('data-hocky');
+
+            const matchSearch = !q || haystack.indexOf(q) !== -1;
+            const matchStatus = !status || rowStatus === status;
+            const matchHocKy = !hocKy || rowHocKy === hocKy;
+
+            const show = matchSearch && matchStatus && matchHocKy;
+            row.classList.toggle('d-none', !show);
+
+            // Hide the matching collapse row (immediate next sibling tr.cb-row-collapse)
+            const next = row.nextElementSibling;
+            if (next && next.classList.contains('cb-row-collapse')) {
+                next.classList.toggle('d-none', !show);
+            }
+            if (show) visible++;
+        });
+
+        if (counterEl) counterEl.textContent = visible;
+        if (emptyRow) emptyRow.classList.toggle('d-none', visible !== 0);
+    }
+
+    searchInput.addEventListener('input', applyFilter);
+    statusFilter.addEventListener('change', applyFilter);
+    hocKyFilter.addEventListener('change', applyFilter);
+    resetBtn.addEventListener('click', function() {
+        searchInput.value = '';
+        statusFilter.value = '';
+        hocKyFilter.value = '';
+        applyFilter();
+    });
+})();
+</script>
+</th:block>
+
 </body>
 </html>

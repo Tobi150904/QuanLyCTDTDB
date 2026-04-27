@@ -77,12 +77,53 @@
                 <span class="fw-semibold">
                     <i class="bi bi-collection me-2"></i>Danh Sách Lớp Học Phần
                 </span>
-                <span class="badge bg-light text-dark"
-                      th:text="'Tổng: ' + ${tongLop}">0</span>
+                <span class="badge bg-light text-dark">
+                    <span id="gvHienThi" th:text="${tongLop}">0</span> / <span th:text="${tongLop}">0</span>
+                </span>
             </div>
+
+            <!-- Filter / Search toolbar (client-side) -->
+            <div class="card-body border-bottom py-3" th:if="${tongLop > 0}">
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-5">
+                        <label for="gvSearchInput" class="form-label small fw-medium mb-1">
+                            <i class="bi bi-search me-1"></i>Tìm kiếm
+                        </label>
+                        <input type="search" id="gvSearchInput"
+                               class="form-control form-control-sm"
+                               placeholder="Mã HP, tên HP, CTĐT, học kỳ...">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="gvHocKyFilter" class="form-label small fw-medium mb-1">
+                            <i class="bi bi-calendar3 me-1"></i>Học kỳ
+                        </label>
+                        <select id="gvHocKyFilter" class="form-select form-select-sm">
+                            <option value="">Tất cả</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="gvCanhBaoFilter" class="form-label small fw-medium mb-1">
+                            <i class="bi bi-funnel me-1"></i>Cảnh báo
+                        </label>
+                        <select id="gvCanhBaoFilter" class="form-select form-select-sm">
+                            <option value="">Tất cả</option>
+                            <option value="co">Có cảnh báo</option>
+                            <option value="khong">Không cảnh báo</option>
+                        </select>
+                    </div>
+                    <div class="col-md-1">
+                        <button type="button" id="gvResetFilter"
+                                class="btn btn-sm btn-outline-secondary w-100"
+                                title="Xoá bộ lọc">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
+                    <table class="table table-hover align-middle mb-0" id="gvTable">
                         <thead>
                             <tr>
                                 <th style="width:50px;">STT</th>
@@ -108,9 +149,22 @@
                                     </div>
                                 </td>
                             </tr>
+                            <tr id="gvEmptyFilter" class="d-none">
+                                <td colspan="9">
+                                    <div class="empty-state">
+                                        <i class="bi bi-funnel"></i>
+                                        <p>Không có lớp nào phù hợp với bộ lọc.</p>
+                                    </div>
+                                </td>
+                            </tr>
                             <tr th:each="lhp, stat : ${lopList}"
                                 th:with="hp=${hocPhanMap.get(lhp.id.maHocPhan)},
-                                         soCB=${canhBaoMap.get(lhp.id.maCTDT + '|' + lhp.id.maHocPhan + '|' + lhp.id.maHocKy + '|' + lhp.id.maLopHocPhan)}">
+                                         soCB=${canhBaoMap.get(lhp.id.maCTDT + '|' + lhp.id.maHocPhan + '|' + lhp.id.maHocKy + '|' + lhp.id.maLopHocPhan)}"
+                                class="gv-row"
+                                th:data-hocky="${lhp.id.maHocKy}"
+                                th:data-canhbao="${(soCB != null and soCB > 0) ? 'co' : 'khong'}"
+                                th:data-search="${lhp.id.maCTDT + ' ' + lhp.id.maHocPhan + ' ' + lhp.id.maHocKy + ' '
+                                                  + (hp != null ? hp.tenHocPhan : '')}">
                                 <td class="text-muted" th:text="${stat.index + 1}">1</td>
                                 <td><code th:text="${lhp.id.maCTDT}">--</code></td>
                                 <td><code th:text="${lhp.id.maHocPhan}">--</code></td>
@@ -188,14 +242,57 @@
         </div>
 
         <div class="card">
-            <div class="card-header">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <span class="fw-semibold">
                     <i class="bi bi-chat-square-text me-2"></i>Lịch Sử Nhận Xét
                 </span>
+                <span class="badge bg-light text-dark">
+                    <span id="svHienThi" th:text="${tong}">0</span> / <span th:text="${tong}">0</span>
+                </span>
             </div>
+
+            <!-- Filter / Search toolbar -->
+            <div class="card-body border-bottom py-3" th:if="${tong > 0}">
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-5">
+                        <label for="svSearchInput" class="form-label small fw-medium mb-1">
+                            <i class="bi bi-search me-1"></i>Tìm kiếm
+                        </label>
+                        <input type="search" id="svSearchInput"
+                               class="form-control form-control-sm"
+                               placeholder="Mã HP, tên HP, học kỳ, nhận xét...">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="svHocKyFilter" class="form-label small fw-medium mb-1">
+                            <i class="bi bi-calendar3 me-1"></i>Học kỳ
+                        </label>
+                        <select id="svHocKyFilter" class="form-select form-select-sm">
+                            <option value="">Tất cả</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="svStatusFilter" class="form-label small fw-medium mb-1">
+                            <i class="bi bi-funnel me-1"></i>Trạng thái
+                        </label>
+                        <select id="svStatusFilter" class="form-select form-select-sm">
+                            <option value="">Tất cả</option>
+                            <option value="cb">Cảnh báo</option>
+                            <option value="bt">Bình thường</option>
+                        </select>
+                    </div>
+                    <div class="col-md-1">
+                        <button type="button" id="svResetFilter"
+                                class="btn btn-sm btn-outline-secondary w-100"
+                                title="Xoá bộ lọc">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
+                    <table class="table table-hover align-middle mb-0" id="svTable">
                         <thead>
                             <tr>
                                 <th style="width:50px;">STT</th>
@@ -216,8 +313,22 @@
                                     </div>
                                 </td>
                             </tr>
+                            <tr id="svEmptyFilter" class="d-none">
+                                <td colspan="7">
+                                    <div class="empty-state">
+                                        <i class="bi bi-funnel"></i>
+                                        <p>Không có nhận xét nào phù hợp với bộ lọc.</p>
+                                    </div>
+                                </td>
+                            </tr>
                             <tr th:each="nx, stat : ${nhanXetList}"
-                                th:with="hp=${hocPhanMap.get(nx.id.maHocPhan)}">
+                                th:with="hp=${hocPhanMap.get(nx.id.maHocPhan)}"
+                                class="sv-row"
+                                th:data-hocky="${nx.id.maHocKy}"
+                                th:data-status="${nx.daCanhBao ? 'cb' : 'bt'}"
+                                th:data-search="${nx.id.maHocPhan + ' ' + nx.id.maHocKy + ' '
+                                                  + (hp != null ? hp.tenHocPhan : '') + ' '
+                                                  + (nx.nhanXet != null ? nx.nhanXet : '')}">
                                 <td class="text-muted" th:text="${stat.index + 1}">1</td>
                                 <td><code th:text="${nx.id.maHocKy}">--</code></td>
                                 <td><code th:text="${nx.id.maHocPhan}">--</code></td>
@@ -248,5 +359,104 @@
     </div>
 
 </div>
+
+<th:block layout:fragment="scripts">
+<script>
+(function() {
+    'use strict';
+
+    function normalize(s) {
+        return (s || '').toString().toLowerCase()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .replace(/đ/g, 'd');
+    }
+
+    function setupFilter(config) {
+        const searchInput = document.getElementById(config.search);
+        if (!searchInput) return; // view not active
+        const hocKyFilter = document.getElementById(config.hocKy);
+        const extraFilter = config.extra ? document.getElementById(config.extra) : null;
+        const resetBtn = document.getElementById(config.reset);
+        const counterEl = document.getElementById(config.counter);
+        const emptyRow = document.getElementById(config.emptyRow);
+        const rows = document.querySelectorAll(config.rowSelector);
+
+        if (rows.length === 0) return;
+
+        // Auto-populate hoc-ky options
+        const hocKySet = new Set();
+        rows.forEach(r => {
+            const hk = r.getAttribute('data-hocky');
+            if (hk) hocKySet.add(hk);
+        });
+        Array.from(hocKySet).sort().forEach(hk => {
+            const opt = document.createElement('option');
+            opt.value = hk;
+            opt.textContent = hk;
+            hocKyFilter.appendChild(opt);
+        });
+
+        function apply() {
+            const q = normalize(searchInput.value.trim());
+            const hk = hocKyFilter.value;
+            const extra = extraFilter ? extraFilter.value : '';
+            let visible = 0;
+
+            rows.forEach(row => {
+                const haystack = normalize(row.getAttribute('data-search'));
+                const rowHk = row.getAttribute('data-hocky');
+                const rowExtra = extraFilter ? row.getAttribute(config.extraAttr) : '';
+
+                const matchSearch = !q || haystack.indexOf(q) !== -1;
+                const matchHk = !hk || rowHk === hk;
+                const matchExtra = !extra || rowExtra === extra;
+
+                const show = matchSearch && matchHk && matchExtra;
+                row.classList.toggle('d-none', !show);
+                if (show) visible++;
+            });
+
+            if (counterEl) counterEl.textContent = visible;
+            if (emptyRow) emptyRow.classList.toggle('d-none', visible !== 0);
+        }
+
+        searchInput.addEventListener('input', apply);
+        hocKyFilter.addEventListener('change', apply);
+        if (extraFilter) extraFilter.addEventListener('change', apply);
+        resetBtn.addEventListener('click', function() {
+            searchInput.value = '';
+            hocKyFilter.value = '';
+            if (extraFilter) extraFilter.value = '';
+            apply();
+        });
+    }
+
+    // GV view
+    setupFilter({
+        search: 'gvSearchInput',
+        hocKy: 'gvHocKyFilter',
+        extra: 'gvCanhBaoFilter',
+        extraAttr: 'data-canhbao',
+        reset: 'gvResetFilter',
+        counter: 'gvHienThi',
+        emptyRow: 'gvEmptyFilter',
+        rowSelector: '.gv-row'
+    });
+
+    // SV view
+    setupFilter({
+        search: 'svSearchInput',
+        hocKy: 'svHocKyFilter',
+        extra: 'svStatusFilter',
+        extraAttr: 'data-status',
+        reset: 'svResetFilter',
+        counter: 'svHienThi',
+        emptyRow: 'svEmptyFilter',
+        rowSelector: '.sv-row'
+    });
+})();
+</script>
+</th:block>
+
 </body>
 </html>

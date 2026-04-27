@@ -248,7 +248,7 @@
             <li class="nav-item" sec:authorize="hasAnyRole('CVHT','PDT','ADMIN')">
                 <a class="nav-link"
                    th:href="@{/danh-gia/canh-bao}"
-                   th:classappend="${activeMenu == 'danh-gia'} ? ' active' : ''">
+                   th:classappend="${activeMenu == 'danh-gia-canh-bao'} ? ' active' : ''">
                     <i class="bi bi-exclamation-triangle me-2"></i>
                     <span>Cảnh Báo Sinh Viên</span>
                 </a>

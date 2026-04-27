@@ -202,6 +202,9 @@ public class DanhGiaController {
         model.addAttribute("filterMode", filterMode);
         model.addAttribute("soChuaXuLy", soChuaXuLy);
         model.addAttribute("soDaXuLy", canhBaoList.size() - soChuaXuLy);
+        // Override activeMenu de sidebar highlight dung menu "Canh Bao" (khong
+        // bi trung voi menu "Danh Gia Sinh Vien" / "Nhan Xet Cua Toi").
+        model.addAttribute("activeMenu", "danh-gia-canh-bao");
         return "danh-gia/canh-bao";
     }
 
