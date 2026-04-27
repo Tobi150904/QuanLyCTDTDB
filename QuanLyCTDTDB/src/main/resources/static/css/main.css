@@ -1257,6 +1257,14 @@ fieldset legend,
     color: var(--danger);
     background: linear-gradient(135deg, rgba(220, 38, 38, 0.16), rgba(220, 38, 38, 0.04));
 }
+/* Phase 3 — variant-neutral: muted look cho cac trang thai "khong noi bat"
+   (vd. ChuanBi, DaKetThuc). Chi de border + icon mau xam, khong glow. */
+.stat-card.variant-neutral { border-left-color: var(--border-color); }
+.stat-card.variant-neutral .stat-card-icon {
+    color: var(--text-muted);
+    background: linear-gradient(135deg, rgba(100, 116, 139, 0.14), rgba(100, 116, 139, 0.04));
+}
+.stat-card.variant-neutral::after { background: none; }
 
 /* ============================================================================
    ERROR PAGES (403 / 404 / 500)
