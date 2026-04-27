@@ -2472,3 +2472,235 @@ a.card-link:hover .card,
         margin: 12mm;
     }
 }
+
+/* ==========================================================================
+   PHASE 5 — Form polish components
+   Stepper, dropzone, and form helpers shared boi nhieu form (import wizard,
+   nguoi-dung/form, hoc-phan/form, kien-tap/form, ...).
+   ========================================================================== */
+
+/* ---- Form stepper (used in nguoi-dung/import wizard, ...) ---------------- */
+.form-stepper {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    margin-bottom: 22px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: var(--surface-card);
+    box-shadow: var(--shadow-xs);
+}
+.form-stepper-item {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    background: var(--surface-card);
+    color: var(--text-muted);
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 0.9rem;
+    position: relative;
+    border-right: 1px solid var(--border-color);
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+.form-stepper-item:last-child { border-right: none; }
+.form-stepper-item .form-stepper-num {
+    flex: 0 0 28px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-soft);
+    color: var(--text-muted);
+    border: 1px solid var(--border-color);
+    font-size: 0.82rem;
+    font-weight: 700;
+    line-height: 1;
+}
+.form-stepper-item .form-stepper-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.25;
+    min-width: 0;
+}
+.form-stepper-item .form-stepper-text small {
+    font-weight: 500;
+    color: var(--text-subtle);
+    font-size: 0.74rem;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    font-family: var(--font-sans);
+}
+.form-stepper-item.active {
+    background: var(--surface-soft);
+    color: var(--text-strong);
+}
+.form-stepper-item.active .form-stepper-num {
+    background: var(--brand-primary);
+    color: #fff;
+    border-color: var(--brand-primary);
+}
+.form-stepper-item.done {
+    color: var(--text-strong);
+}
+.form-stepper-item.done .form-stepper-num {
+    background: var(--success-bg);
+    color: var(--success);
+    border-color: var(--success);
+}
+.form-stepper-item.done .form-stepper-num::before {
+    content: "\F26A"; /* bi-check-lg */
+    font-family: "bootstrap-icons";
+}
+.form-stepper-item.done .form-stepper-num span { display: none; }
+
+/* Mobile: stack vertical */
+@media (max-width: 640px) {
+    .form-stepper { flex-direction: column; }
+    .form-stepper-item {
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .form-stepper-item:last-child { border-bottom: none; }
+}
+
+/* ---- Dropzone (drag-drop file upload) ------------------------------------ */
+.dropzone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 32px 20px;
+    border: 2px dashed var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--surface-soft);
+    color: var(--text-muted);
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+    position: relative;
+}
+.dropzone:hover,
+.dropzone:focus-visible {
+    border-color: var(--brand-primary);
+    background: var(--surface-card);
+    color: var(--text-strong);
+    outline: none;
+}
+.dropzone.is-dragover {
+    border-color: var(--brand-primary);
+    background: var(--surface-card);
+    color: var(--brand-primary);
+    box-shadow: 0 0 0 3px rgba(15, 45, 82, 0.18);
+}
+.dropzone.has-file {
+    border-style: solid;
+    border-color: var(--brand-primary);
+    background: var(--surface-card);
+    color: var(--text-strong);
+    text-align: left;
+    align-items: stretch;
+    flex-direction: row;
+    padding: 18px 20px;
+}
+.dropzone-icon {
+    font-size: 2rem;
+    color: var(--text-subtle);
+    line-height: 1;
+}
+.dropzone.is-dragover .dropzone-icon,
+.dropzone:hover .dropzone-icon {
+    color: var(--brand-primary);
+}
+.dropzone-title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    color: var(--text-strong);
+    font-size: 0.95rem;
+    margin: 0;
+}
+.dropzone-hint {
+    font-size: 0.82rem;
+    color: var(--text-subtle);
+    margin: 0;
+}
+.dropzone-input { display: none; }
+
+.dropzone-file {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+}
+.dropzone-file-icon {
+    font-size: 1.6rem;
+    color: var(--brand-primary);
+    flex: 0 0 auto;
+}
+.dropzone-file-meta {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+.dropzone-file-name {
+    font-weight: 600;
+    color: var(--text-strong);
+    font-size: 0.92rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.dropzone-file-size {
+    color: var(--text-subtle);
+    font-size: 0.78rem;
+}
+.dropzone-file-clear {
+    flex: 0 0 auto;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 4px 10px;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease;
+}
+.dropzone-file-clear:hover {
+    color: var(--danger);
+    border-color: var(--danger);
+}
+
+/* ---- Required asterisk standardization ----------------------------------- */
+.req-mark {
+    color: var(--danger);
+    font-weight: 700;
+    margin-left: 2px;
+}
+
+/* ---- Compact alert inside form (validation summary) ---------------------- */
+.form-alert {
+    border-left: 3px solid;
+    border-radius: var(--radius-md);
+}
+.form-alert.alert-warning { border-left-color: var(--warning); }
+.form-alert.alert-danger  { border-left-color: var(--danger); }
+.form-alert ul { padding-left: 18px; margin-bottom: 0; }
+
+/* ---- Form helper text icon spacing --------------------------------------- */
+.form-text .bi { vertical-align: -0.1em; }
+
+/* Print: hide stepper / dropzone (form pages thuong khong in) */
+@media print {
+    .form-stepper,
+    .dropzone {
+        display: none !important;
+    }
+}
+

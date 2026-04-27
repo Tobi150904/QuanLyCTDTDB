@@ -1,4 +1,12 @@
 <!DOCTYPE html>
+<!--/*
+ * kien-tap/form.html — Phase 5 redesign
+ *
+ * Form Dot Kien Tap chia 3 section:
+ *   1. Thong tin co ban (ten, lop, hoc ky, GV, DN)
+ *   2. Kinh phi
+ *   3. Minh chung
+ */-->
 <html lang="vi"
       xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
@@ -11,69 +19,88 @@
 
     <nav aria-label="breadcrumb" class="mb-3">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a th:href="@{/dashboard}">Trang Chủ</a></li>
-            <li class="breadcrumb-item"><a th:href="@{/kien-tap}">Kiến Tập</a></li>
-            <li class="breadcrumb-item active"
+            <li class="breadcrumb-item">
+                <a th:href="@{/dashboard}" class="text-decoration-none">
+                    <i class="bi bi-house-door me-1"></i>Trang Chủ
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a th:href="@{/kien-tap}" class="text-decoration-none">Kiến Tập</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page"
                 th:text="${dotId != null} ? 'Chỉnh sửa' : 'Thêm mới'">Thêm mới</li>
         </ol>
     </nav>
 
-    <div class="d-flex justify-content-between align-items-start mb-4">
-        <div>
-            <p class="page-subtitle">Kiến Tập &amp; Thực Tập</p>
-            <h4 class="page-title"
-                th:text="${dotId != null} ? 'Chỉnh Sửa Đợt Kiến Tập' : 'Tạo Đợt Kiến Tập Mới'">Tạo Đợt Kiến Tập Mới</h4>
+    <div class="page-header-block mb-4">
+        <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+            <div class="flex-grow-1 min-w-0">
+                <p class="page-subtitle">Kiến Tập &amp; Thực Tập</p>
+                <h1 class="page-title h4 mb-1 d-flex align-items-center gap-2">
+                    <i class="bi bi-binoculars" aria-hidden="true"></i>
+                    <span th:text="${dotId != null} ? 'Chỉnh Sửa Đợt Kiến Tập' : 'Tạo Đợt Kiến Tập Mới'">Tạo Đợt Kiến Tập Mới</span>
+                </h1>
+                <p class="text-muted small mb-0"
+                   th:text="${dotId != null} ? 'Cập nhật thông tin & kinh phí đợt kiến tập.' :
+                                                'Khai báo đợt kiến tập cho lớp & gắn doanh nghiệp.'">Mô tả</p>
+            </div>
+            <div class="action-slot d-flex align-items-center gap-2 flex-wrap">
+                <a th:href="@{/kien-tap}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i>Quay Lại
+                </a>
+            </div>
         </div>
-        <a th:href="@{/kien-tap}" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-arrow-left me-1"></i>Quay Lại
-        </a>
+    </div>
+
+    <!-- Banner loi non-field — ngoai form -->
+    <div th:if="${errorMsg}"
+         class="alert alert-danger form-alert d-flex align-items-start mb-3" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2 mt-1"></i>
+        <div>
+            <strong class="d-block">Không thể lưu đợt kiến tập</strong>
+            <span th:text="${errorMsg}"></span>
+        </div>
     </div>
 
     <div class="row justify-content-center">
-        <div class="col-lg-10">
-
-            <!-- Banner loi non-field (exception tu service / flash) -->
-            <div th:if="${errorMsg}"
-                 class="alert alert-danger d-flex align-items-start" role="alert">
-                <i class="bi bi-exclamation-triangle-fill me-2 mt-1"></i>
-                <div>
-                    <strong class="d-block">Không thể lưu đợt kiến tập</strong>
-                    <span th:text="${errorMsg}"></span>
-                </div>
-            </div>
+        <div class="col-xl-10">
 
             <form th:action="${dotId != null} ? @{/kien-tap/sua/{id}(id=${dotId})} : @{/kien-tap/them}"
                   th:object="${dotKTDTO}"
-                  method="post" enctype="multipart/form-data" novalidate>
+                  method="post" enctype="multipart/form-data"
+                  data-unsaved-guard
+                  novalidate>
 
-                <!-- Banner loi validation: BAT BUOC nam BEN TRONG <form th:object>
-                     vi #fields.hasErrors('*') can binding context cua th:object. -->
+                <!-- Banner loi validation -->
                 <div th:if="${#fields.hasErrors('*')}"
-                     class="alert alert-warning d-flex align-items-start" role="alert">
+                     class="alert alert-warning form-alert d-flex align-items-start mb-3" role="alert">
                     <i class="bi bi-info-circle-fill me-2 mt-1"></i>
                     <div>
                         <strong class="d-block">Vui lòng kiểm tra lại các trường sau:</strong>
-                        <ul class="mb-0">
+                        <ul>
                             <li th:each="err : ${#fields.allErrors()}" th:text="${err}"></li>
                         </ul>
                     </div>
                 </div>
 
-                <!-- Section 1: Thong Tin Co Ban -->
-                <div class="card mb-3">
-                    <div class="card-header">
-                        <i class="bi bi-info-circle"></i>
-                        <span class="fw-semibold">Thông Tin Cơ Bản</span>
+                <!-- SECTION 1 — Thong tin co ban -->
+                <div class="form-section">
+                    <div class="form-section-header">
+                        <i class="bi bi-info-circle" aria-hidden="true"></i>
+                        <span>Thông Tin Cơ Bản</span>
+                        <small class="form-section-hint">Bắt buộc</small>
                     </div>
-                    <div class="card-body">
+                    <div class="form-section-body">
                         <div class="row g-3">
                             <div class="col-12">
                                 <div class="form-floating">
                                     <input type="text" class="form-control"
+                                           th:classappend="${#fields.hasErrors('tenDotKT')} ? 'is-invalid'"
                                            id="tenDotKT" th:field="*{tenDotKT}"
-                                           placeholder="VD: Kiến tập Khoá 64 - HK1 2024-2025">
-                                    <label for="tenDotKT">Tên Đợt Kiến Tập <span class="text-danger">*</span></label>
-                                    <div class="invalid-feedback d-block"
+                                           placeholder="VD: Kiến tập Khoá 64 - HK1 2024-2025"
+                                           aria-required="true" required>
+                                    <label for="tenDotKT">Tên Đợt Kiến Tập <span class="req-mark">*</span></label>
+                                    <div class="invalid-feedback"
                                          th:if="${#fields.hasErrors('tenDotKT')}"
                                          th:errors="*{tenDotKT}"></div>
                                 </div>
@@ -81,35 +108,40 @@
 
                             <div class="col-md-6">
                                 <div class="form-floating">
-                                    <select class="form-select" id="maLopHC"
-                                            th:field="*{maLopHC}"
-                                            th:disabled="${dotId != null}">
+                                    <select class="form-select"
+                                            th:classappend="${#fields.hasErrors('maLopHC')} ? 'is-invalid'"
+                                            id="maLopHC" th:field="*{maLopHC}"
+                                            th:disabled="${dotId != null}"
+                                            aria-required="true" required>
                                         <option value="">-- Chọn Lớp --</option>
                                         <option th:each="lhc : ${lopHCList}"
                                                 th:value="${lhc.maLopHC}"
                                                 th:text="${lhc.maLopHC + ' — ' + lhc.tenLop}"></option>
                                     </select>
-                                    <label for="maLopHC">Lớp Hành Chính <span class="text-danger">*</span></label>
-                                    <div class="invalid-feedback d-block"
+                                    <label for="maLopHC">Lớp Hành Chính <span class="req-mark">*</span></label>
+                                    <div class="invalid-feedback"
                                          th:if="${#fields.hasErrors('maLopHC')}"
                                          th:errors="*{maLopHC}"></div>
                                 </div>
-                                <small class="text-muted" th:if="${dotId != null}">
-                                    <i class="bi bi-lock me-1"></i>Không thể đổi lớp sau khi đã tạo (đã auto-add SV).
+                                <small class="form-text text-muted" th:if="${dotId != null}">
+                                    <i class="bi bi-lock me-1"></i>
+                                    Không thể đổi lớp sau khi đã tạo (đã auto-add SV).
                                 </small>
                             </div>
 
                             <div class="col-md-6">
                                 <div class="form-floating">
-                                    <select class="form-select" id="maHocKy"
-                                            th:field="*{maHocKy}">
+                                    <select class="form-select"
+                                            th:classappend="${#fields.hasErrors('maHocKy')} ? 'is-invalid'"
+                                            id="maHocKy" th:field="*{maHocKy}"
+                                            aria-required="true" required>
                                         <option value="">-- Chọn Học Kỳ --</option>
                                         <option th:each="hk : ${hocKyList}"
                                                 th:value="${hk.maHocKy}"
                                                 th:text="${hk.maHocKy + ' — ' + hk.tenHocKy}"></option>
                                     </select>
-                                    <label for="maHocKy">Học Kỳ <span class="text-danger">*</span></label>
-                                    <div class="invalid-feedback d-block"
+                                    <label for="maHocKy">Học Kỳ <span class="req-mark">*</span></label>
+                                    <div class="invalid-feedback"
                                          th:if="${#fields.hasErrors('maHocKy')}"
                                          th:errors="*{maHocKy}"></div>
                                 </div>
@@ -138,33 +170,37 @@
 
                             <div class="col-md-4">
                                 <div class="form-floating">
-                                    <select class="form-select" id="maDoanhNghiep"
-                                            th:field="*{maDoanhNghiep}">
+                                    <select class="form-select"
+                                            th:classappend="${#fields.hasErrors('maDoanhNghiep')} ? 'is-invalid'"
+                                            id="maDoanhNghiep" th:field="*{maDoanhNghiep}"
+                                            aria-required="true" required>
                                         <option value="">-- Chọn Doanh Nghiệp --</option>
                                         <option th:each="dn : ${doanhNghiepList}"
                                                 th:value="${dn.maDoanhNghiep}"
                                                 th:text="${dn.maDoanhNghiep + ' — ' + dn.tenDoanhNghiep}"></option>
                                     </select>
-                                    <label for="maDoanhNghiep">Doanh Nghiệp <span class="text-danger">*</span></label>
-                                    <div class="invalid-feedback d-block"
+                                    <label for="maDoanhNghiep">Doanh Nghiệp <span class="req-mark">*</span></label>
+                                    <div class="invalid-feedback"
                                          th:if="${#fields.hasErrors('maDoanhNghiep')}"
                                          th:errors="*{maDoanhNghiep}"></div>
                                 </div>
-                                <small class="text-muted">
-                                    <i class="bi bi-info-circle me-1"></i>Chỉ hiển thị DN đang hợp tác.
+                                <small class="form-text text-muted">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Chỉ DN đang hợp tác.
                                 </small>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Section 2: Kinh Phi -->
-                <div class="card mb-3">
-                    <div class="card-header">
-                        <i class="bi bi-cash-coin"></i>
-                        <span class="fw-semibold">Kinh Phí</span>
+                <!-- SECTION 2 — Kinh phi -->
+                <div class="form-section">
+                    <div class="form-section-header">
+                        <i class="bi bi-cash-coin" aria-hidden="true"></i>
+                        <span>Kinh Phí</span>
+                        <small class="form-section-hint">Tuỳ chọn</small>
                     </div>
-                    <div class="card-body">
+                    <div class="form-section-body">
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <div class="form-floating">
@@ -174,7 +210,10 @@
                                            placeholder="0">
                                     <label for="kinhPhiChung">Kinh Phí Chung (VNĐ)</label>
                                 </div>
-                                <small class="text-muted">Chi phí toàn đợt (xe, lễ tân, ấn phẩm…)</small>
+                                <small class="form-text text-muted">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Chi phí toàn đợt (xe, lễ tân, ấn phẩm…).
+                                </small>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-floating">
@@ -184,32 +223,39 @@
                                            placeholder="0">
                                     <label for="kinhPhiTungSV">Kinh Phí / SV (VNĐ)</label>
                                 </div>
-                                <small class="text-muted">Mức thu hoặc hỗ trợ trên mỗi sinh viên.</small>
+                                <small class="form-text text-muted">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Mức thu hoặc hỗ trợ trên mỗi sinh viên.
+                                </small>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Section 3: Minh Chung -->
-                <div class="card mb-3">
-                    <div class="card-header">
-                        <i class="bi bi-paperclip"></i>
-                        <span class="fw-semibold">Minh Chứng</span>
+                <!-- SECTION 3 — Minh chung -->
+                <div class="form-section">
+                    <div class="form-section-header">
+                        <i class="bi bi-paperclip" aria-hidden="true"></i>
+                        <span>Minh Chứng</span>
+                        <small class="form-section-hint">Tuỳ chọn</small>
                     </div>
-                    <div class="card-body">
+                    <div class="form-section-body">
                         <div class="row g-3">
                             <div class="col-12">
-                                <label for="fileMinhChung" class="form-label">
-                                    <i class="bi bi-file-earmark-arrow-up me-1"></i>File Minh Chứng
+                                <label for="fileMinhChung" class="form-label fw-medium">
+                                    File Minh Chứng
                                 </label>
                                 <input type="file" class="form-control"
                                        id="fileMinhChung" name="fileMinhChung"
                                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
-                                <small class="text-muted">Để trống nếu không đổi file hiện tại. Chấp nhận PDF, Word, ảnh.</small>
+                                <small class="form-text text-muted">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Để trống nếu không đổi file hiện tại. Hỗ trợ PDF, Word, ảnh.
+                                </small>
                             </div>
 
                             <div class="col-12" th:if="${dotFile != null and !#strings.isEmpty(dotFile)}">
-                                <div class="alert alert-info d-flex align-items-center mb-0" role="alert">
+                                <div class="alert alert-info form-alert d-flex align-items-center mb-0" role="alert">
                                     <i class="bi bi-paperclip me-2"></i>
                                     <span class="me-2">File hiện có:</span>
                                     <a th:href="@{'/uploads/' + ${dotFile}}" target="_blank"
@@ -221,9 +267,13 @@
                     </div>
                 </div>
 
-                <div class="d-flex justify-content-end gap-2">
-                    <a th:href="@{/kien-tap}" class="btn btn-outline-secondary">Huỷ</a>
-                    <button type="submit" class="btn btn-primary">
+                <!-- Sticky footer -->
+                <div class="form-sticky-footer mt-3">
+                    <a th:href="@{/kien-tap}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-lg me-1"></i>Huỷ
+                    </a>
+                    <button type="submit" class="btn btn-primary" onclick="showLoading(this)">
+                        <span class="spinner-border spinner-border-sm d-none me-1" role="status"></span>
                         <i class="bi bi-save me-1"></i>
                         <span th:text="${dotId != null} ? 'Cập Nhật' : 'Tạo Mới'">Tạo Mới</span>
                     </button>

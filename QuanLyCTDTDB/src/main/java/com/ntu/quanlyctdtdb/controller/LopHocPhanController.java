@@ -214,7 +214,7 @@ public class LopHocPhanController {
                     l.getId().getMaHocPhan(),
                     tenHP,
                     l.getId().getMaHocKy(),
-                    l.getId().getMaLop(),
+                    l.getId().getMaLopHocPhan() != null ? String.valueOf(l.getId().getMaLopHocPhan()) : "",
                     tenGV
             ));
         }

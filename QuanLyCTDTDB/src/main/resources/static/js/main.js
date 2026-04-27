@@ -540,4 +540,174 @@ function previewImage(input, previewId) {
     window.UnsavedGuard = UnsavedGuard;
     document.addEventListener('DOMContentLoaded', UnsavedGuard.autoInit);
 
+    // -------------------------------------------------------------------------
+    // Dropzone — Phase 5
+    //
+    // Bien <input type="file"> binh thuong thanh khu vuc drag-drop dep, voi
+    // preview ten/kich thuoc file, nut clear, va thong bao kich thuoc khi vuot.
+    //
+    // Markup:
+    //   <label class="dropzone" data-dropzone>
+    //     <input type="file" name="file" class="dropzone-input"
+    //            accept=".xlsx,.xls" data-max-size="20971520">
+    //     <i class="bi bi-cloud-arrow-up dropzone-icon"></i>
+    //     <p class="dropzone-title">Keo tha file vao day</p>
+    //     <p class="dropzone-hint">hoac click de chon · .xlsx, .xls (toi da 20MB)</p>
+    //   </label>
+    //
+    // Auto-init: tat ca element co attribute [data-dropzone].
+    // -------------------------------------------------------------------------
+    function formatBytes(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    var Dropzone = {
+        init: function (zoneEl) {
+            if (!zoneEl || zoneEl.__dzInited) return;
+            zoneEl.__dzInited = true;
+
+            var input = zoneEl.querySelector('.dropzone-input');
+            if (!input) return;
+
+            // Backup goc HTML cua zone (de restore sau khi clear)
+            var initialHtml = zoneEl.innerHTML;
+
+            function renderFile(file) {
+                zoneEl.classList.add('has-file');
+                zoneEl.innerHTML = '';
+
+                var fileWrap = document.createElement('div');
+                fileWrap.className = 'dropzone-file';
+
+                var icon = document.createElement('i');
+                icon.className = 'bi bi-file-earmark-spreadsheet dropzone-file-icon';
+                fileWrap.appendChild(icon);
+
+                var meta = document.createElement('div');
+                meta.className = 'dropzone-file-meta';
+                var name = document.createElement('span');
+                name.className = 'dropzone-file-name';
+                name.textContent = file.name;
+                var size = document.createElement('span');
+                size.className = 'dropzone-file-size';
+                size.textContent = formatBytes(file.size);
+                meta.appendChild(name);
+                meta.appendChild(size);
+                fileWrap.appendChild(meta);
+
+                var clearBtn = document.createElement('button');
+                clearBtn.type = 'button';
+                clearBtn.className = 'dropzone-file-clear';
+                clearBtn.innerHTML = '<i class="bi bi-x-lg me-1"></i>Bo chon';
+                clearBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    reset();
+                });
+                fileWrap.appendChild(clearBtn);
+
+                zoneEl.appendChild(fileWrap);
+                // Re-attach hidden input (truoc bi xoa khi innerHTML clear)
+                zoneEl.appendChild(input);
+            }
+
+            function reset() {
+                input.value = '';
+                zoneEl.classList.remove('has-file', 'is-dragover');
+                zoneEl.innerHTML = initialHtml;
+                // Re-bind on the new DOM
+                input = zoneEl.querySelector('.dropzone-input');
+                if (input) bindInput();
+                zoneEl.dispatchEvent(new CustomEvent('dropzone:cleared'));
+            }
+
+            function validate(file) {
+                var maxSize = parseInt(input.getAttribute('data-max-size') || '0', 10);
+                if (maxSize > 0 && file.size > maxSize) {
+                    if (window.Toast) {
+                        window.Toast.error('File qua lon. Toi da ' + formatBytes(maxSize) + '.');
+                    } else {
+                        alert('File qua lon. Toi da ' + formatBytes(maxSize) + '.');
+                    }
+                    return false;
+                }
+                return true;
+            }
+
+            function setFile(file) {
+                if (!file) return;
+                if (!validate(file)) return;
+                // Gan vao input qua DataTransfer
+                try {
+                    var dt = new DataTransfer();
+                    dt.items.add(file);
+                    input.files = dt.files;
+                } catch (err) {
+                    // Trinh duyet cu khong support DataTransfer — bo qua, du
+                    // sao file da nam trong input qua change event.
+                }
+                renderFile(file);
+                zoneEl.dispatchEvent(new CustomEvent('dropzone:filed', { detail: { file: file } }));
+            }
+
+            function bindInput() {
+                input.addEventListener('change', function () {
+                    if (input.files && input.files[0]) {
+                        setFile(input.files[0]);
+                    }
+                });
+            }
+
+            bindInput();
+
+            // Drag-drop handlers
+            ['dragenter', 'dragover'].forEach(function (evt) {
+                zoneEl.addEventListener(evt, function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    zoneEl.classList.add('is-dragover');
+                });
+            });
+            ['dragleave', 'drop'].forEach(function (evt) {
+                zoneEl.addEventListener(evt, function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (evt === 'dragleave' && zoneEl.contains(e.relatedTarget)) return;
+                    zoneEl.classList.remove('is-dragover');
+                });
+            });
+            zoneEl.addEventListener('drop', function (e) {
+                var dt = e.dataTransfer;
+                if (dt && dt.files && dt.files[0]) {
+                    setFile(dt.files[0]);
+                }
+            });
+
+            // Click anywhere on zone -> open file dialog (nhung khong khi click vao chinh input)
+            zoneEl.addEventListener('click', function (e) {
+                if (e.target === input || e.target.closest('.dropzone-file-clear')) return;
+                input.click();
+            });
+
+            // Keyboard accessibility
+            zoneEl.setAttribute('tabindex', '0');
+            zoneEl.setAttribute('role', 'button');
+            zoneEl.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    input.click();
+                }
+            });
+        },
+        autoInit: function () {
+            document.querySelectorAll('[data-dropzone]').forEach(function (el) {
+                Dropzone.init(el);
+            });
+        }
+    };
+    window.Dropzone = Dropzone;
+    document.addEventListener('DOMContentLoaded', Dropzone.autoInit);
+
 })();

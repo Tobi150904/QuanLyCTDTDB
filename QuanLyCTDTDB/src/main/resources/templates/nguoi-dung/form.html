@@ -1,4 +1,20 @@
 <!DOCTYPE html>
+<!--/*
+ * nguoi-dung/form.html — Phase 5 redesign
+ *
+ * Form chia thanh cac form-section card:
+ *   1. Tai khoan (username, mat khau, loai NDD)
+ *   2. Thong tin ca nhan (ho ten, email, SDT)
+ *   3. Thong tin chuyen mon (chi cho GiangVien) — toggle JS
+ *   4. Lop hanh chinh (chi cho SinhVien) — toggle JS
+ *   5. Vai tro nghiep vu (chi cho GiangVien) — toggle JS
+ *
+ * Su dung:
+ *   - data-unsaved-guard: warn truoc khi user navigate away khi co thay doi
+ *   - .form-sticky-footer: footer luon nhin thay khi scroll
+ *   - .form-section / .form-section-header / .form-section-body
+ *   - <span class="req-mark">*</span> chuan hoa indicator required
+ */-->
 <html lang="vi"
       xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
@@ -26,264 +42,343 @@
     </nav>
 
     <!-- Page Header -->
-    <div class="d-flex justify-content-between align-items-start mb-4">
-        <div>
-            <p class="page-subtitle">Quản Trị / Người Dùng</p>
-            <h4 class="page-title"
-                th:text="${isEdit} ? 'Chỉnh Sửa Người Dùng' : 'Thêm Người Dùng Mới'">
-                Form Người Dùng
-            </h4>
+    <div class="page-header-block mb-4">
+        <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+            <div class="flex-grow-1 min-w-0">
+                <p class="page-subtitle">Quản Trị / Người Dùng</p>
+                <h1 class="page-title h4 mb-1 d-flex align-items-center gap-2">
+                    <i class="bi bi-person-vcard" aria-hidden="true"></i>
+                    <span th:text="${isEdit} ? 'Chỉnh Sửa Người Dùng' : 'Thêm Người Dùng Mới'">Form Người Dùng</span>
+                </h1>
+                <p class="text-muted small mb-0">
+                    <span th:if="${isEdit}">
+                        Cập nhật thông tin tài khoản, vai trò &amp; phân loại người dùng.
+                    </span>
+                    <span th:unless="${isEdit}">
+                        Tạo tài khoản mới và phân loại theo vai trò trong hệ thống.
+                    </span>
+                </p>
+            </div>
+            <div class="action-slot d-flex align-items-center gap-2 flex-wrap">
+                <a th:href="@{/nguoi-dung}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i>Quay Lại
+                </a>
+            </div>
         </div>
-        <a th:href="@{/nguoi-dung}" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-arrow-left me-1"></i>Quay Lại
-        </a>
     </div>
 
-    <!-- Form Card -->
-    <div class="card" style="max-width:780px;">
-        <div class="card-header">
-            <i class="bi bi-person-fill me-2"></i>
-            <span class="fw-semibold"
-                  th:text="${isEdit} ? 'Thông Tin Người Dùng' : 'Tạo Tài Khoản Mới'">
-                Thông Tin
-            </span>
-        </div>
-        <div class="card-body">
+    <div class="row justify-content-center">
+        <div class="col-xl-9">
 
             <form th:action="${isEdit} ? @{/nguoi-dung/sua/{ma}(ma=${nguoiDungDTO.maNguoiDung})} : @{/nguoi-dung/them}"
                   th:object="${nguoiDungDTO}"
                   method="post"
+                  data-unsaved-guard
                   novalidate>
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                 <input type="hidden" th:field="*{maNguoiDung}">
 
-                <!-- Section: Thong tin co ban -->
-                <h6 class="section-label">Thông Tin Cơ Bản</h6>
-
-                <div class="row g-3 mb-3">
-                    <!-- Tên đăng nhập -->
-                    <div class="col-md-6">
-                        <div class="form-floating">
-                            <input type="text"
-                                   class="form-control"
-                                   th:classappend="${#fields.hasErrors('tenDangNhap')} ? 'is-invalid'"
-                                   id="tenDangNhap"
-                                   th:field="*{tenDangNhap}"
-                                   placeholder="Tên đăng nhập"
-                                   th:readonly="${isEdit}"
-                                   required>
-                            <label for="tenDangNhap">
-                                Tên Đăng Nhập <span class="text-danger">*</span>
-                            </label>
-                            <div class="invalid-feedback"
-                                 th:if="${#fields.hasErrors('tenDangNhap')}"
-                                 th:errors="*{tenDangNhap}"></div>
-                        </div>
-                    </div>
-
-                    <!-- Loại người dùng
-                         Edit mode: hiện text readonly + hidden field để vẫn POST được giá trị.
-                         (HTML <select disabled> không submit, gây lỗi @NotNull khi save.) -->
-                    <div class="col-md-6">
-                        <!-- Khi tạo mới: select thường -->
-                        <div class="form-floating" th:unless="${isEdit}">
-                            <select class="form-select"
-                                    id="loaiNguoiDung"
-                                    th:field="*{loaiNguoiDung}"
-                                    onchange="toggleExtraFields()"
-                                    required>
-                                <option value="">-- Chọn Loại --</option>
-                                <option th:each="l : ${loaiList}"
-                                        th:value="${l.name()}"
-                                        th:text="${l.name() == 'Admin'       ? 'Quản Trị Viên' :
-                                                  (l.name() == 'GiangVien'  ? 'Giảng Viên'     :
-                                                  (l.name() == 'SinhVien'   ? 'Sinh Viên'      :
-                                                  (l.name() == 'DoanhNghiep' ? 'Doanh Nghiệp' : l.name())))}">
-                                </option>
-                            </select>
-                            <label for="loaiNguoiDung">
-                                Loại Người Dùng <span class="text-danger">*</span>
-                            </label>
-                            <div class="invalid-feedback"
-                                 th:if="${#fields.hasErrors('loaiNguoiDung')}"
-                                 th:errors="*{loaiNguoiDung}"></div>
-                        </div>
-                        <!-- Khi sửa: input readonly + hidden field -->
-                        <div class="form-floating" th:if="${isEdit}">
-                            <input type="text"
-                                   class="form-control"
-                                   id="loaiNguoiDungDisplay"
-                                   th:with="v=${nguoiDungDTO.loaiNguoiDung != null ? nguoiDungDTO.loaiNguoiDung.name() : ''}"
-                                   th:value="${v == 'Admin'       ? 'Quản Trị Viên' :
-                                             (v == 'GiangVien'  ? 'Giảng Viên'     :
-                                             (v == 'SinhVien'   ? 'Sinh Viên'      :
-                                             (v == 'DoanhNghiep' ? 'Doanh Nghiệp' : v)))}"
-                                   readonly>
-                            <label for="loaiNguoiDungDisplay">
-                                Loại Người Dùng (không thể đổi)
-                            </label>
-                            <input type="hidden"
-                                   th:field="*{loaiNguoiDung}">
-                        </div>
+                <!-- Validation summary (binding errors) -->
+                <div th:if="${#fields.hasErrors('*')}"
+                     class="alert alert-warning form-alert d-flex align-items-start mb-3" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2 mt-1"></i>
+                    <div>
+                        <strong class="d-block">Vui lòng kiểm tra lại:</strong>
+                        <ul>
+                            <li th:each="err : ${#fields.allErrors()}" th:text="${err}"></li>
+                        </ul>
                     </div>
                 </div>
 
-                <div class="row g-3 mb-3">
-                    <!-- Mật khẩu -->
-                    <div class="col-md-6">
-                        <div class="form-floating">
-                            <input type="password"
-                                   class="form-control"
-                                   th:classappend="${#fields.hasErrors('matKhau')} ? 'is-invalid'"
-                                   id="matKhau"
-                                   th:field="*{matKhau}"
-                                   placeholder="Mật khẩu"
-                                   th:required="!${isEdit}">
-                            <label for="matKhau">
-                                Mật Khẩu
-                                <span class="text-danger" th:unless="${isEdit}">*</span>
-                                <span class="text-muted small" th:if="${isEdit}">(để trống nếu không đổi)</span>
-                            </label>
-                            <div class="invalid-feedback"
-                                 th:if="${#fields.hasErrors('matKhau')}"
-                                 th:errors="*{matKhau}"></div>
-                        </div>
+                <!-- ============================================================
+                     SECTION 1 — Tài khoản đăng nhập
+                     ============================================================ -->
+                <div class="form-section">
+                    <div class="form-section-header">
+                        <i class="bi bi-shield-lock" aria-hidden="true"></i>
+                        <span>Tài Khoản Đăng Nhập</span>
+                        <small class="form-section-hint">Bắt buộc</small>
                     </div>
-
-                    <!-- Email -->
-                    <div class="col-md-6">
-                        <div class="form-floating">
-                            <input type="email"
-                                   class="form-control"
-                                   th:classappend="${#fields.hasErrors('email')} ? 'is-invalid'"
-                                   id="email"
-                                   th:field="*{email}"
-                                   placeholder="Email"
-                                   required>
-                            <label for="email">Email <span class="text-danger">*</span></label>
-                            <div class="invalid-feedback"
-                                 th:if="${#fields.hasErrors('email')}"
-                                 th:errors="*{email}"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row g-3 mb-4">
-                    <!-- Họ tên -->
-                    <div class="col-md-6">
-                        <div class="form-floating">
-                            <input type="text"
-                                   class="form-control"
-                                   th:classappend="${#fields.hasErrors('hoTen')} ? 'is-invalid'"
-                                   id="hoTen"
-                                   th:field="*{hoTen}"
-                                   placeholder="Họ tên"
-                                   required>
-                            <label for="hoTen">Họ Tên <span class="text-danger">*</span></label>
-                            <div class="invalid-feedback"
-                                 th:if="${#fields.hasErrors('hoTen')}"
-                                 th:errors="*{hoTen}"></div>
-                        </div>
-                    </div>
-
-                    <!-- Số điện thoại -->
-                    <div class="col-md-6">
-                        <div class="form-floating">
-                            <input type="tel"
-                                   class="form-control"
-                                   id="soDienThoai"
-                                   th:field="*{soDienThoai}"
-                                   placeholder="Số điện thoại"
-                                   maxlength="15">
-                            <label for="soDienThoai">Số Điện Thoại</label>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Section: GiangVien fields -->
-                <div id="giangVienFields" class="d-none">
-                    <h6 class="section-label">Thông Tin Giảng Viên</h6>
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-4">
-                            <div class="form-floating">
-                                <input type="text" class="form-control"
-                                       id="hocHam" th:field="*{hocHam}"
-                                       placeholder="Học hàm">
-                                <label for="hocHam">Học Hàm</label>
+                    <div class="form-section-body">
+                        <div class="row g-3">
+                            <!-- Tên đăng nhập -->
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text"
+                                           class="form-control"
+                                           th:classappend="${#fields.hasErrors('tenDangNhap')} ? 'is-invalid'"
+                                           id="tenDangNhap"
+                                           th:field="*{tenDangNhap}"
+                                           placeholder="Tên đăng nhập"
+                                           th:readonly="${isEdit}"
+                                           autocomplete="username"
+                                           aria-required="true"
+                                           required>
+                                    <label for="tenDangNhap">
+                                        Tên Đăng Nhập <span class="req-mark">*</span>
+                                    </label>
+                                    <div class="invalid-feedback"
+                                         th:if="${#fields.hasErrors('tenDangNhap')}"
+                                         th:errors="*{tenDangNhap}"></div>
+                                </div>
+                                <small class="form-text text-muted" th:unless="${isEdit}">
+                                    <i class="bi bi-info-circle me-1"></i>Không thể đổi sau khi tạo.
+                                </small>
                             </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-floating">
-                                <input type="text" class="form-control"
-                                       id="hocVi" th:field="*{hocVi}"
-                                       placeholder="Học vị">
-                                <label for="hocVi">Học Vị</label>
+
+                            <!-- Loại người dùng -->
+                            <div class="col-md-6">
+                                <!-- Khi tạo mới: select thường -->
+                                <div class="form-floating" th:unless="${isEdit}">
+                                    <select class="form-select"
+                                            th:classappend="${#fields.hasErrors('loaiNguoiDung')} ? 'is-invalid'"
+                                            id="loaiNguoiDung"
+                                            th:field="*{loaiNguoiDung}"
+                                            onchange="toggleExtraFields()"
+                                            aria-required="true"
+                                            required>
+                                        <option value="">-- Chọn Loại --</option>
+                                        <option th:each="l : ${loaiList}"
+                                                th:value="${l.name()}"
+                                                th:text="${l.name() == 'Admin'       ? 'Quản Trị Viên' :
+                                                          (l.name() == 'GiangVien'  ? 'Giảng Viên'     :
+                                                          (l.name() == 'SinhVien'   ? 'Sinh Viên'      :
+                                                          (l.name() == 'DoanhNghiep' ? 'Doanh Nghiệp' : l.name())))}">
+                                        </option>
+                                    </select>
+                                    <label for="loaiNguoiDung">
+                                        Loại Người Dùng <span class="req-mark">*</span>
+                                    </label>
+                                    <div class="invalid-feedback"
+                                         th:if="${#fields.hasErrors('loaiNguoiDung')}"
+                                         th:errors="*{loaiNguoiDung}"></div>
+                                </div>
+                                <!-- Khi sửa: input readonly + hidden field -->
+                                <div class="form-floating" th:if="${isEdit}">
+                                    <input type="text"
+                                           class="form-control"
+                                           id="loaiNguoiDungDisplay"
+                                           th:with="v=${nguoiDungDTO.loaiNguoiDung != null ? nguoiDungDTO.loaiNguoiDung.name() : ''}"
+                                           th:value="${v == 'Admin'       ? 'Quản Trị Viên' :
+                                                     (v == 'GiangVien'  ? 'Giảng Viên'     :
+                                                     (v == 'SinhVien'   ? 'Sinh Viên'      :
+                                                     (v == 'DoanhNghiep' ? 'Doanh Nghiệp' : v)))}"
+                                           readonly>
+                                    <label for="loaiNguoiDungDisplay">
+                                        Loại Người Dùng (không thể đổi)
+                                    </label>
+                                    <input type="hidden" th:field="*{loaiNguoiDung}">
+                                </div>
                             </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-floating">
-                                <input type="text" class="form-control"
-                                       id="chuyenNganh" th:field="*{chuyenNganh}"
-                                       placeholder="Chuyên ngành">
-                                <label for="chuyenNganh">Chuyên Ngành</label>
+
+                            <!-- Mật khẩu -->
+                            <div class="col-md-12">
+                                <div class="form-floating">
+                                    <input type="password"
+                                           class="form-control"
+                                           th:classappend="${#fields.hasErrors('matKhau')} ? 'is-invalid'"
+                                           id="matKhau"
+                                           th:field="*{matKhau}"
+                                           placeholder="Mật khẩu"
+                                           autocomplete="new-password"
+                                           th:required="!${isEdit}">
+                                    <label for="matKhau">
+                                        Mật Khẩu
+                                        <span class="req-mark" th:unless="${isEdit}">*</span>
+                                        <span class="text-muted small" th:if="${isEdit}">— để trống nếu không đổi</span>
+                                    </label>
+                                    <div class="invalid-feedback"
+                                         th:if="${#fields.hasErrors('matKhau')}"
+                                         th:errors="*{matKhau}"></div>
+                                </div>
+                                <small class="form-text text-muted">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Tối thiểu 8 ký tự, gồm chữ &amp; số. Người dùng có thể đổi sau khi đăng nhập.
+                                </small>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Section: SinhVien fields -->
-                <div id="sinhVienFields" class="d-none">
-                    <h6 class="section-label">Thông Tin Sinh Viên</h6>
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-6">
-                            <div class="form-floating">
-                                <select class="form-select" id="maLopHC" th:field="*{maLopHC}">
-                                    <option value="">-- Chọn Lớp Hành Chính --</option>
-                                    <option th:each="lhc : ${lopHCList}"
-                                            th:value="${lhc.maLopHC}"
-                                            th:text="${lhc.maLopHC} + ' - ' + ${lhc.tenLop}">
-                                    </option>
-                                </select>
-                                <label for="maLopHC">Lớp Hành Chính <span class="text-danger">*</span></label>
+                <!-- ============================================================
+                     SECTION 2 — Thông tin cá nhân
+                     ============================================================ -->
+                <div class="form-section">
+                    <div class="form-section-header">
+                        <i class="bi bi-person-lines-fill" aria-hidden="true"></i>
+                        <span>Thông Tin Cá Nhân</span>
+                    </div>
+                    <div class="form-section-body">
+                        <div class="row g-3">
+                            <!-- Họ tên -->
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text"
+                                           class="form-control"
+                                           th:classappend="${#fields.hasErrors('hoTen')} ? 'is-invalid'"
+                                           id="hoTen"
+                                           th:field="*{hoTen}"
+                                           placeholder="Họ tên"
+                                           autocomplete="name"
+                                           aria-required="true"
+                                           required>
+                                    <label for="hoTen">Họ Tên <span class="req-mark">*</span></label>
+                                    <div class="invalid-feedback"
+                                         th:if="${#fields.hasErrors('hoTen')}"
+                                         th:errors="*{hoTen}"></div>
+                                </div>
+                            </div>
+
+                            <!-- Email -->
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="email"
+                                           class="form-control"
+                                           th:classappend="${#fields.hasErrors('email')} ? 'is-invalid'"
+                                           id="email"
+                                           th:field="*{email}"
+                                           placeholder="Email"
+                                           autocomplete="email"
+                                           aria-required="true"
+                                           required>
+                                    <label for="email">Email <span class="req-mark">*</span></label>
+                                    <div class="invalid-feedback"
+                                         th:if="${#fields.hasErrors('email')}"
+                                         th:errors="*{email}"></div>
+                                </div>
+                            </div>
+
+                            <!-- Số điện thoại -->
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="tel"
+                                           class="form-control"
+                                           id="soDienThoai"
+                                           th:field="*{soDienThoai}"
+                                           placeholder="Số điện thoại"
+                                           autocomplete="tel"
+                                           maxlength="15">
+                                    <label for="soDienThoai">Số Điện Thoại</label>
+                                </div>
+                                <small class="form-text text-muted">
+                                    <i class="bi bi-info-circle me-1"></i>10 chữ số (VD: 0901234567).
+                                </small>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Section: Vai Tro Nghiep Vu
-                     Chi hien khi LoaiNguoiDung = GiangVien. Sinh Vien / Doanh
-                     Nghiep / Admin khong co vai tro nghiep vu (ho co role
-                     mac dinh qua LoaiNguoiDung — xem CustomUserDetails).
-                     JS toggleExtraFields() se show/hide div nay. -->
-                <div id="vaiTroSection" class="d-none">
-                    <h6 class="section-label">Vai Trò Nghiệp Vụ (Có Thể Chọn Nhiều)</h6>
-                    <p class="text-muted small mb-2">
-                        <i class="bi bi-info-circle me-1"></i>
-                        Các vai trò này chỉ áp dụng cho Giảng Viên (PDT, TTDTXS, CVHT, CNHP).
-                    </p>
-                    <div class="row g-2 mb-4">
-                        <div class="col-auto" th:each="vt : ${vaiTroList}">
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input"
-                                       type="checkbox"
-                                       th:id="'vt_' + ${vt.name()}"
-                                       name="vaiTros"
-                                       th:value="${vt.name()}"
-                                       th:checked="${nguoiDungDTO.vaiTros != null and nguoiDungDTO.vaiTros.contains(vt)}">
-                                <label class="form-check-label"
-                                       th:for="'vt_' + ${vt.name()}"
-                                       th:with="v=${vt.name()}"
-                                       th:text="${v == 'PDT'    ? 'PDT — Phòng Đào Tạo'              :
-                                                 (v == 'TTDTXS' ? 'TTDTXS — Trung Tâm Đào Tạo Xuất Sắc' :
-                                                 (v == 'CVHT'   ? 'CVHT — Cố Vấn Học Tập'              :
-                                                 (v == 'CNHP'   ? 'CNHP — Chủ Nhiệm Học Phần'          : v)))}"></label>
+                <!-- ============================================================
+                     SECTION 3 — Thông tin Giảng Viên (toggle)
+                     ============================================================ -->
+                <div id="giangVienFields" class="form-section d-none">
+                    <div class="form-section-header">
+                        <i class="bi bi-mortarboard" aria-hidden="true"></i>
+                        <span>Thông Tin Giảng Viên</span>
+                        <small class="form-section-hint">Học hàm / Học vị</small>
+                    </div>
+                    <div class="form-section-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control"
+                                           id="hocHam" th:field="*{hocHam}"
+                                           placeholder="Học hàm">
+                                    <label for="hocHam">Học Hàm</label>
+                                </div>
+                                <small class="form-text text-muted">VD: GS, PGS</small>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control"
+                                           id="hocVi" th:field="*{hocVi}"
+                                           placeholder="Học vị">
+                                    <label for="hocVi">Học Vị</label>
+                                </div>
+                                <small class="form-text text-muted">VD: TS, ThS, KS</small>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control"
+                                           id="chuyenNganh" th:field="*{chuyenNganh}"
+                                           placeholder="Chuyên ngành">
+                                    <label for="chuyenNganh">Chuyên Ngành</label>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Buttons -->
-                <div class="d-flex gap-2">
+                <!-- ============================================================
+                     SECTION 4 — Thông tin Sinh Viên (toggle)
+                     ============================================================ -->
+                <div id="sinhVienFields" class="form-section d-none">
+                    <div class="form-section-header">
+                        <i class="bi bi-person-badge" aria-hidden="true"></i>
+                        <span>Thông Tin Sinh Viên</span>
+                        <small class="form-section-hint">Lớp hành chính</small>
+                    </div>
+                    <div class="form-section-body">
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <div class="form-floating">
+                                    <select class="form-select" id="maLopHC" th:field="*{maLopHC}">
+                                        <option value="">-- Chọn Lớp Hành Chính --</option>
+                                        <option th:each="lhc : ${lopHCList}"
+                                                th:value="${lhc.maLopHC}"
+                                                th:text="${lhc.maLopHC} + ' - ' + ${lhc.tenLop}">
+                                        </option>
+                                    </select>
+                                    <label for="maLopHC">Lớp Hành Chính <span class="req-mark">*</span></label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================================
+                     SECTION 5 — Vai trò nghiệp vụ (toggle, GiangVien only)
+                     ============================================================ -->
+                <div id="vaiTroSection" class="form-section d-none">
+                    <div class="form-section-header">
+                        <i class="bi bi-diagram-3" aria-hidden="true"></i>
+                        <span>Vai Trò Nghiệp Vụ</span>
+                        <small class="form-section-hint">Có thể chọn nhiều</small>
+                    </div>
+                    <div class="form-section-body">
+                        <p class="text-muted small mb-3">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Các vai trò chỉ áp dụng cho Giảng Viên: PDT (Phòng Đào Tạo),
+                            TTDTXS (Trung Tâm Đào Tạo Xuất Sắc), CVHT (Cố Vấn Học Tập),
+                            CNHP (Chủ Nhiệm Học Phần).
+                        </p>
+                        <div class="row g-2">
+                            <div class="col-12 col-md-6 col-lg-3" th:each="vt : ${vaiTroList}">
+                                <div class="form-check">
+                                    <input class="form-check-input"
+                                           type="checkbox"
+                                           th:id="'vt_' + ${vt.name()}"
+                                           name="vaiTros"
+                                           th:value="${vt.name()}"
+                                           th:checked="${nguoiDungDTO.vaiTros != null and nguoiDungDTO.vaiTros.contains(vt)}">
+                                    <label class="form-check-label"
+                                           th:for="'vt_' + ${vt.name()}"
+                                           th:with="v=${vt.name()}"
+                                           th:text="${v == 'PDT'    ? 'PDT — Phòng Đào Tạo'              :
+                                                     (v == 'TTDTXS' ? 'TTDTXS — Trung Tâm ĐTXS'         :
+                                                     (v == 'CVHT'   ? 'CVHT — Cố Vấn Học Tập'           :
+                                                     (v == 'CNHP'   ? 'CNHP — Chủ Nhiệm Học Phần'       : v)))}"></label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sticky footer -->
+                <div class="form-sticky-footer mt-3">
+                    <a th:href="@{/nguoi-dung}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-lg me-1"></i>Huỷ
+                    </a>
                     <button type="submit"
                             class="btn btn-primary"
                             onclick="showLoading(this)">
@@ -291,9 +386,6 @@
                         <i class="bi bi-save me-1"></i>
                         <span th:text="${isEdit} ? 'Cập Nhật' : 'Tạo Mới'">Lưu</span>
                     </button>
-                    <a th:href="@{/nguoi-dung}" class="btn btn-outline-secondary">
-                        <i class="bi bi-x-lg me-1"></i>Huỷ
-                    </a>
                 </div>
             </form>
         </div>
@@ -315,11 +407,9 @@
 
         if (gvFields)    gvFields.classList.toggle('d-none', loai !== 'GiangVien');
         if (svFields)    svFields.classList.toggle('d-none', loai !== 'SinhVien');
-        // Vai tro nghiep vu chi ap dung cho Giang Vien.
         if (vaiTroBlock) vaiTroBlock.classList.toggle('d-none', loai !== 'GiangVien');
     }
 
-    // Khoi tao khi load trang
     document.addEventListener('DOMContentLoaded', function () {
         if (isEdit) {
             toggleExtraFields();
@@ -327,7 +417,6 @@
             var sel = document.getElementById('loaiNguoiDung');
             if (sel) sel.addEventListener('change', toggleExtraFields);
         }
-        // Neu dang edit, hien field tuong ung
         if (currentLoai) toggleExtraFields();
     });
 </script>
