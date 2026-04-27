@@ -56,46 +56,47 @@
     </div>
 
     <!-- Search & Filter -->
-    <div class="card mb-4">
-        <div class="card-body py-3">
-            <form th:action="@{/doanh-nghiep}" method="get" class="row g-2 align-items-end">
-                <div class="col-12 col-md-6">
-                    <label class="form-label fw-medium small mb-1">Từ Khoá</label>
-                    <div class="input-group search-bar">
-                        <span class="input-group-text"><i class="bi bi-search"></i></span>
-                        <input type="text"
-                               class="form-control"
-                               name="keyword"
-                               th:value="${keyword}"
-                               aria-label="Từ khoá tìm kiếm doanh nghiệp"
-                               placeholder="Tìm theo tên, lĩnh vực, người đại diện, email...">
-                    </div>
-                </div>
-                <div class="col-12 col-md-3">
-                    <label class="form-label fw-medium small mb-1">Trạng Thái</label>
-                    <select class="form-select form-select-sm" name="trangThai"
-                            aria-label="Lọc theo trạng thái">
-                        <option value="">-- Tất Cả Trạng Thái --</option>
-                        <option th:each="tt : ${trangThaiList}"
-                                th:value="${tt.name()}"
-                                th:text="${tt.name() == 'DangHopTac' ? 'Đang Hợp Tác' : 'Tạm Ngưng'}"
-                                th:selected="${trangThaiFilter != null and trangThaiFilter == tt}">
-                        </option>
-                    </select>
-                </div>
-                <div class="col-auto">
-                    <button type="submit" class="btn btn-primary btn-sm">
-                        <i class="bi bi-search me-1"></i>Tìm Kiếm
-                    </button>
-                    <a th:href="@{/doanh-nghiep}" class="btn btn-outline-secondary btn-sm ms-1"
-                       data-bs-toggle="tooltip" data-bs-title="Xoá bộ lọc"
-                       aria-label="Xoá bộ lọc">
-                        <i class="bi bi-x-lg"></i>
-                    </a>
-                </div>
-            </form>
+    <form th:action="@{/doanh-nghiep}" method="get" class="filter-toolbar mb-3" role="search">
+        <div class="filter-toolbar-title">
+            <i class="bi bi-funnel" aria-hidden="true"></i>
+            <span>Tìm kiếm</span>
         </div>
-    </div>
+        <div class="row g-2">
+            <div class="col-12 col-md-6">
+                <div class="input-group input-group-sm search-bar">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="search"
+                           class="form-control"
+                           name="keyword"
+                           th:value="${keyword}"
+                           aria-label="Từ khoá tìm kiếm doanh nghiệp"
+                           placeholder="Tìm theo tên, lĩnh vực, người đại diện, email...">
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <select class="form-select form-select-sm" name="trangThai"
+                        aria-label="Lọc theo trạng thái">
+                    <option value="">-- Tất Cả Trạng Thái --</option>
+                    <option th:each="tt : ${trangThaiList}"
+                            th:value="${tt.name()}"
+                            th:text="${tt.name() == 'DangHopTac' ? 'Đang Hợp Tác' : 'Tạm Ngưng'}"
+                            th:selected="${trangThaiFilter != null and trangThaiFilter == tt}">
+                    </option>
+                </select>
+            </div>
+            <div class="col-6 col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary btn-sm flex-grow-1">
+                    <i class="bi bi-search me-1" aria-hidden="true"></i>Tìm kiếm
+                </button>
+                <a th:href="@{/doanh-nghiep}" class="btn btn-outline-secondary btn-sm"
+                   th:if="${(keyword != null and keyword != '') or trangThaiFilter != null}"
+                   data-bs-toggle="tooltip" data-bs-title="Xoá bộ lọc"
+                   aria-label="Xoá bộ lọc">
+                    <i class="bi bi-x-lg" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </form>
 
     <!-- Table -->
     <div class="card">

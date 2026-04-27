@@ -14,13 +14,13 @@
  * Nhung Thymeleaf 3 khong ho tro slot. Vi vay viec dung bang APPROACH "MARKUP MAU":
  *   <form th:action="@{/hoc-phan}" method="get" class="filter-toolbar mb-3">
  *     <div class="filter-toolbar-title">
- *       <i class="bi bi-funnel"></i><span>Tìm kiếm &amp; Lọc</span>
+ *       <i class="bi bi-funnel"></i><span>Tìm kiếm</span>
  *     </div>
  *     <div class="row g-2">
  *       <div class="col-md-5"> ... search input ... </div>
  *       <div class="col-md-3"> ... select ... </div>
  *       <div class="col-md-2 d-flex gap-2 align-items-end">
- *          <button class="btn btn-primary btn-sm flex-grow-1">Lọc</button>
+ *          <button class="btn btn-primary btn-sm flex-grow-1">Tìm kiếm</button>
  *          <a class="btn btn-outline-secondary btn-sm" th:href="@{/hoc-phan}">
  *            <i class="bi bi-x-lg"></i>
  *          </a>
@@ -56,7 +56,7 @@
         </div>
         <div class="col-md-3 d-flex gap-2">
             <button type="submit" class="btn btn-primary btn-sm flex-grow-1">
-                <i class="bi bi-search me-1" aria-hidden="true"></i>Lọc
+                <i class="bi bi-search me-1" aria-hidden="true"></i>Tìm kiếm
             </button>
             <a th:href="@{${action}}" class="btn btn-outline-secondary btn-sm"
                th:if="${currentValue != null and currentValue != ''}"

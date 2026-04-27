@@ -2318,15 +2318,22 @@ a.card-link:hover .card,
     position: sticky;
     bottom: 0;
     background: var(--surface-card);
-    border-top: 1px solid var(--border-color);
+    border: 1px solid var(--border-color);
     padding: 12px 20px;
-    margin: 18px -20px -22px;  /* offset card-body padding */
-    border-radius: 0 0 var(--radius-md) var(--radius-md);
+    border-radius: var(--radius-md);
     display: flex;
     justify-content: flex-end;
     gap: 8px;
     z-index: 5;
     box-shadow: 0 -2px 8px rgba(15, 45, 82, 0.04);
+}
+/* When sticky footer is placed inside a .form-section .form-section-body,
+   compensate the body padding so it sits flush with the section borders. */
+.form-section-body > .form-sticky-footer:last-child {
+    border: 0;
+    border-top: 1px solid var(--border-color);
+    margin: 18px -20px -18px;
+    border-radius: 0 0 var(--radius-md) var(--radius-md);
 }
 
 /* ---- Page header block ---------------------------------------------------

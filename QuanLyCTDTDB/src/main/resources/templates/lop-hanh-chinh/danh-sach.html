@@ -54,43 +54,49 @@
 
 
     <!-- Filter toolbar -->
-    <div class="filter-toolbar">
-        <p class="filter-toolbar-title">
-            <i class="bi bi-funnel"></i>Bộ Lọc Lớp Hành Chính
-        </p>
-        <div>
-            <form th:action="@{/lop-hanh-chinh}" method="get" class="row g-2 align-items-end">
-                <div class="col-md-5">
-                    <div class="input-group search-bar">
-                        <span class="input-group-text"><i class="bi bi-search"></i></span>
-                        <input type="text" name="keyword" th:value="${keyword}"
-                               class="form-control" placeholder="Tìm mã lớp, tên lớp...">
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <select class="form-select form-select-sm" name="maCTDT">
-                        <option value="">-- Tất Cả CTĐT --</option>
-                        <option th:each="c : ${ctdtList}"
-                                th:value="${c.maCTDT}"
-                                th:text="${c.maCTDT + ' - ' + c.tenCTDT}"
-                                th:selected="${maCTDT != null and maCTDT == c.maCTDT}"></option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <input type="text" name="khoaHoc" th:value="${khoaHoc}"
-                           class="form-control form-control-sm" placeholder="Khóa (62, 63...)">
-                </div>
-                <div class="col-auto">
-                    <button class="btn btn-primary btn-sm">
-                        <i class="bi bi-funnel me-1"></i>Lọc
-                    </button>
-                    <a th:href="@{/lop-hanh-chinh}" class="btn btn-outline-secondary btn-sm ms-1">
-                        <i class="bi bi-x-lg"></i>
-                    </a>
-                </div>
-            </form>
+    <form th:action="@{/lop-hanh-chinh}" method="get" class="filter-toolbar mb-3" role="search">
+        <div class="filter-toolbar-title">
+            <i class="bi bi-funnel" aria-hidden="true"></i>
+            <span>Tìm kiếm</span>
         </div>
-    </div>
+        <div class="row g-2">
+            <div class="col-12 col-md-5">
+                <div class="input-group input-group-sm search-bar">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="search" name="keyword" th:value="${keyword}"
+                           class="form-control"
+                           placeholder="Tìm mã lớp, tên lớp..."
+                           aria-label="Từ khoá">
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <select class="form-select form-select-sm" name="maCTDT" aria-label="Lọc CTĐT">
+                    <option value="">-- Tất Cả CTĐT --</option>
+                    <option th:each="c : ${ctdtList}"
+                            th:value="${c.maCTDT}"
+                            th:text="${c.maCTDT + ' - ' + c.tenCTDT}"
+                            th:selected="${maCTDT != null and maCTDT == c.maCTDT}"></option>
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <input type="text" name="khoaHoc" th:value="${khoaHoc}"
+                       class="form-control form-control-sm"
+                       placeholder="Khóa (62, 63...)"
+                       aria-label="Khóa học">
+            </div>
+            <div class="col-12 col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary btn-sm flex-grow-1">
+                    <i class="bi bi-search me-1" aria-hidden="true"></i>Tìm kiếm
+                </button>
+                <a th:href="@{/lop-hanh-chinh}" class="btn btn-outline-secondary btn-sm"
+                   th:if="${(keyword != null and keyword != '') or (maCTDT != null and maCTDT != '') or (khoaHoc != null and khoaHoc != '')}"
+                   data-bs-toggle="tooltip" data-bs-title="Xoá bộ lọc"
+                   aria-label="Xoá bộ lọc">
+                    <i class="bi bi-x-lg" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </form>
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">

@@ -86,7 +86,7 @@
     <form th:action="@{/nguoi-dung}" method="get" class="filter-toolbar mb-3" role="search">
         <div class="filter-toolbar-title">
             <i class="bi bi-funnel" aria-hidden="true"></i>
-            <span>Tìm kiếm &amp; Lọc</span>
+            <span>Tìm kiếm</span>
         </div>
         <div class="row g-2">
             <div class="col-12 col-md-6">
@@ -115,7 +115,7 @@
             </div>
             <div class="col-6 col-md-3 d-flex gap-2">
                 <button type="submit" class="btn btn-primary btn-sm flex-grow-1">
-                    <i class="bi bi-search me-1" aria-hidden="true"></i>Lọc
+                    <i class="bi bi-search me-1" aria-hidden="true"></i>Tìm kiếm
                 </button>
                 <a th:href="@{/nguoi-dung}" class="btn btn-outline-secondary btn-sm"
                    th:if="${(keyword != null and keyword != '') or loaiFilter != null}"

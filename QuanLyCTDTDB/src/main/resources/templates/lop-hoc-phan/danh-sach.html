@@ -72,57 +72,55 @@
     </div>
 
     <!-- FILTER + TẠO HÀNG LOẠT -->
-    <div class="filter-toolbar">
-        <p class="filter-toolbar-title">
-            <i class="bi bi-funnel"></i>Lọc Theo CTĐT Hoặc Học Kỳ
-        </p>
-        <div>
-            <p class="text-muted small mb-3 mb-md-2">
-                <i class="bi bi-info-circle me-1"></i>
-                Chọn <strong>ít nhất một</strong> tiêu chí để tra cứu. Có thể lọc chỉ theo CTĐT
-                (xem tất cả các kỳ của một CTĐT), chỉ theo Học Kỳ (xem toàn trường trong một kỳ),
-                hoặc kết hợp cả hai (để mở thêm tác vụ &quot;Kế Hoạch Mở Lớp&quot; và &quot;Tạo Hàng Loạt&quot;).
-            </p>
-            <form th:action="@{/lop-hoc-phan}" method="get"
-                  class="row g-2 align-items-end mb-0"
-                  onsubmit="return validateLopHpFilter(this)">
-                <div class="col-md-5">
-                    <label class="form-label fw-medium small">Chương Trình Đào Tạo</label>
-                    <select class="form-select" name="maCTDT">
-                        <option value="">-- Tất cả CTĐT --</option>
-                        <option th:each="c : ${ctdtList}"
-                                th:value="${c.maCTDT}"
-                                th:text="${c.maCTDT + ' - ' + c.tenCTDT}"
-                                th:selected="${maCTDT != null and maCTDT == c.maCTDT}"></option>
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label fw-medium small">Học Kỳ</label>
-                    <select class="form-select" name="maHocKy">
-                        <option value="">-- Tất cả Học Kỳ --</option>
-                        <option th:each="hk : ${hocKyList}"
-                                th:value="${hk.maHocKy}"
-                                th:text="${hk.maHocKy + ' - ' + hk.tenHocKy}"
-                                th:selected="${maHocKy != null and maHocKy == hk.maHocKy}"></option>
-                    </select>
-                </div>
-                <div class="col-auto">
-                    <button class="btn btn-primary">
-                        <i class="bi bi-search me-1"></i>Tra Cứu
-                    </button>
-                </div>
-                <div class="col-auto"
-                     th:if="${maCTDT != null and !maCTDT.isBlank() and maHocKy != null and !maHocKy.isBlank()}">
-                    <button type="button" class="btn btn-success"
-                            data-bs-toggle="modal" data-bs-target="#modalTaoHangLoat"
-                            sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')"
-                            th:disabled="${hpDuKien == null or #lists.isEmpty(hpDuKien)}">
-                        <i class="bi bi-magic me-1"></i>Tạo Hàng Loạt
-                    </button>
-                </div>
-            </form>
+    <form th:action="@{/lop-hoc-phan}" method="get"
+          class="filter-toolbar mb-3"
+          role="search"
+          onsubmit="return validateLopHpFilter(this)">
+        <div class="filter-toolbar-title">
+            <i class="bi bi-funnel" aria-hidden="true"></i>
+            <span>Tìm kiếm</span>
         </div>
-    </div>
+        <p class="text-muted small mb-2">
+            <i class="bi bi-info-circle me-1"></i>
+            Chọn <strong>ít nhất một</strong> tiêu chí để tra cứu. Có thể chỉ theo CTĐT,
+            chỉ theo Học Kỳ, hoặc kết hợp cả hai (để mở thêm
+            &quot;Kế Hoạch Mở Lớp&quot; &amp; &quot;Tạo Hàng Loạt&quot;).
+        </p>
+        <div class="row g-2">
+            <div class="col-12 col-md-5">
+                <select class="form-select form-select-sm" name="maCTDT" aria-label="Chương trình đào tạo">
+                    <option value="">-- Tất cả CTĐT --</option>
+                    <option th:each="c : ${ctdtList}"
+                            th:value="${c.maCTDT}"
+                            th:text="${c.maCTDT + ' - ' + c.tenCTDT}"
+                            th:selected="${maCTDT != null and maCTDT == c.maCTDT}"></option>
+                </select>
+            </div>
+            <div class="col-12 col-md-4">
+                <select class="form-select form-select-sm" name="maHocKy" aria-label="Học kỳ">
+                    <option value="">-- Tất cả Học Kỳ --</option>
+                    <option th:each="hk : ${hocKyList}"
+                            th:value="${hk.maHocKy}"
+                            th:text="${hk.maHocKy + ' - ' + hk.tenHocKy}"
+                            th:selected="${maHocKy != null and maHocKy == hk.maHocKy}"></option>
+                </select>
+            </div>
+            <div class="col-12 col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary btn-sm flex-grow-1">
+                    <i class="bi bi-search me-1" aria-hidden="true"></i>Tìm kiếm
+                </button>
+                <button type="button" class="btn btn-success btn-sm"
+                        data-bs-toggle="modal" data-bs-target="#modalTaoHangLoat"
+                        sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')"
+                        th:if="${maCTDT != null and !maCTDT.isBlank() and maHocKy != null and !maHocKy.isBlank()}"
+                        th:disabled="${hpDuKien == null or #lists.isEmpty(hpDuKien)}"
+                        data-bs-toggle-tooltip="tooltip" data-bs-title="Tạo hàng loạt"
+                        aria-label="Tạo hàng loạt">
+                    <i class="bi bi-magic" aria-hidden="true"></i>
+                </button>
+            </div>
+        </div>
+    </form>
 
     <script th:inline="javascript">
         /* Validate: it nhat 1 trong 2 truong phai duoc chon.
