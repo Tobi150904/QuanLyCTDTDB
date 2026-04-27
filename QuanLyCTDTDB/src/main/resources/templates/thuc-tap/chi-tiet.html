@@ -68,6 +68,40 @@
         </div>
     </section>
 
+    <!-- Phase 4 — TAB NAV (2 tab semantic):
+           1. Tong quan: state-transition cluster + thong tin dot.
+           2. Phan cong SV: bang DS SV + form them SV (sidebar) + form cap nhat
+              ket qua (inline collapse rows trong bang).
+         Chi 2 tab thay vi 3 (nhu kien-tap) vi thuc-tap khong co section "Nhan
+         Xet" rieng — feedback nam inline trong tung row SV.
+
+         Import result (flash) van render NGOAI tab nav — luon visible sau khi
+         POST de user thay ket qua import du dang o tab nao. -->
+    <ul class="nav tab-nav-clean" role="tablist">
+        <li role="presentation">
+            <a class="tab-link active" id="tab-overview"
+               data-bs-toggle="tab" href="#pane-overview" role="tab"
+               aria-controls="pane-overview" aria-selected="true">
+                <i class="bi bi-info-circle"></i> Tổng Quan
+            </a>
+        </li>
+        <li role="presentation">
+            <a class="tab-link" id="tab-students"
+               data-bs-toggle="tab" href="#pane-students" role="tab"
+               aria-controls="pane-students" aria-selected="false">
+                <i class="bi bi-people"></i> Phân Công Sinh Viên
+                <span class="badge bg-light text-dark ms-1"
+                      th:text="${#lists.size(danhSachSV)}">0</span>
+            </a>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+
+    <!-- ====== TAB 1: TONG QUAN (state + thong tin) ====== -->
+    <div class="tab-pane fade show active" id="pane-overview"
+         role="tabpanel" aria-labelledby="tab-overview" tabindex="0">
+
     <!-- STATE-TRANSITION ACTION CLUSTER -->
     <div class="card mb-4"
          th:if="${s == 'ChuanBi' or s == 'ChoDuyet'}">
@@ -182,7 +216,13 @@
         </div>
     </div>
 
-    <!-- IMPORT RESULT (flash sau khi POST /them-sv) -->
+    </div><!-- /pane-overview -->
+
+    </div><!-- /tab-content (pre-import-result) -->
+
+    <!-- IMPORT RESULT (flash sau khi POST /them-sv) — render NGOAI tab content
+         de luon visible. Khi co flash, user thuong xem ket qua trong khi van
+         co the chuyen tab. -->
     <div th:if="${importResult}" class="card mb-4">
         <div class="card-header">
             <i class="bi bi-clipboard-data me-2"></i>
@@ -221,6 +261,13 @@
             </div>
         </div>
     </div>
+
+    <!-- Re-open tab-content cho pane-students. -->
+    <div class="tab-content">
+
+    <!-- ====== TAB 2: PHAN CONG SINH VIEN ====== -->
+    <div class="tab-pane fade" id="pane-students"
+         role="tabpanel" aria-labelledby="tab-students" tabindex="0">
 
     <div class="row g-4">
 
@@ -440,7 +487,10 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div><!-- /row g-4 -->
+    </div><!-- /pane-students -->
+
+    </div><!-- /tab-content (post-import-result) -->
 
 </div>
 </body>

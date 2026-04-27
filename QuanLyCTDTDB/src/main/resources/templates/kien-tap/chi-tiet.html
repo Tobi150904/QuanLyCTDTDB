@@ -66,6 +66,47 @@
         </div>
     </section>
 
+    <!-- Phase 4 — TAB NAV (3 tab semantic):
+           1. Tong quan: state-transition cluster + thong tin dot.
+           2. Sinh vien: bang danh sach SV tham gia + dong bo + danh dau.
+           3. Nhan xet: chi xuat hien khi DaDuyet/DaThucHien va co data.
+         Ly do tach: trang nay co qua nhieu thong tin (workflow + info + DS SV
+         + nhan xet) — scroll dai, kho navigate. Tab giup focus theo task.
+
+         Badge tren tab "Sinh vien" hien thi soThamGia / total. -->
+    <ul class="nav tab-nav-clean" role="tablist">
+        <li role="presentation">
+            <a class="tab-link active" id="tab-overview"
+               data-bs-toggle="tab" href="#pane-overview" role="tab"
+               aria-controls="pane-overview" aria-selected="true">
+                <i class="bi bi-info-circle"></i> Tổng Quan
+            </a>
+        </li>
+        <li role="presentation">
+            <a class="tab-link" id="tab-students"
+               data-bs-toggle="tab" href="#pane-students" role="tab"
+               aria-controls="pane-students" aria-selected="false">
+                <i class="bi bi-people"></i> Sinh Viên
+                <span class="badge bg-light text-dark ms-1"
+                      th:text="${soThamGia} + ' / ' + ${#lists.size(danhSachSV)}">0 / 0</span>
+            </a>
+        </li>
+        <li role="presentation"
+            th:if="${s == 'DaDuyet' or s == 'DaThucHien'}">
+            <a class="tab-link" id="tab-feedback"
+               data-bs-toggle="tab" href="#pane-feedback" role="tab"
+               aria-controls="pane-feedback" aria-selected="false">
+                <i class="bi bi-chat-left-text"></i> Nhận Xét
+            </a>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+
+    <!-- ====== TAB 1: TONG QUAN (state-transition + thong tin dot) ====== -->
+    <div class="tab-pane fade show active" id="pane-overview"
+         role="tabpanel" aria-labelledby="tab-overview" tabindex="0">
+
     <!-- STATE-TRANSITION ACTION CLUSTER (docs/03 §WF-07.1) -->
     <div class="card mb-4"
          th:if="${s == 'ChuanBi' or s == 'ChoDuyet' or s == 'DaDuyet' or s == 'DaThucHien'}">
@@ -234,13 +275,18 @@
         </div>
     </div>
 
-    <!-- DANH SACH SV THAM GIA -->
-    <div class="card mb-4">
+    </div><!-- /pane-overview -->
+
+    <!-- ====== TAB 2: SINH VIEN ====== -->
+    <div class="tab-pane fade" id="pane-students"
+         role="tabpanel" aria-labelledby="tab-students" tabindex="0">
+
+    <!-- DANH SACH SV THAM GIA — Phase 4: bo mb-4 (tab pane co spacing rieng),
+         bo badge tren card-header (da co tren tab nav). -->
+    <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <span class="fw-semibold">
                 <i class="bi bi-people me-2"></i>Danh Sách Sinh Viên Tham Gia
-                <span class="badge bg-light text-dark ms-1"
-                      th:text="${soThamGia} + ' / ' + ${#lists.size(danhSachSV)}">0 / 0</span>
             </span>
             <form th:action="@{/kien-tap/chi-tiet/{id}/dong-bo(id=${dot.maDotKT})}"
                   method="post" class="d-inline m-0"
@@ -336,9 +382,16 @@
         </div>
     </div>
 
-    <!-- NHAN XET (chi hien khi DaDuyet hoac DaThucHien) -->
+    </div><!-- /pane-students -->
+
+    <!-- ====== TAB 3: NHAN XET (chi neu DaDuyet hoac DaThucHien) ====== -->
+    <div class="tab-pane fade" id="pane-feedback"
+         role="tabpanel" aria-labelledby="tab-feedback" tabindex="0"
+         th:if="${s == 'DaDuyet' or s == 'DaThucHien'}">
+
+    <!-- NHAN XET — editable cho GVPhuTrach / DNTiepDon -->
     <div class="row g-4"
-         th:if="${(s == 'DaDuyet' or s == 'DaThucHien') and (laGVPhuTrach or laDNTiepDon)}">
+         th:if="${laGVPhuTrach or laDNTiepDon}">
 
         <!-- Nhan xet GV phu trach -->
         <div class="col-lg-6" th:if="${laGVPhuTrach}">
@@ -399,9 +452,11 @@
         </div>
     </div>
 
-    <!-- Hien thi nhan xet (read-only) cho cac role khac khi da co nhan xet -->
+    <!-- Hien thi nhan xet (read-only) cho cac role khac khi da co nhan xet.
+         Phase 4: bo dieu kien (s == DaDuyet/DaThucHien) — da duoc handle boi
+         tab visibility o tren. -->
     <div class="row g-4 mt-1"
-         th:if="${(s == 'DaDuyet' or s == 'DaThucHien') and !laGVPhuTrach and !laDNTiepDon
+         th:if="${!laGVPhuTrach and !laDNTiepDon
                  and (dot.nhanXetGV != null or dot.nhanXetDN != null)}">
         <div class="col-lg-6" th:if="${dot.nhanXetGV != null and !#strings.isEmpty(dot.nhanXetGV)}">
             <div class="card h-100">
@@ -426,6 +481,10 @@
             </div>
         </div>
     </div>
+
+    </div><!-- /pane-feedback -->
+
+    </div><!-- /tab-content -->
 
 </div>
 </body>

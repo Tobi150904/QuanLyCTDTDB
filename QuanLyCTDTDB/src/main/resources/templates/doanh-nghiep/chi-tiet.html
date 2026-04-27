@@ -50,10 +50,35 @@
         </div>
     </div>
 
-    <div class="row g-4">
-        <!-- Left: Thông tin DN -->
-        <div class="col-md-7">
-            <div class="card h-100">
+    <!-- Phase 4 — TAB NAV
+         2 tab semantic: thong tin (read-only, all see) vs. thao tac quan tri
+         (chi PDT/TTDTXS/ADMIN see). Tab 2 chi render khi user co quyen. -->
+    <ul class="nav tab-nav-clean" role="tablist">
+        <li role="presentation">
+            <a class="tab-link active" id="tab-overview"
+               data-bs-toggle="tab" href="#pane-overview" role="tab"
+               aria-controls="pane-overview" aria-selected="true">
+                <i class="bi bi-info-circle"></i> Tổng Quan
+            </a>
+        </li>
+        <li role="presentation"
+            sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
+            <a class="tab-link" id="tab-actions"
+               data-bs-toggle="tab" href="#pane-actions" role="tab"
+               aria-controls="pane-actions" aria-selected="false">
+                <i class="bi bi-lightning"></i> Thao Tác Quản Trị
+            </a>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+
+    <!-- ====== TAB 1: TONG QUAN ====== -->
+    <div class="tab-pane fade show active" id="pane-overview"
+         role="tabpanel" aria-labelledby="tab-overview" tabindex="0">
+
+    <!-- Tab pane chiem full width — info card ko can chia col nua. -->
+    <div class="card">
                 <div class="card-header">
                     <i class="bi bi-building me-2"></i>
                     <span class="fw-semibold">Thông Tin Doanh Nghiệp</span>
@@ -120,12 +145,19 @@
                         </tbody>
                     </table>
                 </div>
-            </div>
-        </div>
+            </div><!-- /card info -->
 
-        <!-- Right: Thao tác -->
-        <div class="col-md-5">
-            <div class="card" sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
+    </div><!-- /pane-overview -->
+
+    <!-- ====== TAB 2: THAO TAC QUAN TRI ====== -->
+    <div class="tab-pane fade" id="pane-actions"
+         role="tabpanel" aria-labelledby="tab-actions" tabindex="0"
+         sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
+
+        <!-- Action card — chiem max 6/7 col tren md+ de khong dan trai bttn. -->
+        <div class="row g-4">
+        <div class="col-md-7 col-lg-6">
+            <div class="card">
                 <div class="card-header">
                     <i class="bi bi-lightning me-2"></i>
                     <span class="fw-semibold">Thao Tác</span>
@@ -171,7 +203,10 @@
                 </div>
             </div>
         </div>
-    </div>
+        </div><!-- /row g-4 -->
+    </div><!-- /pane-actions -->
+
+    </div><!-- /tab-content -->
 
 </div>
 </body>
