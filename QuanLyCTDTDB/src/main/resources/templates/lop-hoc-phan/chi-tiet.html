@@ -51,17 +51,45 @@
     <!-- Flash messages da duoc render boi layout/base.html -->
 
 
-    <div class="row g-4">
-        <!-- DS SV TRONG LỚP -->
-        <div class="col-lg-8">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <span class="fw-semibold">
-                        <i class="bi bi-people me-2"></i>Danh Sách Sinh Viên
-                    </span>
-                    <span class="badge bg-light"
-                          th:text="'Tổng: ' + ${#lists.size(danhSachSV)}">0</span>
-                </div>
+    <!-- Phase 4 — TAB NAV
+         2 tab semantic:
+           1. Sinh vien: table SV + modal canh bao (all see).
+           2. Dang ky SV: form dang ky moi (chi PDT/TTDTXS/ADMIN see).
+         Tab 2 chi render khi user co quyen — non-priv user thay 1 tab. -->
+    <ul class="nav tab-nav-clean" role="tablist">
+        <li role="presentation">
+            <a class="tab-link active" id="tab-students"
+               data-bs-toggle="tab" href="#pane-students" role="tab"
+               aria-controls="pane-students" aria-selected="true">
+                <i class="bi bi-people"></i> Danh Sách Sinh Viên
+                <span class="badge bg-light text-dark ms-1"
+                      th:text="${#lists.size(danhSachSV)}">0</span>
+            </a>
+        </li>
+        <li role="presentation"
+            sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
+            <a class="tab-link" id="tab-register"
+               data-bs-toggle="tab" href="#pane-register" role="tab"
+               aria-controls="pane-register" aria-selected="false">
+                <i class="bi bi-person-plus"></i> Đăng Ký SV
+            </a>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+
+    <!-- ====== TAB 1: SINH VIEN ====== -->
+    <div class="tab-pane fade show active" id="pane-students"
+         role="tabpanel" aria-labelledby="tab-students" tabindex="0">
+
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span class="fw-semibold">
+                <i class="bi bi-people me-2"></i>Danh Sách Sinh Viên
+            </span>
+            <span class="badge bg-light"
+                  th:text="'Tổng: ' + ${#lists.size(danhSachSV)}">0</span>
+        </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0">
@@ -173,9 +201,18 @@
             </div>
         </div>
 
-        <!-- ĐĂNG KÝ SV -->
-        <div class="col-lg-4" sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
-            <div class="card sticky-top" style="top: 1rem;">
+    </div><!-- /pane-students -->
+
+    <!-- ====== TAB 2: DANG KY SV ====== -->
+    <div class="tab-pane fade" id="pane-register"
+         role="tabpanel" aria-labelledby="tab-register" tabindex="0"
+         sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
+
+        <!-- Form dang ky — Phase 4: bo wrapper col, do tab da chiem full width.
+             Card khong sticky-top vi pane co the bi switch out anytime. -->
+        <div class="row g-4">
+        <div class="col-lg-6 col-xl-5">
+            <div class="card">
                 <div class="card-header">
                     <i class="bi bi-person-plus"></i>
                     <span class="fw-semibold">Đăng Ký Sinh Viên</span>

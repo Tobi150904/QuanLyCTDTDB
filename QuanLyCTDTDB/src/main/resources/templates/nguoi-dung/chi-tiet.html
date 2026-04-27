@@ -64,6 +64,35 @@
         </div>
     </section>
 
+    <!-- Phase 4 — TAB NAV
+         Hai tab semantic:
+           1. Tong quan: thong tin tai khoan + ho so chuyen mon (SV / GV).
+           2. Vai tro & Quan tri: vai tro nghiep vu + thao tac nhanh.
+         Ly do tach: trang nay phuc vu 2 nhom action — view ho so (read-only)
+         vs. quan tri (toggle khoa, xoa, gan vai tro). Tach giup PDT/Admin
+         tap trung khi can thao tac. -->
+    <ul class="nav tab-nav-clean" role="tablist">
+        <li role="presentation">
+            <a class="tab-link active" id="tab-overview"
+               data-bs-toggle="tab" href="#pane-overview" role="tab"
+               aria-controls="pane-overview" aria-selected="true">
+                <i class="bi bi-info-circle"></i> Tổng Quan
+            </a>
+        </li>
+        <li role="presentation">
+            <a class="tab-link" id="tab-roles"
+               data-bs-toggle="tab" href="#pane-roles" role="tab"
+               aria-controls="pane-roles" aria-selected="false">
+                <i class="bi bi-shield-check"></i> Vai Trò &amp; Quản Trị
+            </a>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+
+    <!-- ====== TAB 1: TONG QUAN ====== -->
+    <div class="tab-pane fade show active" id="pane-overview"
+         role="tabpanel" aria-labelledby="tab-overview" tabindex="0">
     <div class="row g-4">
         <!-- Left: Thong tin nguoi dung -->
         <div class="col-md-6">
@@ -239,6 +268,15 @@
                 </div>
             </div>
 
+        </div>
+    </div>
+    </div><!-- /pane-overview -->
+
+    <!-- ====== TAB 2: VAI TRO & QUAN TRI ====== -->
+    <div class="tab-pane fade" id="pane-roles"
+         role="tabpanel" aria-labelledby="tab-roles" tabindex="0">
+    <div class="row g-4">
+        <div class="col-md-7">
             <div class="card mb-3">
                 <div class="card-header">
                     <i class="bi bi-shield-check me-2"></i>
@@ -264,7 +302,10 @@
                 </div>
             </div>
 
-            <!-- Thao tac nhanh -->
+        </div><!-- /col-md-7 -->
+
+        <!-- Thao tac nhanh — col rieng de Admin focus thao tac -->
+        <div class="col-md-5">
             <div class="card">
                 <div class="card-header">
                     <i class="bi bi-lightning me-2"></i>
@@ -311,8 +352,11 @@
                     </p>
                 </div>
             </div>
-        </div>
-    </div>
+        </div><!-- /col-md-5 -->
+    </div><!-- /row g-4 -->
+    </div><!-- /pane-roles -->
+
+    </div><!-- /tab-content -->
 
 </div>
 </body>

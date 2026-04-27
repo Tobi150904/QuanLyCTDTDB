@@ -60,6 +60,34 @@
         </div>
     </section>
 
+    <!-- Phase 4 — TAB NAV
+         2 tab semantic: thong tin chi tiet (read-mostly) vs. doi ngu GV
+         (action-heavy: them / pause / xoa). -->
+    <ul class="nav tab-nav-clean" role="tablist">
+        <li role="presentation">
+            <a class="tab-link active" id="tab-overview"
+               data-bs-toggle="tab" href="#pane-overview" role="tab"
+               aria-controls="pane-overview" aria-selected="true">
+                <i class="bi bi-info-circle"></i> Tổng Quan
+            </a>
+        </li>
+        <li role="presentation">
+            <a class="tab-link" id="tab-team"
+               data-bs-toggle="tab" href="#pane-team" role="tab"
+               aria-controls="pane-team" aria-selected="false">
+                <i class="bi bi-people"></i> Đội Ngũ Giảng Viên
+                <span class="badge bg-light text-dark ms-1"
+                      th:text="${#lists.size(doiNguList)}">0</span>
+            </a>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+
+    <!-- ====== TAB 1: TONG QUAN ====== -->
+    <div class="tab-pane fade show active" id="pane-overview"
+         role="tabpanel" aria-labelledby="tab-overview" tabindex="0">
+
     <div class="card">
         <div class="card-header">
             <i class="bi bi-info-circle"></i>
@@ -138,13 +166,18 @@
         </div>
     </div>
 
-    <!-- ĐỘI NGŨ GV CỦA HP -->
-    <div class="card mt-4">
+    </div><!-- /pane-overview -->
+
+    <!-- ====== TAB 2: DOI NGU GV ====== -->
+    <div class="tab-pane fade" id="pane-team"
+         role="tabpanel" aria-labelledby="tab-team" tabindex="0">
+
+    <!-- ĐỘI NGŨ GV CỦA HP — Phase 4: bo mt-4 (tab pane da co spacing).
+         Bo badge tren card-header vi da hien thi tren tab nav. -->
+    <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <span class="fw-semibold">
                 <i class="bi bi-people me-2"></i>Đội Ngũ Giảng Viên Đủ Điều Kiện
-                <span class="badge bg-light text-dark ms-1"
-                      th:text="${#lists.size(doiNguList)}">0</span>
             </span>
             <button type="button" class="btn btn-sm btn-primary"
                     data-bs-toggle="modal" data-bs-target="#modalThemDoiNgu"
@@ -220,7 +253,11 @@
         </div>
     </div>
 
-    <!-- MODAL THÊM GV VÀO ĐỘI NGŨ -->
+    </div><!-- /pane-team -->
+    </div><!-- /tab-content -->
+
+    <!-- MODAL THÊM GV VÀO ĐỘI NGŨ — render ngoai tab-content de hop le voi
+         Bootstrap modal accessibility (modal khong should sit inside tab-pane). -->
     <div class="modal fade" id="modalThemDoiNgu" tabindex="-1" aria-hidden="true"
          sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
         <div class="modal-dialog">

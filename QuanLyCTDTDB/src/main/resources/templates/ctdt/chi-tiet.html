@@ -64,13 +64,42 @@
         </div>
     </section>
 
-    <!-- BAN CHỦ NHIỆM -->
-    <div class="card mb-4">
+    <!-- Phase 4 — TAB NAV
+         2 tab semantic: BCN (governance) vs. danh sach HP (curriculum content).
+         Tach giup PDT/CNHP focus rieng theo bo cong viec. -->
+    <ul class="nav tab-nav-clean" role="tablist">
+        <li role="presentation">
+            <a class="tab-link active" id="tab-overview"
+               data-bs-toggle="tab" href="#pane-overview" role="tab"
+               aria-controls="pane-overview" aria-selected="true">
+                <i class="bi bi-people-fill"></i> Ban Chủ Nhiệm
+                <span class="badge bg-light text-dark ms-1"
+                      th:text="${#lists.size(bcnList)}">0</span>
+            </a>
+        </li>
+        <li role="presentation">
+            <a class="tab-link" id="tab-courses"
+               data-bs-toggle="tab" href="#pane-courses" role="tab"
+               aria-controls="pane-courses" aria-selected="false">
+                <i class="bi bi-list-check"></i> Học Phần Trong CTĐT
+                <span class="badge bg-light text-dark ms-1"
+                      th:text="${#lists.size(ctdt.ctdtHocPhans)}">0</span>
+            </a>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+
+    <!-- ====== TAB 1: BAN CHU NHIEM ====== -->
+    <div class="tab-pane fade show active" id="pane-overview"
+         role="tabpanel" aria-labelledby="tab-overview" tabindex="0">
+
+    <!-- BAN CHỦ NHIỆM — Phase 4: bo mb-4 (tab pane co spacing rieng), bo
+         badge tren card-header (da hien thi tren tab nav). -->
+    <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <span class="fw-semibold">
                 <i class="bi bi-people-fill me-2"></i>Ban Chủ Nhiệm CTĐT
-                <span class="badge bg-light"
-                      th:text="${#lists.size(bcnList)}">0</span>
             </span>
             <button type="button" class="btn btn-sm btn-primary"
                     data-bs-toggle="modal" data-bs-target="#modalThemBCN"
@@ -136,7 +165,13 @@
         </div>
     </div>
 
-    <!-- MODAL THÊM BCN -->
+    </div><!-- /pane-overview -->
+
+    <!-- MODAL THÊM BCN — render giua 2 tab pane (van la con cua tab-content
+         div, nhung khong nam trong pane nao). De don gian va dung Bootstrap
+         pattern, ta dong tab-content TRUOC modal va re-open sau. -->
+    </div><!-- /tab-content (pre-modal) -->
+
     <div class="modal fade" id="modalThemBCN" tabindex="-1" aria-hidden="true"
          sec:authorize="hasAnyRole('PDT','ADMIN')">
         <div class="modal-dialog">
@@ -193,15 +228,18 @@
         </div>
     </div>
 
+    <!-- Re-open tab-content cho pane-courses (modal o giua 2 tab pane). -->
+    <div class="tab-content">
+    <div class="tab-pane fade" id="pane-courses"
+         role="tabpanel" aria-labelledby="tab-courses" tabindex="0">
+
     <div class="row g-4">
-        <!-- DS HỌC PHẦN TRONG CTĐT -->
+        <!-- DS HỌC PHẦN TRONG CTĐT — bo badge tren card-header (da co tren tab nav). -->
         <div class="col-lg-8">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <span class="fw-semibold">
                         <i class="bi bi-list-check me-2"></i>Danh Sách Học Phần
-                        <span class="badge bg-light"
-                              th:text="${#lists.size(ctdt.ctdtHocPhans)}">0</span>
                     </span>
                 </div>
                 <div class="table-responsive">
@@ -330,7 +368,9 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div><!-- /row g-4 -->
+    </div><!-- /pane-courses -->
+    </div><!-- /tab-content (post-modal) -->
 
 </div>
 </body>
