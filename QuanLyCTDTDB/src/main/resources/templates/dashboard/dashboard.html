@@ -11,353 +11,871 @@
 <div layout:fragment="content">
 
     <!-- ===================== PAGE HEADER ===================== -->
-    <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
-        <div>
-            <p class="page-subtitle">Tổng Quan</p>
-            <h4 class="page-title">Trang Chủ — Hệ Thống QLĐTXS</h4>
+    <div class="page-header-block mb-4">
+        <div class="page-header-text">
+            <p class="page-eyebrow">Tổng Quan</p>
+            <h1 class="page-title">
+                <i class="bi bi-grid-1x2-fill" aria-hidden="true"></i>
+                <span>Trang Chủ</span>
+            </h1>
+            <p class="page-subtitle"
+               th:if="${currentUser != null}"
+               th:text="'Xin chào, ' + ${currentUser.hoTen != null ? currentUser.hoTen : currentUser.username} + '!'">
+                Xin chào!
+            </p>
         </div>
-        <div th:if="${hocKyHienTai}">
-            <span class="hk-chip" aria-label="Học kỳ hiện tại">
+        <div class="action-slot d-flex flex-column flex-md-row gap-2 align-items-md-center">
+            <span class="status-pill tone-primary"
+                  th:if="${primaryRole != null}">
+                <i class="bi bi-person-badge-fill" aria-hidden="true"></i>
+                <span th:text="${primaryRole}">ROLE</span>
+            </span>
+            <span class="hk-chip" th:if="${hocKyHienTai}" aria-label="Học kỳ hiện tại">
                 <span class="hk-dot" aria-hidden="true"></span>
                 <i class="bi bi-calendar3" aria-hidden="true"></i>
-                <span th:text="${hocKyHienTai.tenHocKy}">Học Kỳ Hiện Tại</span>
+                <span th:text="${hocKyHienTai.tenHocKy}">Học Kỳ</span>
             </span>
         </div>
     </div>
 
-    <!-- ===================== WELCOME CARD ===================== -->
-    <div class="card welcome-card mb-4">
-        <div class="card-body py-4 px-4 position-relative">
-            <div class="d-flex align-items-center gap-3 flex-wrap">
-                <div class="welcome-avatar" aria-hidden="true">
-                    <i class="bi bi-mortarboard-fill"></i>
-                </div>
-                <div class="flex-grow-1" style="min-width:240px;">
-                    <!-- Role chip: hien thi vai tro nghiep vu chinh cua user -->
-                    <span class="welcome-role-chip" sec:authorize="hasRole('ADMIN')">
-                        <i class="bi bi-shield-fill-check" aria-hidden="true"></i>Quản Trị Viên
-                    </span>
-                    <span class="welcome-role-chip"
-                          sec:authorize="hasRole('PDT') and !hasRole('ADMIN')">
-                        <i class="bi bi-buildings" aria-hidden="true"></i>Phòng Đào Tạo
-                    </span>
-                    <span class="welcome-role-chip"
-                          sec:authorize="hasRole('TTDTXS') and !hasAnyRole('ADMIN','PDT')">
-                        <i class="bi bi-stars" aria-hidden="true"></i>TT Đào Tạo Xuất Sắc
-                    </span>
-                    <span class="welcome-role-chip"
-                          sec:authorize="hasRole('CNHP') and !hasAnyRole('ADMIN','PDT','TTDTXS')">
-                        <i class="bi bi-journal-bookmark-fill" aria-hidden="true"></i>Chủ Nhiệm Học Phần
-                    </span>
-                    <span class="welcome-role-chip"
-                          sec:authorize="hasRole('CVHT') and !hasAnyRole('ADMIN','PDT','TTDTXS','CNHP')">
-                        <i class="bi bi-person-hearts" aria-hidden="true"></i>Cố Vấn Học Tập
-                    </span>
-                    <span class="welcome-role-chip"
-                          sec:authorize="hasRole('GIANG_VIEN') and !hasAnyRole('ADMIN','PDT','TTDTXS','CNHP','CVHT')">
-                        <i class="bi bi-person-workspace" aria-hidden="true"></i>Giảng Viên
-                    </span>
-                    <span class="welcome-role-chip"
-                          sec:authorize="hasRole('SINH_VIEN')">
-                        <i class="bi bi-mortarboard" aria-hidden="true"></i>Sinh Viên
-                    </span>
-                    <span class="welcome-role-chip"
-                          sec:authorize="hasRole('DOANH_NGHIEP')">
-                        <i class="bi bi-building" aria-hidden="true"></i>Doanh Nghiệp
-                    </span>
+    <!-- =========================================================================
+         ADMIN / PDT / TTDTXS — Operational dashboard
+         ========================================================================= -->
+    <div th:if="${primaryRole == 'ADMIN' or primaryRole == 'PDT' or primaryRole == 'TTDTXS'}">
 
-                    <h5 class="mb-1 fw-semibold">
-                        <span id="greetingPrefix">Xin chào</span>,
-                        <span sec:authentication="principal.hoTen">Người Dùng</span>
-                    </h5>
-                    <p class="mb-0 small" style="opacity:0.85;">
-                        <i class="bi bi-clock me-1" aria-hidden="true"></i>
-                        <span id="currentDateTime">Đang tải ngày giờ…</span>
-                    </p>
+        <div class="dash-section-title">
+            <h6>Số liệu hệ thống</h6>
+            <small>Tổng hợp toàn bộ học phần, CTĐT, lớp HP và đợt KT/TT</small>
+        </div>
+
+        <!-- KPI cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-4 col-xl-2">
+                <a th:href="@{/nguoi-dung}" class="kpi-card tone-info">
+                    <span class="kpi-card-icon"><i class="bi bi-people-fill"></i></span>
+                    <span class="kpi-card-body">
+                        <span class="kpi-card-value" th:text="${kpi.tongNguoiDung}">0</span>
+                        <span class="kpi-card-label">Người dùng</span>
+                        <span class="kpi-card-hint">
+                            GV: <span th:text="${kpi.giangVien}">0</span> ·
+                            SV: <span th:text="${kpi.sinhVien}">0</span>
+                        </span>
+                    </span>
+                </a>
+            </div>
+            <div class="col-6 col-md-4 col-xl-2">
+                <a th:href="@{/hoc-phan}" class="kpi-card">
+                    <span class="kpi-card-icon"><i class="bi bi-journal-text"></i></span>
+                    <span class="kpi-card-body">
+                        <span class="kpi-card-value" th:text="${kpi.hocPhanDaDuyet}">0</span>
+                        <span class="kpi-card-label">HP đã duyệt</span>
+                        <span class="kpi-card-hint">
+                            Chờ: <span th:text="${kpi.hocPhanChoDuyet}">0</span>
+                        </span>
+                    </span>
+                </a>
+            </div>
+            <div class="col-6 col-md-4 col-xl-2">
+                <a th:href="@{/ctdt}" class="kpi-card">
+                    <span class="kpi-card-icon"><i class="bi bi-mortarboard-fill"></i></span>
+                    <span class="kpi-card-body">
+                        <span class="kpi-card-value" th:text="${kpi.ctdtDaDuyet}">0</span>
+                        <span class="kpi-card-label">CTĐT đã duyệt</span>
+                        <span class="kpi-card-hint">
+                            Chờ: <span th:text="${kpi.ctdtChoDuyet}">0</span>
+                        </span>
+                    </span>
+                </a>
+            </div>
+            <div class="col-6 col-md-4 col-xl-2">
+                <a th:href="@{/lop-hoc-phan}" class="kpi-card tone-success">
+                    <span class="kpi-card-icon"><i class="bi bi-collection-fill"></i></span>
+                    <span class="kpi-card-body">
+                        <span class="kpi-card-value" th:text="${kpi.lopHpDangMo}">0</span>
+                        <span class="kpi-card-label">Lớp HP đang mở</span>
+                    </span>
+                </a>
+            </div>
+            <div class="col-6 col-md-4 col-xl-2">
+                <a th:href="@{/kien-tap}" class="kpi-card tone-warning">
+                    <span class="kpi-card-icon"><i class="bi bi-binoculars-fill"></i></span>
+                    <span class="kpi-card-body">
+                        <span class="kpi-card-value" th:text="${kpi.kienTapDangHD}">0</span>
+                        <span class="kpi-card-label">Kiến tập đang HD</span>
+                    </span>
+                </a>
+            </div>
+            <div class="col-6 col-md-4 col-xl-2">
+                <a th:href="@{/thuc-tap}" class="kpi-card tone-warning">
+                    <span class="kpi-card-icon"><i class="bi bi-briefcase-fill"></i></span>
+                    <span class="kpi-card-body">
+                        <span class="kpi-card-value" th:text="${kpi.thucTapDangHD}">0</span>
+                        <span class="kpi-card-label">Thực tập đang HD</span>
+                    </span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="row g-3 mb-4">
+            <div class="col-lg-6">
+                <div class="chart-card">
+                    <div class="chart-card-head">
+                        <span class="chart-card-title">
+                            <i class="bi bi-pie-chart-fill"></i> SV cảnh báo / SV an toàn
+                        </span>
+                    </div>
+                    <div class="chart-card-canvas-wrap">
+                        <canvas id="chartCanhBao"
+                                th:attr="data-labels=${chartCanhBao != null ? #strings.listJoin(chartCanhBao.labels, '|') : ''},
+                                         data-values=${chartCanhBao != null ? #strings.listJoin(chartCanhBao.data, '|') : ''},
+                                         data-colors=${chartCanhBao != null ? #strings.listJoin(chartCanhBao.colors, '|') : ''}"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="chart-card">
+                    <div class="chart-card-head">
+                        <span class="chart-card-title">
+                            <i class="bi bi-bar-chart-fill"></i> Lớp HP đã có / chưa có giảng viên
+                        </span>
+                    </div>
+                    <div class="chart-card-canvas-wrap">
+                        <canvas id="chartLopHp"
+                                th:attr="data-labels=${chartLopHp != null ? #strings.listJoin(chartLopHp.labels, '|') : ''},
+                                         data-values=${chartLopHp != null ? #strings.listJoin(chartLopHp.data, '|') : ''},
+                                         data-colors=${chartLopHp != null ? #strings.listJoin(chartLopHp.colors, '|') : ''}"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending widgets -->
+        <div class="row g-3 mb-4">
+            <div class="col-lg-6">
+                <div class="dash-panel">
+                    <div class="dash-panel-head">
+                        <span class="dash-panel-title">
+                            <i class="bi bi-journal-check"></i> Học phần chờ duyệt
+                            <span class="badge bg-warning text-dark ms-1"
+                                  th:text="${pendingHocPhanTotal != null ? pendingHocPhanTotal : 0}">0</span>
+                        </span>
+                        <a th:href="@{/hoc-phan(trangThai='ChoDuyet')}" class="dash-panel-action">
+                            Xem tất cả <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </div>
+                    <div class="dash-panel-body p-0">
+                        <div th:if="${#lists.isEmpty(pendingHocPhan)}" class="mini-list-empty">
+                            <i class="bi bi-check2-circle"></i>
+                            Không có học phần nào chờ duyệt.
+                        </div>
+                        <div class="mini-list" th:unless="${#lists.isEmpty(pendingHocPhan)}">
+                            <a th:each="hp : ${pendingHocPhan}"
+                               th:href="@{${hp.href}}"
+                               class="mini-list-item">
+                                <span class="mini-list-item-icon"><i class="bi bi-journal-text"></i></span>
+                                <span class="mini-list-item-body">
+                                    <span class="mini-list-item-title" th:text="${hp.title}">Tên</span>
+                                    <span class="mini-list-item-meta" th:text="${hp.meta}">Mô tả</span>
+                                </span>
+                                <span class="status-pill tone-warning">Chờ</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="dash-panel">
+                    <div class="dash-panel-head">
+                        <span class="dash-panel-title">
+                            <i class="bi bi-mortarboard"></i> CTĐT chờ duyệt
+                            <span class="badge bg-warning text-dark ms-1"
+                                  th:text="${pendingCtdtTotal != null ? pendingCtdtTotal : 0}">0</span>
+                        </span>
+                        <a th:href="@{/ctdt(trangThai='ChoDuyet')}" class="dash-panel-action">
+                            Xem tất cả <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </div>
+                    <div class="dash-panel-body p-0">
+                        <div th:if="${#lists.isEmpty(pendingCtdt)}" class="mini-list-empty">
+                            <i class="bi bi-check2-circle"></i>
+                            Không có CTĐT nào chờ duyệt.
+                        </div>
+                        <div class="mini-list" th:unless="${#lists.isEmpty(pendingCtdt)}">
+                            <a th:each="c : ${pendingCtdt}"
+                               th:href="@{${c.href}}"
+                               class="mini-list-item">
+                                <span class="mini-list-item-icon"><i class="bi bi-mortarboard"></i></span>
+                                <span class="mini-list-item-body">
+                                    <span class="mini-list-item-title" th:text="${c.title}">Tên</span>
+                                    <span class="mini-list-item-meta" th:text="${c.meta}">Mô tả</span>
+                                </span>
+                                <span class="status-pill tone-warning">Chờ</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-lg-6">
+                <div class="dash-panel">
+                    <div class="dash-panel-head">
+                        <span class="dash-panel-title">
+                            <i class="bi bi-person-x-fill"></i> Lớp HP chưa có GV
+                            <span class="badge bg-danger-subtle text-danger ms-1"
+                                  th:text="${chuaCoGvCount != null ? chuaCoGvCount : 0}">0</span>
+                        </span>
+                        <a th:href="@{/lop-hoc-phan}" class="dash-panel-action">
+                            Xem tất cả <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </div>
+                    <div class="dash-panel-body p-0">
+                        <div th:if="${#lists.isEmpty(chuaCoGvList)}" class="mini-list-empty">
+                            <i class="bi bi-check2-circle"></i>
+                            Tất cả lớp HP đã được phân công.
+                        </div>
+                        <div class="mini-list" th:unless="${#lists.isEmpty(chuaCoGvList)}">
+                            <a th:each="l : ${chuaCoGvList}"
+                               th:href="@{${l.href}}"
+                               class="mini-list-item">
+                                <span class="mini-list-item-icon"><i class="bi bi-collection"></i></span>
+                                <span class="mini-list-item-body">
+                                    <span class="mini-list-item-title" th:text="${l.title}">Tên</span>
+                                    <span class="mini-list-item-meta" th:text="${l.meta}">Mô tả</span>
+                                </span>
+                                <span class="status-pill tone-danger">Chưa PC</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="dash-panel">
+                    <div class="dash-panel-head">
+                        <span class="dash-panel-title">
+                            <i class="bi bi-exclamation-triangle-fill"></i> SV cảnh báo chưa xử lý
+                            <span class="badge bg-danger-subtle text-danger ms-1"
+                                  th:text="${canhBaoChuaXuLyCount != null ? canhBaoChuaXuLyCount : 0}">0</span>
+                        </span>
+                        <a th:href="@{/danh-gia/canh-bao}" class="dash-panel-action">
+                            Xem tất cả <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </div>
+                    <div class="dash-panel-body p-0">
+                        <div th:if="${#lists.isEmpty(canhBaoList)}" class="mini-list-empty">
+                            <i class="bi bi-shield-check"></i>
+                            Không có cảnh báo nào.
+                        </div>
+                        <div class="mini-list" th:unless="${#lists.isEmpty(canhBaoList)}">
+                            <a th:each="cb : ${canhBaoList}"
+                               th:href="@{${cb.href}}"
+                               class="mini-list-item">
+                                <span class="mini-list-item-icon"><i class="bi bi-person-exclamation"></i></span>
+                                <span class="mini-list-item-body">
+                                    <span class="mini-list-item-title" th:text="${cb.title}">Tên SV</span>
+                                    <span class="mini-list-item-meta" th:text="${cb.meta}">Mô tả</span>
+                                </span>
+                                <span class="status-pill tone-danger">Cảnh báo</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4" th:if="${pendingKienTap != null and !#lists.isEmpty(pendingKienTap)}">
+            <div class="col-12">
+                <div class="dash-panel">
+                    <div class="dash-panel-head">
+                        <span class="dash-panel-title">
+                            <i class="bi bi-binoculars"></i> Đợt kiến tập chờ duyệt
+                        </span>
+                        <a th:href="@{/kien-tap}" class="dash-panel-action">
+                            Xem tất cả <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </div>
+                    <div class="dash-panel-body p-0">
+                        <div class="mini-list">
+                            <a th:each="kt : ${pendingKienTap}"
+                               th:href="@{${kt.href}}"
+                               class="mini-list-item">
+                                <span class="mini-list-item-icon"><i class="bi bi-calendar-event"></i></span>
+                                <span class="mini-list-item-body">
+                                    <span class="mini-list-item-title" th:text="${kt.title}">Tên</span>
+                                    <span class="mini-list-item-meta" th:text="${kt.meta}">Mô tả</span>
+                                </span>
+                                <span class="status-pill tone-warning">Chờ</span>
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ===================== STAT CARDS — ADMIN / PDT / TTDTXS ===================== -->
-    <section sec:authorize="hasAnyRole('ADMIN','PDT','TTDTXS')"
-             aria-labelledby="sec-thongke-nd">
+    <!-- =========================================================================
+         CNHP — Chu nhiem hoc phan
+         ========================================================================= -->
+    <div th:if="${primaryRole == 'CNHP'}">
+        <div class="dash-section-title">
+            <h6>Chủ nhiệm Học phần</h6>
+            <small>Học phần bạn phụ trách và trạng thái duyệt</small>
+        </div>
 
-        <p class="page-subtitle mb-3" id="sec-thongke-nd">Thống Kê Người Dùng</p>
         <div class="row g-3 mb-4">
             <div class="col-6 col-md-3">
-                <div class="stat-card">
-                    <div class="stat-card-icon"><i class="bi bi-people" aria-hidden="true"></i></div>
-                    <div>
-                        <div class="stat-card-value" th:text="${thongKe['tongNguoiDung'] ?: 0}">0</div>
-                        <div class="stat-card-label">Tổng Người Dùng</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="stat-card variant-info">
-                    <div class="stat-card-icon"><i class="bi bi-person-workspace" aria-hidden="true"></i></div>
-                    <div>
-                        <div class="stat-card-value" th:text="${thongKe['giangVien'] ?: 0}">0</div>
-                        <div class="stat-card-label">Giảng Viên</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="stat-card variant-teal">
-                    <div class="stat-card-icon"><i class="bi bi-person-badge" aria-hidden="true"></i></div>
-                    <div>
-                        <div class="stat-card-value" th:text="${thongKe['sinhVien'] ?: 0}">0</div>
-                        <div class="stat-card-label">Sinh Viên</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="stat-card variant-success">
-                    <div class="stat-card-icon"><i class="bi bi-building" aria-hidden="true"></i></div>
-                    <div>
-                        <div class="stat-card-value" th:text="${thongKe['doanhNghiep'] ?: 0}">0</div>
-                        <div class="stat-card-label">Doanh Nghiệp</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <p class="page-subtitle mb-3">Chương Trình Đào Tạo &amp; Học Phần</p>
-        <div class="row g-3 mb-4">
-            <div class="col-6 col-md-3">
-                <div class="stat-card variant-success">
-                    <div class="stat-card-icon"><i class="bi bi-book-half" aria-hidden="true"></i></div>
-                    <div>
-                        <div class="stat-card-value" th:text="${thongKe['hocPhanDaDuyet'] ?: 0}">0</div>
-                        <div class="stat-card-label">HP Đã Duyệt</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="stat-card variant-warning">
-                    <div class="stat-card-icon"><i class="bi bi-hourglass-split" aria-hidden="true"></i></div>
-                    <div>
-                        <div class="stat-card-value" th:text="${thongKe['hocPhanChoDuyet'] ?: 0}">0</div>
-                        <div class="stat-card-label">HP Chờ Duyệt</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="stat-card variant-info">
-                    <div class="stat-card-icon"><i class="bi bi-journal-bookmark" aria-hidden="true"></i></div>
-                    <div>
-                        <div class="stat-card-value" th:text="${thongKe['ctdtDaDuyet'] ?: 0}">0</div>
-                        <div class="stat-card-label">CTĐT Đã Duyệt</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="stat-card variant-teal">
-                    <div class="stat-card-icon"><i class="bi bi-collection" aria-hidden="true"></i></div>
-                    <div>
-                        <div class="stat-card-value" th:text="${thongKe['lopHocPhanDangMo'] ?: 0}">0</div>
-                        <div class="stat-card-label">Lớp HP Đang Mở</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <p class="page-subtitle mb-3">Kiến Tập &amp; Thực Tập</p>
-        <div class="row g-3 mb-4">
-            <div class="col-6 col-md-3">
-                <div class="stat-card variant-purple">
-                    <div class="stat-card-icon"><i class="bi bi-briefcase" aria-hidden="true"></i></div>
-                    <div>
-                        <div class="stat-card-value"
-                             th:text="${thongKe['dotKienTapDangHoatDong'] ?: 0}">0</div>
-                        <div class="stat-card-label">Đợt Kiến Tập</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="stat-card variant-orange">
-                    <div class="stat-card-icon"><i class="bi bi-building-check" aria-hidden="true"></i></div>
-                    <div>
-                        <div class="stat-card-value"
-                             th:text="${thongKe['dotThucTapDangDienRa'] ?: 0}">0</div>
-                        <div class="stat-card-label">Đợt Thực Tập</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ===================== GIẢNG VIÊN dashboard ===================== -->
-    <section sec:authorize="hasRole('GIANG_VIEN') and !hasAnyRole('PDT','TTDTXS','ADMIN')"
-             aria-labelledby="sec-gv">
-        <p class="page-subtitle mb-3" id="sec-gv">Chuyển Trang Nhanh</p>
-        <div class="row g-3">
-            <div class="col-sm-6 col-md-4">
-                <a th:href="@{/lop-hoc-phan}" class="text-decoration-none">
-                    <div class="stat-card h-100">
-                        <div class="stat-card-icon"><i class="bi bi-collection" aria-hidden="true"></i></div>
-                        <div>
-                            <div class="fw-semibold text-primary">Lớp Học Phần Của Tôi</div>
-                            <div class="stat-card-label">Xem và quản lý lớp HP</div>
-                        </div>
-                    </div>
+                <a th:href="@{/hoc-phan}" class="kpi-card">
+                    <span class="kpi-card-icon"><i class="bi bi-journal-text"></i></span>
+                    <span class="kpi-card-body">
+                        <span class="kpi-card-value" th:text="${kpi.hpPhuTrach}">0</span>
+                        <span class="kpi-card-label">HP phụ trách</span>
+                    </span>
                 </a>
             </div>
-            <div class="col-sm-6 col-md-4">
-                <a th:href="@{/danh-gia}" class="text-decoration-none">
-                    <div class="stat-card h-100">
-                        <div class="stat-card-icon"><i class="bi bi-clipboard-check" aria-hidden="true"></i></div>
-                        <div>
-                            <div class="fw-semibold text-primary">Đánh Giá Sinh Viên</div>
-                            <div class="stat-card-label">Nhận xét và cảnh báo</div>
-                        </div>
-                    </div>
+            <div class="col-6 col-md-3">
+                <div class="kpi-card tone-success">
+                    <span class="kpi-card-icon"><i class="bi bi-check-circle-fill"></i></span>
+                    <span class="kpi-card-body">
+                        <span class="kpi-card-value" th:text="${kpi.hpDaDuyet}">0</span>
+                        <span class="kpi-card-label">Đã duyệt</span>
+                    </span>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <a th:href="@{/hoc-phan(trangThai='ChoDuyet')}" class="kpi-card tone-warning">
+                    <span class="kpi-card-icon"><i class="bi bi-hourglass-split"></i></span>
+                    <span class="kpi-card-body">
+                        <span class="kpi-card-value" th:text="${kpi.hpChoDuyet}">0</span>
+                        <span class="kpi-card-label">Chờ duyệt</span>
+                    </span>
                 </a>
             </div>
-            <div class="col-sm-6 col-md-4">
-                <a th:href="@{/kien-tap}" class="text-decoration-none">
-                    <div class="stat-card h-100">
-                        <div class="stat-card-icon"><i class="bi bi-briefcase" aria-hidden="true"></i></div>
-                        <div>
-                            <div class="fw-semibold text-primary">Kiến Tập</div>
-                            <div class="stat-card-label">Quản lý đợt kiến tập</div>
-                        </div>
-                    </div>
+            <div class="col-6 col-md-3">
+                <a th:href="@{/hoc-phan(trangThai='BanNhap')}" class="kpi-card">
+                    <span class="kpi-card-icon"><i class="bi bi-file-earmark"></i></span>
+                    <span class="kpi-card-body">
+                        <span class="kpi-card-value" th:text="${kpi.hpBanNhap}">0</span>
+                        <span class="kpi-card-label">Bản nháp</span>
+                    </span>
                 </a>
             </div>
         </div>
-    </section>
 
-    <!-- ===================== SINH VIÊN dashboard ===================== -->
-    <section sec:authorize="hasRole('SINH_VIEN') and !hasAnyRole('PDT','TTDTXS','ADMIN','GIANG_VIEN')"
-             aria-labelledby="sec-sv">
-        <p class="page-subtitle mb-3" id="sec-sv">Chuyển Trang Nhanh</p>
-        <div class="row g-3">
-            <div class="col-sm-6 col-md-4">
-                <a th:href="@{/thuc-tap}" class="text-decoration-none">
-                    <div class="stat-card h-100">
-                        <div class="stat-card-icon"><i class="bi bi-building-check" aria-hidden="true"></i></div>
-                        <div>
-                            <div class="fw-semibold text-primary">Thực Tập Của Tôi</div>
-                            <div class="stat-card-label">Xem kết quả thực tập</div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-        </div>
-    </section>
-
-    <!-- ===================== DOANH NGHIỆP dashboard ===================== -->
-    <section sec:authorize="hasRole('DOANH_NGHIEP') and !hasAnyRole('PDT','TTDTXS','ADMIN')"
-             aria-labelledby="sec-dn">
-        <p class="page-subtitle mb-3" id="sec-dn">Chuyển Trang Nhanh</p>
-        <div class="row g-3">
-            <div class="col-sm-6 col-md-4">
-                <a th:href="@{/kien-tap}" class="text-decoration-none">
-                    <div class="stat-card h-100">
-                        <div class="stat-card-icon"><i class="bi bi-briefcase" aria-hidden="true"></i></div>
-                        <div>
-                            <div class="fw-semibold text-primary">Kiến Tập</div>
-                            <div class="stat-card-label">Quản lý sinh viên kiến tập</div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-            <div class="col-sm-6 col-md-4">
-                <a th:href="@{/thuc-tap}" class="text-decoration-none">
-                    <div class="stat-card h-100">
-                        <div class="stat-card-icon"><i class="bi bi-building-check" aria-hidden="true"></i></div>
-                        <div>
-                            <div class="fw-semibold text-primary">Thực Tập</div>
-                            <div class="stat-card-label">Đánh giá sinh viên thực tập</div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-        </div>
-    </section>
-
-    <!-- ===================== QUICK ACTIONS ===================== -->
-    <section class="mt-4" sec:authorize="hasAnyRole('ADMIN','PDT','TTDTXS','CNHP')"
-             aria-labelledby="sec-quick">
-        <p class="page-subtitle mb-3" id="sec-quick">Thao Tác Nhanh</p>
-        <div class="card">
-            <div class="card-header">
-                <i class="bi bi-lightning-charge-fill" aria-hidden="true"></i>
-                <span class="fw-semibold">Tác Vụ Phổ Biến</span>
-                <span class="text-muted small ms-auto d-none d-sm-inline">
-                    Chọn hành động để bắt đầu
+        <div class="dash-panel mb-4">
+            <div class="dash-panel-head">
+                <span class="dash-panel-title">
+                    <i class="bi bi-journal-text"></i> Học phần của tôi
                 </span>
+                <a th:href="@{/hoc-phan}" class="dash-panel-action">
+                    Xem tất cả <i class="bi bi-chevron-right"></i>
+                </a>
             </div>
-            <div class="card-body">
-                <div class="d-flex flex-wrap gap-2">
-                    <a sec:authorize="hasAnyRole('PDT','ADMIN')"
-                       th:href="@{/nguoi-dung/them}"
-                       class="btn btn-sm btn-outline-primary">
-                        <i class="bi bi-person-plus me-1" aria-hidden="true"></i>Thêm Người Dùng
-                    </a>
-                    <a sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')"
-                       th:href="@{/doanh-nghiep/them}"
-                       class="btn btn-sm btn-outline-primary">
-                        <i class="bi bi-building-add me-1" aria-hidden="true"></i>Thêm Doanh Nghiệp
-                    </a>
-                    <a sec:authorize="hasAnyRole('CNHP','TTDTXS','ADMIN')"
-                       th:href="@{/hoc-phan/them}"
-                       class="btn btn-sm btn-outline-primary">
-                        <i class="bi bi-plus-circle me-1" aria-hidden="true"></i>Thêm Học Phần
-                    </a>
-                    <a sec:authorize="hasAnyRole('PDT','TTDTXS','CNHP','ADMIN')"
-                       th:href="@{/ctdt/them}"
-                       class="btn btn-sm btn-outline-primary">
-                        <i class="bi bi-journal-plus me-1" aria-hidden="true"></i>Tạo CTĐT
-                    </a>
-                    <a sec:authorize="hasAnyRole('TTDTXS','CNHP','ADMIN')"
-                       th:href="@{/kien-tap/them}"
-                       class="btn btn-sm btn-outline-primary">
-                        <i class="bi bi-briefcase me-1" aria-hidden="true"></i>Tạo Đợt Kiến Tập
-                    </a>
-                    <a sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')"
-                       th:href="@{/hoc-ky}"
-                       class="btn btn-sm btn-outline-primary">
-                        <i class="bi bi-calendar-plus me-1" aria-hidden="true"></i>Quản Lý Học Kỳ
+            <div class="dash-panel-body p-0">
+                <div th:if="${#lists.isEmpty(myHocPhanList)}" class="mini-list-empty">
+                    <i class="bi bi-inbox"></i>
+                    Bạn chưa phụ trách học phần nào.
+                </div>
+                <div class="mini-list" th:unless="${#lists.isEmpty(myHocPhanList)}">
+                    <a th:each="hp : ${myHocPhanList}"
+                       th:href="@{${hp.href}}"
+                       class="mini-list-item">
+                        <span class="mini-list-item-icon"><i class="bi bi-journal-text"></i></span>
+                        <span class="mini-list-item-body">
+                            <span class="mini-list-item-title" th:text="${hp.title}">Tên</span>
+                            <span class="mini-list-item-meta" th:text="${hp.meta}">Mô tả</span>
+                        </span>
+                        <span th:switch="${hp.trangThai}">
+                            <span th:case="'DaDuyet'"  class="status-pill tone-success">Đã duyệt</span>
+                            <span th:case="'ChoDuyet'" class="status-pill tone-warning">Chờ duyệt</span>
+                            <span th:case="'BanNhap'"  class="status-pill tone-info">Bản nháp</span>
+                            <span th:case="*"          class="status-pill tone-neutral" th:text="${hp.trangThai}">--</span>
+                        </span>
                     </a>
                 </div>
             </div>
         </div>
-    </section>
+    </div>
+
+    <!-- =========================================================================
+         CVHT — Co van hoc tap
+         ========================================================================= -->
+    <div th:if="${primaryRole == 'CVHT'}">
+        <div class="dash-section-title">
+            <h6>Cố vấn Học tập</h6>
+            <small>Lớp hành chính bạn phụ trách và sinh viên cảnh báo</small>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <a th:href="@{/lop-hanh-chinh}" class="kpi-card tone-info">
+                    <span class="kpi-card-icon"><i class="bi bi-buildings"></i></span>
+                    <span class="kpi-card-body">
+                        <span class="kpi-card-value" th:text="${kpi.soLop}">0</span>
+                        <span class="kpi-card-label">Lớp HC phụ trách</span>
+                    </span>
+                </a>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="kpi-card">
+                    <span class="kpi-card-icon"><i class="bi bi-people-fill"></i></span>
+                    <span class="kpi-card-body">
+                        <span class="kpi-card-value" th:text="${kpi.tongSV}">0</span>
+                        <span class="kpi-card-label">Sinh viên</span>
+                    </span>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <a th:href="@{/danh-gia/canh-bao}" class="kpi-card tone-warning">
+                    <span class="kpi-card-icon"><i class="bi bi-exclamation-triangle"></i></span>
+                    <span class="kpi-card-body">
+                        <span class="kpi-card-value" th:text="${kpi.canhBaoTong}">0</span>
+                        <span class="kpi-card-label">Tổng cảnh báo</span>
+                    </span>
+                </a>
+            </div>
+            <div class="col-6 col-md-3">
+                <a th:href="@{/danh-gia/canh-bao}" class="kpi-card tone-danger">
+                    <span class="kpi-card-icon"><i class="bi bi-exclamation-triangle-fill"></i></span>
+                    <span class="kpi-card-body">
+                        <span class="kpi-card-value" th:text="${kpi.canhBaoChuaXL}">0</span>
+                        <span class="kpi-card-label">Chưa xử lý</span>
+                    </span>
+                </a>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-lg-6">
+                <div class="dash-panel">
+                    <div class="dash-panel-head">
+                        <span class="dash-panel-title">
+                            <i class="bi bi-buildings"></i> Lớp hành chính của tôi
+                        </span>
+                    </div>
+                    <div class="dash-panel-body p-0">
+                        <div th:if="${#lists.isEmpty(myLopList)}" class="mini-list-empty">
+                            <i class="bi bi-inbox"></i>
+                            Bạn chưa phụ trách lớp hành chính nào.
+                        </div>
+                        <div class="mini-list" th:unless="${#lists.isEmpty(myLopList)}">
+                            <a th:each="l : ${myLopList}"
+                               th:href="@{${l.href}}"
+                               class="mini-list-item">
+                                <span class="mini-list-item-icon"><i class="bi bi-buildings"></i></span>
+                                <span class="mini-list-item-body">
+                                    <span class="mini-list-item-title" th:text="${l.title}">Tên lớp</span>
+                                    <span class="mini-list-item-meta" th:text="${l.meta}">Mô tả</span>
+                                </span>
+                                <span class="mini-list-item-aside"><i class="bi bi-chevron-right"></i></span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="dash-panel">
+                    <div class="dash-panel-head">
+                        <span class="dash-panel-title">
+                            <i class="bi bi-exclamation-triangle"></i> SV cần theo dõi
+                        </span>
+                        <a th:href="@{/danh-gia/canh-bao}" class="dash-panel-action">
+                            Xem tất cả <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </div>
+                    <div class="dash-panel-body p-0">
+                        <div th:if="${#lists.isEmpty(canhBaoList)}" class="mini-list-empty">
+                            <i class="bi bi-shield-check"></i>
+                            Không có cảnh báo nào.
+                        </div>
+                        <div class="mini-list" th:unless="${#lists.isEmpty(canhBaoList)}">
+                            <a th:each="cb : ${canhBaoList}"
+                               th:href="@{${cb.href}}"
+                               class="mini-list-item">
+                                <span class="mini-list-item-icon"><i class="bi bi-person-exclamation"></i></span>
+                                <span class="mini-list-item-body">
+                                    <span class="mini-list-item-title" th:text="${cb.title}">Tên SV</span>
+                                    <span class="mini-list-item-meta" th:text="${cb.meta}">Mô tả</span>
+                                </span>
+                                <span th:if="${cb.trangThai == 'Đã xử lý'}" class="status-pill tone-success">Đã XL</span>
+                                <span th:if="${cb.trangThai != 'Đã xử lý'}" class="status-pill tone-danger">Chưa XL</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================================
+         GIANG_VIEN
+         ========================================================================= -->
+    <div th:if="${primaryRole == 'GIANG_VIEN'}">
+        <div class="dash-section-title">
+            <h6>Giảng viên</h6>
+            <small th:text="${hocKyHienTai != null} ? 'Học kỳ ' + ${hocKyHienTai.tenHocKy} : 'Chưa có học kỳ hiện tại'">
+                Học kỳ
+            </small>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <a th:href="@{/lop-hoc-phan}" class="kpi-card tone-info">
+                    <span class="kpi-card-icon"><i class="bi bi-collection-fill"></i></span>
+                    <span class="kpi-card-body">
+                        <span class="kpi-card-value" th:text="${kpi.lopHocKyNay}">0</span>
+                        <span class="kpi-card-label">Lớp kỳ này</span>
+                    </span>
+                </a>
+            </div>
+            <div class="col-6 col-md-3">
+                <a th:href="@{/lop-hoc-phan}" class="kpi-card">
+                    <span class="kpi-card-icon"><i class="bi bi-collection"></i></span>
+                    <span class="kpi-card-body">
+                        <span class="kpi-card-value" th:text="${kpi.tongLop}">0</span>
+                        <span class="kpi-card-label">Tổng số lớp</span>
+                    </span>
+                </a>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="kpi-card tone-success">
+                    <span class="kpi-card-icon"><i class="bi bi-check-circle-fill"></i></span>
+                    <span class="kpi-card-body">
+                        <span class="kpi-card-value" th:text="${kpi.dangMo}">0</span>
+                        <span class="kpi-card-label">Lớp đang mở</span>
+                    </span>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <a th:href="@{/kien-tap}" class="kpi-card tone-warning">
+                    <span class="kpi-card-icon"><i class="bi bi-binoculars-fill"></i></span>
+                    <span class="kpi-card-body">
+                        <span class="kpi-card-value" th:text="${kpi.ktPhuTrach != null ? kpi.ktPhuTrach : 0}">0</span>
+                        <span class="kpi-card-label">Đợt KT phụ trách</span>
+                    </span>
+                </a>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-lg-7">
+                <div class="dash-panel">
+                    <div class="dash-panel-head">
+                        <span class="dash-panel-title">
+                            <i class="bi bi-collection"></i> Lớp HP của tôi
+                        </span>
+                        <a th:href="@{/lop-hoc-phan}" class="dash-panel-action">
+                            Xem tất cả <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </div>
+                    <div class="dash-panel-body p-0">
+                        <div th:if="${#lists.isEmpty(myLopList)}" class="mini-list-empty">
+                            <i class="bi bi-inbox"></i>
+                            Bạn chưa được phân công lớp nào.
+                        </div>
+                        <div class="mini-list" th:unless="${#lists.isEmpty(myLopList)}">
+                            <a th:each="l : ${myLopList}"
+                               th:href="@{${l.href}}"
+                               class="mini-list-item">
+                                <span class="mini-list-item-icon"><i class="bi bi-journal-text"></i></span>
+                                <span class="mini-list-item-body">
+                                    <span class="mini-list-item-title" th:text="${l.title}">Tên</span>
+                                    <span class="mini-list-item-meta" th:text="${l.meta}">Mô tả</span>
+                                </span>
+                                <span class="mini-list-item-aside"><i class="bi bi-chevron-right"></i></span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="dash-panel">
+                    <div class="dash-panel-head">
+                        <span class="dash-panel-title">
+                            <i class="bi bi-binoculars"></i> Đợt kiến tập tôi phụ trách
+                        </span>
+                    </div>
+                    <div class="dash-panel-body p-0">
+                        <div th:if="${#lists.isEmpty(myKtList)}" class="mini-list-empty">
+                            <i class="bi bi-calendar-x"></i>
+                            Bạn chưa phụ trách đợt nào.
+                        </div>
+                        <div class="mini-list" th:unless="${#lists.isEmpty(myKtList)}">
+                            <a th:each="kt : ${myKtList}"
+                               th:href="@{${kt.href}}"
+                               class="mini-list-item">
+                                <span class="mini-list-item-icon"><i class="bi bi-calendar-event"></i></span>
+                                <span class="mini-list-item-body">
+                                    <span class="mini-list-item-title" th:text="${kt.title}">Tên</span>
+                                    <span class="mini-list-item-meta" th:text="${kt.meta}">Mô tả</span>
+                                </span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================================
+         SINH_VIEN
+         ========================================================================= -->
+    <div th:if="${primaryRole == 'SINH_VIEN'}">
+        <div class="dash-section-title">
+            <h6>Sinh viên</h6>
+            <small th:if="${profile != null}"
+                   th:text="${profile.maSV} + ' · Lớp ' + ${profile.lop}">Mã SV</small>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="kpi-card tone-info">
+                    <span class="kpi-card-icon"><i class="bi bi-journal-bookmark-fill"></i></span>
+                    <span class="kpi-card-body">
+                        <span class="kpi-card-value" th:text="${kpi.hpKyNay}">0</span>
+                        <span class="kpi-card-label">HP kỳ này</span>
+                    </span>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="kpi-card">
+                    <span class="kpi-card-icon"><i class="bi bi-collection-fill"></i></span>
+                    <span class="kpi-card-body">
+                        <span class="kpi-card-value" th:text="${kpi.tongHpDaHoc}">0</span>
+                        <span class="kpi-card-label">Tổng HP đã học</span>
+                    </span>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div th:class="'kpi-card ' + (${kpi.soCanhBao > 0} ? 'tone-danger' : 'tone-success')">
+                    <span class="kpi-card-icon">
+                        <i th:class="${kpi.soCanhBao > 0} ? 'bi bi-exclamation-triangle-fill' : 'bi bi-shield-check'"></i>
+                    </span>
+                    <span class="kpi-card-body">
+                        <span class="kpi-card-value" th:text="${kpi.soCanhBao}">0</span>
+                        <span class="kpi-card-label">Cảnh báo</span>
+                    </span>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <a th:href="@{/kien-tap}" class="kpi-card tone-warning">
+                    <span class="kpi-card-icon"><i class="bi bi-binoculars-fill"></i></span>
+                    <span class="kpi-card-body">
+                        <span class="kpi-card-value" th:text="${kpi.kienTap}">0</span>
+                        <span class="kpi-card-label">Đợt kiến tập</span>
+                        <span class="kpi-card-hint">
+                            Thực tập: <span th:text="${kpi.thucTap}">0</span>
+                        </span>
+                    </span>
+                </a>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-lg-8">
+                <div class="dash-panel">
+                    <div class="dash-panel-head">
+                        <span class="dash-panel-title">
+                            <i class="bi bi-journal-bookmark"></i> Học phần của tôi
+                        </span>
+                        <a th:href="@{/profile}" class="dash-panel-action">
+                            Hồ sơ <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </div>
+                    <div class="dash-panel-body p-0">
+                        <div th:if="${#lists.isEmpty(myLhpList)}" class="mini-list-empty">
+                            <i class="bi bi-inbox"></i>
+                            Bạn chưa đăng ký lớp HP nào.
+                        </div>
+                        <div class="mini-list" th:unless="${#lists.isEmpty(myLhpList)}">
+                            <a th:each="hp : ${myLhpList}"
+                               th:href="@{${hp.href}}"
+                               class="mini-list-item">
+                                <span class="mini-list-item-icon"><i class="bi bi-journal-text"></i></span>
+                                <span class="mini-list-item-body">
+                                    <span class="mini-list-item-title" th:text="${hp.title}">Tên</span>
+                                    <span class="mini-list-item-meta" th:text="${hp.meta}">Mô tả</span>
+                                </span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="dash-panel" th:if="${profile != null}">
+                    <div class="dash-panel-head">
+                        <span class="dash-panel-title">
+                            <i class="bi bi-person-badge"></i> Hồ sơ
+                        </span>
+                        <a th:href="@{/profile}" class="dash-panel-action">
+                            Chi tiết <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </div>
+                    <div class="dash-panel-body">
+                        <dl class="row mb-0 small g-2">
+                            <dt class="col-5 text-muted">Họ tên</dt>
+                            <dd class="col-7 mb-0 fw-medium" th:text="${profile.hoTen}">--</dd>
+                            <dt class="col-5 text-muted">Mã SV</dt>
+                            <dd class="col-7 mb-0" th:text="${profile.maSV}">--</dd>
+                            <dt class="col-5 text-muted">Lớp</dt>
+                            <dd class="col-7 mb-0" th:text="${profile.lop}">--</dd>
+                            <dt class="col-5 text-muted">Trạng thái</dt>
+                            <dd class="col-7 mb-0">
+                                <span class="status-pill tone-info" th:text="${profile.trangThai}">--</span>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================================
+         DOANH_NGHIEP
+         ========================================================================= -->
+    <div th:if="${primaryRole == 'DOANH_NGHIEP'}">
+        <div class="dash-section-title">
+            <h6>Doanh nghiệp</h6>
+            <small>Tổng quan kiến tập / thực tập đối tác</small>
+        </div>
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <a th:href="@{/kien-tap}" class="kpi-card tone-info">
+                    <span class="kpi-card-icon"><i class="bi bi-binoculars-fill"></i></span>
+                    <span class="kpi-card-body">
+                        <span class="kpi-card-value" th:text="${kpi.tongKienTap}">0</span>
+                        <span class="kpi-card-label">Đợt kiến tập</span>
+                    </span>
+                </a>
+            </div>
+            <div class="col-md-6">
+                <a th:href="@{/thuc-tap}" class="kpi-card tone-success">
+                    <span class="kpi-card-icon"><i class="bi bi-briefcase-fill"></i></span>
+                    <span class="kpi-card-body">
+                        <span class="kpi-card-value" th:text="${kpi.tongThucTap}">0</span>
+                        <span class="kpi-card-label">Đợt thực tập</span>
+                    </span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================================
+         FALLBACK (GUEST or unknown role)
+         ========================================================================= -->
+    <div th:if="${primaryRole == 'GUEST' or primaryRole == null}">
+        <div class="dash-panel">
+            <div class="dash-panel-body text-center py-5">
+                <i class="bi bi-grid-1x2 fs-1 text-muted mb-3 d-block"></i>
+                <h5 class="mb-2">Chào mừng đến với Hệ Thống QLĐTXS</h5>
+                <p class="text-muted mb-0">Sử dụng menu bên trái để bắt đầu.</p>
+            </div>
+        </div>
+    </div>
 
 </div>
 
 <th:block layout:fragment="scripts">
-<script>
-    (function () {
-        'use strict';
+    <!--
+        Chart.js — load tu CDN. Cac canvas data attributes (data-labels,
+        data-values, data-colors) duoc encode bang ky tu '|' de tranh phai
+        escape JSON trong Thymeleaf (#strings.listJoin).
+    -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script>
+        (function () {
+            document.addEventListener('DOMContentLoaded', function () {
+                if (typeof Chart === 'undefined') return;
 
-        // Cap nhat dong ho realtime
-        function updateDateTime() {
-            var now = new Date();
-            var opts = {
-                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
-                hour: '2-digit', minute: '2-digit'
-            };
-            var el = document.getElementById('currentDateTime');
-            if (el) el.textContent = now.toLocaleDateString('vi-VN', opts);
-        }
-        updateDateTime();
-        setInterval(updateDateTime, 60000);
+                var rootStyle = getComputedStyle(document.documentElement);
+                var palette = {
+                    primary: rootStyle.getPropertyValue('--primary').trim() || '#0f2d52',
+                    success: rootStyle.getPropertyValue('--success').trim() || '#16a34a',
+                    warning: rootStyle.getPropertyValue('--warning').trim() || '#d97706',
+                    danger:  rootStyle.getPropertyValue('--danger').trim()  || '#dc2626',
+                    info:    rootStyle.getPropertyValue('--info').trim()    || '#1d4ed8',
+                    muted:   rootStyle.getPropertyValue('--text-muted').trim() || '#6b7280'
+                };
 
-        // Loi chao theo gio: sang/trua/chieu/toi
-        var prefix = document.getElementById('greetingPrefix');
-        if (prefix) {
-            var h = new Date().getHours();
-            if (h >= 5 && h < 11)       prefix.textContent = 'Chào buổi sáng';
-            else if (h >= 11 && h < 13) prefix.textContent = 'Chào buổi trưa';
-            else if (h >= 13 && h < 18) prefix.textContent = 'Chào buổi chiều';
-            else                        prefix.textContent = 'Chào buổi tối';
-        }
-    })();
-</script>
+                Chart.defaults.font.family = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+                Chart.defaults.font.size = 11;
+                Chart.defaults.color = palette.muted;
+                Chart.defaults.borderColor = 'rgba(15,45,82,0.08)';
+
+                function parseList(attr) {
+                    if (!attr) return [];
+                    return attr.split('|').map(function (s) { return s.trim(); }).filter(Boolean);
+                }
+                function parseNumberList(attr) {
+                    return parseList(attr).map(function (s) {
+                        var n = parseFloat(s);
+                        return isNaN(n) ? 0 : n;
+                    });
+                }
+
+                // ---------- chartCanhBao (donut: SV canh bao vs an toan) ----------
+                var elCanhBao = document.getElementById('chartCanhBao');
+                if (elCanhBao) {
+                    var labels = parseList(elCanhBao.getAttribute('data-labels'));
+                    var values = parseNumberList(elCanhBao.getAttribute('data-values'));
+                    var colors = parseList(elCanhBao.getAttribute('data-colors'));
+                    if (colors.length === 0) colors = [palette.danger, palette.success];
+                    new Chart(elCanhBao, {
+                        type: 'doughnut',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                data: values,
+                                backgroundColor: colors,
+                                borderWidth: 2,
+                                borderColor: '#fff'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { position: 'bottom', labels: { boxWidth: 10, padding: 12 } }
+                            },
+                            cutout: '60%'
+                        }
+                    });
+                }
+
+                // ---------- chartLopHp (bar: Co GV / Chua co GV) ----------
+                var elLopHp = document.getElementById('chartLopHp');
+                if (elLopHp) {
+                    var labels2 = parseList(elLopHp.getAttribute('data-labels'));
+                    var values2 = parseNumberList(elLopHp.getAttribute('data-values'));
+                    var colors2 = parseList(elLopHp.getAttribute('data-colors'));
+                    if (colors2.length === 0) colors2 = [palette.success, palette.warning];
+                    new Chart(elLopHp, {
+                        type: 'bar',
+                        data: {
+                            labels: labels2,
+                            datasets: [{
+                                label: 'Số lớp',
+                                data: values2,
+                                backgroundColor: colors2,
+                                borderRadius: 4,
+                                maxBarThickness: 60
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                y: { beginAtZero: true, ticks: { precision: 0 } }
+                            }
+                        }
+                    });
+                }
+            });
+        })();
+    </script>
 </th:block>
 </body>
 </html>
