@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<!--/*
+ * fragments/_info-grid.html
+ *
+ * Helper de render mot info-item don le trong info-grid. Thay vi viet
+ * markup lap di lap lai 6-12 lan o moi trang chi tiet.
+ *
+ * Goi:
+ *   <div class="info-grid">
+ *     <div th:replace="~{fragments/_info-grid :: item(
+ *         label='Mã CTĐT', value=${ctdt.maCTDT}, isCode=true)}"></div>
+ *     <div th:replace="~{fragments/_info-grid :: item(
+ *         label='Tên CTĐT', value=${ctdt.tenCTDT})}"></div>
+ *   </div>
+ *
+ * isCode (boolean): wrap value trong <code> (ma so, ma SV, ...).
+ */-->
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="item(label, value, isCode)" class="info-item">
+    <span class="info-item-label" th:text="${label}">Nhãn</span>
+    <span class="info-item-value">
+        <code th:if="${isCode == true}" th:text="${value}">--</code>
+        <span th:unless="${isCode == true}"
+              th:text="${value != null and value != '' ? value : '—'}"
+              th:classappend="${value == null or value == ''} ? ' text-muted' : ''">Giá trị</span>
+    </span>
+</div>
+
+</body>
+</html>

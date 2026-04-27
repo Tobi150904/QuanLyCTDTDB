@@ -1,4 +1,14 @@
 <!DOCTYPE html>
+<!--/*
+ * templates/layout/base.html
+ *
+ * Layout chinh cho toan he thong (Thymeleaf Layout Dialect).
+ * Phase 1 - Foundation refactor: tach sidebar / flash / confirm-modal /
+ * toast-container ra cac fragment trong templates/fragments/_*.html.
+ *
+ * Khong dung dark-mode, khong command-palette, khong gradient flashy —
+ * chinh thong theo phong cach University Admin.
+ */-->
 <html lang="vi"
       xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
@@ -12,7 +22,7 @@
     <meta name="theme-color" content="#0f2d52">
     <meta name="color-scheme" content="light">
 
-    <!-- Google Fonts: Inter (body) + Plus Jakarta Sans (display) — dong bo trang dang nhap -->
+    <!-- Google Fonts: Inter (body) + Plus Jakarta Sans (display) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap"
@@ -60,8 +70,48 @@
             <i class="bi bi-list"></i>
         </button>
 
-        <!-- Right: User + Logout -->
+        <!-- Right: Search (admin) + Quick action + User -->
         <div class="ms-auto d-flex align-items-center gap-2">
+
+            <!-- Phase 7: Global search admin (placeholder route /tim-kiem).
+                 Chi hien voi PDT/ADMIN. Dropdown form GET de search nhanh.
+                 Trang /tim-kiem se duoc xay o Phase 7 — khi do form nay
+                 da co san frontend. -->
+            <div class="dropdown d-none d-md-block"
+                 sec:authorize="hasAnyRole('PDT','ADMIN')">
+                <button class="btn btn-sm btn-outline-light"
+                        type="button"
+                        data-bs-toggle="dropdown"
+                        data-bs-auto-close="outside"
+                        aria-expanded="false"
+                        aria-label="Tìm kiếm toàn hệ thống">
+                    <i class="bi bi-search"></i>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end shadow p-2"
+                     style="min-width: 320px;">
+                    <form th:action="@{/tim-kiem}" method="get" role="search">
+                        <label for="globalSearchInput" class="form-label small text-muted mb-1">
+                            Tìm trong toàn hệ thống
+                        </label>
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text"><i class="bi bi-search"></i></span>
+                            <input type="search" id="globalSearchInput"
+                                   name="q"
+                                   class="form-control"
+                                   placeholder="Người dùng, mã HP, mã CTĐT..."
+                                   autocomplete="off">
+                            <button class="btn btn-primary" type="submit">
+                                <i class="bi bi-arrow-right"></i>
+                            </button>
+                        </div>
+                        <small class="text-muted d-block mt-2">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Tìm theo họ tên, email, mã sinh viên, mã học phần...
+                        </small>
+                    </form>
+                </div>
+            </div>
+
             <!-- Phase 4: Quick access cho CVHT toi danh sach canh bao chua xu ly. -->
             <div sec:authorize="hasRole('CVHT')" class="d-none d-sm-block">
                 <a th:href="@{/danh-gia/canh-bao}"
@@ -113,242 +163,14 @@
 </nav>
 
 <!-- ===================== SIDEBAR ===================== -->
-<!-- Desktop sidebar overlay on mobile -->
-<div class="sidebar-overlay d-lg-none" id="sidebarOverlay"></div>
-
-<nav id="sidebar" class="sidebar" aria-label="Điều hướng chính">
-    <div class="sidebar-body">
-        <ul class="nav flex-column">
-
-            <!-- Dashboard -->
-            <li class="nav-item">
-                <a class="nav-link"
-                   th:href="@{/dashboard}"
-                   th:classappend="${activeMenu == 'dashboard'} ? ' active' : ''">
-                    <i class="bi bi-speedometer2 me-2"></i>
-                    <span>Trang Chủ</span>
-                </a>
-            </li>
-
-            <!-- ---- QUẢN TRỊ ----
-                 sec:authorize phai dat o <li> (khong phai <span>), neu khong
-                 browser van render <li class="sidebar-section-header"> rong
-                 voi padding → sidebar cua SV/GV/DN/CVHT bi lo gap xau. -->
-            <li class="sidebar-section-header"
-                sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
-                <span>Quản Trị</span>
-            </li>
-
-            <!-- Người Dùng -->
-            <li class="nav-item" sec:authorize="hasAnyRole('PDT','ADMIN')">
-                <a class="nav-link"
-                   th:href="@{/nguoi-dung}"
-                   th:classappend="${activeMenu == 'nguoi-dung'} ? ' active' : ''">
-                    <i class="bi bi-people me-2"></i>
-                    <span>Người Dùng</span>
-                </a>
-            </li>
-
-            <!-- Doanh Nghiệp -->
-            <li class="nav-item" sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
-                <a class="nav-link"
-                   th:href="@{/doanh-nghiep}"
-                   th:classappend="${activeMenu == 'doanh-nghiep'} ? ' active' : ''">
-                    <i class="bi bi-building me-2"></i>
-                    <span>Doanh Nghiệp</span>
-                </a>
-            </li>
-
-            <!-- Học Kỳ -->
-            <li class="nav-item" sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
-                <a class="nav-link"
-                   th:href="@{/hoc-ky}"
-                   th:classappend="${activeMenu == 'hoc-ky'} ? ' active' : ''">
-                    <i class="bi bi-calendar3 me-2"></i>
-                    <span>Học Kỳ - Năm Học</span>
-                </a>
-            </li>
-
-            <!-- Lớp Hành Chính -->
-            <li class="nav-item" sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
-                <a class="nav-link"
-                   th:href="@{/lop-hanh-chinh}"
-                   th:classappend="${activeMenu == 'lop-hanh-chinh'} ? ' active' : ''">
-                    <i class="bi bi-diagram-3 me-2"></i>
-                    <span>Lớp Hành Chính</span>
-                </a>
-            </li>
-
-            <!-- ---- ĐÀO TẠO ----
-                 Mo rong cho GIANG_VIEN + SINH_VIEN (read-only):
-                 - GV can tra cuu khung CTDT, HP minh day, LHP minh duoc phan cong.
-                 - SV can xem CTDT minh theo hoc, danh sach HP, LHP (thoi khoa bieu).
-                 Quyen GHI (tao/sua/xoa/duyet) van bi chan qua @PreAuthorize
-                 method-level trong cac Controller tuong ung - an toan.
-            -->
-            <li class="sidebar-section-header"
-                sec:authorize="hasAnyRole('PDT','TTDTXS','CNHP','ADMIN','GIANG_VIEN','SINH_VIEN')">
-                <span>Đào Tạo</span>
-            </li>
-
-            <!-- Học Phần - R: PDT/CNHP/TTDTXS/ADMIN/GV/SV. Writes chan o Controller. -->
-            <li class="nav-item"
-                sec:authorize="hasAnyRole('PDT','CNHP','TTDTXS','ADMIN','GIANG_VIEN','SINH_VIEN')">
-                <a class="nav-link"
-                   th:href="@{/hoc-phan}"
-                   th:classappend="${activeMenu == 'hoc-phan'} ? ' active' : ''">
-                    <i class="bi bi-book me-2"></i>
-                    <span>Học Phần</span>
-                </a>
-            </li>
-
-            <!-- CTĐT - R: PDT/TTDTXS/CNHP/ADMIN/GV/SV. Writes chan o Controller. -->
-            <li class="nav-item"
-                sec:authorize="hasAnyRole('PDT','TTDTXS','CNHP','ADMIN','GIANG_VIEN','SINH_VIEN')">
-                <a class="nav-link"
-                   th:href="@{/ctdt}"
-                   th:classappend="${activeMenu == 'ctdt'} ? ' active' : ''">
-                    <i class="bi bi-journal-bookmark me-2"></i>
-                    <span>Chương Trình Đào Tạo</span>
-                </a>
-            </li>
-
-            <!-- Lớp Học Phần - R: moi role trong he. -->
-            <li class="nav-item"
-                sec:authorize="hasAnyRole('PDT','TTDTXS','CNHP','ADMIN','GIANG_VIEN','SINH_VIEN')">
-                <a class="nav-link"
-                   th:href="@{/lop-hoc-phan}"
-                   th:classappend="${activeMenu == 'lop-hoc-phan'} ? ' active' : ''">
-                    <i class="bi bi-collection me-2"></i>
-                    <span>Lớp Học Phần</span>
-                </a>
-            </li>
-
-            <!-- ---- ĐÁNH GIÁ ----
-                 Phase 4: templates da san sang (danh-gia/{index,nhan-xet,canh-bao}.html).
-                 Backend service DanhGia + repo JOIN FETCH cho OSIV=false.
-                 - GV/SV thay menu "Đánh Giá Sinh Viên" -> /danh-gia (router theo role).
-                 - CVHT/PDT/ADMIN thay them "Cảnh Báo Sinh Viên" -> /danh-gia/canh-bao. -->
-            <li class="sidebar-section-header"
-                sec:authorize="hasAnyRole('GIANG_VIEN','CVHT','SINH_VIEN','PDT','ADMIN')">
-                <span>Đánh Giá</span>
-            </li>
-
-            <li class="nav-item"
-                sec:authorize="hasAnyRole('GIANG_VIEN','SINH_VIEN','ADMIN')">
-                <a class="nav-link"
-                   th:href="@{/danh-gia}"
-                   th:classappend="${activeMenu == 'danh-gia'} ? ' active' : ''">
-                    <i class="bi bi-clipboard-check me-2"></i>
-                    <span sec:authorize="hasRole('SINH_VIEN')">Nhận Xét Của Tôi</span>
-                    <span sec:authorize="!hasRole('SINH_VIEN')">Đánh Giá Sinh Viên</span>
-                </a>
-            </li>
-
-            <li class="nav-item" sec:authorize="hasAnyRole('CVHT','PDT','ADMIN')">
-                <a class="nav-link"
-                   th:href="@{/danh-gia/canh-bao}"
-                   th:classappend="${activeMenu == 'danh-gia-canh-bao'} ? ' active' : ''">
-                    <i class="bi bi-exclamation-triangle me-2"></i>
-                    <span>Cảnh Báo Sinh Viên</span>
-                </a>
-            </li>
-
-            <!-- ---- KIẾN TẬP / THỰC TẬP ----
-                 Phase 5: templates da san sang (kien-tap/{danh-sach,form,chi-tiet}.html
-                 + thuc-tap/{danh-sach,form,chi-tiet}.html). Backend repo da co
-                 JOIN FETCH cho OSIV=false. -->
-            <li class="sidebar-section-header"
-                sec:authorize="hasAnyRole('PDT','TTDTXS','CNHP','ADMIN','GIANG_VIEN','DOANH_NGHIEP')">
-                <span>Kiến Tập &amp; Thực Tập</span>
-            </li>
-
-            <li class="nav-item"
-                sec:authorize="hasAnyRole('TTDTXS','CNHP','ADMIN','GIANG_VIEN','DOANH_NGHIEP')">
-                <a class="nav-link"
-                   th:href="@{/kien-tap}"
-                   th:classappend="${activeMenu == 'kien-tap'} ? ' active' : ''">
-                    <i class="bi bi-briefcase me-2"></i>
-                    <span>Kiến Tập</span>
-                </a>
-            </li>
-
-            <li class="nav-item"
-                sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN','GIANG_VIEN','CVHT','DOANH_NGHIEP','SINH_VIEN')">
-                <a class="nav-link"
-                   th:href="@{/thuc-tap}"
-                   th:classappend="${activeMenu == 'thuc-tap'} ? ' active' : ''">
-                    <i class="bi bi-building-check me-2"></i>
-                    <span>Thực Tập</span>
-                </a>
-            </li>
-
-            <!--/* ========================================================
-                 [PHASE 6 — BaoCao]
-                 Module BaoCao chua co controller/template. Bat lai sau
-                 khi build BaoCaoController.
-            =========================================================
-
-            <!- ---- BÁO CÁO ---- ->
-            <li class="sidebar-section-header"
-                sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
-                <span>Báo Cáo</span>
-            </li>
-
-            <li class="nav-item" sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
-                <a class="nav-link"
-                   th:href="@{/bao-cao}"
-                   th:classappend="${activeMenu == 'bao-cao'} ? ' active' : ''">
-                    <i class="bi bi-bar-chart-line me-2"></i>
-                    <span>Báo Cáo &amp; Thống Kê</span>
-                </a>
-            </li>
-            */-->
-
-        </ul>
-    </div>
-</nav>
+<th:block th:replace="~{fragments/_sidebar :: sidebar}"></th:block>
 
 <!-- ===================== MAIN CONTENT ===================== -->
 <main class="main-content" id="mainContent" tabindex="-1">
     <div class="container-fluid py-4 px-4">
 
-        <!-- Flash Messages (live region: screen readers thong bao tu dong) -->
-        <div aria-live="polite" aria-atomic="true">
-        <div th:if="${successMsg}"
-             class="alert alert-success alert-dismissible fade show auto-dismiss"
-             role="alert">
-            <i class="bi bi-check-circle-fill me-2"></i>
-            <span th:text="${successMsg}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"
-                    aria-label="Đóng"></button>
-        </div>
-        <div th:if="${errorMsg}"
-             class="alert alert-danger alert-dismissible fade show auto-dismiss"
-             role="alert">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i>
-            <span th:text="${errorMsg}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"
-                    aria-label="Đóng"></button>
-        </div>
-        <div th:if="${warningMsg}"
-             class="alert alert-warning alert-dismissible fade show auto-dismiss"
-             role="alert">
-            <i class="bi bi-exclamation-circle-fill me-2"></i>
-            <span th:text="${warningMsg}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"
-                    aria-label="Đóng"></button>
-        </div>
-        <div th:if="${infoMsg}"
-             class="alert alert-info alert-dismissible fade show auto-dismiss"
-             role="alert">
-            <i class="bi bi-info-circle-fill me-2"></i>
-            <span th:text="${infoMsg}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"
-                    aria-label="Đóng"></button>
-        </div>
-        </div>
-        <!-- /aria-live region -->
+        <!-- Flash Messages (banner) — fragment _flash voi auto-dismiss + toast bridge -->
+        <th:block th:replace="~{fragments/_flash :: flash}"></th:block>
 
         <!-- Page Content -->
         <div layout:fragment="content">
@@ -377,27 +199,10 @@
 </main>
 
 <!-- Global Confirm Delete Modal -->
-<div class="modal fade" id="confirmDeleteModal" tabindex="-1"
-     aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-sm modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h6 class="modal-title" id="confirmDeleteModalLabel">Xác Nhận Xoá</h6>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"
-                        aria-label="Đóng"></button>
-            </div>
-            <div class="modal-body" id="confirmDeleteModalBody">
-                Bạn có chắc muốn xoá mục này?
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-sm btn-outline-secondary"
-                        data-bs-dismiss="modal">Huỷ</button>
-                <button type="button" class="btn btn-sm btn-danger"
-                        id="confirmDeleteBtn">Xoá</button>
-            </div>
-        </div>
-    </div>
-</div>
+<th:block th:replace="~{fragments/_confirm-modal :: modal}"></th:block>
+
+<!-- Toast container (Phase 1 — Toast.success/error/info) -->
+<th:block th:replace="~{fragments/_toast-container :: container}"></th:block>
 
 <!-- Bootstrap 5 JS Bundle -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>

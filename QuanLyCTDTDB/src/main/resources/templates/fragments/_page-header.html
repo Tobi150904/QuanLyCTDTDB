@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<!--/*
+ * fragments/_page-header.html
+ *
+ * Header chuan cho moi trang noi dung:
+ *   - eyebrow text (subtitle nho phia tren)
+ *   - title (h1) co accent border-left
+ *   - icon optional
+ *   - meta line (cac chip nho ben duoi title)
+ *   - primary action slot (top-right)
+ *   - breadcrumb optional (phia tren cung)
+ *
+ * 2 cach dung:
+ *
+ * (A) Goi don gian voi parameters (khong co slot):
+ *   <div th:replace="~{fragments/_page-header :: simple(
+ *          eyebrow='QUẢN LÝ', title='Học Phần', icon='bi-book',
+ *          desc='Tra cứu khung học phần đào tạo')}"></div>
+ *
+ * (B) Goi voi action slot va breadcrumb slot (linh hoat):
+ *   <div th:replace="~{fragments/_page-header :: full(
+ *          eyebrow='QUẢN LÝ', title='Học Phần', icon='bi-book',
+ *          desc='Tra cứu khung học phần đào tạo')}">
+ *       <th:block th:fragment="breadcrumbSlot">
+ *           <ol class="breadcrumb">
+ *             <li class="breadcrumb-item"><a th:href="@{/dashboard}">Trang Chủ</a></li>
+ *             <li class="breadcrumb-item active">Học Phần</li>
+ *           </ol>
+ *       </th:block>
+ *       <th:block th:fragment="actionSlot">
+ *           <a th:href="@{/hoc-phan/them}" class="btn btn-primary">
+ *               <i class="bi bi-plus-lg"></i> Thêm
+ *           </a>
+ *       </th:block>
+ *   </div>
+ *
+ * Note: Thymeleaf 3 khong ho tro slot kieu Vue. Cach (B) thuc te dung
+ * ${actionHtml}/${breadcrumbHtml} la chuoi HTML thuan, hoac dung approach
+ * "th:insert + th:replace inner" — voi project nay don gian la viet INLINE
+ * cho moi trang khi can tu do (xem mau o cac trang Phase 2+).
+ */-->
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--/* ============================================================
+       Variant A — simple (no action, no breadcrumb)
+   ============================================================ */-->
+<div th:fragment="simple(eyebrow, title, icon, desc)"
+     class="page-header-block mb-4">
+    <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+        <div class="flex-grow-1 min-w-0">
+            <div th:if="${eyebrow}" class="page-subtitle"
+                 th:text="${eyebrow}">EYEBROW</div>
+            <h1 class="page-title h4 mb-0 d-flex align-items-center gap-2">
+                <i th:if="${icon}" th:class="${'bi ' + icon}" aria-hidden="true"></i>
+                <span th:text="${title}">Tiêu đề</span>
+            </h1>
+            <p th:if="${desc}" class="text-muted small mb-0 mt-1"
+               th:text="${desc}">Mô tả</p>
+        </div>
+    </div>
+</div>
+
+<!--/* ============================================================
+       Variant B — with action + breadcrumb
+       Use kieu inline: render desc va breadcrumb tu trang.
+       Trang truyen "actionContent" la HTML string qua model — KHONG khuyen.
+       Thay vao do ho dung:
+         <div class="page-header-block mb-4">
+            <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+              <div>...title...</div>
+              <div class="action-slot">...buttons...</div>
+            </div>
+         </div>
+       hoac dung markup mau ben duoi.
+   ============================================================ */-->
+<div th:fragment="withAction(eyebrow, title, icon, desc, actionLabel, actionHref, actionIcon)"
+     class="page-header-block mb-4">
+    <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+        <div class="flex-grow-1 min-w-0">
+            <div th:if="${eyebrow}" class="page-subtitle"
+                 th:text="${eyebrow}">EYEBROW</div>
+            <h1 class="page-title h4 mb-0 d-flex align-items-center gap-2">
+                <i th:if="${icon}" th:class="${'bi ' + icon}" aria-hidden="true"></i>
+                <span th:text="${title}">Tiêu đề</span>
+            </h1>
+            <p th:if="${desc}" class="text-muted small mb-0 mt-1"
+               th:text="${desc}">Mô tả</p>
+        </div>
+        <div th:if="${actionLabel != null and actionHref != null}"
+             class="action-slot d-flex align-items-center gap-2 flex-wrap">
+            <a th:href="@{${actionHref}}" class="btn btn-primary btn-sm">
+                <i th:if="${actionIcon}" th:class="${'bi ' + actionIcon + ' me-1'}"
+                   aria-hidden="true"></i>
+                <span th:text="${actionLabel}">Hành động</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

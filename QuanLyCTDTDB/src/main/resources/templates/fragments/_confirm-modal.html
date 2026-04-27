@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<!--/*
+ * fragments/_confirm-modal.html
+ *
+ * Modal xac nhan xoa toan cuc — id="confirmDeleteModal" duoc main.js
+ * (confirmDelete / confirmDeleteFromForm) refer toi.
+ *
+ * Su dung:
+ *   <th:block th:replace="~{fragments/_confirm-modal :: modal}"></th:block>
+ *
+ * Cach goi tu trang:
+ *   <form ... data-item-name="ten muc"
+ *         onsubmit="return confirmDeleteFromForm(this, event)">
+ */-->
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<th:block th:fragment="modal">
+    <div class="modal fade" id="confirmDeleteModal" tabindex="-1"
+         aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="modal-title" id="confirmDeleteModalLabel">Xác Nhận Xoá</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                            aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body" id="confirmDeleteModalBody">
+                    Bạn có chắc muốn xoá mục này?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-outline-secondary"
+                            data-bs-dismiss="modal">Huỷ</button>
+                    <button type="button" class="btn btn-sm btn-danger"
+                            id="confirmDeleteBtn">
+                        <i class="bi bi-trash me-1" aria-hidden="true"></i>Xoá
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+</body>
+</html>

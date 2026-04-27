@@ -1843,3 +1843,624 @@ a.card-link:hover .card,
         transition-duration: 0.01ms !important;
     }
 }
+
+/* ============================================================================
+   PHASE 1 — FOUNDATION EXTENSIONS (production-grade)
+   Cac component moi them vao khong pha vo bat ky thanh phan cu nao.
+   ============================================================================ */
+
+/* ---- Sticky table header --------------------------------------------------
+   .data-table-sticky lam thead "dinh" o dau khi scroll trong .table-responsive
+   co max-height. Dung trong list page co ban dai (>20 row) de header luon
+   trong thay khi scroll trong card. */
+.data-table-sticky .table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background-color: var(--surface-alt); /* loi neu nen trong suot */
+    box-shadow: inset 0 -1px 0 var(--border-strong);
+}
+
+/* ---- Sortable column header ----------------------------------------------- */
+.sortable-th {
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    padding-right: 26px !important;
+    transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+.sortable-th:hover {
+    background-color: var(--surface-hover) !important;
+    color: var(--primary) !important;
+}
+.sortable-th::after {
+    content: '\F128'; /* bi-arrow-down-up */
+    font-family: 'bootstrap-icons';
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0.35;
+    font-size: 0.85em;
+    transition: opacity var(--transition-fast), color var(--transition-fast);
+}
+.sortable-th:hover::after { opacity: 0.7; }
+.sortable-th.sort-asc::after {
+    content: '\F148'; /* bi-arrow-up */
+    color: var(--primary);
+    opacity: 1;
+}
+.sortable-th.sort-desc::after {
+    content: '\F128'; /* bi-arrow-down */
+    content: '\F127';
+    color: var(--primary);
+    opacity: 1;
+}
+.sortable-th.sort-asc,
+.sortable-th.sort-desc {
+    color: var(--primary) !important;
+    background-color: var(--surface-hover) !important;
+}
+
+/* ---- Bulk select bar ------------------------------------------------------
+   Hien o duoi man hinh khi co >=1 row checkbox selected. Dat trong DOM o
+   muc cao (sau toast container) — main.js BulkSelect xu ly show/hide. */
+.bulk-bar {
+    position: fixed;
+    left: 50%;
+    bottom: 28px;
+    transform: translateX(-50%) translateY(20px);
+    z-index: 1055;
+    background: var(--text-strong);
+    color: #fff;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+    padding: 8px 8px 8px 18px;
+    min-width: 320px;
+    max-width: calc(100vw - 32px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--transition), transform var(--transition);
+}
+.bulk-bar[data-state="visible"],
+.bulk-bar.show {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(-50%) translateY(0);
+}
+.bulk-bar[hidden] { display: none; }
+.bulk-bar-inner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.bulk-bar-count {
+    font-size: 0.86rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.92);
+    margin-right: auto;
+}
+.bulk-bar-count strong {
+    color: var(--accent-lt);
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0 2px;
+}
+.bulk-bar .btn {
+    border-radius: var(--radius-sm);
+    font-weight: 500;
+}
+.bulk-bar .btn-outline-secondary {
+    color: rgba(255, 255, 255, 0.85);
+    border-color: rgba(255, 255, 255, 0.22);
+    background: transparent;
+}
+.bulk-bar .btn-outline-secondary:hover {
+    background: rgba(255, 255, 255, 0.10);
+    border-color: rgba(255, 255, 255, 0.40);
+    color: #fff;
+}
+@media (max-width: 575.98px) {
+    .bulk-bar { left: 12px; right: 12px; transform: translateY(20px); min-width: 0; }
+    .bulk-bar[data-state="visible"],
+    .bulk-bar.show { transform: translateY(0); }
+}
+
+/* ---- Toast stack (Bootstrap 5 toast container variant) -------------------
+   Goc duoi-phai man hinh; mobile thi top-center. Toast moi prepend vao stack. */
+.toast-stack {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    z-index: 1080;
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 10px;
+    pointer-events: none;
+    max-width: min(420px, calc(100vw - 32px));
+}
+.toast-stack > .toast {
+    pointer-events: auto;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--surface-card);
+    overflow: hidden;
+    border-left-width: 4px;
+}
+.toast-stack > .toast.toast-success { border-left-color: var(--success); }
+.toast-stack > .toast.toast-error,
+.toast-stack > .toast.toast-danger  { border-left-color: var(--danger); }
+.toast-stack > .toast.toast-info    { border-left-color: var(--primary-lt); }
+.toast-stack > .toast.toast-warning { border-left-color: var(--accent); }
+.toast-stack .toast-body {
+    padding: 12px 14px;
+    color: var(--text-strong);
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+.toast-stack .toast-body .bi {
+    margin-right: 8px;
+    font-size: 1.05rem;
+    vertical-align: -1px;
+}
+.toast-stack .toast.toast-success .toast-body .bi { color: var(--success); }
+.toast-stack .toast.toast-error   .toast-body .bi,
+.toast-stack .toast.toast-danger  .toast-body .bi { color: var(--danger); }
+.toast-stack .toast.toast-info    .toast-body .bi { color: var(--primary-lt); }
+.toast-stack .toast.toast-warning .toast-body .bi { color: var(--accent-dk); }
+.toast-stack .btn-close {
+    --bs-btn-close-color: var(--text-muted);
+    margin-right: 8px;
+    margin-top: 4px;
+}
+@media (max-width: 575.98px) {
+    .toast-stack {
+        bottom: auto;
+        top: calc(var(--navbar-height) + 12px);
+        right: 12px;
+        left: 12px;
+        max-width: none;
+    }
+}
+
+/* ---- Tabs modern (Bootstrap nav-tabs polished) ---------------------------
+   Variant nay flat, sat man hinh — dung trong cac trang chi tiet co nhieu
+   nhom thong tin. */
+.tabs-modern {
+    border-bottom: 1px solid var(--border-color);
+    gap: 2px;
+    margin-bottom: 18px;
+    --bs-nav-tabs-link-active-bg: transparent;
+    --bs-nav-tabs-link-active-border-color: transparent;
+    --bs-nav-tabs-border-color: transparent;
+}
+.tabs-modern .nav-link {
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 10px 18px;
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: color var(--transition), background-color var(--transition),
+                border-color var(--transition);
+    background: transparent;
+}
+.tabs-modern .nav-link:hover {
+    color: var(--primary);
+    background-color: var(--surface-soft);
+    border-bottom-color: var(--border-strong);
+}
+.tabs-modern .nav-link.active {
+    color: var(--primary);
+    background-color: var(--surface-card);
+    border-bottom-color: var(--accent);
+    font-weight: 600;
+}
+.tabs-modern .nav-link .badge {
+    margin-left: 6px;
+    font-size: 0.68rem;
+    padding: 3px 7px;
+    vertical-align: 1px;
+}
+.tabs-modern .nav-link[disabled],
+.tabs-modern .nav-link.disabled {
+    color: var(--text-subtle);
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* ---- Skeleton loading row ------------------------------------------------- */
+@keyframes skeletonShimmer {
+    0%   { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+.skeleton {
+    display: inline-block;
+    background: linear-gradient(90deg,
+        var(--surface-alt) 0%,
+        var(--surface-hover) 40%,
+        var(--surface-alt) 80%);
+    background-size: 200% 100%;
+    animation: skeletonShimmer 1.4s ease-in-out infinite;
+    border-radius: var(--radius-xs);
+    color: transparent !important;
+    user-select: none;
+    height: 1em;
+    width: 100%;
+    min-height: 16px;
+}
+.skeleton-line { height: 12px; margin: 4px 0; border-radius: 4px; }
+.skeleton-line.w-25 { width: 25%; }
+.skeleton-line.w-50 { width: 50%; }
+.skeleton-line.w-75 { width: 75%; }
+
+/* ---- KPI card (compact dashboard variant of stat-card) -------------------
+   Khi can hien 4-6 KPI ngang, .kpi-card gon hon, font display nhe hon. */
+.kpi-card {
+    background: var(--surface-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    box-shadow: var(--shadow-xs);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    transition: box-shadow var(--transition), border-color var(--transition);
+    position: relative;
+}
+.kpi-card:hover {
+    box-shadow: var(--shadow-sm);
+    border-color: var(--border-strong);
+}
+.kpi-card-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-muted);
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.kpi-card-label .bi {
+    color: var(--primary-lt);
+    font-size: 0.92rem;
+}
+.kpi-card-value {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--text-strong);
+    line-height: 1.15;
+    letter-spacing: -0.018em;
+}
+.kpi-card-delta {
+    font-size: 0.74rem;
+    color: var(--text-muted);
+}
+.kpi-card-delta.positive { color: var(--success); }
+.kpi-card-delta.negative { color: var(--danger); }
+
+/* ---- Timeline (for "Hoat dong gan day" trong dashboard) ------------------ */
+.timeline {
+    position: relative;
+    padding-left: 28px;
+    margin: 0;
+    list-style: none;
+}
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 9px;
+    top: 6px;
+    bottom: 6px;
+    width: 2px;
+    background: var(--border-color);
+}
+.timeline-item {
+    position: relative;
+    padding: 0 0 16px 0;
+    font-size: 0.86rem;
+}
+.timeline-item:last-child { padding-bottom: 0; }
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -24px;
+    top: 6px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--surface-card);
+    border: 2px solid var(--primary-lt);
+    box-shadow: 0 0 0 3px var(--surface-card);
+}
+.timeline-item.tone-success::before { border-color: var(--success); }
+.timeline-item.tone-warning::before { border-color: var(--accent); }
+.timeline-item.tone-danger::before  { border-color: var(--danger); }
+.timeline-item-time {
+    font-size: 0.74rem;
+    color: var(--text-subtle);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 2px;
+}
+.timeline-item-text { color: var(--text-main); line-height: 1.5; }
+.timeline-item-text strong { color: var(--text-strong); font-weight: 600; }
+
+/* ---- Detail hero "flat" variant ------------------------------------------
+   Surface phang voi accent border-left thay cho gradient hero. Phong cach
+   chinh thong, in tot. Variant cu .detail-hero (gradient) van duoc giu
+   cho backward compat — Phase 4 se replace tat ca .detail-hero -> flat. */
+.detail-hero-flat {
+    background: var(--surface-card);
+    border: 1px solid var(--border-color);
+    border-left: 4px solid var(--accent);
+    border-radius: var(--radius-md);
+    padding: 18px 22px;
+    box-shadow: var(--shadow-xs);
+    color: var(--text-main);
+}
+.detail-hero-flat .detail-hero-eyebrow-flat {
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    letter-spacing: 1.2px;
+    color: var(--text-subtle);
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+.detail-hero-flat .detail-hero-title-flat {
+    font-family: var(--font-display);
+    font-weight: 800;
+    color: var(--text-strong);
+    letter-spacing: -0.018em;
+    line-height: 1.25;
+    margin: 0 0 8px 0;
+    text-wrap: balance;
+}
+.detail-hero-flat .detail-hero-meta-flat {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    align-items: center;
+    color: var(--text-muted);
+    font-size: 0.86rem;
+}
+.detail-hero-flat .detail-hero-meta-flat > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.detail-hero-flat .detail-hero-meta-flat code {
+    background: var(--surface-alt);
+    color: var(--primary-dk);
+    padding: 2px 8px;
+    border-radius: var(--radius-xs);
+    font-size: 0.8rem;
+    font-weight: 500;
+    border: 1px solid var(--border-color);
+}
+.detail-hero-flat .detail-hero-actions-flat {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+.detail-hero-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: var(--radius-md);
+    background: linear-gradient(135deg,
+        var(--primary-soft) 0%,
+        rgba(31, 79, 138, 0.04) 100%);
+    color: var(--primary-lt);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    flex-shrink: 0;
+}
+
+/* ---- Form section --------------------------------------------------------
+   Goi form dai thanh cac card section co header (icon + title + hint). */
+.form-section {
+    background: var(--surface-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-xs);
+}
+.form-section + .form-section { margin-top: 16px; }
+.form-section-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border-color);
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: var(--text-strong);
+    font-size: 0.92rem;
+    background: var(--surface-soft);
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+.form-section-header .bi {
+    color: var(--primary-lt);
+    font-size: 1.05rem;
+}
+.form-section-hint {
+    margin-left: auto;
+    color: var(--text-muted);
+    font-size: 0.74rem;
+    font-weight: 500;
+    font-family: var(--font-sans);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.form-section-body { padding: 18px 20px; }
+
+/* ---- Form sticky footer --------------------------------------------------
+   Hien o cuoi form dai — ghim duoi cua viewport khi user scroll, neu form
+   khong vua trong man hinh. Dung optional class .form-sticky-footer. */
+.form-sticky-footer {
+    position: sticky;
+    bottom: 0;
+    background: var(--surface-card);
+    border-top: 1px solid var(--border-color);
+    padding: 12px 20px;
+    margin: 18px -20px -22px;  /* offset card-body padding */
+    border-radius: 0 0 var(--radius-md) var(--radius-md);
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    z-index: 5;
+    box-shadow: 0 -2px 8px rgba(15, 45, 82, 0.04);
+}
+
+/* ---- Page header block ---------------------------------------------------
+   Wrapper dung trong _page-header — keep simple, su dung .page-title da co. */
+.page-header-block .action-slot { flex-shrink: 0; }
+
+/* ---- Print CSS — cu the cho list / detail / form -------------------------
+   Bo sung cac style print de giao vu in danh sach lop, danh sach HP, chi
+   tiet HP/CTDT. */
+@media print {
+    /* An everything chrome */
+    #mainNavbar, #sidebar, .sidebar-overlay,
+    .breadcrumb, .filter-toolbar,
+    .detail-hero-actions, .detail-hero-actions-flat,
+    .action-cluster, .pagination,
+    .bulk-bar, .toast-stack,
+    .form-sticky-footer,
+    footer, .app-footer,
+    .skip-link,
+    .page-header-block .action-slot {
+        display: none !important;
+    }
+
+    /* Reset layout */
+    body { background: #fff !important; }
+    body::before { display: none; }
+    .main-content {
+        margin: 0 !important;
+        padding: 0 !important;
+        animation: none !important;
+        background: #fff !important;
+    }
+    .container-fluid { padding: 0 !important; max-width: 100% !important; }
+
+    /* Card flat — no shadow, no rounded for cleaner print */
+    .card,
+    .form-section {
+        box-shadow: none !important;
+        border: 1px solid #ccc !important;
+        break-inside: avoid;
+    }
+    .card-header { background: #f5f5f5 !important; color: #000 !important; }
+    .card-header.card-header-hero { background: #f5f5f5 !important; }
+    .card-header.card-header-hero::after { display: none !important; }
+
+    /* Hero — flatten */
+    .detail-hero,
+    .detail-hero-flat {
+        background: #fff !important;
+        color: #000 !important;
+        box-shadow: none !important;
+        border: 1px solid #ccc !important;
+        border-left: 4px solid #999 !important;
+    }
+    .detail-hero::before,
+    .detail-hero::after { display: none !important; }
+    .detail-hero-title,
+    .detail-hero-title-flat,
+    .detail-hero-eyebrow,
+    .detail-hero-eyebrow-flat,
+    .detail-hero-meta,
+    .detail-hero-meta-flat,
+    .detail-hero-meta-flat code {
+        color: #000 !important;
+        background: transparent !important;
+    }
+
+    /* Welcome card on dashboard */
+    .welcome-card {
+        background: #fff !important;
+        color: #000 !important;
+        border: 1px solid #ccc !important;
+        box-shadow: none !important;
+    }
+    .welcome-card::before,
+    .welcome-card::after { display: none !important; }
+    .welcome-card * { color: #000 !important; }
+    .welcome-card .welcome-role-chip { background: #f5f5f5 !important; border-color: #ccc !important; }
+
+    /* Tables — make readable */
+    .table {
+        page-break-inside: auto;
+        font-size: 11pt;
+        color: #000 !important;
+    }
+    .table thead {
+        display: table-header-group; /* lap header tren moi page khi xuong trang */
+    }
+    .table thead th {
+        background: #eee !important;
+        color: #000 !important;
+        border-bottom: 1px solid #999 !important;
+    }
+    .table tbody tr { page-break-inside: avoid; }
+    .table tbody td {
+        background: #fff !important;
+        color: #000 !important;
+    }
+
+    /* Status pill / badge — keep visible but black-and-white friendly */
+    .status-pill,
+    .badge,
+    .chip {
+        background: #f5f5f5 !important;
+        color: #000 !important;
+        border: 1px solid #999 !important;
+    }
+    .status-pill.tone-success { border-left: 3px solid #16a34a !important; }
+    .status-pill.tone-warning { border-left: 3px solid #d97706 !important; }
+    .status-pill.tone-danger  { border-left: 3px solid #dc2626 !important; }
+
+    /* Stat / KPI cards — flatten */
+    .stat-card,
+    .kpi-card {
+        background: #fff !important;
+        box-shadow: none !important;
+        border: 1px solid #ccc !important;
+        border-left: 3px solid #999 !important;
+    }
+    .stat-card::after,
+    .stat-card-icon { display: none !important; }
+    .stat-card-value,
+    .kpi-card-value { color: #000 !important; }
+
+    /* Show URL after links — useful for print archive */
+    a[href^="http"]::after,
+    a[href^="/"]::after {
+        content: " (" attr(href) ")";
+        font-size: 0.78em;
+        color: #666;
+        font-weight: 400;
+    }
+    /* Tru link trong navigation/breadcrumb */
+    .breadcrumb a::after,
+    nav a::after,
+    .pagination a::after { content: ""; }
+
+    /* Force page break before .page-break */
+    .page-break { page-break-before: always; }
+
+    /* Margin */
+    @page {
+        margin: 12mm;
+    }
+}

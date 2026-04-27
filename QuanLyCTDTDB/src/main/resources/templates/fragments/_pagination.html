@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<!--/*
+ * fragments/_pagination.html
+ *
+ * Pagination + page-size selector + summary "Hiển thị X-Y của Z".
+ *
+ * Yeu cau: Spring Data Page object (vi du model attribute "page" la
+ * Page<NguoiDung>).
+ *
+ * Goi:
+ *   <div th:replace="~{fragments/_pagination :: bar(
+ *           page=${page}, baseUrl='/nguoi-dung',
+ *           queryString=${'&q=' + (q != null ? q : '')})}"></div>
+ *
+ * baseUrl: path khong co query string ('/nguoi-dung').
+ * queryString: prefix bang '&' (de noi them sau '?page=N&size=M'),
+ *              hoac chuoi rong neu khong co bo loc.
+ *
+ * page object da co cac field: number (zero-based), totalPages, totalElements,
+ * size, numberOfElements, hasPrevious(), hasNext().
+ */-->
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<th:block th:fragment="bar(page, baseUrl, queryString)">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 px-3 py-3">
+
+        <!-- Summary + page-size -->
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+            <span class="pagination-summary"
+                  th:if="${page != null and page.totalElements > 0}">
+                Hiển thị
+                <strong th:text="${page.number * page.size + 1}">1</strong>
+                –
+                <strong th:text="${page.number * page.size + page.numberOfElements}">10</strong>
+                /
+                <strong th:text="${page.totalElements}">100</strong>
+            </span>
+
+            <!-- Page size selector (form GET) -->
+            <form th:if="${page != null and page.totalElements > 0}"
+                  th:action="@{${baseUrl}}" method="get"
+                  class="d-flex align-items-center gap-2 m-0">
+                <label for="pageSizeSelect" class="form-label small text-muted m-0">Mỗi trang</label>
+                <select id="pageSizeSelect" name="size"
+                        class="form-select form-select-sm"
+                        style="width:auto;min-width:80px;"
+                        onchange="this.form.submit()">
+                    <option th:each="opt : ${ {10, 20, 50, 100} }"
+                            th:value="${opt}"
+                            th:text="${opt}"
+                            th:selected="${opt == page.size}">10</option>
+                </select>
+                <input type="hidden" name="page" value="0">
+                <!--/* Truyen lai cac param khac (search/sort) — trang tu them
+                       hidden inputs neu can. */-->
+            </form>
+        </div>
+
+        <!-- Pagination links -->
+        <nav th:if="${page != null and page.totalPages > 1}"
+             aria-label="Phân trang">
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item" th:classappend="${page.first} ? ' disabled' : ''">
+                    <a class="page-link"
+                       th:href="@{${baseUrl}(page=${page.number - 1}, size=${page.size})}"
+                       th:attrappend="href=${queryString}"
+                       aria-label="Trang trước">
+                        <i class="bi bi-chevron-left" aria-hidden="true"></i>
+                        <span class="d-none d-sm-inline ms-1">Trước</span>
+                    </a>
+                </li>
+
+                <!--/* Pagination compact: show 5 trang quanh trang hien tai +
+                       trang dau/cuoi neu xa. */-->
+                <th:block th:with="totalPages=${page.totalPages}, current=${page.number}">
+
+                    <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                              th:if="${i == 0 or i == totalPages - 1
+                                       or (i >= current - 2 and i <= current + 2)}">
+
+                        <!--/* Ellipsis dau */-->
+                        <li class="page-item disabled"
+                            th:if="${i == current - 2 and i > 1}">
+                            <span class="page-link">…</span>
+                        </li>
+
+                        <li class="page-item" th:classappend="${i == current} ? ' active' : ''">
+                            <a class="page-link"
+                               th:href="@{${baseUrl}(page=${i}, size=${page.size})}"
+                               th:attrappend="href=${queryString}"
+                               th:text="${i + 1}">1</a>
+                        </li>
+
+                        <!--/* Ellipsis cuoi */-->
+                        <li class="page-item disabled"
+                            th:if="${i == current + 2 and i < totalPages - 2}">
+                            <span class="page-link">…</span>
+                        </li>
+                    </th:block>
+                </th:block>
+
+                <li class="page-item" th:classappend="${page.last} ? ' disabled' : ''">
+                    <a class="page-link"
+                       th:href="@{${baseUrl}(page=${page.number + 1}, size=${page.size})}"
+                       th:attrappend="href=${queryString}"
+                       aria-label="Trang sau">
+                        <span class="d-none d-sm-inline me-1">Sau</span>
+                        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+    </div>
+</th:block>
+
+</body>
+</html>
