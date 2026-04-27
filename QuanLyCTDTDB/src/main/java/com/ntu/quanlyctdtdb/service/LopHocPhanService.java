@@ -58,4 +58,14 @@ public interface LopHocPhanService {
 
     /** Lay danh sach SV trong lop */
     List<DanhSachSvLopHocPhan> findSinhVienTrongLop(LopHocPhanId lopId);
+
+    /**
+     * Phase 2 — thong ke nhanh cho stat-card row tren danh sach lop HP.
+     * Key:
+     *   tongLop       : tong so lop HP
+     *   dangMo        : so lop dang mo
+     *   daDong        : so lop da dong
+     *   chuaPhanCong  : so lop dang mo nhung chua co GV phan cong
+     */
+    Map<String, Long> getThongKe();
 }

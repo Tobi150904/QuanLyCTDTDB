@@ -97,6 +97,10 @@ public class HocPhanController {
         model.addAttribute("trangThaiFilter", trangThai);
         model.addAttribute("loaiHPList", LoaiHocPhan.values());
         model.addAttribute("trangThaiHPList", TrangThaiHocPhan.values());
+        // Phase 2 — stat-card row hien thi tren dau danh sach (giong nguoi-dung).
+        // Lay COUNT() cua tat ca cac trang thai chinh, KHONG phu thuoc filter
+        // hien tai (de PDT/CNHP nhin nhanh tinh hinh tong CTDT).
+        model.addAttribute("thongKe", hocPhanService.getThongKe());
         return "hoc-phan/danh-sach";
     }
 

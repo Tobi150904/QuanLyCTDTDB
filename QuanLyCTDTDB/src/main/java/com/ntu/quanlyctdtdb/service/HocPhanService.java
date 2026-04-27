@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Map;
 
 public interface HocPhanService {
 
@@ -50,4 +51,14 @@ public interface HocPhanService {
 
     /** Upload file de cuong va luu ten file vao HP */
     HocPhan uploadDeCuong(String ma, String tenFile);
+
+    /**
+     * Phase 2 — thong ke nhanh cho stat-card row tren danh sach.
+     * Key:
+     *   tongHocPhan : tong so hoc phan
+     *   daDuyet     : so HP da duyet
+     *   choDuyet    : so HP cho duyet
+     *   banNhap     : so HP ban nhap
+     */
+    Map<String, Long> getThongKe();
 }

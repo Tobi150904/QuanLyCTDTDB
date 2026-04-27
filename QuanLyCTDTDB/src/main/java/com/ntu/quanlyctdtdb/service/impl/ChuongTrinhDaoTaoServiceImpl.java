@@ -13,7 +13,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -142,6 +144,19 @@ public class ChuongTrinhDaoTaoServiceImpl implements ChuongTrinhDaoTaoService {
     @Transactional(readOnly = true)
     public List<HocPhan> findHocPhanChuaThuoc(String maCTDT) {
         return hocPhanRepo.findHocPhanChuaCoTrongCTDT(maCTDT);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, Long> getThongKe() {
+        // Datasize CTDT thuong nho (~10-30) nhung dung COUNT() de nhat quan
+        // voi pattern cua HocPhan / NguoiDung / DoanhNghiep getThongKe.
+        Map<String, Long> map = new LinkedHashMap<>();
+        map.put("tongCTDT", ctdtRepo.count());
+        map.put("daDuyet",  ctdtRepo.countByTrangThai(TrangThaiCTDT.DaDuyet));
+        map.put("choDuyet", ctdtRepo.countByTrangThai(TrangThaiCTDT.ChoDuyet));
+        map.put("banNhap",  ctdtRepo.countByTrangThai(TrangThaiCTDT.BanNhap));
+        return map;
     }
 
     @Override

@@ -20,7 +20,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -193,5 +195,18 @@ public class HocPhanServiceImpl implements HocPhanService {
         HocPhan hp = findById(ma);
         hp.setFileDeCuong(tenFile);
         return hocPhanRepo.save(hp);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, Long> getThongKe() {
+        // Dung COUNT() rieng cho tung trang thai - re hon load toan bo va
+        // group on memory (datasize HP co the len toi vai tram record).
+        Map<String, Long> map = new LinkedHashMap<>();
+        map.put("tongHocPhan", hocPhanRepo.count());
+        map.put("daDuyet",  hocPhanRepo.countByTrangThai(TrangThaiHocPhan.DaDuyet));
+        map.put("choDuyet", hocPhanRepo.countByTrangThai(TrangThaiHocPhan.ChoDuyet));
+        map.put("banNhap",  hocPhanRepo.countByTrangThai(TrangThaiHocPhan.BanNhap));
+        return map;
     }
 }

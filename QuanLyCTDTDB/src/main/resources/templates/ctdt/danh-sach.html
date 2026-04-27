@@ -57,59 +57,29 @@
         </div>
     </div>
 
-    <!-- STAT CARDS — chi hien neu co du lieu -->
-    <div class="row g-3 mb-4" th:if="${not #lists.isEmpty(danhSach)}"
-         th:with="cnt=${ {'BanNhap':0,'ChoDuyet':0,'DaDuyet':0,'DaHuy':0} }">
-        <th:block th:each="c : ${danhSach}">
-            <th:block th:with="k=${c.trangThai.name()}">
-                <th:block th:if="${cnt.containsKey(k)}"
-                          th:with="ignored=${cnt.put(k, cnt.get(k) + 1)}"></th:block>
-            </th:block>
-        </th:block>
-
+    <!-- STAT CARDS — Phase 2: dung canonical _stat-card fragment voi
+         variant-* class (truoc day dung stat-card-info / stat-card-warning
+         khong canh quy uoc dung trong main.css). -->
+    <div class="row g-3 mb-4" th:if="${thongKe != null}">
         <div class="col-sm-6 col-lg-3">
-            <div class="stat-card stat-card-info">
-                <div class="d-flex align-items-start gap-3">
-                    <div class="stat-card-icon"><i class="bi bi-collection-fill"></i></div>
-                    <div>
-                        <div class="stat-card-label">Tổng CTĐT</div>
-                        <div class="stat-card-value" th:text="${#lists.size(danhSach)}">0</div>
-                    </div>
-                </div>
-            </div>
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-collection-fill', value=${thongKe['tongCTDT'] ?: 0},
+                  label='Tổng CTĐT', variant='info', href=null)}"></div>
         </div>
         <div class="col-sm-6 col-lg-3">
-            <div class="stat-card stat-card-warning">
-                <div class="d-flex align-items-start gap-3">
-                    <div class="stat-card-icon"><i class="bi bi-hourglass-split"></i></div>
-                    <div>
-                        <div class="stat-card-label">Chờ duyệt</div>
-                        <div class="stat-card-value" th:text="${cnt.get('ChoDuyet')}">0</div>
-                    </div>
-                </div>
-            </div>
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-patch-check-fill', value=${thongKe['daDuyet'] ?: 0},
+                  label='Đã Duyệt', variant='success', href=null)}"></div>
         </div>
         <div class="col-sm-6 col-lg-3">
-            <div class="stat-card stat-card-success">
-                <div class="d-flex align-items-start gap-3">
-                    <div class="stat-card-icon"><i class="bi bi-patch-check-fill"></i></div>
-                    <div>
-                        <div class="stat-card-label">Đã duyệt</div>
-                        <div class="stat-card-value" th:text="${cnt.get('DaDuyet')}">0</div>
-                    </div>
-                </div>
-            </div>
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-hourglass-split', value=${thongKe['choDuyet'] ?: 0},
+                  label='Chờ Duyệt', variant='warning', href=null)}"></div>
         </div>
         <div class="col-sm-6 col-lg-3">
-            <div class="stat-card stat-card-neutral">
-                <div class="d-flex align-items-start gap-3">
-                    <div class="stat-card-icon"><i class="bi bi-pencil-square"></i></div>
-                    <div>
-                        <div class="stat-card-label">Bản nháp</div>
-                        <div class="stat-card-value" th:text="${cnt.get('BanNhap')}">0</div>
-                    </div>
-                </div>
-            </div>
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-pencil-square', value=${thongKe['banNhap'] ?: 0},
+                  label='Bản Nháp', variant='orange', href=null)}"></div>
         </div>
     </div>
 
@@ -274,7 +244,7 @@
                                 <div th:replace="~{fragments/_empty-state :: simple(
                                         icon='bi-journal-bookmark',
                                         title='Chưa có chương trình đào tạo nào',
-                                        desc='Bắt đầu bằng cách tạo CTĐT đầu tiên cho khóa học mới.')}"></div>
+                                        desc='B��t đầu bằng cách tạo CTĐT đầu tiên cho khóa học mới.')}"></div>
                                 <div class="text-center mb-3"
                                      sec:authorize="hasAnyRole('PDT','ADMIN')">
                                     <a th:href="@{/ctdt/them}" class="btn btn-primary btn-sm">

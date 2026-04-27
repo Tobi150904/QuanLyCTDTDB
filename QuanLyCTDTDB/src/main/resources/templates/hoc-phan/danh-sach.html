@@ -51,6 +51,33 @@
         </div>
     </div>
 
+    <!-- Stat Cards (Phase 2) -->
+    <div class="row g-3 mb-4" th:if="${thongKe != null}">
+        <div class="col-6 col-md-3">
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-journal-text', value=${thongKe['tongHocPhan'] ?: 0},
+                  label='Tổng Học Phần', variant='info', href=null)}"></div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-patch-check-fill', value=${thongKe['daDuyet'] ?: 0},
+                  label='Đã Duyệt', variant='success',
+                  href=${'/hoc-phan?trangThai=DaDuyet'})}"></div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-hourglass-split', value=${thongKe['choDuyet'] ?: 0},
+                  label='Chờ Duyệt', variant='warning',
+                  href=${'/hoc-phan?trangThai=ChoDuyet'})}"></div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-pencil-square', value=${thongKe['banNhap'] ?: 0},
+                  label='Bản Nháp', variant='orange',
+                  href=${'/hoc-phan?trangThai=BanNhap'})}"></div>
+        </div>
+    </div>
+
     <!-- Filter toolbar -->
     <form th:action="@{/hoc-phan}" method="get" class="filter-toolbar mb-3" role="search">
         <div class="filter-toolbar-title">

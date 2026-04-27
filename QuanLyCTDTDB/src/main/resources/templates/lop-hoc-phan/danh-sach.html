@@ -47,6 +47,29 @@
 
     <!-- Flash messages da duoc render boi layout/base.html -->
 
+    <!-- STAT CARDS (Phase 2) — luon hien thi (tong toan he thong) -->
+    <div class="row g-3 mb-4" th:if="${thongKe != null}">
+        <div class="col-6 col-md-3">
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-collection', value=${thongKe['tongLop'] ?: 0},
+                  label='Tổng Lớp HP', variant='info', href=null)}"></div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-play-circle-fill', value=${thongKe['dangMo'] ?: 0},
+                  label='Đang Mở', variant='success', href=null)}"></div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-pause-circle-fill', value=${thongKe['daDong'] ?: 0},
+                  label='Đã Đóng', variant='orange', href=null)}"></div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-person-exclamation', value=${thongKe['chuaPhanCong'] ?: 0},
+                  label='Chưa Phân Công GV', variant='danger', href=null)}"></div>
+        </div>
+    </div>
 
     <!-- FILTER + TẠO HÀNG LOẠT -->
     <div class="filter-toolbar">

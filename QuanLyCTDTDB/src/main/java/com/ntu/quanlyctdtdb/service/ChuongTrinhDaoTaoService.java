@@ -6,6 +6,7 @@ import com.ntu.quanlyctdtdb.entity.ChuongTrinhDaoTao;
 import com.ntu.quanlyctdtdb.entity.CtdtHocPhan;
 
 import java.util.List;
+import java.util.Map;
 
 public interface ChuongTrinhDaoTaoService {
 
@@ -36,4 +37,14 @@ public interface ChuongTrinhDaoTaoService {
 
     /** Cap nhat duong dan File Word cua CTDT (goi sau khi da upload file thanh cong). */
     ChuongTrinhDaoTao updateFileWord(String maCTDT, String fileWordPath);
+
+    /**
+     * Phase 2 — thong ke nhanh cho stat-card row tren danh sach CTDT.
+     * Key:
+     *   tongCTDT : tong so CTDT
+     *   daDuyet  : so CTDT da duyet
+     *   choDuyet : so CTDT cho duyet
+     *   banNhap  : so CTDT ban nhap
+     */
+    Map<String, Long> getThongKe();
 }

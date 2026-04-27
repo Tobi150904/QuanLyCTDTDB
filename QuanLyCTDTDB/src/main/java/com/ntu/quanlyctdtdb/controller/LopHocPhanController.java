@@ -154,6 +154,10 @@ public class LopHocPhanController {
             model.addAttribute("daMoCount", daMoCount);
         }
         model.addAttribute("chuaPhanCong", lopHPService.findChuaPhanCongGV());
+        // Phase 2 — stat-card row tren dau danh sach (4 KPI: tong / dang mo /
+        // da dong / chua phan cong). Khong phu thuoc filter hien tai de
+        // PDT/TTDTXS thay nhanh tinh hinh tong toan he thong.
+        model.addAttribute("thongKe", lopHPService.getThongKe());
 
         // Map maHocPhan -> HocPhan de template hien thi tenHocPhan
         // (LopHocPhan khong map truc tiep sang HocPhan qua @EmbeddedId).

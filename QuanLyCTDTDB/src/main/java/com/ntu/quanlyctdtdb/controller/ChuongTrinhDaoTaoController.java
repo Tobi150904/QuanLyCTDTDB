@@ -71,6 +71,10 @@ public class ChuongTrinhDaoTaoController {
     @GetMapping
     public String danhSach(Model model) {
         model.addAttribute("danhSach", ctdtService.findAll());
+        // Phase 2 — stat-card row dong bo voi nguoi-dung/hoc-phan/lop-hoc-phan.
+        // Datasize CTDT nho nhung van dung COUNT() de tach logic dem khoi
+        // template (truoc day count duoc compute inline trong Thymeleaf).
+        model.addAttribute("thongKe", ctdtService.getThongKe());
         return "ctdt/danh-sach";
     }
 

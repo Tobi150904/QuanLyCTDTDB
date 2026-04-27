@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -212,6 +213,26 @@ public class LopHocPhanServiceImpl implements LopHocPhanService {
         return dsSvRepo.findDanhSachSinhVienLop(
                 lopId.getMaCTDT(), lopId.getMaHocPhan(), lopId.getMaHocKy(), lopId.getMaLopHocPhan()
         );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, Long> getThongKe() {
+        // Datasize lop HP co the len toi vai nghin record - dung COUNT()
+        // truc tiep o DB de tranh load toan bo bang vao memory.
+        Map<String, Long> map = new LinkedHashMap<>();
+        long tong = lopHocPhanRepo.count();
+        long dangMo = lopHocPhanRepo.countByTrangThai(TrangThaiLopHocPhan.DangMo);
+        long daDong = lopHocPhanRepo.countByTrangThai(TrangThaiLopHocPhan.DaDong);
+        // findChuaPhanCongGiangVien() chi tra ve lop "DangMo + chua co GV";
+        // dung size() vi service hien chua co count rieng (datasize ket qua
+        // thuong < 50 nen chap nhan duoc).
+        long chuaPhanCong = lopHocPhanRepo.findChuaPhanCongGiangVien().size();
+        map.put("tongLop", tong);
+        map.put("dangMo", dangMo);
+        map.put("daDong", daDong);
+        map.put("chuaPhanCong", chuaPhanCong);
+        return map;
     }
 
     // Helper
