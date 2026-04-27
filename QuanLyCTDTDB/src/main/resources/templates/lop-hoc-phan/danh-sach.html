@@ -8,22 +8,40 @@
 <body>
 <div layout:fragment="content">
 
+    <!-- BREADCRUMB -->
     <nav aria-label="breadcrumb" class="mb-3">
         <ol class="breadcrumb">
             <li class="breadcrumb-item">
                 <a th:href="@{/dashboard}" class="text-decoration-none">
-                    <i class="bi bi-house-door me-1"></i>Trang Chủ
+                    <i class="bi bi-house-door me-1" aria-hidden="true"></i>Trang Chủ
                 </a>
             </li>
             <li class="breadcrumb-item active" aria-current="page">Lớp Học Phần</li>
         </ol>
     </nav>
 
-    <!-- HEADER -->
-    <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
-        <div>
-            <p class="page-subtitle">Đào Tạo</p>
-            <h4 class="page-title mb-0">Quản Lý Lớp Học Phần</h4>
+    <!-- PAGE HEADER -->
+    <div class="page-header-block mb-4">
+        <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+            <div class="flex-grow-1 min-w-0">
+                <p class="page-subtitle mb-1">Đào Tạo</p>
+                <h1 class="page-title h4 mb-1 d-flex align-items-center gap-2">
+                    <i class="bi bi-collection text-primary" aria-hidden="true"></i>
+                    <span>Quản Lý Lớp Học Phần</span>
+                </h1>
+                <p class="text-muted small mb-0">
+                    Tạo, phân công giảng viên và tra cứu lớp theo CTĐT / Học Kỳ.
+                </p>
+            </div>
+            <div class="action-slot d-flex gap-2 flex-wrap"
+                 th:if="${(maCTDT != null and !maCTDT.isBlank()) or (maHocKy != null and !maHocKy.isBlank())}">
+                <a class="btn btn-sm btn-outline-secondary"
+                   th:href="@{/lop-hoc-phan/export(maCTDT=${maCTDT},maHocKy=${maHocKy})}"
+                   data-bs-toggle="tooltip"
+                   data-bs-title="Xuất CSV theo bộ lọc đang xem">
+                    <i class="bi bi-download me-1" aria-hidden="true"></i>Xuất CSV
+                </a>
+            </div>
         </div>
     </div>
 
@@ -86,12 +104,17 @@
     <script th:inline="javascript">
         /* Validate: it nhat 1 trong 2 truong phai duoc chon.
            Giu logic "OR" o FE de co UX feedback som; BE van cho phep de trong
-           (se hien prompt empty state), nen day chi la guard rail thien chi. */
+           (se hien prompt empty state), nen day chi la guard rail thien chi.
+           Phase 2: dung Toast.warning thay vi alert() de UI nhat quan. */
         function validateLopHpFilter(form) {
             var ctdt = form.querySelector('select[name="maCTDT"]').value;
             var hocKy = form.querySelector('select[name="maHocKy"]').value;
             if (!ctdt && !hocKy) {
-                alert('Vui lòng chọn ít nhất một tiêu chí: CTĐT hoặc Học Kỳ.');
+                if (window.Toast) {
+                    window.Toast.warning('Vui lòng chọn ít nhất một tiêu chí: CTĐT hoặc Học Kỳ.');
+                } else {
+                    alert('Vui lòng chọn ít nhất một tiêu chí: CTĐT hoặc Học Kỳ.');
+                }
                 return false;
             }
             return true;
@@ -485,13 +508,18 @@
     </div>
 
     <!-- DS LỚP CHƯA CÓ GV -->
-    <div class="card" th:if="${chuaPhanCong != null and !#lists.isEmpty(chuaPhanCong)}">
-        <div class="card-header d-flex justify-content-between align-items-center"
-             style="border-left: 3px solid #dc3545;">
-            <span class="fw-semibold text-danger">
-                <i class="bi bi-exclamation-triangle me-2"></i>Lớp Chưa Phân Công Giảng Viên
+    <div class="card border-danger-subtle"
+         th:if="${chuaPhanCong != null and !#lists.isEmpty(chuaPhanCong)}"
+         style="border-left-width: 4px;">
+        <div class="card-header d-flex justify-content-between align-items-center bg-danger-subtle">
+            <span class="fw-semibold text-danger-emphasis">
+                <i class="bi bi-exclamation-triangle-fill me-2" aria-hidden="true"></i>
+                Lớp Chưa Phân Công Giảng Viên
             </span>
-            <span class="badge bg-danger" th:text="${#lists.size(chuaPhanCong)}">0</span>
+            <span class="status-pill tone-danger">
+                <span class="pill-dot" aria-hidden="true"></span>
+                <span th:text="${#lists.size(chuaPhanCong)} + ' lớp cần xử lý'">0</span>
+            </span>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">

@@ -1,4 +1,13 @@
 <!DOCTYPE html>
+<!--/*
+ * ctdt/danh-sach.html — Phase 2 redesign
+ *
+ * Goi y dung CTDT.danhSach trong project: tap CTDT thuong nho (~10–30
+ * record), khong can server-side pagination. O day them client-side filter
+ * (search theo ma/ten, theo Trang Thai, theo Khoa) + sortable column +
+ * sticky header + export CSV. Stat cards hien thi tom tat 4 trang thai de
+ * giup PDT thay nhanh CTDT nao can phe duyet.
+ */-->
 <html lang="vi"
       xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
@@ -8,56 +17,205 @@
 <body>
 <div layout:fragment="content">
 
+    <!-- BREADCRUMB -->
     <nav aria-label="breadcrumb" class="mb-3">
         <ol class="breadcrumb">
             <li class="breadcrumb-item">
-                <a th:href="@{/dashboard}"><i class="bi bi-house-door me-1"></i>Trang Chủ</a>
+                <a th:href="@{/dashboard}" class="text-decoration-none">
+                    <i class="bi bi-house-door me-1" aria-hidden="true"></i>Trang Chủ
+                </a>
             </li>
-            <li class="breadcrumb-item active">Chương Trình Đào Tạo</li>
+            <li class="breadcrumb-item active" aria-current="page">Chương Trình Đào Tạo</li>
         </ol>
     </nav>
 
-    <!-- HEADER -->
-    <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
-        <div>
-            <p class="page-subtitle">Đào Tạo</p>
-            <h4 class="page-title mb-0">Quản Lý Chương Trình Đào Tạo</h4>
+    <!-- PAGE HEADER -->
+    <div class="page-header-block mb-4">
+        <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+            <div class="flex-grow-1 min-w-0">
+                <p class="page-subtitle mb-1">Đào Tạo</p>
+                <h1 class="page-title h4 mb-1 d-flex align-items-center gap-2">
+                    <i class="bi bi-journal-bookmark text-primary" aria-hidden="true"></i>
+                    <span>Quản Lý Chương Trình Đào Tạo</span>
+                </h1>
+                <p class="text-muted small mb-0">
+                    Thiết kế khung CTĐT, phân bổ học phần theo kỳ và phê duyệt phiên bản.
+                </p>
+            </div>
+            <div class="action-slot d-flex gap-2 flex-wrap">
+                <a class="btn btn-sm btn-outline-secondary"
+                   th:href="@{/ctdt/export}"
+                   data-bs-toggle="tooltip" data-bs-title="Xuất danh sách CTĐT ra file CSV">
+                    <i class="bi bi-download me-1" aria-hidden="true"></i>Xuất CSV
+                </a>
+                <a sec:authorize="hasAnyRole('PDT','ADMIN')"
+                   th:href="@{/ctdt/them}"
+                   class="btn btn-sm btn-primary">
+                    <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Tạo CTĐT Mới
+                </a>
+            </div>
         </div>
-        <a sec:authorize="hasAnyRole('PDT','ADMIN')"
-           th:href="@{/ctdt/them}" class="btn btn-primary btn-sm">
-            <i class="bi bi-plus-lg me-1"></i>Tạo CTĐT Mới
-        </a>
+    </div>
+
+    <!-- STAT CARDS — chi hien neu co du lieu -->
+    <div class="row g-3 mb-4" th:if="${not #lists.isEmpty(danhSach)}"
+         th:with="cnt=${ {'BanNhap':0,'ChoDuyet':0,'DaDuyet':0,'DaHuy':0} }">
+        <th:block th:each="c : ${danhSach}">
+            <th:block th:with="k=${c.trangThai.name()}">
+                <th:block th:if="${cnt.containsKey(k)}"
+                          th:with="ignored=${cnt.put(k, cnt.get(k) + 1)}"></th:block>
+            </th:block>
+        </th:block>
+
+        <div class="col-sm-6 col-lg-3">
+            <div class="stat-card stat-card-info">
+                <div class="d-flex align-items-start gap-3">
+                    <div class="stat-card-icon"><i class="bi bi-collection-fill"></i></div>
+                    <div>
+                        <div class="stat-card-label">Tổng CTĐT</div>
+                        <div class="stat-card-value" th:text="${#lists.size(danhSach)}">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="stat-card stat-card-warning">
+                <div class="d-flex align-items-start gap-3">
+                    <div class="stat-card-icon"><i class="bi bi-hourglass-split"></i></div>
+                    <div>
+                        <div class="stat-card-label">Chờ duyệt</div>
+                        <div class="stat-card-value" th:text="${cnt.get('ChoDuyet')}">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="stat-card stat-card-success">
+                <div class="d-flex align-items-start gap-3">
+                    <div class="stat-card-icon"><i class="bi bi-patch-check-fill"></i></div>
+                    <div>
+                        <div class="stat-card-label">Đã duyệt</div>
+                        <div class="stat-card-value" th:text="${cnt.get('DaDuyet')}">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="stat-card stat-card-neutral">
+                <div class="d-flex align-items-start gap-3">
+                    <div class="stat-card-icon"><i class="bi bi-pencil-square"></i></div>
+                    <div>
+                        <div class="stat-card-label">Bản nháp</div>
+                        <div class="stat-card-value" th:text="${cnt.get('BanNhap')}">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FILTER (client-side: dataset CTDT nho, khong can server filter) -->
+    <div class="filter-toolbar mb-3" th:if="${not #lists.isEmpty(danhSach)}">
+        <p class="filter-toolbar-title">
+            <i class="bi bi-funnel" aria-hidden="true"></i>Lọc & Tìm Kiếm
+        </p>
+        <div class="row g-2 align-items-end">
+            <div class="col-md-5">
+                <label for="ctdtSearch" class="form-label small fw-medium mb-1">
+                    <i class="bi bi-search me-1" aria-hidden="true"></i>Tìm kiếm
+                </label>
+                <input type="search" id="ctdtSearch"
+                       class="form-control form-control-sm"
+                       placeholder="Mã CTĐT, tên chương trình, khóa..."
+                       autocomplete="off">
+            </div>
+            <div class="col-md-3">
+                <label for="ctdtTrangThai" class="form-label small fw-medium mb-1">
+                    <i class="bi bi-flag me-1" aria-hidden="true"></i>Trạng thái
+                </label>
+                <select id="ctdtTrangThai" class="form-select form-select-sm">
+                    <option value="">Tất cả</option>
+                    <option value="BanNhap">Bản nháp</option>
+                    <option value="ChoDuyet">Chờ duyệt</option>
+                    <option value="DaDuyet">Đã duyệt</option>
+                    <option value="DaHuy">Đã hủy</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="ctdtKhoa" class="form-label small fw-medium mb-1">
+                    <i class="bi bi-calendar-range me-1" aria-hidden="true"></i>Khóa
+                </label>
+                <select id="ctdtKhoa" class="form-select form-select-sm">
+                    <option value="">Tất cả</option>
+                </select>
+            </div>
+            <div class="col-md-1">
+                <button type="button" id="ctdtReset"
+                        class="btn btn-sm btn-outline-secondary w-100"
+                        title="Xoá bộ lọc">
+                    <i class="bi bi-x-lg" aria-hidden="true"></i>
+                </button>
+            </div>
+        </div>
     </div>
 
     <!-- BẢNG DS -->
-    <div class="card">
+    <div class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <span class="fw-semibold"><i class="bi bi-journal-bookmark me-2"></i>Danh Sách Chương Trình Đào Tạo</span>
-            <span class="badge bg-secondary" th:text="'Tổng: ' + ${#lists.size(danhSach)}">0</span>
+            <span class="fw-semibold">
+                <i class="bi bi-journal-bookmark me-2" aria-hidden="true"></i>
+                Danh Sách Chương Trình Đào Tạo
+            </span>
+            <span class="badge bg-light text-dark border"
+                  th:if="${not #lists.isEmpty(danhSach)}">
+                <span id="ctdtHienThi" th:text="${#lists.size(danhSach)}">0</span>
+                / <span th:text="${#lists.size(danhSach)}">0</span>
+            </span>
         </div>
+
         <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover table-bordered align-middle mb-0">
+            <div class="table-responsive data-table-sticky" style="max-height: 70vh;">
+                <table class="table table-hover align-middle mb-0" id="ctdtTable">
                     <thead>
                         <tr>
-                            <th style="width:110px;">Mã</th>
+                            <th style="width:110px;">Mã CTĐT</th>
                             <th>Tên Chương Trình</th>
-                            <th>Khóa</th>
-                            <th class="text-center">Số HP</th>
+                            <th style="width:90px;">Khóa</th>
+                            <th class="text-center" style="width:90px;">Số HP</th>
                             <th>Người Tạo</th>
-                            <th>Trạng Thái</th>
-                            <th>Ngày Duyệt</th>
-                            <th class="text-end" style="width:180px;">Thao Tác</th>
+                            <th style="width:140px;">Trạng Thái</th>
+                            <th style="width:120px;">Ngày Duyệt</th>
+                            <th class="text-end" style="width:170px;">Thao Tác</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr th:each="ctdt : ${danhSach}">
-                            <td><code th:text="${ctdt.maCTDT}"></code></td>
-                            <td class="fw-semibold" th:text="${ctdt.tenCTDT}"></td>
-                            <td><span class="badge bg-light text-dark" th:text="${ctdt.khoa ?: '--'}"></span></td>
-                            <td class="text-center" th:text="${#lists.size(ctdt.ctdtHocPhans)}"></td>
+                        <tr id="ctdtEmptyFilter" class="d-none">
+                            <td colspan="8">
+                                <div class="empty-state">
+                                    <i class="bi bi-funnel" aria-hidden="true"></i>
+                                    <p class="mb-1 fw-medium">Không có CTĐT nào phù hợp với bộ lọc</p>
+                                    <small class="text-muted">Thử xoá bộ lọc hoặc thay đổi từ khoá tìm kiếm.</small>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:each="ctdt : ${danhSach}"
+                            class="ctdt-row"
+                            th:data-status="${ctdt.trangThai.name()}"
+                            th:data-khoa="${ctdt.khoa != null ? ctdt.khoa : ''}"
+                            th:data-search="${ctdt.maCTDT + ' ' + ctdt.tenCTDT
+                                              + ' ' + (ctdt.khoa != null ? ctdt.khoa : '')
+                                              + ' ' + (ctdt.nguoiTao != null ? ctdt.nguoiTao.hoTen : '')}">
+                            <td><code th:text="${ctdt.maCTDT}">--</code></td>
+                            <td class="fw-medium" th:text="${ctdt.tenCTDT}">--</td>
+                            <td>
+                                <span class="badge bg-light text-dark border"
+                                      th:text="${ctdt.khoa ?: '--'}">--</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-secondary-subtle text-secondary-emphasis"
+                                      th:text="${#lists.size(ctdt.ctdtHocPhans)}">0</span>
+                            </td>
                             <td class="small text-muted"
-                                th:text="${ctdt.nguoiTao != null ? ctdt.nguoiTao.hoTen : '--'}"></td>
+                                th:text="${ctdt.nguoiTao != null ? ctdt.nguoiTao.hoTen : '--'}">--</td>
                             <td>
                                 <span class="status-pill"
                                       th:with="s=${ctdt.trangThai.name()}"
@@ -65,49 +223,63 @@
                                                        (s == 'ChoDuyet' ? 'tone-warning'  :
                                                        (s == 'BanNhap'  ? 'tone-neutral' : 'tone-danger'))}">
                                     <span class="pill-dot" aria-hidden="true"></span>
-                                    <span th:text="${s == 'DaDuyet'  ? 'Đã Duyệt' :
-                                                   (s == 'ChoDuyet' ? 'Chờ Duyệt' :
-                                                   (s == 'BanNhap'  ? 'Bản Nháp' : 'Đã Hủy'))}">--</span>
+                                    <span th:text="${s == 'DaDuyet'  ? 'Đã duyệt' :
+                                                   (s == 'ChoDuyet' ? 'Chờ duyệt' :
+                                                   (s == 'BanNhap'  ? 'Bản nháp' : 'Đã hủy'))}">--</span>
                                 </span>
                             </td>
-                            <td class="text-muted small" th:text="${ctdt.ngayDuyet != null ?
-                                #temporals.format(ctdt.ngayDuyet, 'dd/MM/yyyy') : '--'}"></td>
+                            <td class="text-muted small text-nowrap"
+                                th:text="${ctdt.ngayDuyet != null ?
+                                    #temporals.format(ctdt.ngayDuyet, 'dd/MM/yyyy') : '--'}">--</td>
                             <td class="text-end">
-                                <a th:href="@{'/ctdt/chi-tiet/' + ${ctdt.maCTDT}}"
-                                   class="btn btn-sm btn-outline-secondary"
-                                   data-bs-toggle="tooltip" data-bs-title="Chi tiết / Quản lý học phần">
-                                    <i class="bi bi-eye"></i>
-                                </a>
-                                <a sec:authorize="hasAnyRole('PDT','ADMIN')"
-                                   th:if="${ctdt.trangThai.name() != 'DaDuyet'}"
-                                   th:href="@{'/ctdt/sua/' + ${ctdt.maCTDT}}"
-                                   class="btn btn-sm btn-outline-primary"
-                                   data-bs-toggle="tooltip" data-bs-title="Chỉnh sửa">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                <form sec:authorize="hasAnyRole('BGH','TTDTXS','ADMIN')"
-                                      th:if="${ctdt.trangThai.name() == 'ChoDuyet'}"
-                                      th:action="@{'/ctdt/phe-duyet/' + ${ctdt.maCTDT}}"
-                                      method="post" class="d-inline"
-                                      onsubmit="return confirm('Phê duyệt CTĐT này?')">
-                                    <input type="hidden" th:name="${_csrf.parameterName}"
-                                                          th:value="${_csrf.token}">
-                                    <button class="btn btn-sm btn-success"
-                                            data-bs-toggle="tooltip" data-bs-title="Phê duyệt">
-                                        <i class="bi bi-check2-circle"></i>
-                                    </button>
-                                </form>
+                                <div class="action-cluster justify-content-end">
+                                    <a th:href="@{'/ctdt/chi-tiet/' + ${ctdt.maCTDT}}"
+                                       class="btn btn-sm btn-outline-secondary"
+                                       data-bs-toggle="tooltip"
+                                       data-bs-title="Chi tiết / Quản lý học phần"
+                                       aria-label="Xem chi tiết">
+                                        <i class="bi bi-eye" aria-hidden="true"></i>
+                                    </a>
+                                    <a sec:authorize="hasAnyRole('PDT','ADMIN')"
+                                       th:if="${ctdt.trangThai.name() != 'DaDuyet'}"
+                                       th:href="@{'/ctdt/sua/' + ${ctdt.maCTDT}}"
+                                       class="btn btn-sm btn-outline-primary"
+                                       data-bs-toggle="tooltip"
+                                       data-bs-title="Chỉnh sửa"
+                                       aria-label="Chỉnh sửa">
+                                        <i class="bi bi-pencil" aria-hidden="true"></i>
+                                    </a>
+                                    <!-- Phe duyet — dung confirm modal global thay vi confirm() -->
+                                    <form sec:authorize="hasAnyRole('BGH','TTDTXS','ADMIN')"
+                                          th:if="${ctdt.trangThai.name() == 'ChoDuyet'}"
+                                          th:action="@{'/ctdt/phe-duyet/' + ${ctdt.maCTDT}}"
+                                          method="post" class="d-inline"
+                                          th:data-confirm-action="phê duyệt"
+                                          th:data-item-name="|CTĐT ${ctdt.maCTDT} - ${ctdt.tenCTDT}|"
+                                          onsubmit="return confirmDeleteFromForm(this, event)">
+                                        <input type="hidden" th:name="${_csrf.parameterName}"
+                                                              th:value="${_csrf.token}">
+                                        <button type="submit" class="btn btn-sm btn-success"
+                                                data-bs-toggle="tooltip"
+                                                data-bs-title="Phê duyệt CTĐT này"
+                                                aria-label="Phê duyệt">
+                                            <i class="bi bi-check2-circle" aria-hidden="true"></i>
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                         <tr th:if="${#lists.isEmpty(danhSach)}">
                             <td colspan="8">
-                                <div class="empty-state">
-                                    <i class="bi bi-journal-bookmark"></i>
-                                    <p>Chưa có chương trình đào tạo nào.</p>
-                                    <a sec:authorize="hasAnyRole('PDT','ADMIN')"
-                                       th:href="@{/ctdt/them}"
-                                       class="btn btn-primary btn-sm">
-                                        <i class="bi bi-plus-lg me-1"></i>Tạo CTĐT Đầu Tiên
+                                <div th:replace="~{fragments/_empty-state :: simple(
+                                        icon='bi-journal-bookmark',
+                                        title='Chưa có chương trình đào tạo nào',
+                                        desc='Bắt đầu bằng cách tạo CTĐT đầu tiên cho khóa học mới.')}"></div>
+                                <div class="text-center mb-3"
+                                     sec:authorize="hasAnyRole('PDT','ADMIN')">
+                                    <a th:href="@{/ctdt/them}" class="btn btn-primary btn-sm">
+                                        <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>
+                                        Tạo CTĐT đầu tiên
                                     </a>
                                 </div>
                             </td>
@@ -119,5 +291,75 @@
     </div>
 
 </div>
+
+<!-- =============================================================
+     FILTER LOGIC (client-side, vi datasize CTDT thuong nho)
+     ============================================================= -->
+<th:block layout:fragment="scripts">
+<script th:inline="javascript">
+(function () {
+    'use strict';
+    const searchInput = document.getElementById('ctdtSearch');
+    if (!searchInput) return;
+    const statusFilter = document.getElementById('ctdtTrangThai');
+    const khoaFilter   = document.getElementById('ctdtKhoa');
+    const resetBtn     = document.getElementById('ctdtReset');
+    const counterEl    = document.getElementById('ctdtHienThi');
+    const emptyRow     = document.getElementById('ctdtEmptyFilter');
+    const rows         = document.querySelectorAll('.ctdt-row');
+    if (rows.length === 0) return;
+
+    // Build danh sach Khoa unique tu data-khoa
+    const khoaSet = new Set();
+    rows.forEach(r => {
+        const k = (r.getAttribute('data-khoa') || '').trim();
+        if (k) khoaSet.add(k);
+    });
+    Array.from(khoaSet).sort().forEach(k => {
+        const o = document.createElement('option');
+        o.value = k; o.textContent = k;
+        khoaFilter.appendChild(o);
+    });
+
+    function normalize(s) {
+        return (s || '').toString().toLowerCase()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .replace(/đ/g, 'd');
+    }
+
+    function apply() {
+        const q = normalize(searchInput.value.trim());
+        const st = statusFilter.value;
+        const kh = khoaFilter.value;
+        let visible = 0;
+
+        rows.forEach(row => {
+            const haystack = normalize(row.getAttribute('data-search'));
+            const rowSt = row.getAttribute('data-status');
+            const rowKh = row.getAttribute('data-khoa');
+            const ok = (!q || haystack.indexOf(q) !== -1)
+                    && (!st || rowSt === st)
+                    && (!kh || rowKh === kh);
+            row.classList.toggle('d-none', !ok);
+            if (ok) visible++;
+        });
+
+        if (counterEl) counterEl.textContent = visible;
+        if (emptyRow) emptyRow.classList.toggle('d-none', visible !== 0);
+    }
+
+    searchInput.addEventListener('input', apply);
+    statusFilter.addEventListener('change', apply);
+    khoaFilter.addEventListener('change', apply);
+    resetBtn.addEventListener('click', function () {
+        searchInput.value = '';
+        statusFilter.value = '';
+        khoaFilter.value = '';
+        apply();
+    });
+})();
+</script>
+</th:block>
+
 </body>
 </html>
