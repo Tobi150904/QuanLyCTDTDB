@@ -4,14 +4,22 @@ import com.ntu.quanlyctdtdb.dto.DoiNguGvDTO;
 import com.ntu.quanlyctdtdb.dto.HocPhanDTO;
 import com.ntu.quanlyctdtdb.entity.HocPhan;
 import com.ntu.quanlyctdtdb.enums.LoaiHocPhan;
+import com.ntu.quanlyctdtdb.enums.TrangThaiHocPhan;
 import com.ntu.quanlyctdtdb.repository.GiangVienRepository;
 import com.ntu.quanlyctdtdb.security.CustomUserDetails;
 import com.ntu.quanlyctdtdb.service.DoiNguGvService;
 import com.ntu.quanlyctdtdb.service.HocPhanService;
+import com.ntu.quanlyctdtdb.util.CsvExportUtil;
 import com.ntu.quanlyctdtdb.util.FileStorageUtil;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -21,6 +29,11 @@ import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Controller quan ly Hoc Phan.
@@ -65,11 +78,70 @@ public class HocPhanController {
     }
 
     /* ====================== DANH SACH ====================== */
+    /**
+     * Phase 2 — server-side Pageable + Sort + filter loaiHocPhan + trangThai.
+     * - Default sort: maHocPhan ASC, size=20.
+     * - URL params: ?keyword=&loai=BatBuoc&trangThai=ChoDuyet&page=0&size=20&sort=tenHocPhan,asc
+     */
     @GetMapping
-    public String danhSach(@RequestParam(defaultValue = "") String keyword, Model model) {
-        model.addAttribute("danhSach", hocPhanService.findAll(keyword));
+    public String danhSach(@RequestParam(defaultValue = "") String keyword,
+                            @RequestParam(required = false) LoaiHocPhan loai,
+                            @RequestParam(required = false) TrangThaiHocPhan trangThai,
+                            @PageableDefault(size = 20, sort = "maHocPhan") Pageable pageable,
+                            Model model) {
+        Pageable safe = sanitizePageable(pageable);
+        Page<HocPhan> pages = hocPhanService.findPaged(keyword, loai, trangThai, safe);
+        model.addAttribute("pages", pages);
         model.addAttribute("keyword", keyword);
+        model.addAttribute("loaiFilter", loai);
+        model.addAttribute("trangThaiFilter", trangThai);
+        model.addAttribute("loaiHPList", LoaiHocPhan.values());
+        model.addAttribute("trangThaiHPList", TrangThaiHocPhan.values());
         return "hoc-phan/danh-sach";
+    }
+
+    /* ====================== EXPORT CSV ====================== */
+    @GetMapping("/export")
+    public void exportCsv(@RequestParam(defaultValue = "") String keyword,
+                           @RequestParam(required = false) LoaiHocPhan loai,
+                           @RequestParam(required = false) TrangThaiHocPhan trangThai,
+                           HttpServletResponse response) throws IOException {
+        List<HocPhan> rows = hocPhanService.findForExport(keyword, loai, trangThai);
+        String[] headers = {
+            "Ma HP", "Ten Hoc Phan", "So Tin Chi", "Loai HP",
+            "Chu Nhiem", "Trang Thai"
+        };
+        List<String[]> data = new ArrayList<>();
+        for (HocPhan hp : rows) {
+            String chuNhiem = "";
+            if (hp.getChuNhiemHP() != null && hp.getChuNhiemHP().getNguoiDung() != null) {
+                chuNhiem = hp.getChuNhiemHP().getNguoiDung().getHoTen();
+            }
+            data.add(CsvExportUtil.row(
+                    hp.getMaHocPhan(),
+                    hp.getTenHocPhan(),
+                    hp.getSoTinChi(),
+                    hp.getLoaiHocPhan() != null ? hp.getLoaiHocPhan().name() : "",
+                    chuNhiem,
+                    hp.getTrangThai() != null ? hp.getTrangThai().name() : ""
+            ));
+        }
+        CsvExportUtil.write(response, "hoc-phan", headers, data);
+    }
+
+    /* === HELPER === */
+    private static final Set<String> ALLOWED_SORT = Set.of(
+            "maHocPhan", "tenHocPhan", "soTinChi", "loaiHocPhan", "trangThai");
+
+    private static Pageable sanitizePageable(Pageable in) {
+        Sort safe = Sort.by(in.getSort().stream()
+                .map(o -> ALLOWED_SORT.contains(o.getProperty())
+                        ? o
+                        : Sort.Order.asc("maHocPhan"))
+                .toList());
+        if (safe.isUnsorted()) safe = Sort.by(Sort.Order.asc("maHocPhan"));
+        int size = Math.min(in.getPageSize(), 200);
+        return PageRequest.of(in.getPageNumber(), size, safe);
     }
 
     /* ====================== THEM MOI ====================== */

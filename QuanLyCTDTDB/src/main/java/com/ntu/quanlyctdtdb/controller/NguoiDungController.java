@@ -10,13 +10,16 @@ import com.ntu.quanlyctdtdb.repository.GiangVienRepository;
 import com.ntu.quanlyctdtdb.repository.LopHanhChinhRepository;
 import com.ntu.quanlyctdtdb.repository.SinhVienRepository;
 import com.ntu.quanlyctdtdb.service.NguoiDungService;
+import com.ntu.quanlyctdtdb.util.CsvExportUtil;
 import com.ntu.quanlyctdtdb.util.ExcelImportUtil;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.propertyeditors.StringTrimmerEditor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -27,6 +30,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -69,13 +74,20 @@ public class NguoiDungController {
     }
 
     /* ====================== DANH SACH ====================== */
+    /**
+     * Phase 2 — server-side Pageable + Sort + page-size selector.
+     * - Mac dinh sort theo hoTen ASC, size=15 (giu tuong thich URL cu).
+     * - URL co the override:  ?sort=hoTen,desc&size=50&page=2
+     * - Whitelist sort field (chong injection thuoc tinh tuy y va lo prop nhay cam):
+     *   {hoTen, tenDangNhap, email, loaiNguoiDung, trangThaiTK, maNguoiDung}.
+     */
     @GetMapping
     public String danhSach(@RequestParam(defaultValue = "") String keyword,
                             @RequestParam(required = false) LoaiNguoiDung loai,
-                            @RequestParam(defaultValue = "0") int page,
+                            @PageableDefault(size = 15, sort = "hoTen") Pageable pageable,
                             Model model) {
-        Page<NguoiDung> pages = nguoiDungService.search(keyword, loai,
-                PageRequest.of(page, 15, Sort.by("hoTen")));
+        Pageable safe = sanitizePageable(pageable);
+        Page<NguoiDung> pages = nguoiDungService.search(keyword, loai, safe);
         model.addAttribute("pages", pages);
         model.addAttribute("keyword", keyword);
         model.addAttribute("loaiFilter", loai);
@@ -83,6 +95,120 @@ public class NguoiDungController {
         model.addAttribute("thongKe", nguoiDungService.getThongKe());
         model.addAttribute("activeMenu", ACTIVE_MENU);
         return "nguoi-dung/danh-sach";
+    }
+
+    /* ====================== EXPORT CSV ====================== */
+    /**
+     * Xuat CSV theo dung filter hien tai (keyword + loai). Khong dung
+     * pageable - lay full dataset hop voi filter, sort theo hoTen ASC de
+     * deterministic.
+     *
+     * <p>Quyen: PDT, TTDTXS, ADMIN deu duoc export (read-only operation).
+     */
+    @GetMapping("/export")
+    public void exportCsv(@RequestParam(defaultValue = "") String keyword,
+                           @RequestParam(required = false) LoaiNguoiDung loai,
+                           HttpServletResponse response) throws IOException {
+        // Lay het record (Integer.MAX_VALUE) thay vi page nho - dataset nguoi
+        // dung thuong duoi vai chuc ngan, du an toan voi memory.
+        Pageable all = org.springframework.data.domain.PageRequest.of(
+                0, Integer.MAX_VALUE, Sort.by(Sort.Order.asc("hoTen")));
+        Page<NguoiDung> rows = nguoiDungService.search(keyword, loai, all);
+
+        String[] headers = {
+            "Ma", "Ho Ten", "Ten Dang Nhap", "Email", "So Dien Thoai",
+            "Loai", "Vai Tro", "Trang Thai"
+        };
+        List<String[]> data = new ArrayList<>();
+        for (NguoiDung nd : rows.getContent()) {
+            String vaiTros = nd.getNhomNguoiDungs() == null ? "" :
+                    nd.getNhomNguoiDungs().stream()
+                            .map(n -> n.getId().getVaiTro().name())
+                            .reduce((a, b) -> a + "; " + b).orElse("");
+            data.add(CsvExportUtil.row(
+                    nd.getMaNguoiDung(),
+                    nd.getHoTen(),
+                    nd.getTenDangNhap(),
+                    nd.getEmail(),
+                    nd.getSoDienThoai(),
+                    nd.getLoaiNguoiDung() != null ? nd.getLoaiNguoiDung().name() : "",
+                    vaiTros,
+                    Boolean.TRUE.equals(nd.getTrangThaiTK()) ? "HoatDong" : "DaKhoa"
+            ));
+        }
+        CsvExportUtil.write(response, "nguoi-dung", headers, data);
+    }
+
+    /* ====================== BULK TOGGLE ====================== */
+    /**
+     * Khoa/mo khoa hang loat tai khoan.
+     * <p>Khong xoa cung — module Nguoi Dung dac biet quan trong (luu lich su
+     * dang ky / phan cong), chi cho phep toggle TrangThaiTK, dong bo voi
+     * single-toggle action.</p>
+     *
+     * <p>Action: "lock" → set false, "unlock" → set true. {@code ids} la
+     * danh sach maNguoiDung lay tu checkbox bulk-select.</p>
+     */
+    @PreAuthorize("hasAnyRole('PDT','ADMIN')")
+    @PostMapping("/bulk-toggle")
+    public String bulkToggle(@RequestParam(value = "ids", required = false) List<String> ids,
+                              @RequestParam(defaultValue = "lock") String action,
+                              RedirectAttributes ra) {
+        if (ids == null || ids.isEmpty()) {
+            ra.addFlashAttribute("warningMsg", "Chua chon nguoi dung nao.");
+            return "redirect:/nguoi-dung";
+        }
+        boolean targetActive = "unlock".equalsIgnoreCase(action);
+        int ok = 0;
+        List<String> failed = new ArrayList<>();
+        for (String ma : ids) {
+            try {
+                NguoiDung nd = nguoiDungService.findById(ma);
+                if (Boolean.TRUE.equals(nd.getTrangThaiTK()) != targetActive) {
+                    nguoiDungService.toggleTrangThai(ma);
+                    ok++;
+                }
+            } catch (Exception e) {
+                failed.add(ma);
+            }
+        }
+        if (failed.isEmpty()) {
+            ra.addFlashAttribute("successMsg",
+                    String.format("Da %s %d tai khoan.",
+                            targetActive ? "mo khoa" : "khoa", ok));
+        } else {
+            ra.addFlashAttribute("warningMsg",
+                    String.format("Da %s %d/%d tai khoan. That bai: %s",
+                            targetActive ? "mo khoa" : "khoa",
+                            ok, ids.size(),
+                            String.join(", ", failed)));
+        }
+        return "redirect:/nguoi-dung";
+    }
+
+    /* === HELPER === */
+    /**
+     * Whitelist sort field cho list nguoi dung. Spring Data dat truc tiep
+     * property tu URL ?sort=... sang Sort, neu user nhap field khong ton tai
+     * → JPA throw IllegalArgumentException luc execute query. Loc va fallback
+     * ve "hoTen" cho moi field khong nam trong allow-list.
+     */
+    private static final java.util.Set<String> ALLOWED_SORT = java.util.Set.of(
+            "hoTen", "tenDangNhap", "email", "loaiNguoiDung",
+            "trangThaiTK", "maNguoiDung");
+
+    private static Pageable sanitizePageable(Pageable in) {
+        Sort safe = Sort.by(in.getSort().stream()
+                .map(o -> ALLOWED_SORT.contains(o.getProperty())
+                        ? o
+                        : Sort.Order.asc("hoTen"))
+                .toList());
+        if (safe.isUnsorted()) safe = Sort.by(Sort.Order.asc("hoTen"));
+        // Cap size toi da 200 de chong nguoi dung tu them ?size=99999 lam
+        // app load het bang ra browser.
+        int size = Math.min(in.getPageSize(), 200);
+        return org.springframework.data.domain.PageRequest.of(
+                in.getPageNumber(), size, safe);
     }
 
     /* ====================== THEM MOI ====================== */

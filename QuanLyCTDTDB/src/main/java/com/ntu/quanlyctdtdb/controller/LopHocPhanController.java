@@ -12,7 +12,9 @@ import com.ntu.quanlyctdtdb.repository.GiangVienRepository;
 import com.ntu.quanlyctdtdb.repository.HocKyNamHocRepository;
 import com.ntu.quanlyctdtdb.repository.HocPhanRepository;
 import com.ntu.quanlyctdtdb.service.LopHocPhanService;
+import com.ntu.quanlyctdtdb.util.CsvExportUtil;
 import com.ntu.quanlyctdtdb.util.HocKyUtil;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
@@ -161,6 +163,61 @@ public class LopHocPhanController {
 
         model.addAttribute("giangVienList", giangVienRepo.findAllFetchNguoiDung());
         return "lop-hoc-phan/danh-sach";
+    }
+
+    /* ====================== EXPORT CSV ====================== */
+    /**
+     * Xuat lop HP ra CSV theo filter hien tai (CTDT / HocKy / both).
+     * Bat buoc co it nhat 1 filter de tranh export ca bang LopHocPhan
+     * (datasize lon, khong co y nghia bao cao).
+     */
+    @GetMapping("/export")
+    public void exportCsv(@RequestParam(required = false) String maCTDT,
+                           @RequestParam(required = false) String maHocKy,
+                           HttpServletResponse response) throws java.io.IOException {
+        boolean hasCTDT  = maCTDT  != null && !maCTDT.isBlank();
+        boolean hasHocKy = maHocKy != null && !maHocKy.isBlank();
+        if (!hasCTDT && !hasHocKy) {
+            response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_BAD_REQUEST);
+            response.setContentType("text/plain; charset=UTF-8");
+            response.getWriter().write("Hay chon CTDT hoac HocKy truoc khi xuat CSV.");
+            return;
+        }
+        List<LopHocPhan> rows;
+        if (hasCTDT && hasHocKy) {
+            rows = lopHPService.findByCTDTAndHocKy(maCTDT, maHocKy);
+        } else if (hasCTDT) {
+            rows = lopHPService.findByCTDT(maCTDT);
+        } else {
+            rows = lopHPService.findByHocKy(maHocKy);
+        }
+        Map<String, HocPhan> hocPhanMap = hocPhanRepo.findAll().stream()
+                .collect(Collectors.toMap(HocPhan::getMaHocPhan, Function.identity()));
+
+        String[] headers = {
+            "Ma CTDT", "Ma HP", "Ten HP", "Hoc Ky", "Ma Lop", "GV Phan Cong"
+        };
+        List<String[]> data = new ArrayList<>();
+        for (LopHocPhan l : rows) {
+            HocPhan hp = hocPhanMap.get(l.getId().getMaHocPhan());
+            String tenHP = hp != null ? hp.getTenHocPhan() : "";
+            String tenGV = "";
+            if (l.getGiangVien() != null && l.getGiangVien().getNguoiDung() != null) {
+                tenGV = l.getGiangVien().getNguoiDung().getHoTen();
+            }
+            data.add(CsvExportUtil.row(
+                    l.getId().getMaCTDT(),
+                    l.getId().getMaHocPhan(),
+                    tenHP,
+                    l.getId().getMaHocKy(),
+                    l.getId().getMaLop(),
+                    tenGV
+            ));
+        }
+        String fileBase = "lop-hoc-phan"
+                + (hasCTDT ? "_" + maCTDT : "")
+                + (hasHocKy ? "_" + maHocKy : "");
+        CsvExportUtil.write(response, fileBase, headers, data);
     }
 
     /**

@@ -3,6 +3,7 @@ package com.ntu.quanlyctdtdb.service.impl;
 import com.ntu.quanlyctdtdb.dto.HocPhanDTO;
 import com.ntu.quanlyctdtdb.entity.GiangVien;
 import com.ntu.quanlyctdtdb.entity.HocPhan;
+import com.ntu.quanlyctdtdb.enums.LoaiHocPhan;
 import com.ntu.quanlyctdtdb.enums.TrangThaiHocPhan;
 import com.ntu.quanlyctdtdb.exception.BusinessException;
 import com.ntu.quanlyctdtdb.exception.ResourceNotFoundException;
@@ -12,6 +13,9 @@ import com.ntu.quanlyctdtdb.service.EmailService;
 import com.ntu.quanlyctdtdb.service.HocPhanService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,6 +41,26 @@ public class HocPhanServiceImpl implements HocPhanService {
             return hocPhanRepo.searchFetchChuNhiem(keyword.trim());
         }
         return hocPhanRepo.findAllFetchChuNhiem();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<HocPhan> findPaged(String keyword, LoaiHocPhan loai,
+                                    TrangThaiHocPhan trangThai, Pageable pageable) {
+        String kw = (keyword != null && !keyword.isBlank()) ? keyword.trim() : null;
+        return hocPhanRepo.searchPaged(kw, loai, trangThai, pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<HocPhan> findForExport(String keyword, LoaiHocPhan loai,
+                                        TrangThaiHocPhan trangThai) {
+        // Dung Pageable.unpaged() voi sort co dinh theo maHocPhan de file CSV
+        // co thu tu deterministic (tranh phu thuoc thu tu xuat hien tu DB).
+        String kw = (keyword != null && !keyword.isBlank()) ? keyword.trim() : null;
+        Pageable all = org.springframework.data.domain.PageRequest.of(
+                0, Integer.MAX_VALUE, Sort.by(Sort.Order.asc("maHocPhan")));
+        return hocPhanRepo.searchPaged(kw, loai, trangThai, all).getContent();
     }
 
     @Override

@@ -9,7 +9,9 @@ import com.ntu.quanlyctdtdb.repository.GiangVienRepository;
 import com.ntu.quanlyctdtdb.security.CustomUserDetails;
 import com.ntu.quanlyctdtdb.service.BcnThanhVienService;
 import com.ntu.quanlyctdtdb.service.ChuongTrinhDaoTaoService;
+import com.ntu.quanlyctdtdb.util.CsvExportUtil;
 import com.ntu.quanlyctdtdb.util.FileStorageUtil;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -70,6 +72,37 @@ public class ChuongTrinhDaoTaoController {
     public String danhSach(Model model) {
         model.addAttribute("danhSach", ctdtService.findAll());
         return "ctdt/danh-sach";
+    }
+
+    /* ====================== EXPORT CSV ====================== */
+    /**
+     * Xuat danh sach CTDT ra CSV (bao gom: ma, ten, khoa, so HP, trang thai,
+     * nguoi tao, ngay duyet). Dataset CTDT thuong nho (~10-30 record), khong
+     * can phan trang/filter; xuat tat ca cho on gian.
+     */
+    @GetMapping("/export")
+    public void exportCsv(HttpServletResponse response) throws java.io.IOException {
+        var rows = ctdtService.findAll();
+        String[] headers = {
+            "Ma CTDT", "Ten CTDT", "Khoa", "So HP", "Trang Thai",
+            "Nguoi Tao", "Ngay Duyet"
+        };
+        java.util.List<String[]> data = new java.util.ArrayList<>();
+        for (var c : rows) {
+            int soHP = c.getCtdtHocPhans() == null ? 0 : c.getCtdtHocPhans().size();
+            data.add(CsvExportUtil.row(
+                    c.getMaCTDT(),
+                    c.getTenCTDT(),
+                    c.getKhoa(),
+                    soHP,
+                    c.getTrangThai() != null ? c.getTrangThai().name() : "",
+                    c.getNguoiTao() != null ? c.getNguoiTao().getHoTen() : "",
+                    c.getNgayDuyet() != null
+                        ? c.getNgayDuyet().toString()
+                        : ""
+            ));
+        }
+        CsvExportUtil.write(response, "ctdt", headers, data);
     }
 
     // Tao / sua / quan ly HP trong CTDT la cua BCN (CNHP), TTDTXS, PDT, ADMIN.

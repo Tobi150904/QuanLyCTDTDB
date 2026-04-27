@@ -3,8 +3,11 @@ package com.ntu.quanlyctdtdb.repository;
 import com.ntu.quanlyctdtdb.entity.HocPhan;
 import com.ntu.quanlyctdtdb.enums.LoaiHocPhan;
 import com.ntu.quanlyctdtdb.enums.TrangThaiHocPhan;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -56,6 +59,36 @@ public interface HocPhanRepository extends JpaRepository<HocPhan, String> {
         WHERE hp.maHocPhan = :ma
         """)
     Optional<HocPhan> findByIdFetch(String ma);
+
+    /**
+     * Paged search cho list page (Phase 2 - server-side Pageable + Sort).
+     * - keyword nullable: neu null thi tra ve tat ca.
+     * - loaiHocPhan nullable: neu null thi khong filter theo loai.
+     * - trangThai nullable: neu null thi khong filter theo trang thai.
+     * Note: COUNT query rieng (tang hieu nang khi datasize lon).
+     */
+    @Query(value = """
+        SELECT hp FROM HocPhan hp
+        LEFT JOIN FETCH hp.chuNhiemHP gv
+        LEFT JOIN FETCH gv.nguoiDung
+        WHERE (:kw IS NULL
+               OR LOWER(hp.tenHocPhan) LIKE LOWER(CONCAT('%', :kw, '%'))
+               OR LOWER(hp.maHocPhan)  LIKE LOWER(CONCAT('%', :kw, '%')))
+          AND (:loai     IS NULL OR hp.loaiHocPhan = :loai)
+          AND (:trangThai IS NULL OR hp.trangThai  = :trangThai)
+        """,
+        countQuery = """
+        SELECT COUNT(hp) FROM HocPhan hp
+        WHERE (:kw IS NULL
+               OR LOWER(hp.tenHocPhan) LIKE LOWER(CONCAT('%', :kw, '%'))
+               OR LOWER(hp.maHocPhan)  LIKE LOWER(CONCAT('%', :kw, '%')))
+          AND (:loai     IS NULL OR hp.loaiHocPhan = :loai)
+          AND (:trangThai IS NULL OR hp.trangThai  = :trangThai)
+        """)
+    Page<HocPhan> searchPaged(@Param("kw") String kw,
+                              @Param("loai") LoaiHocPhan loai,
+                              @Param("trangThai") TrangThaiHocPhan trangThai,
+                              Pageable pageable);
 
     // Lay cac HP chua co trong 1 CTDT
     @Query("""

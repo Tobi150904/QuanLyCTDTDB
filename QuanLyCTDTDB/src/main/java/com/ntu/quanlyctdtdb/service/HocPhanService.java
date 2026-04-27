@@ -2,12 +2,31 @@ package com.ntu.quanlyctdtdb.service;
 
 import com.ntu.quanlyctdtdb.dto.HocPhanDTO;
 import com.ntu.quanlyctdtdb.entity.HocPhan;
+import com.ntu.quanlyctdtdb.enums.LoaiHocPhan;
+import com.ntu.quanlyctdtdb.enums.TrangThaiHocPhan;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
 public interface HocPhanService {
 
     List<HocPhan> findAll(String keyword);
+
+    /**
+     * Phase 2 — server-side Pageable + Sort.
+     * Tham so {@code loai} va {@code trangThai} co the {@code null} de bo qua filter.
+     */
+    Page<HocPhan> findPaged(String keyword, LoaiHocPhan loai,
+                             TrangThaiHocPhan trangThai, Pageable pageable);
+
+    /**
+     * Phase 2 — du lieu cho export CSV (khong phan trang, khong sort theo
+     * pageable). Lay theo cung filter voi findPaged de output trung khop voi
+     * UI nguoi dung dang xem.
+     */
+    List<HocPhan> findForExport(String keyword, LoaiHocPhan loai,
+                                 TrangThaiHocPhan trangThai);
 
     HocPhan findById(String ma);
 
