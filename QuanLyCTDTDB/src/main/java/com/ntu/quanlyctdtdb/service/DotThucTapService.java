@@ -45,4 +45,16 @@ public interface DotThucTapService {
     /** Nhap ket qua thuc tap cho SV */
     DanhSachThucTap capNhatKetQua(Integer maDanhSach, String loaiThucTap,
                                     String maDoanhNghiep, String nhanXet);
+
+    /**
+     * Phase 3 — thong ke nhanh cho stat-card row tren danh sach.
+     * Key:
+     *   tong         : tong so dot TT
+     *   chuanBi      : ChuanBi
+     *   choDuyet     : ChoDuyet
+     *   daDuyet      : DaDuyet
+     *   dangThucHien : DangThucHien
+     *   daKetThuc    : DaKetThuc
+     */
+    Map<String, Long> getThongKe();
 }

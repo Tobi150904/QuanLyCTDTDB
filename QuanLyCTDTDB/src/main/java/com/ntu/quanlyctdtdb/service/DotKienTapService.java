@@ -6,6 +6,7 @@ import com.ntu.quanlyctdtdb.entity.DotKienTap;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Service cho DotKienTap. Quy tac Hybrid DaThamGia:
@@ -71,4 +72,15 @@ public interface DotKienTapService {
     // ============== Doc danh sach ==============
 
     List<DanhSachSvKienTap> findDanhSachSVKienTap(Integer maDotKT);
+
+    /**
+     * Phase 3 — thong ke nhanh cho stat-card row tren danh sach.
+     * Key:
+     *   tong       : tong so dot KT
+     *   chuanBi    : ChuanBi
+     *   choDuyet   : ChoDuyet
+     *   daDuyet    : DaDuyet
+     *   daThucHien : DaThucHien
+     */
+    Map<String, Long> getThongKe();
 }

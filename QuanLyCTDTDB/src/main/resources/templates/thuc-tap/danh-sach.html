@@ -6,13 +6,7 @@
       layout:decorate="~{layout/base}">
 <head><title>Quản Lý Thực Tập</title></head>
 <body>
-<div layout:fragment="content"
-     th:with="cntTong=${#lists.size(danhSach)},
-              cntCB=${#lists.size(danhSach.?[trangThai != null and trangThai.name() == 'ChuanBi'])},
-              cntCD=${#lists.size(danhSach.?[trangThai != null and trangThai.name() == 'ChoDuyet'])},
-              cntDD=${#lists.size(danhSach.?[trangThai != null and trangThai.name() == 'DaDuyet'])},
-              cntDTH=${#lists.size(danhSach.?[trangThai != null and trangThai.name() == 'DangThucHien'])},
-              cntDKT=${#lists.size(danhSach.?[trangThai != null and trangThai.name() == 'DaKetThuc'])}">
+<div layout:fragment="content">
 
     <nav aria-label="breadcrumb" class="mb-3">
         <ol class="breadcrumb">
@@ -36,62 +30,38 @@
         </a>
     </div>
 
-    <!-- 6 stat cards (Tong + 5 trang thai) — col-6 col-md-4 col-xl auto-flex
-         de fit het tren XL ma van wrap dep tren md. -->
-    <div class="row g-3 mb-4">
+    <!-- 6 stat cards — Phase 3: dung canonical _stat-card fragment.
+         col-6 col-md-4 col-xl auto-flex de fit het tren XL ma van wrap dep tren md. -->
+    <div class="row g-3 mb-4" th:if="${thongKe != null}">
         <div class="col-6 col-md-4 col-xl">
-            <div class="stat-card variant-info">
-                <div class="stat-card-icon"><i class="bi bi-collection"></i></div>
-                <div>
-                    <div class="stat-card-value" th:text="${cntTong}">0</div>
-                    <div class="stat-card-label">Tổng Đợt</div>
-                </div>
-            </div>
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-collection', value=${thongKe['tong'] ?: 0},
+                  label='Tổng Đợt', variant='info', href=null)}"></div>
         </div>
         <div class="col-6 col-md-4 col-xl">
-            <div class="stat-card">
-                <div class="stat-card-icon"><i class="bi bi-pencil-square"></i></div>
-                <div>
-                    <div class="stat-card-value" th:text="${cntCB}">0</div>
-                    <div class="stat-card-label">Chuẩn Bị</div>
-                </div>
-            </div>
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-pencil-square', value=${thongKe['chuanBi'] ?: 0},
+                  label='Chuẩn Bị', variant='neutral', href=null)}"></div>
         </div>
         <div class="col-6 col-md-4 col-xl">
-            <div class="stat-card variant-warning">
-                <div class="stat-card-icon"><i class="bi bi-hourglass-split"></i></div>
-                <div>
-                    <div class="stat-card-value" th:text="${cntCD}">0</div>
-                    <div class="stat-card-label">Chờ Duyệt</div>
-                </div>
-            </div>
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-hourglass-split', value=${thongKe['choDuyet'] ?: 0},
+                  label='Chờ Duyệt', variant='warning', href=null)}"></div>
         </div>
         <div class="col-6 col-md-4 col-xl">
-            <div class="stat-card variant-success">
-                <div class="stat-card-icon"><i class="bi bi-check2-circle"></i></div>
-                <div>
-                    <div class="stat-card-value" th:text="${cntDD}">0</div>
-                    <div class="stat-card-label">Đã Duyệt</div>
-                </div>
-            </div>
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-check2-circle', value=${thongKe['daDuyet'] ?: 0},
+                  label='Đã Duyệt', variant='success', href=null)}"></div>
         </div>
         <div class="col-6 col-md-4 col-xl">
-            <div class="stat-card variant-orange">
-                <div class="stat-card-icon"><i class="bi bi-play-circle"></i></div>
-                <div>
-                    <div class="stat-card-value" th:text="${cntDTH}">0</div>
-                    <div class="stat-card-label">Đang Thực Hiện</div>
-                </div>
-            </div>
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-play-circle-fill', value=${thongKe['dangThucHien'] ?: 0},
+                  label='Đang Thực Hiện', variant='orange', href=null)}"></div>
         </div>
         <div class="col-6 col-md-4 col-xl">
-            <div class="stat-card variant-teal">
-                <div class="stat-card-icon"><i class="bi bi-flag-fill"></i></div>
-                <div>
-                    <div class="stat-card-value" th:text="${cntDKT}">0</div>
-                    <div class="stat-card-label">Đã Kết Thúc</div>
-                </div>
-            </div>
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-flag-fill', value=${thongKe['daKetThuc'] ?: 0},
+                  label='Đã Kết Thúc', variant='teal', href=null)}"></div>
         </div>
     </div>
 
@@ -101,7 +71,7 @@
                 <i class="bi bi-building-check me-2"></i>Danh Sách Đợt Thực Tập
             </span>
             <span class="badge bg-light text-dark"
-                  th:text="'Tổng: ' + ${cntTong}">0</span>
+                  th:text="'Tổng: ' + (${thongKe != null ? thongKe['tong'] : 0})">0</span>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">

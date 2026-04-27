@@ -403,4 +403,18 @@ public class DotKienTapServiceImpl implements DotKienTapService {
         dot.setNhanXetDN(nhanXet);
         return dotKTRepo.save(dot);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, Long> getThongKe() {
+        // Datasize DotKienTap thuong nho (~hang chuc), dung COUNT() truc tiep
+        // de nhat quan voi pattern HocPhan/CTDT/DoanhNghiep getThongKe.
+        Map<String, Long> map = new LinkedHashMap<>();
+        map.put("tong",       dotKTRepo.count());
+        map.put("chuanBi",    dotKTRepo.countByTrangThai(TrangThaiDotKT.ChuanBi));
+        map.put("choDuyet",   dotKTRepo.countByTrangThai(TrangThaiDotKT.ChoDuyet));
+        map.put("daDuyet",    dotKTRepo.countByTrangThai(TrangThaiDotKT.DaDuyet));
+        map.put("daThucHien", dotKTRepo.countByTrangThai(TrangThaiDotKT.DaThucHien));
+        return map;
+    }
 }

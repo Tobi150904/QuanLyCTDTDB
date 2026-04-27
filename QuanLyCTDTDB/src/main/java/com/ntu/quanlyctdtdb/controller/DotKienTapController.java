@@ -54,6 +54,10 @@ public class DotKienTapController {
     @GetMapping
     public String danhSach(Model model) {
         model.addAttribute("danhSach", dotKTService.findAll());
+        // Phase 3 — stat-card row dong bo voi thuc-tap/hoc-ky/lop-hanh-chinh.
+        // Truoc day count duoc tinh inline trong template (#lists.size +
+        // .?[trangThai==…]) — chuyen sang COUNT() o DB de tach logic.
+        model.addAttribute("thongKe", dotKTService.getThongKe());
         model.addAttribute("activeMenu", "kien-tap");
         return "kien-tap/danh-sach";
     }

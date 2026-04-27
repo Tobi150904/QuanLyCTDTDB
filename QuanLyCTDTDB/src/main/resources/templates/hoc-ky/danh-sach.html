@@ -30,43 +30,27 @@
         </a>
     </div>
 
-    <!-- Stat cards — dung variant classes thay cho inline style -->
-    <div class="row g-3 mb-4">
+    <!-- Stat cards — Phase 3: dung canonical _stat-card fragment -->
+    <div class="row g-3 mb-4" th:if="${thongKe != null}">
         <div class="col-6 col-md-3">
-            <div class="stat-card variant-info">
-                <div class="stat-card-icon"><i class="bi bi-calendar3"></i></div>
-                <div>
-                    <div class="stat-card-value" th:text="${thongKe['tong'] ?: 0}">0</div>
-                    <div class="stat-card-label">Tổng Cộng</div>
-                </div>
-            </div>
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-calendar3', value=${thongKe['tong'] ?: 0},
+                  label='Tổng Cộng', variant='info', href=null)}"></div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="stat-card variant-success">
-                <div class="stat-card-icon"><i class="bi bi-play-circle"></i></div>
-                <div>
-                    <div class="stat-card-value" th:text="${thongKe['dangDienRa'] ?: 0}">0</div>
-                    <div class="stat-card-label">Đang Diễn Ra</div>
-                </div>
-            </div>
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-play-circle-fill', value=${thongKe['dangDienRa'] ?: 0},
+                  label='Đang Diễn Ra', variant='success', href=null)}"></div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="stat-card variant-teal">
-                <div class="stat-card-icon"><i class="bi bi-hourglass-split"></i></div>
-                <div>
-                    <div class="stat-card-value" th:text="${thongKe['sapDienRa'] ?: 0}">0</div>
-                    <div class="stat-card-label">Sắp Diễn Ra</div>
-                </div>
-            </div>
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-hourglass-split', value=${thongKe['sapDienRa'] ?: 0},
+                  label='Sắp Diễn Ra', variant='teal', href=null)}"></div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="stat-card">
-                <div class="stat-card-icon"><i class="bi bi-check2-square"></i></div>
-                <div>
-                    <div class="stat-card-value" th:text="${thongKe['daKetThuc'] ?: 0}">0</div>
-                    <div class="stat-card-label">Đã Kết Thúc</div>
-                </div>
-            </div>
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-check2-square', value=${thongKe['daKetThuc'] ?: 0},
+                  label='Đã Kết Thúc', variant='neutral', href=null)}"></div>
         </div>
     </div>
 

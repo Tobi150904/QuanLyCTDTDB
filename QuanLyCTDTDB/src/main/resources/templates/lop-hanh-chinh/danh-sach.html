@@ -26,43 +26,27 @@
         </a>
     </div>
 
-    <!-- Stats — dung variant classes thay cho inline style de dong nhat design tokens -->
-    <div class="row g-3 mb-4">
+    <!-- Stats — Phase 3: dung canonical _stat-card fragment -->
+    <div class="row g-3 mb-4" th:if="${thongKe != null}">
         <div class="col-6 col-md-3">
-            <div class="stat-card variant-info">
-                <div class="stat-card-icon"><i class="bi bi-collection"></i></div>
-                <div>
-                    <div class="stat-card-value" th:text="${thongKe['tong'] ?: 0}">0</div>
-                    <div class="stat-card-label">Tổng Lớp</div>
-                </div>
-            </div>
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-collection', value=${thongKe['tong'] ?: 0},
+                  label='Tổng Lớp', variant='info', href=null)}"></div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="stat-card variant-success">
-                <div class="stat-card-icon"><i class="bi bi-person-check"></i></div>
-                <div>
-                    <div class="stat-card-value" th:text="${thongKe['daCoCVHT'] ?: 0}">0</div>
-                    <div class="stat-card-label">Đã Có CVHT</div>
-                </div>
-            </div>
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-person-check-fill', value=${thongKe['daCoCVHT'] ?: 0},
+                  label='Đã Có CVHT', variant='success', href=null)}"></div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="stat-card variant-warning">
-                <div class="stat-card-icon"><i class="bi bi-person-x"></i></div>
-                <div>
-                    <div class="stat-card-value" th:text="${thongKe['chuaCoCVHT'] ?: 0}">0</div>
-                    <div class="stat-card-label">Chưa Có CVHT</div>
-                </div>
-            </div>
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-person-x-fill', value=${thongKe['chuaCoCVHT'] ?: 0},
+                  label='Chưa Có CVHT', variant='warning', href=null)}"></div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="stat-card variant-teal">
-                <div class="stat-card-icon"><i class="bi bi-mortarboard"></i></div>
-                <div>
-                    <div class="stat-card-value" th:text="${thongKe['soKhoaHoc'] ?: 0}">0</div>
-                    <div class="stat-card-label">Số Khóa</div>
-                </div>
-            </div>
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-mortarboard-fill', value=${thongKe['soKhoaHoc'] ?: 0},
+                  label='Số Khóa', variant='teal', href=null)}"></div>
         </div>
     </div>
 

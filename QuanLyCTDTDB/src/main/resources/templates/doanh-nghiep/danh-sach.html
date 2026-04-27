@@ -34,34 +34,24 @@
         </div>
     </div>
 
-    <!-- Stat summary — dung variant classes thay cho inline style -->
-    <div class="row g-3 mb-4">
+    <!-- Stat summary — Phase 3: dung canonical _stat-card fragment -->
+    <div class="row g-3 mb-4" th:if="${thongKe != null}">
         <div class="col-6 col-md-4">
-            <div class="stat-card variant-info">
-                <div class="stat-card-icon"><i class="bi bi-building"></i></div>
-                <div>
-                    <div class="stat-card-value" th:text="${thongKe['tongDoanhNghiep'] ?: 0}">0</div>
-                    <div class="stat-card-label">Tổng Cộng</div>
-                </div>
-            </div>
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-building-fill', value=${thongKe['tongDoanhNghiep'] ?: 0},
+                  label='Tổng Cộng', variant='info', href=null)}"></div>
         </div>
         <div class="col-6 col-md-4">
-            <div class="stat-card variant-success">
-                <div class="stat-card-icon"><i class="bi bi-check-circle"></i></div>
-                <div>
-                    <div class="stat-card-value" th:text="${thongKe['dangHopTac'] ?: 0}">0</div>
-                    <div class="stat-card-label">Đang Hợp Tác</div>
-                </div>
-            </div>
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-check-circle-fill', value=${thongKe['dangHopTac'] ?: 0},
+                  label='Đang Hợp Tác', variant='success',
+                  href=${'/doanh-nghiep?trangThai=DangHopTac'})}"></div>
         </div>
         <div class="col-12 col-md-4">
-            <div class="stat-card variant-warning">
-                <div class="stat-card-icon"><i class="bi bi-pause-circle"></i></div>
-                <div>
-                    <div class="stat-card-value" th:text="${thongKe['tamNgung'] ?: 0}">0</div>
-                    <div class="stat-card-label">Tạm Ngưng</div>
-                </div>
-            </div>
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-pause-circle-fill', value=${thongKe['tamNgung'] ?: 0},
+                  label='Tạm Ngưng', variant='warning',
+                  href=${'/doanh-nghiep?trangThai=TamNgung'})}"></div>
         </div>
     </div>
 

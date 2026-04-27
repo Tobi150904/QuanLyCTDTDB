@@ -328,4 +328,20 @@ public class DotThucTapServiceImpl implements DotThucTapService {
 
         return dsTTRepo.save(ds);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, Long> getThongKe() {
+        // Phase 3 — stat-card row. DotThucTap co 6 trang thai chinh:
+        // ChuanBi / ChoDuyet / DaDuyet / DangThucHien / DaKetThuc / DaHuy.
+        // UI hien 5 cot dau (DaHuy de minh hoa noise nen bo qua) + 1 cot tong.
+        Map<String, Long> map = new LinkedHashMap<>();
+        map.put("tong",         dotTTRepo.count());
+        map.put("chuanBi",      dotTTRepo.countByTrangThai(TrangThaiDotTT.ChuanBi));
+        map.put("choDuyet",     dotTTRepo.countByTrangThai(TrangThaiDotTT.ChoDuyet));
+        map.put("daDuyet",      dotTTRepo.countByTrangThai(TrangThaiDotTT.DaDuyet));
+        map.put("dangThucHien", dotTTRepo.countByTrangThai(TrangThaiDotTT.DangThucHien));
+        map.put("daKetThuc",    dotTTRepo.countByTrangThai(TrangThaiDotTT.DaKetThuc));
+        return map;
+    }
 }
