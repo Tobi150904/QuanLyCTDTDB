@@ -135,7 +135,9 @@ code, kbd, samp, pre {
     box-shadow: 0 2px 16px rgba(8, 24, 47, 0.22);
     z-index: 1040;
     border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-    position: relative;
+    /* KHONG override Bootstrap's `position: fixed` tu class fixed-top.
+       Pseudo-element ::after van duoc dinh vi tuong doi voi navbar fixed
+       (vi position:fixed cung tao ra positioning context). */
 }
 #mainNavbar::after {
     /* warm accent hairline at the very bottom — institutional but elegant */
@@ -156,25 +158,30 @@ code, kbd, samp, pre {
     color: #fff;
     display: inline-flex;
     align-items: center;
-    gap: 12px;
-    padding: 4px 0;
+    gap: 10px;
+    /* Khong them padding rieng — de Bootstrap navbar tu xu ly chieu cao
+       (truoc day padding: 4px 0 + brand-mark 36px = 44px = sat het content area). */
+    padding: 0;
+    margin-right: 0.75rem;
 }
 #mainNavbar .navbar-brand:hover { color: #fff; }
 .navbar-brand-mark {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
     background: linear-gradient(135deg, var(--accent) 0%, var(--accent-lt) 100%);
     color: var(--primary-dk);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.2rem;
+    font-size: 1.05rem;
+    line-height: 1;
     flex-shrink: 0;
     box-shadow: 0 4px 10px rgba(232, 160, 32, 0.35),
                 inset 0 -2px 4px rgba(0, 0, 0, 0.12);
     transition: transform var(--transition);
 }
+.navbar-brand-mark .bi { line-height: 1; }
 #mainNavbar .navbar-brand:hover .navbar-brand-mark { transform: scale(1.04); }
 .navbar-brand-title {
     font-family: var(--font-display);
