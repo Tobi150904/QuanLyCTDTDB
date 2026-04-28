@@ -16,21 +16,21 @@ import java.time.LocalDateTime;
  * <ul>
  *   <li>LoaiThucTap = <i>Truong</i>: cột 1 = GV_HD, cột 2 = GV_PB — cả hai
  *       đều là giảng viên (NguoiDung có row trong {@link GiangVien}).</li>
- *   <li>LoaiThucTap = <i>DoanhNghiep</i>: cột 1 = DN (do
- *       {@link NhanVienDoanhNghiep} chấm), cột 2 = GV_HD (giảng viên giám
- *       sát từ trường). Cột DN <b>không phải</b> giảng viên — vì vậy FK cũ
- *       về GiangVien là sai semantic, dẫn tới phải seed giả GV001 cho mọi
- *       cột DN ⇒ thống kê người đánh giá bị nhiễu, audit không tin cậy.</li>
+ *   <li>LoaiThucTap = <i>DoanhNghiep</i>: cột 1 = DN (do NV DN chấm — NguoiDung
+ *       loại DoanhNghiep), cột 2 = GV_HD (giảng viên giám sát từ trường).
+ *       Cột DN <b>không phải</b> giảng viên — vì vậy FK cũ về GiangVien là
+ *       sai semantic, dẫn tới phải seed giả GV001 cho mọi cột DN ⇒ thống kê
+ *       người đánh giá bị nhiễu, audit không tin cậy.</li>
  * </ul>
  *
  * <p>Sau refactor, <i>MaNguoiDanhGia</i> luôn trỏ về {@link NguoiDung}
  * (thực thể gốc) — service layer (DotThucTapServiceImpl#capNhatDiem) chịu
  * trách nhiệm validate role-based:</p>
  * <ul>
- *   <li>{@code MaVaiTro = 'DN'} ⇒ NguoiDung phải có {@link NhanVienDoanhNghiep}
- *       record và thuộc đúng DN tiếp nhận SV (hoặc DN cho phép cross-mentor).</li>
+ *   <li>{@code MaVaiTro = 'DN'} ⇒ NguoiDung phải có loaiNguoiDung = DoanhNghiep
+ *       và thuộc đúng DN tiếp nhận SV (qua FK NguoiDung.doanhNghiep).</li>
  *   <li>{@code MaVaiTro IN ('GV_HD','GV_PB','CVHT','GV')} ⇒ NguoiDung phải có
- *       {@link GiangVien} record.</li>
+ *       loaiNguoiDung = GiangVien (có row {@link GiangVien} tương ứng).</li>
  * </ul>
  */
 @Entity

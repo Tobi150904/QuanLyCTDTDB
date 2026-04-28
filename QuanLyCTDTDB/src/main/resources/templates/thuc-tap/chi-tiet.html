@@ -521,17 +521,18 @@
                                                                             th:disabled="${!canEdit}">
                                                                         <option value="">-- Giữ nguyên / chọn --</option>
 
-                                                                        <!-- isDN -> list NV DN cua DN cua SV -->
+                                                                        <!-- isDN -> list NV DN cua DN cua SV
+                                                                             Refactor: nhanVienDNList giờ là List<NguoiDung> (bỏ bảng NhanVienDoanhNghiep).
+                                                                             NguoiDung loại DoanhNghiep có FK doanhNghiep trực tiếp. -->
                                                                         <th:block th:if="${isDN}">
                                                                             <option th:each="nv : ${nhanVienDNList}"
                                                                                     th:if="${ds.doanhNghiep == null
-                                                                                            or ds.doanhNghiep.maDoanhNghiep == nv.doanhNghiep.maDoanhNghiep}"
-                                                                                    th:value="${nv.nguoiDung.maNguoiDung}"
+                                                                                            or ds.doanhNghiep.maDoanhNghiep == nv.maDoanhNghiep}"
+                                                                                    th:value="${nv.maNguoiDung}"
                                                                                     th:selected="${kq1 != null
                                                                                                   and kq1.nguoiDanhGia != null
-                                                                                                  and kq1.nguoiDanhGia.maNguoiDung == nv.nguoiDung.maNguoiDung}"
-                                                                                    th:text="${nv.nguoiDung.hoTen
-                                                                                              + (nv.chucVu != null ? ' — ' + nv.chucVu : '')}">NV</option>
+                                                                                                  and kq1.nguoiDanhGia.maNguoiDung == nv.maNguoiDung}"
+                                                                                    th:text="${nv.hoTen + ' — ' + (nv.tenDoanhNghiep != null ? nv.tenDoanhNghiep : '')}">NV</option>
                                                                         </th:block>
 
                                                                         <!-- isTruong -> list GV (giang vien giam sat) -->

@@ -1,6 +1,7 @@
 -- =============================================================================
--- 01_create_tables.sql  —  SCHEMA FULL  (Phase 1 -> Phase 7, 2 cot diem + NV DN
---                                         duoc lien ket truc tiep tu NguoiDung)
+-- 01_create_tables.sql  —  SCHEMA FULL  (Phase 1 -> Phase 7 REFACTORED)
+--                          NV DN lien ket truc tiep tu NguoiDung.MaDoanhNghiep
+--                          (BO BANG NhanVienDoanhNghiep — Java code da dong bo)
 -- =============================================================================
 -- He Thong Quan Ly Chuong Trinh Dao Tao Xuat Sac (Truong DH Nha Trang).
 -- Schema 1-1 voi @Entity JPA + 02_seed_data.sql.

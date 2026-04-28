@@ -1,6 +1,7 @@
 -- =============================================================================
--- 02_seed_data.sql  —  SEED FULL  (refactor: bo bang NhanVienDoanhNghiep,
---                                   NV DN duoc lien ket truc tiep tu NguoiDung)
+-- 02_seed_data.sql  —  SEED FULL  (Phase 7 REFACTORED)
+--                       BO bang NhanVienDoanhNghiep — NV DN lien ket truc tiep
+--                       tu NguoiDung.MaDoanhNghiep (Java code da dong bo)
 -- =============================================================================
 -- He Thong Quan Ly Chuong Trinh Dao Tao Xuat Sac (Truong DH Nha Trang).
 -- Chay SAU KHI 01_create_tables.sql da chay xong.

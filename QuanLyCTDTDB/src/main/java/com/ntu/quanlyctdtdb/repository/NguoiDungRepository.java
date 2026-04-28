@@ -70,4 +70,39 @@ public interface NguoiDungRepository extends JpaRepository<NguoiDung, String> {
     @Query("SELECT MAX(n.maNguoiDung) FROM NguoiDung n "
             + "WHERE n.maNguoiDung LIKE CONCAT(:prefix, '%')")
     String findMaxMaNguoiDungByPrefix(@Param("prefix") String prefix);
+
+    // =====================================================================
+    // Phase 7 Refactor — NV DN query (thay thế NhanVienDoanhNghiepRepository)
+    // =====================================================================
+
+    /**
+     * Liệt kê tất cả NguoiDung loại DoanhNghiep (nhân viên / đại diện DN)
+     * đã fetch doanhNghiep để tránh LazyInitException khi template hiển thị
+     * tên DN trong dropdown chọn người chấm điểm.
+     *
+     * <p>Dùng thay thế cho {@code NhanVienDoanhNghiepRepository.findAllFetch()}.</p>
+     */
+    @Query("""
+        SELECT n FROM NguoiDung n
+        LEFT JOIN FETCH n.doanhNghiep
+        WHERE n.loaiNguoiDung = com.ntu.quanlyctdtdb.enums.LoaiNguoiDung.DoanhNghiep
+          AND n.trangThaiTK = true
+        ORDER BY n.doanhNghiep.tenDoanhNghiep ASC, n.hoTen ASC
+        """)
+    List<NguoiDung> findAllNhanVienDNFetch();
+
+    /**
+     * Liệt kê NguoiDung loại DoanhNghiep thuộc một DN cụ thể.
+     *
+     * <p>Dùng thay thế cho {@code NhanVienDoanhNghiepRepository.findByDoanhNghiep()}.</p>
+     */
+    @Query("""
+        SELECT n FROM NguoiDung n
+        LEFT JOIN FETCH n.doanhNghiep
+        WHERE n.loaiNguoiDung = com.ntu.quanlyctdtdb.enums.LoaiNguoiDung.DoanhNghiep
+          AND n.doanhNghiep.maDoanhNghiep = :maDN
+          AND n.trangThaiTK = true
+        ORDER BY n.hoTen ASC
+        """)
+    List<NguoiDung> findNhanVienDNByDoanhNghiep(@Param("maDN") String maDoanhNghiep);
 }

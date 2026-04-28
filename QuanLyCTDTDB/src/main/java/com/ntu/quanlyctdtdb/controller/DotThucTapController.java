@@ -10,7 +10,7 @@ import com.ntu.quanlyctdtdb.repository.DoanhNghiepRepository;
 import com.ntu.quanlyctdtdb.repository.GiangVienRepository;
 import com.ntu.quanlyctdtdb.repository.HocKyNamHocRepository;
 import com.ntu.quanlyctdtdb.repository.HocPhanRepository;
-import com.ntu.quanlyctdtdb.repository.NhanVienDoanhNghiepRepository;
+import com.ntu.quanlyctdtdb.repository.NguoiDungRepository;
 import com.ntu.quanlyctdtdb.security.CustomUserDetails;
 import com.ntu.quanlyctdtdb.service.DotThucTapService;
 import jakarta.validation.Valid;
@@ -60,7 +60,8 @@ public class DotThucTapController {
     private final DoanhNghiepRepository doanhNghiepRepo;
     // Phase 7 — 2 cot diem (nguoi danh gia = NguoiDung — co the la GV hoac NV DN)
     private final GiangVienRepository giangVienRepo;
-    private final NhanVienDoanhNghiepRepository nhanVienDNRepo;
+    // Refactor: NV DN giờ là NguoiDung loại DoanhNghiep với FK doanhNghiep
+    private final NguoiDungRepository nguoiDungRepo;
 
     @GetMapping
     public String danhSach(Model model) {
@@ -246,13 +247,14 @@ public class DotThucTapController {
         //   ketQuaMap     : Map<maThucTap, Map<maVaiTro, KetQuaThucTap>>
         //                   de template render diem cho tung SV theo vai tro.
         //   giangVienList : dropdown chon nguoi cham (cot GV — vai tro GV_HD/GV_PB).
-        //   nhanVienDNList: dropdown chon nguoi cham (cot DN — vai tro DN). Phase 7
-        //                   refactor: NV DN la NguoiDung loai DOANH_NGHIEP, lam viec
-        //                   tai mot DN cu the. Da fetch nguoiDung + doanhNghiep de
-        //                   render hoTen + tenDN trong template.
+        //   nhanVienDNList: dropdown chon nguoi cham (cot DN — vai tro DN).
+        //                   Refactor: NV DN giờ là NguoiDung loại DoanhNghiep với FK
+        //                   doanhNghiep trực tiếp (bỏ bảng NhanVienDoanhNghiep).
+        //                   Đã fetch doanhNghiep để render hoTen + tenDN trong template.
         model.addAttribute("ketQuaMap", dotTTService.getKetQuaMapByDot(id));
         model.addAttribute("giangVienList", giangVienRepo.findAllFetchNguoiDung());
-        model.addAttribute("nhanVienDNList", nhanVienDNRepo.findAllFetch());
+        // Refactor: NV DN giờ là NguoiDung loại DoanhNghiep với FK doanhNghiep (bỏ bảng NhanVienDoanhNghiep)
+        model.addAttribute("nhanVienDNList", nguoiDungRepo.findAllNhanVienDNFetch());
         model.addAttribute("activeMenu", "thuc-tap");
         return "thuc-tap/chi-tiet";
     }
