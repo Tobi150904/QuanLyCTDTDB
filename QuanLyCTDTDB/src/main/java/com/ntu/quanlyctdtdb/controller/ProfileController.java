@@ -42,24 +42,25 @@ public class ProfileController {
 
         if (!passwordEncoder.matches(matKhauCu, nd.getMatKhauHash())) {
             ra.addFlashAttribute("errorMsg", "Mật khẩu cũ không đúng.");
-            return "redirect:/profile";
+            return "redirect:/profile#security";
         }
         if (!matKhauMoi.equals(xacNhanMatKhau)) {
             ra.addFlashAttribute("errorMsg",
                     "Mật khẩu mới và xác nhận không khớp.");
-            return "redirect:/profile";
+            return "redirect:/profile#security";
         }
         // Chan truong hop user dat lai mat khau trung voi mat khau hien tai —
         // tranh feeling "da doi" nhung thuc te khong co gi thay doi.
         if (passwordEncoder.matches(matKhauMoi, nd.getMatKhauHash())) {
             ra.addFlashAttribute("warningMsg",
                     "Mật khẩu mới không được trùng với mật khẩu hiện tại.");
-            return "redirect:/profile";
+            return "redirect:/profile#security";
         }
         nd.setMatKhauHash(passwordEncoder.encode(matKhauMoi));
         nguoiDungRepo.save(nd);
-        ra.addFlashAttribute("successMsg", "Đổi mật khẩu thành công!");
-        return "redirect:/profile";
+        ra.addFlashAttribute("successMsg",
+                "Đổi mật khẩu thành công! Lần đăng nhập tiếp theo bạn sẽ dùng mật khẩu mới.");
+        return "redirect:/profile#security";
     }
 
     @PostMapping("/cap-nhat")
@@ -69,12 +70,36 @@ public class ProfileController {
                            RedirectAttributes ra) {
         NguoiDung nd = nguoiDungRepo.findById(currentUser.getMaNguoiDung())
                 .orElseThrow(() -> new BusinessException("Không tìm thấy người dùng."));
-        if (hoTen != null && !hoTen.isBlank()) {
-            nd.setHoTen(hoTen.trim());
+
+        // Phase 7 — bug fix: validate hoTen NOT blank instead of silently
+        // skipping. Previously empty hoTen was a no-op which felt broken.
+        if (hoTen == null || hoTen.isBlank()) {
+            ra.addFlashAttribute("errorMsg", "Họ và tên không được để trống.");
+            return "redirect:/profile#info";
         }
-        nd.setSoDienThoai(soDienThoai);
+        if (hoTen.trim().length() > 100) {
+            ra.addFlashAttribute("errorMsg",
+                    "Họ và tên không được vượt quá 100 ký tự.");
+            return "redirect:/profile#info";
+        }
+        nd.setHoTen(hoTen.trim());
+
+        // Normalize SDT: trim, treat empty -> null. Validate format if present.
+        if (soDienThoai != null) {
+            String sdt = soDienThoai.trim();
+            if (sdt.isEmpty()) {
+                nd.setSoDienThoai(null);
+            } else if (!sdt.matches("[0-9+\\-\\s]{8,15}")) {
+                ra.addFlashAttribute("errorMsg",
+                        "Số điện thoại không hợp lệ (8-15 ký tự, chỉ chữ số / + / - / khoảng trắng).");
+                return "redirect:/profile#info";
+            } else {
+                nd.setSoDienThoai(sdt);
+            }
+        }
+
         nguoiDungRepo.save(nd);
         ra.addFlashAttribute("successMsg", "Cập nhật thông tin thành công!");
-        return "redirect:/profile";
+        return "redirect:/profile#info";
     }
 }

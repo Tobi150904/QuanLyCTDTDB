@@ -479,17 +479,42 @@
         activateFromHash();
         window.addEventListener('hashchange', activateFromHash);
 
+        // Bug fix: data-bs-target is "#tab-overview" -> the previous code did
+        // target.replace('tab-', '#') = "##overview" which never matched
+        // tabMap. Use a target -> hash map keyed by the actual selector.
+        var targetToHash = {
+            '#tab-overview': '#overview',
+            '#tab-info':     '#info',
+            '#tab-security': '#security'
+        };
         document.querySelectorAll('#profileTabs button[data-bs-toggle="tab"]')
             .forEach(function (btn) {
                 btn.addEventListener('shown.bs.tab', function (e) {
                     var target = e.target.getAttribute('data-bs-target');
-                    if (!target) return;
-                    var key = target.replace('tab-', '#');
-                    if (tabMap[key] && history.replaceState) {
-                        history.replaceState(null, '', key);
+                    var hash = targetToHash[target];
+                    if (hash && history.replaceState) {
+                        history.replaceState(null, '', hash);
                     }
                 });
             });
+
+        /* ---------- Quick-action buttons -> activate tab ---------- */
+        // "Sửa Thông Tin Cá Nhân" / "Đổi Mật Khẩu" inside tab Tổng Quan
+        // should switch tab instead of relying on the browser's hash jump,
+        // which would scroll past the tab nav and not actually open it.
+        document.querySelectorAll('[data-quick-tab]').forEach(function (a) {
+            a.addEventListener('click', function (e) {
+                var btn = document.getElementById(a.getAttribute('data-quick-tab'));
+                if (btn && window.bootstrap && window.bootstrap.Tab) {
+                    e.preventDefault();
+                    window.bootstrap.Tab.getOrCreateInstance(btn).show();
+                    var href = a.getAttribute('href');
+                    if (href && history.replaceState) {
+                        history.replaceState(null, '', href);
+                    }
+                }
+            });
+        });
 
     })();
 </script>

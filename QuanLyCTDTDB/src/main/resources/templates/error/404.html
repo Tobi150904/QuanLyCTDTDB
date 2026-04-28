@@ -2,6 +2,7 @@
 <html lang="vi"
       xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       layout:decorate="~{layout/base}">
 <head><title>404 — Không Tìm Thấy Trang</title></head>
 <body>
@@ -34,9 +35,6 @@
                 <a th:href="@{/dashboard}" class="btn btn-primary">
                     <i class="bi bi-house-door me-1" aria-hidden="true"></i>Về Trang Chủ
                 </a>
-                <a th:href="@{/tim-kiem}" class="btn btn-outline-primary">
-                    <i class="bi bi-search me-1" aria-hidden="true"></i>Tìm Kiếm
-                </a>
                 <button type="button" class="btn btn-outline-secondary"
                         onclick="history.back()">
                     <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Quay Lại
@@ -45,8 +43,9 @@
 
             <hr class="soft-divider">
 
-            <!--/* Phase 7: shortcut den cac trang chinh thay vi text mo ho */-->
-            <div class="small">
+            <!--/* Phase 7: shortcut den cac trang chinh — chi link toi route co
+                  thuc te trong he thong (chua co /tim-kiem hay /dang-ky doc lap). */-->
+            <div class="small" sec:authorize="isAuthenticated()">
                 <p class="text-muted mb-2">
                     <i class="bi bi-signpost-2 me-1" aria-hidden="true"></i>
                     Có thể bạn cần:
@@ -60,9 +59,10 @@
                        class="badge text-decoration-none bg-light text-dark border px-3 py-2">
                         <i class="bi bi-person me-1" aria-hidden="true"></i>Hồ sơ cá nhân
                     </a>
-                    <a th:href="@{/dang-ky}"
-                       class="badge text-decoration-none bg-light text-dark border px-3 py-2">
-                        <i class="bi bi-pencil-square me-1" aria-hidden="true"></i>Đăng ký học phần
+                    <a th:href="@{/lop-hoc-phan}"
+                       class="badge text-decoration-none bg-light text-dark border px-3 py-2"
+                       sec:authorize="hasAnyRole('PDT','TTDTXS','GIANG_VIEN','SINH_VIEN','ADMIN')">
+                        <i class="bi bi-collection me-1" aria-hidden="true"></i>Lớp học phần
                     </a>
                 </div>
             </div>
