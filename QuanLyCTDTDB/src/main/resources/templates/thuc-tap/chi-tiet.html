@@ -104,9 +104,12 @@
     <div class="tab-pane fade show active" id="pane-overview"
          role="tabpanel" aria-labelledby="tab-overview" tabindex="0">
 
-    <!-- STATE-TRANSITION ACTION CLUSTER -->
+    <!-- STATE-TRANSITION ACTION CLUSTER (docs/03 §WF-08).
+         Phase 7 — them day du transitions: bat-dau, ket-thuc, huy.
+         Pipeline: ChuanBi -> ChoDuyet -> DaDuyet -> DangThucHien -> DaKetThuc.
+         Huy ap dung o moi state truoc DaKetThuc. -->
     <div class="card mb-4"
-         th:if="${s == 'ChuanBi' or s == 'ChoDuyet'}">
+         th:if="${s != 'DaKetThuc' and s != 'DaHuy'}">
         <div class="card-header">
             <i class="bi bi-arrow-repeat"></i>
             <span class="fw-semibold">Thao Tác Trạng Thái</span>
@@ -114,11 +117,11 @@
         <div class="card-body">
             <div class="d-flex flex-wrap gap-2">
 
-                <!-- ChuanBi -> ChoDuyet — mau warning theo §3.2 (Cho Duyet = warning) -->
+                <!-- ChuanBi -> ChoDuyet -->
                 <form th:if="${s == 'ChuanBi'}"
                       th:action="@{/thuc-tap/gui-phe-duyet/{id}(id=${dot.maDotTT})}"
                       method="post" class="d-inline m-0"
-                      sec:authorize="hasAnyRole('TTDTXS','ADMIN')">
+                      sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                     <button class="btn btn-sm btn-warning text-dark">
                         <i class="bi bi-send me-1"></i>Gửi Phê Duyệt
@@ -136,10 +139,43 @@
                         <i class="bi bi-check-lg me-1"></i>Phê Duyệt
                     </button>
                 </form>
+
+                <!-- DaDuyet -> DangThucHien -->
+                <form th:if="${s == 'DaDuyet'}"
+                      th:action="@{/thuc-tap/bat-dau/{id}(id=${dot.maDotTT})}"
+                      method="post" class="d-inline m-0"
+                      sec:authorize="hasAnyRole('TTDTXS','ADMIN')"
+                      onsubmit="return confirm('Bắt đầu đợt thực tập? Sinh viên có thể nhập điểm và nhận xét.')">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <button class="btn btn-sm btn-info text-white">
+                        <i class="bi bi-play-circle me-1"></i>Bắt Đầu
+                    </button>
+                </form>
+
+                <!-- DangThucHien -> DaKetThuc -->
+                <form th:if="${s == 'DangThucHien'}"
+                      th:action="@{/thuc-tap/ket-thuc/{id}(id=${dot.maDotTT})}"
+                      method="post" class="d-inline m-0"
+                      sec:authorize="hasAnyRole('TTDTXS','ADMIN')"
+                      onsubmit="return confirm('Kết thúc đợt thực tập? Trạng thái sinh viên sẽ được chốt và không thể chỉnh sửa.')">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <button class="btn btn-sm btn-success">
+                        <i class="bi bi-flag-fill me-1"></i>Kết Thúc Đợt
+                    </button>
+                </form>
+
+                <!-- {ChuanBi,ChoDuyet,DaDuyet,DangThucHien} -> DaHuy -->
+                <form th:if="${s == 'ChuanBi' or s == 'ChoDuyet' or s == 'DaDuyet' or s == 'DangThucHien'}"
+                      th:action="@{/thuc-tap/huy/{id}(id=${dot.maDotTT})}"
+                      method="post" class="d-inline m-0"
+                      sec:authorize="hasAnyRole('TTDTXS','ADMIN')"
+                      onsubmit="return confirm('Huỷ đợt thực tập? Thao tác không thể hoàn tác.')">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <button class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-x-lg me-1"></i>Huỷ Đợt
+                    </button>
+                </form>
             </div>
-            <!-- Phase 5 placeholder: chua co endpoint bat-dau / ket-thuc / huy
-                 trong DotThucTapController. Khi them endpoint, render them
-                 button DangThucHien / DaKetThuc / DaHuy o day. -->
         </div>
     </div>
 

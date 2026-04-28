@@ -27,6 +27,29 @@ public interface DotThucTapService {
     /** Lanh dao / quan tri phe duyet */
     DotThucTap pheduyet(Integer id, String maNguoiDung);
 
+    /**
+     * Phase 7 — TTDTXS bat dau dot thuc tap.
+     * <p>DaDuyet -> DangThucHien. Block neu khong o trang thai DaDuyet.</p>
+     */
+    DotThucTap batDau(Integer id);
+
+    /**
+     * Phase 7 — TTDTXS ket thuc dot thuc tap.
+     *
+     * <p>DangThucHien -> DaKetThuc. Cascade: tat ca DanhSachThucTap thuoc dot
+     * dang o trang thai DaPhanCong / DangThucTap se chuyen sang DaKetThuc
+     * (giu nguyen DaHuy de bao toan audit).</p>
+     */
+    DotThucTap ketThuc(Integer id);
+
+    /**
+     * Phase 7 — TTDTXS huy dot thuc tap (truoc khi DaKetThuc).
+     *
+     * <p>{ChuanBi, ChoDuyet, DaDuyet, DangThucHien} -> DaHuy.
+     * Khong cho phep huy khi dot da DaKetThuc hoac da DaHuy.</p>
+     */
+    DotThucTap huy(Integer id);
+
     /** Import sinh vien (csv maSV list) — default LoaiThucTap = Truong, khong DN.
      *  Tra ve map: "success" -> int, "errors" -> List&lt;String&gt; */
     Map<String, Object> importSinhVien(Integer maDotTT, List<String> dsMaSV);

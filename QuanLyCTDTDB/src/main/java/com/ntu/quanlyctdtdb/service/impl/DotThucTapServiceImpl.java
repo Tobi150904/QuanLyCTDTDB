@@ -163,6 +163,68 @@ public class DotThucTapServiceImpl implements DotThucTapService {
         return dotTTRepo.save(dot);
     }
 
+    // -------------------------------------------------------------------------
+    // Phase 7 — State transitions sau phe duyet (docs/03 §WF-08).
+    // TTDTXS: DaDuyet -> DangThucHien -> DaKetThuc.
+    //         huy() applicable o moi trang thai truoc DaKetThuc.
+    // -------------------------------------------------------------------------
+
+    @Override
+    public DotThucTap batDau(Integer id) {
+        DotThucTap dot = findById(id);
+        if (dot.getTrangThai() != TrangThaiDotTT.DaDuyet) {
+            throw new BusinessException(
+                    "Chi co the bat dau dot dang o trang thai DaDuyet. "
+                    + "Trang thai hien tai: " + dot.getTrangThai());
+        }
+        dot.setTrangThai(TrangThaiDotTT.DangThucHien);
+        log.info("[DotThucTap {}] Bat dau dot thuc tap (DaDuyet -> DangThucHien).", id);
+        return dotTTRepo.save(dot);
+    }
+
+    @Override
+    public DotThucTap ketThuc(Integer id) {
+        DotThucTap dot = findById(id);
+        if (dot.getTrangThai() != TrangThaiDotTT.DangThucHien) {
+            throw new BusinessException(
+                    "Chi co the ket thuc dot dang o trang thai DangThucHien. "
+                    + "Trang thai hien tai: " + dot.getTrangThai());
+        }
+        dot.setTrangThai(TrangThaiDotTT.DaKetThuc);
+
+        // Cascade: chuyen DanhSachThucTap dang o DaPhanCong/DangThucTap sang
+        // DaKetThuc. Bo qua DaHuy de giu lich su huy phan cong.
+        List<DanhSachThucTap> dsList = dsTTRepo.findByDotThucTap_MaDotTT(id);
+        int updated = 0;
+        for (DanhSachThucTap ds : dsList) {
+            if (ds.getTrangThai() == TrangThaiThucTap.DaPhanCong
+                    || ds.getTrangThai() == TrangThaiThucTap.DangThucTap) {
+                ds.setTrangThai(TrangThaiThucTap.DaKetThuc);
+                dsTTRepo.save(ds);
+                updated++;
+            }
+        }
+        log.info("[DotThucTap {}] Ket thuc dot. Cascade: {} SV chuyen sang DaKetThuc.",
+                 id, updated);
+        return dotTTRepo.save(dot);
+    }
+
+    @Override
+    public DotThucTap huy(Integer id) {
+        DotThucTap dot = findById(id);
+        if (dot.getTrangThai() == TrangThaiDotTT.DaHuy) {
+            throw new BusinessException("Dot thuc tap nay da bi huy truoc do.");
+        }
+        if (dot.getTrangThai() == TrangThaiDotTT.DaKetThuc) {
+            throw new BusinessException(
+                    "Khong the huy dot da o trang thai DaKetThuc. "
+                    + "Du lieu da chot — chi co the tao dot moi de thay the.");
+        }
+        dot.setTrangThai(TrangThaiDotTT.DaHuy);
+        log.info("[DotThucTap {}] Huy dot thuc tap.", id);
+        return dotTTRepo.save(dot);
+    }
+
     @Override
     public Map<String, Object> importSinhVien(Integer maDotTT, List<String> dsMaSV) {
         return importSinhVien(maDotTT, dsMaSV, LoaiThucTap.Truong, null);

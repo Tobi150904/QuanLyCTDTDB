@@ -53,4 +53,19 @@ public interface SinhVienRepository extends JpaRepository<SinhVien, String> {
         ORDER BY sv.nguoiDung.hoTen
         """)
     List<SinhVien> findDangHocByMaCTDT(String maCTDT);
+
+    /**
+     * Phase 7 — Lay SV kem fetch lopHanhChinh + coVan + nguoiDung (cua co van).
+     * Dung trong DanhGiaController.xuLyCanhBao() khi can verify CVHT current
+     * la co van cua lop SV. Tranh LazyInitException khi OSIV=false.
+     */
+    @Query("""
+        SELECT sv FROM SinhVien sv
+        LEFT JOIN FETCH sv.nguoiDung
+        LEFT JOIN FETCH sv.lopHanhChinh lhc
+        LEFT JOIN FETCH lhc.coVan cv
+        LEFT JOIN FETCH cv.nguoiDung
+        WHERE sv.maSV = :maSV
+        """)
+    Optional<SinhVien> findByIdFetchCoVan(@Param("maSV") String maSV);
 }

@@ -78,4 +78,23 @@ public interface LopHocPhanRepository extends JpaRepository<LopHocPhan, LopHocPh
         ORDER BY lhp.id.maCTDT, lhp.id.maHocPhan, lhp.id.maLopHocPhan
         """)
     List<LopHocPhan> findByHocKyFetch(String maHocKy);
+
+    /**
+     * Phase 7 — Lay 1 LopHocPhan kem giang vien (fetch eager) de DanhGia
+     * controller verify ownership cua GV truoc khi cho phep nhap nhan xet.
+     * Tranh LazyInitException khi OSIV=false.
+     */
+    @Query("""
+        SELECT lhp FROM LopHocPhan lhp
+        LEFT JOIN FETCH lhp.giangVien
+        WHERE lhp.id.maCTDT = :maCTDT
+          AND lhp.id.maHocPhan = :maHP
+          AND lhp.id.maHocKy = :maHK
+          AND lhp.id.maLopHocPhan = :maLop
+        """)
+    java.util.Optional<LopHocPhan> findByIdFetchGv(
+            @org.springframework.data.repository.query.Param("maCTDT") String maCTDT,
+            @org.springframework.data.repository.query.Param("maHP") String maHP,
+            @org.springframework.data.repository.query.Param("maHK") String maHK,
+            @org.springframework.data.repository.query.Param("maLop") Integer maLop);
 }

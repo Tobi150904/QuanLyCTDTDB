@@ -14,8 +14,10 @@ import com.ntu.quanlyctdtdb.repository.HocKyNamHocRepository;
 import com.ntu.quanlyctdtdb.repository.HocPhanRepository;
 import com.ntu.quanlyctdtdb.repository.SinhVienRepository;
 import com.ntu.quanlyctdtdb.security.CustomUserDetails;
+import com.ntu.quanlyctdtdb.repository.LopHocPhanRepository;
 import com.ntu.quanlyctdtdb.service.DanhGiaService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -66,6 +68,10 @@ public class DanhGiaController {
     // Phase 7 — Bug fix: load HocKy de hien thi friendly name (truoc day chi
     // hien ma "HK1-2024" -> user nham la khong dung HK).
     private final HocKyNamHocRepository hocKyRepo;
+    // Phase 7 — Bug fix: kiem tra GV thuc su la giao vien cua lop khi vao
+    // GET /danh-gia/lop. Truoc day URL tay co the truy cap lop khong phai
+    // cua minh (path traversal).
+    private final LopHocPhanRepository lopHocPhanRepo;
 
     @ModelAttribute("activeMenu")
     public String activeMenu() { return "danh-gia"; }
@@ -140,8 +146,32 @@ public class DanhGiaController {
                            @RequestParam String maHocPhan,
                            @RequestParam String maHocKy,
                            @RequestParam Integer maLop,
+                           @AuthenticationPrincipal CustomUserDetails ud,
                            Model model) {
         LopHocPhanId id = new LopHocPhanId(maCTDT, maHocPhan, maHocKy, maLop);
+
+        // Phase 7 — Ownership guard: GV chi duoc nhap nhan xet cho lop minh
+        // duoc phan cong day. ADMIN bypass de ho tro support.
+        boolean isAdmin = ud != null && ud.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+        if (!isAdmin) {
+            LopHocPhan lhp = lopHocPhanRepo
+                    .findByIdFetchGv(maCTDT, maHocPhan, maHocKy, maLop).orElse(null);
+            if (lhp == null) {
+                throw new AccessDeniedException(
+                        "Khong tim thay lop hoc phan nay.");
+            }
+            GiangVien gvHienTai = giangVienRepo
+                    .findByNguoiDung_MaNguoiDung(ud.getMaNguoiDung()).orElse(null);
+            String maGvHienTai = gvHienTai != null ? gvHienTai.getMaGV() : null;
+            String maGvCuaLop = lhp.getGiangVien() != null
+                    ? lhp.getGiangVien().getMaGV() : null;
+            if (maGvHienTai == null || !maGvHienTai.equals(maGvCuaLop)) {
+                throw new AccessDeniedException(
+                        "Ban khong phai la giang vien cua lop hoc phan nay.");
+            }
+        }
+
         List<DanhSachSvLopHocPhan> danhSachSV = danhGiaService.findDanhSachSvTrongLop(id);
         HocPhan hp = hocPhanRepo.findById(maHocPhan).orElse(null);
         // Phase 7 — load HocKy de hien friendly ten ("HK1 2024-2025") trong hero.
@@ -162,8 +192,28 @@ public class DanhGiaController {
     @PreAuthorize("hasAnyRole('GIANG_VIEN','ADMIN')")
     @PostMapping("/lop/nhan-xet")
     public String luuNhanXet(@ModelAttribute NhapNhanXetDTO form,
+                              @AuthenticationPrincipal CustomUserDetails ud,
                               RedirectAttributes ra) {
+        // Phase 7 — Ownership guard tren write path. URL-level chi check role,
+        // can xac minh GV current chinh la giang vien cua lop. Khong dua chi
+        // vao GET guard vi user co the goi POST truc tiep (curl/postman).
         try {
+            boolean isAdmin = ud != null && ud.getAuthorities().stream()
+                    .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+            if (!isAdmin) {
+                LopHocPhan lhp = lopHocPhanRepo.findByIdFetchGv(
+                        form.getMaCTDT(), form.getMaHocPhan(),
+                        form.getMaHocKy(), form.getMaLop()).orElseThrow(() ->
+                        new AccessDeniedException("Lop hoc phan khong ton tai."));
+                GiangVien gv = giangVienRepo
+                        .findByNguoiDung_MaNguoiDung(ud.getMaNguoiDung()).orElse(null);
+                String maGvCuaLop = lhp.getGiangVien() != null
+                        ? lhp.getGiangVien().getMaGV() : null;
+                if (gv == null || !gv.getMaGV().equals(maGvCuaLop)) {
+                    throw new AccessDeniedException(
+                            "Ban khong phai la giang vien cua lop hoc phan nay.");
+                }
+            }
             danhGiaService.nhapNhanXet(form);
             ra.addFlashAttribute("successMsg",
                     "Da luu nhan xet cho SV " + form.getMaSV()
@@ -237,8 +287,28 @@ public class DanhGiaController {
                                 @RequestParam Integer maLop,
                                 @RequestParam String maSV,
                                 @RequestParam String ketQuaXuLy,
+                                @AuthenticationPrincipal CustomUserDetails ud,
                                 RedirectAttributes ra) {
+        // Phase 7 — Ownership guard cho CVHT: chi xu ly canh bao SV thuoc lop
+        // hanh chinh do minh phu trach. PDT/ADMIN bypass de giam sat toan he.
         try {
+            boolean isPdtOrAdmin = ud != null && ud.getAuthorities().stream()
+                    .anyMatch(a -> "ROLE_PDT".equals(a.getAuthority())
+                                || "ROLE_ADMIN".equals(a.getAuthority()));
+            if (!isPdtOrAdmin) {
+                SinhVien sv = sinhVienRepo.findByIdFetchCoVan(maSV).orElseThrow(() ->
+                        new AccessDeniedException("Khong tim thay sinh vien."));
+                String maCoVan = sv.getLopHanhChinh() != null
+                        && sv.getLopHanhChinh().getCoVan() != null
+                        ? sv.getLopHanhChinh().getCoVan().getMaGV() : null;
+                GiangVien gv = giangVienRepo
+                        .findByNguoiDung_MaNguoiDung(ud.getMaNguoiDung()).orElse(null);
+                if (gv == null || maCoVan == null
+                        || !gv.getMaGV().equals(maCoVan)) {
+                    throw new AccessDeniedException(
+                            "Ban khong phai co van hoc tap cua lop sinh vien nay.");
+                }
+            }
             danhGiaService.xuLyCanhBao(maCTDT, maHocPhan, maHocKy, maLop, maSV, ketQuaXuLy);
             ra.addFlashAttribute("successMsg",
                     "Da luu ket qua xu ly cho SV " + maSV + ".");

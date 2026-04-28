@@ -185,6 +185,54 @@ public class DotThucTapController {
         return "redirect:/thuc-tap/chi-tiet/" + id;
     }
 
+    /**
+     * Phase 7 — TTDTXS bat dau dot thuc tap (DaDuyet -> DangThucHien).
+     */
+    @PreAuthorize("hasAnyRole('TTDTXS','ADMIN')")
+    @PostMapping("/bat-dau/{id}")
+    public String batDau(@PathVariable Integer id, RedirectAttributes ra) {
+        try {
+            dotTTService.batDau(id);
+            ra.addFlashAttribute("successMsg",
+                    "Da bat dau dot thuc tap. Sinh vien co the nhap diem va nhan xet.");
+        } catch (Exception e) {
+            ra.addFlashAttribute("errorMsg", e.getMessage());
+        }
+        return "redirect:/thuc-tap/chi-tiet/" + id;
+    }
+
+    /**
+     * Phase 7 — TTDTXS ket thuc dot thuc tap (DangThucHien -> DaKetThuc).
+     * Cascade: cap nhat trang thai DanhSachThucTap chua chot sang DaKetThuc.
+     */
+    @PreAuthorize("hasAnyRole('TTDTXS','ADMIN')")
+    @PostMapping("/ket-thuc/{id}")
+    public String ketThuc(@PathVariable Integer id, RedirectAttributes ra) {
+        try {
+            dotTTService.ketThuc(id);
+            ra.addFlashAttribute("successMsg",
+                    "Da ket thuc dot thuc tap. Trang thai sinh vien duoc chot.");
+        } catch (Exception e) {
+            ra.addFlashAttribute("errorMsg", e.getMessage());
+        }
+        return "redirect:/thuc-tap/chi-tiet/" + id;
+    }
+
+    /**
+     * Phase 7 — TTDTXS huy dot thuc tap (truoc DaKetThuc).
+     */
+    @PreAuthorize("hasAnyRole('TTDTXS','ADMIN')")
+    @PostMapping("/huy/{id}")
+    public String huy(@PathVariable Integer id, RedirectAttributes ra) {
+        try {
+            dotTTService.huy(id);
+            ra.addFlashAttribute("successMsg", "Da huy dot thuc tap.");
+        } catch (Exception e) {
+            ra.addFlashAttribute("errorMsg", e.getMessage());
+        }
+        return "redirect:/thuc-tap/chi-tiet/" + id;
+    }
+
     @GetMapping("/chi-tiet/{id}")
     public String chiTiet(@PathVariable Integer id, Model model) {
         model.addAttribute("dot", dotTTService.findById(id));
