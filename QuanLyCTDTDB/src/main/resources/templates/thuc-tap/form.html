@@ -109,11 +109,13 @@
                             </div>
 
                             <div class="col-md-6">
-                                <div class="form-floating">
+                                <!--/* Phase 7: Khi sua, khoa CTDT bang readonly text + hidden input
+                                       (xem ghi chu o kien-tap/form.html cho ly do).
+                                       Khi tao moi, dung select binh thuong. */-->
+                                <div class="form-floating" th:if="${dotId == null}">
                                     <select class="form-select"
                                             th:classappend="${#fields.hasErrors('maCTDT')} ? 'is-invalid'"
                                             id="maCTDT" th:field="*{maCTDT}"
-                                            th:disabled="${dotId != null}"
                                             aria-required="true" required>
                                         <option value="">-- Chọn CTĐT --</option>
                                         <option th:each="ctdt : ${ctdtList}"
@@ -125,6 +127,15 @@
                                          th:if="${#fields.hasErrors('maCTDT')}"
                                          th:errors="*{maCTDT}"></div>
                                 </div>
+                                <div th:if="${dotId != null}">
+                                    <label for="maCTDTDisplay" class="form-label fw-medium small mb-1">
+                                        Chương Trình Đào Tạo <span class="req-mark">*</span>
+                                    </label>
+                                    <input type="text" id="maCTDTDisplay" class="form-control"
+                                           th:value="${dotTTDTO.maCTDT}"
+                                           readonly disabled tabindex="-1">
+                                    <input type="hidden" name="maCTDT" th:value="${dotTTDTO.maCTDT}">
+                                </div>
                                 <small class="form-text text-muted" th:if="${dotId != null}">
                                     <i class="bi bi-lock me-1"></i>
                                     Không thể đổi CTĐT sau khi đã tạo.
@@ -132,11 +143,10 @@
                             </div>
 
                             <div class="col-md-6">
-                                <div class="form-floating">
+                                <div class="form-floating" th:if="${dotId == null}">
                                     <select class="form-select"
                                             th:classappend="${#fields.hasErrors('maHocPhan')} ? 'is-invalid'"
                                             id="maHocPhan" th:field="*{maHocPhan}"
-                                            th:disabled="${dotId != null}"
                                             aria-required="true" required>
                                         <option value="">-- Chọn Học Phần --</option>
                                         <option th:each="hp : ${hocPhanList}"
@@ -148,7 +158,20 @@
                                          th:if="${#fields.hasErrors('maHocPhan')}"
                                          th:errors="*{maHocPhan}"></div>
                                 </div>
-                                <small class="form-text text-muted">
+                                <div th:if="${dotId != null}">
+                                    <label for="maHocPhanDisplay" class="form-label fw-medium small mb-1">
+                                        Học Phần <span class="req-mark">*</span>
+                                    </label>
+                                    <input type="text" id="maHocPhanDisplay" class="form-control"
+                                           th:value="${dotTTDTO.maHocPhan}"
+                                           readonly disabled tabindex="-1">
+                                    <input type="hidden" name="maHocPhan" th:value="${dotTTDTO.maHocPhan}">
+                                </div>
+                                <small class="form-text text-muted" th:if="${dotId != null}">
+                                    <i class="bi bi-lock me-1"></i>
+                                    Không thể đổi học phần sau khi đã tạo.
+                                </small>
+                                <small class="form-text text-muted" th:if="${dotId == null}">
                                     <i class="bi bi-info-circle me-1"></i>
                                     Chỉ HP đã duyệt &amp; nằm trong CTĐT đã chọn.
                                 </small>

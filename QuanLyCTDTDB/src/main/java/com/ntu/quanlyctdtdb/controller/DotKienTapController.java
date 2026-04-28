@@ -3,6 +3,7 @@ package com.ntu.quanlyctdtdb.controller;
 import com.ntu.quanlyctdtdb.dto.DotKienTapDTO;
 import com.ntu.quanlyctdtdb.entity.DotKienTap;
 import com.ntu.quanlyctdtdb.enums.TrangThaiDoanhNghiep;
+import com.ntu.quanlyctdtdb.enums.TrangThaiDotKT;
 import com.ntu.quanlyctdtdb.repository.DoanhNghiepRepository;
 import com.ntu.quanlyctdtdb.repository.GiangVienRepository;
 import com.ntu.quanlyctdtdb.repository.HocKyNamHocRepository;
@@ -96,8 +97,19 @@ public class DotKienTapController {
 
     @PreAuthorize("hasAnyRole('TTDTXS','CNHP','ADMIN')")
     @GetMapping("/sua/{id}")
-    public String suaForm(@PathVariable Integer id, Model model) {
+    public String suaForm(@PathVariable Integer id, Model model, RedirectAttributes ra) {
         DotKienTap dot = dotKTService.findById(id);
+        // Phase 7 — UX guard: san xuat tinh nhat quan voi service. Service block
+        // update khi state khac ChuanBi/ChoDuyet, nhung neu user truy cap GET
+        // /sua/{id} ho van load duoc form -> dien xong moi bi tu choi.
+        // Chuyen huong som sang chi-tiet kem flash error de tranh that vong.
+        TrangThaiDotKT tt = dot.getTrangThai();
+        if (tt != TrangThaiDotKT.ChuanBi && tt != TrangThaiDotKT.ChoDuyet) {
+            ra.addFlashAttribute("errorMsg",
+                    "Khong the chinh sua dot dang o trang thai " + tt
+                    + ". Chi co the sua khi dot o trang thai ChuanBi hoac ChoDuyet.");
+            return "redirect:/kien-tap/chi-tiet/" + id;
+        }
         DotKienTapDTO dto = new DotKienTapDTO();
         dto.setTenDotKT(dot.getTenDotKT());
         dto.setMaLopHC(dot.getLopHanhChinh() != null ? dot.getLopHanhChinh().getMaLopHC() : null);

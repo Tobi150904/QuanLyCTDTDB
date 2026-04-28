@@ -55,8 +55,10 @@
                 </div>
             </div>
             <div class="detail-hero-actions">
-                <a sec:authorize="hasAnyRole('TTDTXS','ADMIN')"
-                   th:if="${s == 'ChuanBi' or s == 'ChoDuyet' or s == 'DaDuyet'}"
+                <!--/* Phase 7 — chi cho sua khi ChuanBi hoac ChoDuyet (dong bo voi
+                       service guard). Truoc day cho ca DaDuyet -> click vao bi tu choi. */-->
+                <a sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')"
+                   th:if="${s == 'ChuanBi' or s == 'ChoDuyet'}"
                    th:href="@{/thuc-tap/sua/{id}(id=${dot.maDotTT})}"
                    class="btn btn-light btn-sm">
                     <i class="bi bi-pencil me-1"></i>Sửa

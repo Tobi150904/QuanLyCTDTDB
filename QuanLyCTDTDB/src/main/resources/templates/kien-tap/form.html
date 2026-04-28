@@ -107,11 +107,14 @@
                             </div>
 
                             <div class="col-md-6">
-                                <div class="form-floating">
+                                <!--/* Khi sua (dotId != null): khoa lop HC bang select disabled +
+                                       hidden input cung name de submit van mang gia tri.
+                                       Neu chi disabled (khong hidden), browser KHONG gui field disabled
+                                       len server -> @NotBlank tren DTO se fail. */-->
+                                <div class="form-floating" th:if="${dotId == null}">
                                     <select class="form-select"
                                             th:classappend="${#fields.hasErrors('maLopHC')} ? 'is-invalid'"
                                             id="maLopHC" th:field="*{maLopHC}"
-                                            th:disabled="${dotId != null}"
                                             aria-required="true" required>
                                         <option value="">-- Chọn Lớp --</option>
                                         <option th:each="lhc : ${lopHCList}"
@@ -123,7 +126,18 @@
                                          th:if="${#fields.hasErrors('maLopHC')}"
                                          th:errors="*{maLopHC}"></div>
                                 </div>
-                                <small class="form-text text-muted" th:if="${dotId != null}">
+                                <div th:if="${dotId != null}">
+                                    <label for="maLopHCDisplay" class="form-label fw-medium small mb-1">
+                                        Lớp Hành Chính <span class="req-mark">*</span>
+                                    </label>
+                                    <input type="text" id="maLopHCDisplay" class="form-control"
+                                           th:value="${dotKTDTO.maLopHC}"
+                                           readonly disabled tabindex="-1"
+                                           aria-describedby="maLopHCLockHelp">
+                                    <input type="hidden" name="maLopHC" th:value="${dotKTDTO.maLopHC}">
+                                </div>
+                                <small class="form-text text-muted" th:if="${dotId != null}"
+                                       id="maLopHCLockHelp">
                                     <i class="bi bi-lock me-1"></i>
                                     Không thể đổi lớp sau khi đã tạo (đã auto-add SV).
                                 </small>

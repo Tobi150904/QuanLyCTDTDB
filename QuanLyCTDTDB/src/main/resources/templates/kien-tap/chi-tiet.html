@@ -53,8 +53,12 @@
                 </div>
             </div>
             <div class="detail-hero-actions">
+                <!--/* Phase 7 — chi cho sua khi ChuanBi hoac ChoDuyet. Service da chan
+                       voi DaDuyet/DaThucHien/DaHuy nhung UI van phai an button cho sach.
+                       Truoc day (Phase 4): th:if="${s != 'DaHuy' and s != 'DaThucHien'}"
+                       -> van hien voi DaDuyet, gay confuse + click vao -> error. */-->
                 <a sec:authorize="hasAnyRole('TTDTXS','CNHP','ADMIN')"
-                   th:if="${s != 'DaHuy' and s != 'DaThucHien'}"
+                   th:if="${s == 'ChuanBi' or s == 'ChoDuyet'}"
                    th:href="@{/kien-tap/sua/{id}(id=${dot.maDotKT})}"
                    class="btn btn-light btn-sm">
                     <i class="bi bi-pencil me-1"></i>Sửa

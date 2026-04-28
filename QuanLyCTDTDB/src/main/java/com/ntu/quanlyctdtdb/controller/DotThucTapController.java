@@ -4,6 +4,7 @@ import com.ntu.quanlyctdtdb.dto.DotThucTapDTO;
 import com.ntu.quanlyctdtdb.entity.DotThucTap;
 import com.ntu.quanlyctdtdb.enums.LoaiThucTap;
 import com.ntu.quanlyctdtdb.enums.TrangThaiDoanhNghiep;
+import com.ntu.quanlyctdtdb.enums.TrangThaiDotTT;
 import com.ntu.quanlyctdtdb.repository.ChuongTrinhDaoTaoRepository;
 import com.ntu.quanlyctdtdb.repository.DoanhNghiepRepository;
 import com.ntu.quanlyctdtdb.repository.HocKyNamHocRepository;
@@ -103,8 +104,17 @@ public class DotThucTapController {
 
     @PreAuthorize("hasAnyRole('PDT','TTDTXS','ADMIN')")
     @GetMapping("/sua/{id}")
-    public String suaForm(@PathVariable Integer id, Model model) {
+    public String suaForm(@PathVariable Integer id, Model model, RedirectAttributes ra) {
         var dot = dotTTService.findById(id);
+        // Phase 7 — UX guard: tra ve chi-tiet kem flash error neu state khong cho phep sua
+        // (service block, nhung neu khong chan o controller -> user dien xong moi bi reject).
+        TrangThaiDotTT tt = dot.getTrangThai();
+        if (tt != TrangThaiDotTT.ChuanBi && tt != TrangThaiDotTT.ChoDuyet) {
+            ra.addFlashAttribute("errorMsg",
+                    "Khong the chinh sua dot dang o trang thai " + tt
+                    + ". Chi co the sua khi dot o trang thai ChuanBi hoac ChoDuyet.");
+            return "redirect:/thuc-tap/chi-tiet/" + id;
+        }
         DotThucTapDTO dto = new DotThucTapDTO();
         dto.setTenDotTT(dot.getTenDotTT());
         dto.setMaCTDT(dot.getCtdtHocPhan() != null ? dot.getCtdtHocPhan().getId().getMaCTDT() : null);
