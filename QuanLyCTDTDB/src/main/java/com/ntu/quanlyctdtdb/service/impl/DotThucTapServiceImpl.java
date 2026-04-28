@@ -461,34 +461,30 @@ public class DotThucTapServiceImpl implements DotThucTapService {
                     .orElseThrow(() -> new BusinessException(
                             "Nguoi danh gia '" + maNguoiDanhGia + "' khong ton tai."));
 
-            // Role-consistency theo nghiep vu (docs/03 §WF-08, user spec):
-            //   - vai tro DN          -> phai la NguoiDung loai DOANH_NGHIEP
-            //   - vai tro GV_HD/GV_PB -> phai la GIANG_VIEN hoac CVHT
-            //   - vai tro CVHT        -> phai la CVHT
+            // Role-consistency theo nghiep vu (docs/03 §WF-08, user spec).
+            // LoaiNguoiDung enum (PascalCase): Admin / GiangVien / SinhVien / DoanhNghiep.
+            // CVHT khong phai la 1 LoaiNguoiDung rieng — CVHT la 1 dang GiangVien
+            // (xac dinh boi GiangVien.loaiGiangVien = CoVanHocTap), nen role-check
+            // chi can compare voi GiangVien / DoanhNghiep.
+            //   - vai tro DN               -> NguoiDung loai DoanhNghiep
+            //   - vai tro GV_HD/GV_PB/CVHT -> NguoiDung loai GiangVien
             LoaiNguoiDung loai = nguoiDanhGia.getLoaiNguoiDung();
             switch (maVaiTroTrim) {
                 case "DN" -> {
-                    if (loai != LoaiNguoiDung.DOANH_NGHIEP) {
+                    if (loai != LoaiNguoiDung.DoanhNghiep) {
                         throw new BusinessException(
                                 "Vai tro 'DN' yeu cau nguoi cham la nhan vien doanh nghiep "
-                                + "(NguoiDung loai DOANH_NGHIEP). Hien tai: " + loai + ".");
+                                + "(NguoiDung loai DoanhNghiep). Hien tai: " + loai + ".");
                     }
                 }
-                case "GV_HD", "GV_PB" -> {
-                    if (loai != LoaiNguoiDung.GIANG_VIEN && loai != LoaiNguoiDung.CVHT) {
+                case "GV_HD", "GV_PB", "CVHT" -> {
+                    if (loai != LoaiNguoiDung.GiangVien) {
                         throw new BusinessException(
-                                "Vai tro '" + maVaiTroTrim + "' yeu cau nguoi cham la giang vien (GV/CVHT). "
-                                + "Hien tai: " + loai + ".");
+                                "Vai tro '" + maVaiTroTrim + "' yeu cau nguoi cham la giang vien "
+                                + "(NguoiDung loai GiangVien). Hien tai: " + loai + ".");
                     }
                 }
-                case "CVHT" -> {
-                    if (loai != LoaiNguoiDung.CVHT && loai != LoaiNguoiDung.GIANG_VIEN) {
-                        throw new BusinessException(
-                                "Vai tro 'CVHT' yeu cau nguoi cham la CVHT (hoac GV). "
-                                + "Hien tai: " + loai + ".");
-                    }
-                }
-                default -> { /* no-op — vai tro la khong chuan da bi reject o tren */ }
+                default -> { /* no-op — vai tro khong chuan da bi reject o tren */ }
             }
         }
 
