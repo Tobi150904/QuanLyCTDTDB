@@ -405,10 +405,12 @@ public class DotThucTapServiceImpl implements DotThucTapService {
     @Transactional(readOnly = true)
     public Map<Integer, Map<String, KetQuaThucTap>> getKetQuaMapByDot(Integer maDotTT) {
         // Group: maThucTap -> (maVaiTro -> KetQuaThucTap).
-        // Repo da fetch vaiTro + nguoiDanhGia.nguoiDung -> safe khi
-        // open-in-view=false va template render gv.hoTen.
+        // Repo da fetch danhSachThucTap + vaiTro + nguoiDanhGia -> safe khi
+        // open-in-view=false va template render kq1.diem / kq1.nguoiDanhGia.hoTen.
         List<KetQuaThucTap> all = ketQuaTTRepo.findByDotFetchAll(maDotTT);
-        return all.stream().collect(Collectors.groupingBy(
+        log.info("[v0] getKetQuaMapByDot: maDotTT={}, ketQua loaded={}", maDotTT, all.size());
+
+        Map<Integer, Map<String, KetQuaThucTap>> result = all.stream().collect(Collectors.groupingBy(
                 kq -> kq.getDanhSachThucTap().getMaThucTap(),
                 Collectors.toMap(
                         kq -> kq.getVaiTroThucTap().getMaVaiTro(),
@@ -418,6 +420,13 @@ public class DotThucTapServiceImpl implements DotThucTapService {
                                 && (a.getUpdatedAt() == null
                                     || b.getUpdatedAt().isAfter(a.getUpdatedAt())) ? b : a
                 )));
+
+        log.info("[v0] getKetQuaMapByDot: grouped map keys (maThucTap)={}", result.keySet());
+        result.forEach((maThucTap, vaiTroMap) ->
+                log.info("[v0] getKetQuaMapByDot:   maThucTap={} -> vaiTro keys={}",
+                        maThucTap, vaiTroMap.keySet()));
+
+        return result;
     }
 
     @Override

@@ -34,9 +34,10 @@ public interface KetQuaThucTapRepository extends JpaRepository<KetQuaThucTap, In
      */
     @Query("""
         SELECT kq FROM KetQuaThucTap kq
+        JOIN FETCH kq.danhSachThucTap dst
         LEFT JOIN FETCH kq.vaiTroThucTap
         LEFT JOIN FETCH kq.nguoiDanhGia
-        WHERE kq.danhSachThucTap.dotThucTap.maDotTT = :maDotTT
+        WHERE dst.dotThucTap.maDotTT = :maDotTT
         """)
     List<KetQuaThucTap> findByDotFetchAll(@Param("maDotTT") Integer maDotTT);
 
