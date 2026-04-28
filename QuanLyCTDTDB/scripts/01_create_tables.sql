@@ -1,5 +1,6 @@
 -- =============================================================================
--- 01_create_tables.sql  —  SCHEMA FULL  (Phase 1 -> Phase 7, refactor 2 cot diem)
+-- 01_create_tables.sql  —  SCHEMA FULL  (Phase 1 -> Phase 7, 2 cot diem + NV DN
+--                                         duoc lien ket truc tiep tu NguoiDung)
 -- =============================================================================
 -- He Thong Quan Ly Chuong Trinh Dao Tao Xuat Sac (Truong DH Nha Trang).
 -- Schema 1-1 voi @Entity JPA + 02_seed_data.sql.
@@ -9,32 +10,40 @@
 --   2) Tab SQL > paste file nay > Go.
 --   3) Chay tiep scripts/02_seed_data.sql.
 --
--- ===== THAY DOI LON SO VOI BAN TRUOC (Phase 7 refactor — fix bug "diem TT") =====
+-- ===== THAY DOI LON SO VOI BAN TRUOC (refactor — bo bang NhanVienDoanhNghiep) =====
 --
--- 1. **Bang moi NhanVienDoanhNghiep** — luu can bo doanh nghiep huong dan SV
---    thuc tap. Truoc day chi co GiangVien, dan toi viec MaNguoiDanhGia phai
---    FK ve GiangVien va nguoi cham diem cho cot DN bi GIA LAP bang GV001
---    (sai semantic + bao cao thong ke nguoi danh gia bi nhieu).
+-- 1. **BO bang NhanVienDoanhNghiep** — He thong cua truong khong can quan ly
+--    nhan su cua doanh nghiep (chuc vu / phong ban / chuyen mon). Mot NV DN
+--    chi can co tai khoan trong NguoiDung (LoaiNguoiDung='DoanhNghiep') de
+--    login + cham diem thuc tap. Lien ket "NV nay thuoc DN nao" duoc dua
+--    truc tiep len NguoiDung qua cot mới `MaDoanhNghiep` (nullable FK).
 --
--- 2. **KetQuaThucTap.MaNguoiDanhGia FK chuyen tu GiangVien sang NguoiDung**.
---    Cho phep ca GV (cot 1 Truong / cot 2 DN) lan NV DN (cot 1 DN) deu la
---    nguoi danh gia hop le. CHK enum-like duy tri qua app layer + UI dropdown.
+-- 2. **NguoiDung.MaDoanhNghiep** (moi):
+--      - LoaiNguoiDung='DoanhNghiep' -> bat buoc NOT NULL (ai cham cho DN nao).
+--      - LoaiNguoiDung khac          -> luon NULL.
+--      Rang buoc nay duoc bao dam boi CHECK constraint chk_nd_dn_required.
 --
--- 3. **VaiTroThucTap.TenVaiTro chuan hoa**:
+-- 3. **KetQuaThucTap.MaNguoiDanhGia FK -> NguoiDung** (giu nguyen tu Phase 7).
+--    Cho phep ca GV (vai tro GV_HD/GV_PB/CVHT) lan NV DN (vai tro DN) deu la
+--    nguoi danh gia hop le. Validate role-based o service layer.
+--
+-- 4. **Case A (NV DN giang day thinh giang)**: 1 NguoiDung loai DoanhNghiep
+--    co the dong thoi co record GiangVien (LoaiGiangVien=GiangVienThinhGiang).
+--    Khi do dropdown chon nguoi cham + dropdown phan giang vien hoc phan deu
+--    nhin thay user nay (qua 2 truy van khac nhau). UI khong can phan biet
+--    "NV DN" voi "GV thuong" — chi can dung dung repository.
+--
+-- 5. **VaiTroThucTap.TenVaiTro chuan hoa**:
 --      GV_HD : "GV Giam Sat / Huong Dan"  (truong=cot1, DN=cot2)
 --      GV_PB : "GV Phan Bien"             (truong=cot2)
 --      DN    : "Nhan Vien Doanh Nghiep"   (DN=cot1)
 --      CVHT  : "Co Van Hoc Tap"           (tham khao, ngoai 2 cot diem)
 --      GV    : (legacy, giu de migrate cu)
 --
--- 4. **Case A (NV DN giang day thinh giang)** duoc seed: 1 NguoiDung vua co
---    record NhanVienDoanhNghiep (lien ket DN001) vua co record GiangVien
---    (LoaiGiangVien=GiangVienThinhGiang). UI tu nhan dien qua 2 bang.
---
 -- ===== CHINH SACH FK — IMMUTABLE KEYS =====
 --   Tat ca FK khong ON UPDATE => default RESTRICT.
 --   Business key (MaGV, MaSV, MaHP, MaCTDT, MaHocKy, MaDoanhNghiep, MaLopHC,
---   MaNguoiDung, MaNVDN) la BAT BIEN sau khi INSERT.
+--   MaNguoiDung) la BAT BIEN sau khi INSERT.
 --   Muon "doi ma" -> tao record moi + soft-delete record cu, KHONG UPDATE PK.
 --
 -- ===== DROP IDEMPOTENT =====
@@ -66,10 +75,10 @@ DROP TABLE IF EXISTS BCN_ThanhVien;
 DROP TABLE IF EXISTS ChuongTrinhDaoTao;
 DROP TABLE IF EXISTS NhomNguoiDung;
 DROP TABLE IF EXISTS VaiTroThucTap;
-DROP TABLE IF EXISTS NhanVienDoanhNghiep;        -- moi (Phase 7 refactor)
-DROP TABLE IF EXISTS DoanhNghiep;
+DROP TABLE IF EXISTS NhanVienDoanhNghiep;        -- legacy: drop neu schema cu con ton tai
 DROP TABLE IF EXISTS GiangVien;
-DROP TABLE IF EXISTS NguoiDung;
+DROP TABLE IF EXISTS NguoiDung;                   -- NguoiDung now FK -> DoanhNghiep
+DROP TABLE IF EXISTS DoanhNghiep;
 DROP TABLE IF EXISTS HocKyNamHoc;
 
 -- =============================================================================
@@ -87,48 +96,7 @@ CREATE TABLE HocKyNamHoc (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =============================================================================
--- 2. NguoiDung  (root identity: AD/GV/SV/DN)
---    LoaiNguoiDung: Admin | GiangVien | SinhVien | DoanhNghiep
---    Mat khau Password@123 (BCrypt cost=10) cho seed test.
--- =============================================================================
-CREATE TABLE NguoiDung (
-    MaNguoiDung    VARCHAR(20)  NOT NULL,
-    TenDangNhap    VARCHAR(50)  NOT NULL,
-    MatKhauHash    VARCHAR(255) NOT NULL,
-    Email          VARCHAR(100) NOT NULL,
-    HoTen          VARCHAR(100) NOT NULL,
-    SoDienThoai    VARCHAR(15),
-    TrangThaiTK    BIT          DEFAULT 1,
-    LoaiNguoiDung  VARCHAR(20)  NOT NULL,
-    created_at     DATETIME     DEFAULT CURRENT_TIMESTAMP,
-    updated_at     DATETIME     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (MaNguoiDung),
-    UNIQUE KEY uk_nguoidung_tendangnhap (TenDangNhap),
-    UNIQUE KEY uk_nguoidung_email (Email)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- =============================================================================
--- 3. GiangVien  <- NguoiDung
---    LoaiGiangVien: GiangVienTruong | GiangVienThinhGiang | DoanhNghiep
---    MOT NguoiDung co the dong thoi co record NhanVienDoanhNghiep (Case A)
---    -> dung de mo ta NV DN tham gia thinh giang tai truong.
--- =============================================================================
-CREATE TABLE GiangVien (
-    MaGV          VARCHAR(20)  NOT NULL,
-    MaNguoiDung   VARCHAR(20)  NOT NULL,
-    HocHam        VARCHAR(50),
-    HocVi         VARCHAR(50),
-    ChuyenNganh   VARCHAR(200),
-    LoaiGiangVien VARCHAR(20)  DEFAULT 'GiangVienTruong',
-    PRIMARY KEY (MaGV),
-    UNIQUE KEY uk_giangvien_nguoidung (MaNguoiDung),
-    CONSTRAINT fk_giangvien_nguoidung
-        FOREIGN KEY (MaNguoiDung) REFERENCES NguoiDung(MaNguoiDung)
-        ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- =============================================================================
--- 4. DoanhNghiep  (doc lap)
+-- 2. DoanhNghiep  (doc lap — phai tao TRUOC NguoiDung vi NguoiDung FK -> DN)
 --    TrangThai: DangHopTac | TamNgung
 -- =============================================================================
 CREATE TABLE DoanhNghiep (
@@ -146,34 +114,57 @@ CREATE TABLE DoanhNghiep (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =============================================================================
--- 5. NhanVienDoanhNghiep  (Phase 7 — moi)
+-- 3. NguoiDung  (root identity: AD/GV/SV/DN)
+--    LoaiNguoiDung: Admin | GiangVien | SinhVien | DoanhNghiep
+--    Mat khau Password@123 (BCrypt cost=10) cho seed test.
 --
---    Mo hinh hoa "can bo doanh nghiep" tham gia huong dan SV thuc tap tai DN.
---    Tach khoi GiangVien vi ban chat khac (khong giang day chinh khoa). Tuy
---    nhien, MOT NguoiDung co the cung luc co GiangVien record (LoaiGiangVien
---    =GiangVienThinhGiang) -> Case A: NV DN tham gia thinh giang tai truong.
---
---    UNIQUE(MaNguoiDung): 1 NV DN map 1-1 voi 1 NguoiDung.
---    LaCongTacVien=1: NV DN co tham gia hop tac voi truong (vd thinh giang).
---    TrangThaiTK ke thua tu NguoiDung — khong tach trang thai rieng.
+--    MaDoanhNghiep (refactor — bo bang NhanVienDoanhNghiep):
+--      - LoaiNguoiDung='DoanhNghiep' -> NOT NULL: chi ro NV/dai dien thuoc DN nao.
+--      - LoaiNguoiDung khac          -> luon NULL.
+--      - Bao dam boi CHECK chk_nd_dn_required (yeu cau MySQL >= 8.0.16).
+--      - Truong khong quan ly chi tiet "chuc vu / phong ban / chuyen mon" cua
+--        NV DN — nhung thong tin ay khong can cho nghiep vu cham diem thuc tap.
 -- =============================================================================
-CREATE TABLE NhanVienDoanhNghiep (
-    MaNVDN          VARCHAR(20)  NOT NULL,
-    MaNguoiDung     VARCHAR(20)  NOT NULL,
-    MaDoanhNghiep   VARCHAR(20)  NOT NULL,
-    ChucVu          VARCHAR(100),
-    PhongBan        VARCHAR(100),
-    ChuyenMon       VARCHAR(200),
-    LaCongTacVien   BIT          DEFAULT 0,
-    GhiChu          VARCHAR(255),
-    created_at      DATETIME     DEFAULT CURRENT_TIMESTAMP,
-    updated_at      DATETIME     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (MaNVDN),
-    UNIQUE KEY uk_nvdn_nguoidung (MaNguoiDung),
-    CONSTRAINT fk_nvdn_nguoidung
-        FOREIGN KEY (MaNguoiDung) REFERENCES NguoiDung(MaNguoiDung) ON DELETE CASCADE,
-    CONSTRAINT fk_nvdn_doanhnghiep
-        FOREIGN KEY (MaDoanhNghiep) REFERENCES DoanhNghiep(MaDoanhNghiep)
+CREATE TABLE NguoiDung (
+    MaNguoiDung    VARCHAR(20)  NOT NULL,
+    TenDangNhap    VARCHAR(50)  NOT NULL,
+    MatKhauHash    VARCHAR(255) NOT NULL,
+    Email          VARCHAR(100) NOT NULL,
+    HoTen          VARCHAR(100) NOT NULL,
+    SoDienThoai    VARCHAR(15),
+    TrangThaiTK    BIT          DEFAULT 1,
+    LoaiNguoiDung  VARCHAR(20)  NOT NULL,
+    MaDoanhNghiep  VARCHAR(20)  NULL,
+    created_at     DATETIME     DEFAULT CURRENT_TIMESTAMP,
+    updated_at     DATETIME     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (MaNguoiDung),
+    UNIQUE KEY uk_nguoidung_tendangnhap (TenDangNhap),
+    UNIQUE KEY uk_nguoidung_email (Email),
+    CONSTRAINT fk_nguoidung_doanhnghiep
+        FOREIGN KEY (MaDoanhNghiep) REFERENCES DoanhNghiep(MaDoanhNghiep),
+    CONSTRAINT chk_nd_dn_required CHECK (
+        LoaiNguoiDung <> 'DoanhNghiep' OR MaDoanhNghiep IS NOT NULL
+    )
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =============================================================================
+-- 4. GiangVien  <- NguoiDung
+--    LoaiGiangVien: GiangVienTruong | GiangVienThinhGiang | DoanhNghiep
+--    Case A: 1 NguoiDung loai DoanhNghiep co the dong thoi co GiangVien record
+--    (LoaiGiangVien=GiangVienThinhGiang) -> NV DN thinh giang tai truong.
+-- =============================================================================
+CREATE TABLE GiangVien (
+    MaGV          VARCHAR(20)  NOT NULL,
+    MaNguoiDung   VARCHAR(20)  NOT NULL,
+    HocHam        VARCHAR(50),
+    HocVi         VARCHAR(50),
+    ChuyenNganh   VARCHAR(200),
+    LoaiGiangVien VARCHAR(20)  DEFAULT 'GiangVienTruong',
+    PRIMARY KEY (MaGV),
+    UNIQUE KEY uk_giangvien_nguoidung (MaNguoiDung),
+    CONSTRAINT fk_giangvien_nguoidung
+        FOREIGN KEY (MaNguoiDung) REFERENCES NguoiDung(MaNguoiDung)
+        ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =============================================================================
@@ -474,17 +465,15 @@ CREATE TABLE DanhSachThucTap (
 --     thay vi GiangVien(MaGV).
 --
 --     Ly do: vai tro 'DN' (cot 1 cua LoaiThucTap=DoanhNghiep) phai do nhan
---     vien doanh nghiep (NguoiDung loaiNguoiDung=DoanhNghiep, co record
---     NhanVienDoanhNghiep) cham. Truoc day phai gia lap GV001 -> bao cao
---     thong ke nguoi danh gia bi nhieu, audit khong tin cay.
+--     vien doanh nghiep (NguoiDung loaiNguoiDung=DoanhNghiep) cham. Truoc day
+--     phai gia lap GV001 -> bao cao thong ke nguoi danh gia bi nhieu, audit
+--     khong tin cay.
 --
 --     Validate o service:
---       MaVaiTro = 'DN'                    -> MaNguoiDanhGia phai la NV DN
---                                             (co row NhanVienDoanhNghiep)
---                                             VA thuoc dung DN cua DanhSachThucTap
---                                             (hoac DN cho phep "thinh-mentor" cheo)
---       MaVaiTro IN ('GV_HD','GV_PB','CVHT','GV')  -> MaNguoiDanhGia phai la GV
---                                             (co row GiangVien)
+--       MaVaiTro = 'DN'                            -> NguoiDung loai DoanhNghiep
+--                                                     (cung NV/dai dien cua DN tiep nhan SV).
+--       MaVaiTro IN ('GV_HD','GV_PB','CVHT','GV')  -> NguoiDung loai GiangVien
+--                                                     (co row GiangVien tuong ung).
 --
 --     UNIQUE(MaThucTap, MaVaiTro): moi vai tro chi 1 row / SV.
 -- =============================================================================

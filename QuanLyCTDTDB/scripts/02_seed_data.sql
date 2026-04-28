@@ -1,27 +1,38 @@
 -- =============================================================================
--- 02_seed_data.sql  —  SEED FULL  (Phase 1 -> Phase 7, NV DN + 2 cot diem dung)
+-- 02_seed_data.sql  —  SEED FULL  (refactor: bo bang NhanVienDoanhNghiep,
+--                                   NV DN duoc lien ket truc tiep tu NguoiDung)
 -- =============================================================================
 -- He Thong Quan Ly Chuong Trinh Dao Tao Xuat Sac (Truong DH Nha Trang).
 -- Chay SAU KHI 01_create_tables.sql da chay xong.
 --
--- ===== THAY DOI LON SO VOI BAN TRUOC (Phase 7 refactor) =====
---   1. Them 7 nhan vien doanh nghiep (NV001..NV007) — moi DN dang hop tac co
---      it nhat 1 nguoi phu trach SV thuc tap. Cac record nay vua co NguoiDung
---      (de login + audit), vua co NhanVienDoanhNghiep (de gan voi DN).
+-- ===== THAY DOI LON SO VOI BAN TRUOC =====
+--   1. **BO bang NhanVienDoanhNghiep**. Truong khong can quan ly chuc vu /
+--      phong ban / chuyen mon cua NV DN — chi can biet "NV nay thuoc DN nao"
+--      de filter dropdown cham diem. Lien ket nay duoc luu vao cot moi
+--      NguoiDung.MaDoanhNghiep (NULL khi khong phai loai DoanhNghiep).
 --
---   2. **Case A** — NV DN dong thoi giang day thinh giang tai truong:
+--   2. NguoiDung loai DoanhNghiep gom 2 nhom:
+--        + DN001..DN007: TK dai dien DN (truoc day la "TK doanh nghiep").
+--          MaDoanhNghiep tro ve chinh DN do (DN001 -> DN001, DN002 -> DN002...).
+--        + NV001..NV007: TK ca nhan, lam viec tai 1 DN cu the
+--          (NV001@FPT -> DN001, NV002@VNG -> DN002, ...).
+--      Tat ca cac TK nay deu co the lam nguoi cham diem cot DN — UI dropdown
+--      filter theo doanhNghiep.maDoanhNghiep == ds.doanhNghiep.maDoanhNghiep.
+--
+--   3. **Case A** — NV DN dong thoi giang day thinh giang tai truong:
 --        NV001 (FPT)  -> GV013 LoaiGiangVien=GiangVienThinhGiang  (HP-LTW)
 --        NV002 (VNG)  -> GV014 LoaiGiangVien=GiangVienThinhGiang  (HP-AI)
---      1 NguoiDung -> 2 record (NhanVienDoanhNghiep + GiangVien).
+--      1 NguoiDung -> 2 vai tro (vua la NV DN, vua la GV thinh giang). Khong
+--      can flag rieng — chi can co ban ghi GiangVien tro ve NguoiDung do.
 --
---   3. KetQuaThucTap.MaNguoiDanhGia hien tro ve NguoiDung:
+--   4. KetQuaThucTap.MaNguoiDanhGia tro ve NguoiDung:
 --        + LoaiThucTap='Truong'      : cot 1 = GV_HD (GV cua truong)
 --                                      cot 2 = GV_PB (GV cua truong)
 --        + LoaiThucTap='DoanhNghiep' : cot 1 = DN    (NV cua DN, vd NV001)
 --                                      cot 2 = GV_HD (GV cua truong, giam sat)
 --      => KHONG con gia lap GV001 cho cot DN. Bao cao thong ke chinh xac.
 --
---   4. VaiTroThucTap.TenVaiTro chuan hoa:
+--   5. VaiTroThucTap.TenVaiTro chuan hoa:
 --        GV_HD -> "GV Giam Sat / Huong Dan"
 --        DN    -> "Nhan Vien Doanh Nghiep"
 --        ...
@@ -29,10 +40,9 @@
 -- Convention:
 --   - MaSV     = MaNguoiDung
 --   - MaGV     = MaNguoiDung (GV cua truong)
---   - MaGV     = NV{xxx} cho thinh giang la NV DN (Case A) — vd GV013 ko,
---                ma dung MaGV='GV013' nhung MaNguoiDung='NV001' (1-1 unique).
---   - MaDoanhNghiep != MaNguoiDung (tach roi: DN001..007 NguoiDung la TK
---                                    "dai dien DN", DN001..009 la company entity).
+--   - Truong hop Case A: MaGV='GV013' nhung MaNguoiDung='NV001' (1-1 unique).
+--   - DoanhNghiep entity (DN001..009) khac NguoiDung (DN001..007 + NV001..007),
+--     du PK trung — 2 bang khac nhau.
 --   - Mat khau: Password@123  (BCrypt cost=10).
 -- =============================================================================
 
@@ -55,13 +65,15 @@ TRUNCATE TABLE BCN_ThanhVien;
 TRUNCATE TABLE ChuongTrinhDaoTao;
 TRUNCATE TABLE NhomNguoiDung;
 TRUNCATE TABLE VaiTroThucTap;
-TRUNCATE TABLE NhanVienDoanhNghiep;
-TRUNCATE TABLE DoanhNghiep;
 TRUNCATE TABLE GiangVien;
 TRUNCATE TABLE NguoiDung;
+TRUNCATE TABLE DoanhNghiep;
 TRUNCATE TABLE HocKyNamHoc;
 
-SET FOREIGN_KEY_CHECKS = 1;
+-- Note: FOREIGN_KEY_CHECKS van duoc giu tat trong suot phase INSERT vi
+-- NguoiDung gio FK -> DoanhNghiep, ma seed insert NguoiDung TRUOC DoanhNghiep
+-- (giu thu tu cu de dien minh hoa kha nang). Sau khi seed xong, ta SET=1
+-- o cuoi file de cac transaction sau van bi rang buoc kiem tra binh thuong.
 
 -- =============================================================================
 -- 1. HocKyNamHoc
@@ -76,87 +88,90 @@ INSERT INTO HocKyNamHoc (MaHocKy, TenHocKy, NgayBatDau, NgayKetThuc, TrangThai) 
 -- =============================================================================
 -- 2. NguoiDung  (Admin + 12 GV + 30 SV + 7 DN-rep + 7 NV-DN = 57 row)
 --    BCrypt hash co dinh cho 'Password@123'.
+--    Cot moi MaDoanhNghiep:
+--      - LoaiNguoiDung='DoanhNghiep' -> tro ve DN tuong ung (NOT NULL boi CHECK).
+--      - Cac loai khac               -> NULL.
 -- =============================================================================
 INSERT INTO NguoiDung
-    (MaNguoiDung, TenDangNhap, MatKhauHash, Email, HoTen, SoDienThoai, TrangThaiTK, LoaiNguoiDung) VALUES
+    (MaNguoiDung, TenDangNhap, MatKhauHash, Email, HoTen, SoDienThoai, TrangThaiTK, LoaiNguoiDung, MaDoanhNghiep) VALUES
 
 -- ---- Admin ----
-('AD001', 'admin', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'admin@ntu.edu.vn', 'Quan Tri Vien He Thong', '0909000001', 1, 'Admin'),
+('AD001', 'admin', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'admin@ntu.edu.vn', 'Quan Tri Vien He Thong', '0909000001', 1, 'Admin', NULL),
 
 -- ---- Giang Vien: PDT / TTDTXS ----
-('GV001', 'tran.van.an',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'tran.van.an@ntu.edu.vn',     'PGS.TS. Tran Van An',      '0912340001', 1, 'GiangVien'),
-('GV002', 'le.thi.binh',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'le.thi.binh@ntu.edu.vn',     'TS. Le Thi Binh',          '0912340002', 1, 'GiangVien'),
+('GV001', 'tran.van.an',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'tran.van.an@ntu.edu.vn',     'PGS.TS. Tran Van An',      '0912340001', 1, 'GiangVien', NULL),
+('GV002', 'le.thi.binh',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'le.thi.binh@ntu.edu.vn',     'TS. Le Thi Binh',          '0912340002', 1, 'GiangVien', NULL),
 
 -- ---- Giang Vien: CVHT + CNHP (cac CTDT) ----
-('GV003', 'nguyen.van.cuong','$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'nguyen.van.cuong@ntu.edu.vn','TS. Nguyen Van Cuong',     '0912340003', 1, 'GiangVien'),
-('GV004', 'pham.thi.dung',   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'pham.thi.dung@ntu.edu.vn',   'ThS. Pham Thi Dung',       '0912340004', 1, 'GiangVien'),
-('GV005', 'hoang.van.em',    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'hoang.van.em@ntu.edu.vn',    'ThS. Hoang Van Em',        '0912340005', 1, 'GiangVien'),
-('GV006', 'vu.thi.giang',    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'vu.thi.giang@ntu.edu.vn',    'TS. Vu Thi Giang',         '0912340006', 1, 'GiangVien'),
-('GV007', 'do.minh.hieu',    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'do.minh.hieu@ntu.edu.vn',    'ThS. Do Minh Hieu',        '0912340007', 1, 'GiangVien'),
-('GV008', 'bui.thanh.ha',    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'bui.thanh.ha@ntu.edu.vn',    'ThS. Bui Thanh Ha',        '0912340008', 1, 'GiangVien'),
+('GV003', 'nguyen.van.cuong','$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'nguyen.van.cuong@ntu.edu.vn','TS. Nguyen Van Cuong',     '0912340003', 1, 'GiangVien', NULL),
+('GV004', 'pham.thi.dung',   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'pham.thi.dung@ntu.edu.vn',   'ThS. Pham Thi Dung',       '0912340004', 1, 'GiangVien', NULL),
+('GV005', 'hoang.van.em',    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'hoang.van.em@ntu.edu.vn',    'ThS. Hoang Van Em',        '0912340005', 1, 'GiangVien', NULL),
+('GV006', 'vu.thi.giang',    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'vu.thi.giang@ntu.edu.vn',    'TS. Vu Thi Giang',         '0912340006', 1, 'GiangVien', NULL),
+('GV007', 'do.minh.hieu',    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'do.minh.hieu@ntu.edu.vn',    'ThS. Do Minh Hieu',        '0912340007', 1, 'GiangVien', NULL),
+('GV008', 'bui.thanh.ha',    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'bui.thanh.ha@ntu.edu.vn',    'ThS. Bui Thanh Ha',        '0912340008', 1, 'GiangVien', NULL),
 
 -- ---- Giang Vien: Bo mon chuyen mon (giang day + GV_PB thuc tap) ----
-('GV009', 'ngo.thi.lan',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'ngo.thi.lan@ntu.edu.vn',     'TS. Ngo Thi Lan',          '0912340009', 1, 'GiangVien'),
-('GV010', 'dang.van.minh',   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'dang.van.minh@ntu.edu.vn',   'ThS. Dang Van Minh',       '0912340010', 1, 'GiangVien'),
-('GV011', 'phan.thi.ngoc',   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'phan.thi.ngoc@ntu.edu.vn',   'TS. Phan Thi Ngoc',        '0912340011', 1, 'GiangVien'),
-('GV012', 'ly.quoc.phong',   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'ly.quoc.phong@ntu.edu.vn',   'ThS. Ly Quoc Phong',       '0912340012', 1, 'GiangVien'),
+('GV009', 'ngo.thi.lan',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'ngo.thi.lan@ntu.edu.vn',     'TS. Ngo Thi Lan',          '0912340009', 1, 'GiangVien', NULL),
+('GV010', 'dang.van.minh',   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'dang.van.minh@ntu.edu.vn',   'ThS. Dang Van Minh',       '0912340010', 1, 'GiangVien', NULL),
+('GV011', 'phan.thi.ngoc',   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'phan.thi.ngoc@ntu.edu.vn',   'TS. Phan Thi Ngoc',        '0912340011', 1, 'GiangVien', NULL),
+('GV012', 'ly.quoc.phong',   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'ly.quoc.phong@ntu.edu.vn',   'ThS. Ly Quoc Phong',       '0912340012', 1, 'GiangVien', NULL),
 
 -- ---- Sinh Vien: K24 (nam 1) ----
-('SV2024001', 'sv.2024001', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2024001@sv.ntu.edu.vn', 'Nguyen Thi Hoa',       '0978001001', 1, 'SinhVien'),
-('SV2024002', 'sv.2024002', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2024002@sv.ntu.edu.vn', 'Tran Minh Khoa',       '0978001002', 1, 'SinhVien'),
-('SV2024003', 'sv.2024003', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2024003@sv.ntu.edu.vn', 'Le Quoc Long',         '0978001003', 1, 'SinhVien'),
-('SV2024004', 'sv.2024004', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2024004@sv.ntu.edu.vn', 'Pham Ha My',           '0978001004', 1, 'SinhVien'),
-('SV2024005', 'sv.2024005', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2024005@sv.ntu.edu.vn', 'Hoang Tuan Nam',       '0978001005', 1, 'SinhVien'),
-('SV2024006', 'sv.2024006', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2024006@sv.ntu.edu.vn', 'Vu Thi Ngan',          '0978001006', 1, 'SinhVien'),
-('SV2024007', 'sv.2024007', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2024007@sv.ntu.edu.vn', 'Do Anh Quan',          '0978001007', 1, 'SinhVien'),
-('SV2024008', 'sv.2024008', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2024008@sv.ntu.edu.vn', 'Bui Thu Thao',         '0978001008', 1, 'SinhVien'),
-('SV2024009', 'sv.2024009', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2024009@sv.ntu.edu.vn', 'Ngo Van Thien',        '0978001009', 1, 'SinhVien'),
-('SV2024010', 'sv.2024010', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2024010@sv.ntu.edu.vn', 'Ly Thanh Vy',          '0978001010', 1, 'SinhVien'),
+('SV2024001', 'sv.2024001', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2024001@sv.ntu.edu.vn', 'Nguyen Thi Hoa',       '0978001001', 1, 'SinhVien', NULL),
+('SV2024002', 'sv.2024002', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2024002@sv.ntu.edu.vn', 'Tran Minh Khoa',       '0978001002', 1, 'SinhVien', NULL),
+('SV2024003', 'sv.2024003', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2024003@sv.ntu.edu.vn', 'Le Quoc Long',         '0978001003', 1, 'SinhVien', NULL),
+('SV2024004', 'sv.2024004', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2024004@sv.ntu.edu.vn', 'Pham Ha My',           '0978001004', 1, 'SinhVien', NULL),
+('SV2024005', 'sv.2024005', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2024005@sv.ntu.edu.vn', 'Hoang Tuan Nam',       '0978001005', 1, 'SinhVien', NULL),
+('SV2024006', 'sv.2024006', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2024006@sv.ntu.edu.vn', 'Vu Thi Ngan',          '0978001006', 1, 'SinhVien', NULL),
+('SV2024007', 'sv.2024007', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2024007@sv.ntu.edu.vn', 'Do Anh Quan',          '0978001007', 1, 'SinhVien', NULL),
+('SV2024008', 'sv.2024008', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2024008@sv.ntu.edu.vn', 'Bui Thu Thao',         '0978001008', 1, 'SinhVien', NULL),
+('SV2024009', 'sv.2024009', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2024009@sv.ntu.edu.vn', 'Ngo Van Thien',        '0978001009', 1, 'SinhVien', NULL),
+('SV2024010', 'sv.2024010', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2024010@sv.ntu.edu.vn', 'Ly Thanh Vy',          '0978001010', 1, 'SinhVien', NULL),
 
 -- ---- Sinh Vien: K23 (nam 2) ----
-('SV2023001', 'sv.2023001', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2023001@sv.ntu.edu.vn', 'Pham Ngoc Mai',        '0978002001', 1, 'SinhVien'),
-('SV2023002', 'sv.2023002', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2023002@sv.ntu.edu.vn', 'Hoang Thi Nhu',        '0978002002', 1, 'SinhVien'),
-('SV2023003', 'sv.2023003', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2023003@sv.ntu.edu.vn', 'Do Quoc Tuan',         '0978002003', 1, 'SinhVien'),
-('SV2023004', 'sv.2023004', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2023004@sv.ntu.edu.vn', 'Truong Quoc Bao',      '0978002004', 1, 'SinhVien'),
-('SV2023005', 'sv.2023005', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2023005@sv.ntu.edu.vn', 'Nguyen Thao Vy',       '0978002005', 1, 'SinhVien'),
-('SV2023006', 'sv.2023006', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2023006@sv.ntu.edu.vn', 'Le Xuan Khang',        '0978002006', 1, 'SinhVien'),
-('SV2023007', 'sv.2023007', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2023007@sv.ntu.edu.vn', 'Vo Thuy Duong',        '0978002007', 1, 'SinhVien'),
-('SV2023008', 'sv.2023008', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2023008@sv.ntu.edu.vn', 'Tran Huy Hoang',       '0978002008', 1, 'SinhVien'),
-('SV2023009', 'sv.2023009', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2023009@sv.ntu.edu.vn', 'Phan Kim Anh',         '0978002009', 1, 'SinhVien'),
-('SV2023010', 'sv.2023010', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2023010@sv.ntu.edu.vn', 'Bui Cong Dat',         '0978002010', 1, 'SinhVien'),
+('SV2023001', 'sv.2023001', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2023001@sv.ntu.edu.vn', 'Pham Ngoc Mai',        '0978002001', 1, 'SinhVien', NULL),
+('SV2023002', 'sv.2023002', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2023002@sv.ntu.edu.vn', 'Hoang Thi Nhu',        '0978002002', 1, 'SinhVien', NULL),
+('SV2023003', 'sv.2023003', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2023003@sv.ntu.edu.vn', 'Do Quoc Tuan',         '0978002003', 1, 'SinhVien', NULL),
+('SV2023004', 'sv.2023004', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2023004@sv.ntu.edu.vn', 'Truong Quoc Bao',      '0978002004', 1, 'SinhVien', NULL),
+('SV2023005', 'sv.2023005', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2023005@sv.ntu.edu.vn', 'Nguyen Thao Vy',       '0978002005', 1, 'SinhVien', NULL),
+('SV2023006', 'sv.2023006', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2023006@sv.ntu.edu.vn', 'Le Xuan Khang',        '0978002006', 1, 'SinhVien', NULL),
+('SV2023007', 'sv.2023007', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2023007@sv.ntu.edu.vn', 'Vo Thuy Duong',        '0978002007', 1, 'SinhVien', NULL),
+('SV2023008', 'sv.2023008', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2023008@sv.ntu.edu.vn', 'Tran Huy Hoang',       '0978002008', 1, 'SinhVien', NULL),
+('SV2023009', 'sv.2023009', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2023009@sv.ntu.edu.vn', 'Phan Kim Anh',         '0978002009', 1, 'SinhVien', NULL),
+('SV2023010', 'sv.2023010', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2023010@sv.ntu.edu.vn', 'Bui Cong Dat',         '0978002010', 1, 'SinhVien', NULL),
 
 -- ---- Sinh Vien: K22 (nam 3-4 — di kien tap, thuc tap) ----
-('SV2022001', 'sv.2022001', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2022001@sv.ntu.edu.vn', 'Vo Thanh Phong',       '0978003001', 1, 'SinhVien'),
-('SV2022002', 'sv.2022002', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2022002@sv.ntu.edu.vn', 'Bui Thi Quynh',        '0978003002', 1, 'SinhVien'),
-('SV2022003', 'sv.2022003', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2022003@sv.ntu.edu.vn', 'Ngo Van Tan',          '0978003003', 1, 'SinhVien'),
-('SV2022004', 'sv.2022004', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2022004@sv.ntu.edu.vn', 'Dao Thi Uyen',         '0978003004', 1, 'SinhVien'),
-('SV2022006', 'sv.2022006', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2022006@sv.ntu.edu.vn', 'Le Hong Son',          '0978003006', 1, 'SinhVien'),
-('SV2022007', 'sv.2022007', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2022007@sv.ntu.edu.vn', 'Tran My Linh',         '0978003007', 1, 'SinhVien'),
-('SV2022008', 'sv.2022008', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2022008@sv.ntu.edu.vn', 'Nguyen Quang Huy',     '0978003008', 1, 'SinhVien'),
-('SV2022009', 'sv.2022009', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2022009@sv.ntu.edu.vn', 'Pham Hoang Kim',       '0978003009', 1, 'SinhVien'),
-('SV2022010', 'sv.2022010', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2022010@sv.ntu.edu.vn', 'Hoang Gia Bao',        '0978003010', 1, 'SinhVien'),
+('SV2022001', 'sv.2022001', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2022001@sv.ntu.edu.vn', 'Vo Thanh Phong',       '0978003001', 1, 'SinhVien', NULL),
+('SV2022002', 'sv.2022002', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2022002@sv.ntu.edu.vn', 'Bui Thi Quynh',        '0978003002', 1, 'SinhVien', NULL),
+('SV2022003', 'sv.2022003', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2022003@sv.ntu.edu.vn', 'Ngo Van Tan',          '0978003003', 1, 'SinhVien', NULL),
+('SV2022004', 'sv.2022004', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2022004@sv.ntu.edu.vn', 'Dao Thi Uyen',         '0978003004', 1, 'SinhVien', NULL),
+('SV2022006', 'sv.2022006', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2022006@sv.ntu.edu.vn', 'Le Hong Son',          '0978003006', 1, 'SinhVien', NULL),
+('SV2022007', 'sv.2022007', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2022007@sv.ntu.edu.vn', 'Tran My Linh',         '0978003007', 1, 'SinhVien', NULL),
+('SV2022008', 'sv.2022008', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2022008@sv.ntu.edu.vn', 'Nguyen Quang Huy',     '0978003008', 1, 'SinhVien', NULL),
+('SV2022009', 'sv.2022009', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2022009@sv.ntu.edu.vn', 'Pham Hoang Kim',       '0978003009', 1, 'SinhVien', NULL),
+('SV2022010', 'sv.2022010', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2022010@sv.ntu.edu.vn', 'Hoang Gia Bao',        '0978003010', 1, 'SinhVien', NULL),
 
 -- ---- Sinh Vien edge-case: KHAC trang thai DangHoc ----
-('SV2022005', 'sv.2022005', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2022005@sv.ntu.edu.vn', 'Ly Thi Van',           '0978003005', 1, 'SinhVien'),
+('SV2022005', 'sv.2022005', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2022005@sv.ntu.edu.vn', 'Ly Thi Van',           '0978003005', 1, 'SinhVien', NULL),
 
--- ---- Doanh Nghiep — TK login dai dien DN (NguoiDaiDien) ----
-('DN001', 'dn.fpt',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'tuyendung@fpt.com.vn',      'FPT Software',           '0243768888', 1, 'DoanhNghiep'),
-('DN002', 'dn.vng',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'thuctap@vng.com.vn',        'VNG Corporation',        '0283962828', 1, 'DoanhNghiep'),
-('DN003', 'dn.tma',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'hr@tma.com.vn',             'TMA Solutions',          '0283997300', 1, 'DoanhNghiep'),
-('DN004', 'dn.viettel', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'tuyendung@viettel.com.vn',  'Viettel Solutions',      '0243628400', 1, 'DoanhNghiep'),
-('DN005', 'dn.misa',    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'tuyendung@misa.com.vn',     'Cong ty Co phan MISA',   '0243762868', 1, 'DoanhNghiep'),
-('DN006', 'dn.kms',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'careers@kms-technology.com','KMS Technology',         '0283811999', 1, 'DoanhNghiep'),
-('DN007', 'dn.vnpay',   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'tuyendung@vnpay.vn',        'VNPay',                  '0247108998', 1, 'DoanhNghiep'),
+-- ---- Doanh Nghiep — TK login dai dien DN (NguoiDaiDien). MaDoanhNghiep tro ve chinh DN do. ----
+('DN001', 'dn.fpt',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'tuyendung@fpt.com.vn',      'FPT Software',           '0243768888', 1, 'DoanhNghiep', 'DN001'),
+('DN002', 'dn.vng',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'thuctap@vng.com.vn',        'VNG Corporation',        '0283962828', 1, 'DoanhNghiep', 'DN002'),
+('DN003', 'dn.tma',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'hr@tma.com.vn',             'TMA Solutions',          '0283997300', 1, 'DoanhNghiep', 'DN003'),
+('DN004', 'dn.viettel', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'tuyendung@viettel.com.vn',  'Viettel Solutions',      '0243628400', 1, 'DoanhNghiep', 'DN004'),
+('DN005', 'dn.misa',    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'tuyendung@misa.com.vn',     'Cong ty Co phan MISA',   '0243762868', 1, 'DoanhNghiep', 'DN005'),
+('DN006', 'dn.kms',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'careers@kms-technology.com','KMS Technology',         '0283811999', 1, 'DoanhNghiep', 'DN006'),
+('DN007', 'dn.vnpay',   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'tuyendung@vnpay.vn',        'VNPay',                  '0247108998', 1, 'DoanhNghiep', 'DN007'),
 
--- ---- Nhan Vien Doanh Nghiep — TK ca nhan, cham diem cho cot DN ----
--- NV001 + NV002 dong thoi la GV thinh giang tai truong (Case A)
-('NV001', 'nv.le.van.hung',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'le.van.hung@fpt.com.vn',         'Le Van Hung',          '0987001001', 1, 'DoanhNghiep'),
-('NV002', 'nv.tran.thi.mai',    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'tran.thi.mai@vng.com.vn',        'Tran Thi Mai',         '0987001002', 1, 'DoanhNghiep'),
-('NV003', 'nv.hoang.van.quoc',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'hoang.van.quoc@tma.com.vn',      'Hoang Van Quoc',       '0987001003', 1, 'DoanhNghiep'),
-('NV004', 'nv.dao.anh.tu',      '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'dao.anh.tu@viettel.com.vn',      'Dao Anh Tu',           '0987001004', 1, 'DoanhNghiep'),
-('NV005', 'nv.vu.thi.linh',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'vu.thi.linh@misa.com.vn',        'Vu Thi Linh',          '0987001005', 1, 'DoanhNghiep'),
-('NV006', 'nv.pham.quoc.khang', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'pham.quoc.khang@kms.com.vn',     'Pham Quoc Khang',      '0987001006', 1, 'DoanhNghiep'),
-('NV007', 'nv.bui.hoang.nam',   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'bui.hoang.nam@vnpay.vn',         'Bui Hoang Nam',        '0987001007', 1, 'DoanhNghiep');
+-- ---- Nhan Vien Doanh Nghiep — TK ca nhan, cham diem cho cot DN. MaDoanhNghiep cho biet NV thuoc DN nao. ----
+-- NV001 + NV002 dong thoi la GV thinh giang tai truong (Case A — co them ban ghi GiangVien o duoi).
+('NV001', 'nv.le.van.hung',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'le.van.hung@fpt.com.vn',         'Le Van Hung',          '0987001001', 1, 'DoanhNghiep', 'DN001'),
+('NV002', 'nv.tran.thi.mai',    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'tran.thi.mai@vng.com.vn',        'Tran Thi Mai',         '0987001002', 1, 'DoanhNghiep', 'DN002'),
+('NV003', 'nv.hoang.van.quoc',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'hoang.van.quoc@tma.com.vn',      'Hoang Van Quoc',       '0987001003', 1, 'DoanhNghiep', 'DN003'),
+('NV004', 'nv.dao.anh.tu',      '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'dao.anh.tu@viettel.com.vn',      'Dao Anh Tu',           '0987001004', 1, 'DoanhNghiep', 'DN004'),
+('NV005', 'nv.vu.thi.linh',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'vu.thi.linh@misa.com.vn',        'Vu Thi Linh',          '0987001005', 1, 'DoanhNghiep', 'DN005'),
+('NV006', 'nv.pham.quoc.khang', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'pham.quoc.khang@kms.com.vn',     'Pham Quoc Khang',      '0987001006', 1, 'DoanhNghiep', 'DN006'),
+('NV007', 'nv.bui.hoang.nam',   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'bui.hoang.nam@vnpay.vn',         'Bui Hoang Nam',        '0987001007', 1, 'DoanhNghiep', 'DN007');
 
 -- =============================================================================
 -- 3. GiangVien  <- NguoiDung
