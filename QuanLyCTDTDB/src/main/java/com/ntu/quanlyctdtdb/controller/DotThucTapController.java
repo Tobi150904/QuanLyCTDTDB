@@ -10,6 +10,7 @@ import com.ntu.quanlyctdtdb.repository.DoanhNghiepRepository;
 import com.ntu.quanlyctdtdb.repository.GiangVienRepository;
 import com.ntu.quanlyctdtdb.repository.HocKyNamHocRepository;
 import com.ntu.quanlyctdtdb.repository.HocPhanRepository;
+import com.ntu.quanlyctdtdb.repository.NhanVienDoanhNghiepRepository;
 import com.ntu.quanlyctdtdb.security.CustomUserDetails;
 import com.ntu.quanlyctdtdb.service.DotThucTapService;
 import jakarta.validation.Valid;
@@ -57,8 +58,9 @@ public class DotThucTapController {
     private final HocPhanRepository hocPhanRepo;
     private final HocKyNamHocRepository hocKyRepo;
     private final DoanhNghiepRepository doanhNghiepRepo;
-    // Phase 7 — 2 cot diem
+    // Phase 7 — 2 cot diem (nguoi danh gia = NguoiDung — co the la GV hoac NV DN)
     private final GiangVienRepository giangVienRepo;
+    private final NhanVienDoanhNghiepRepository nhanVienDNRepo;
 
     @GetMapping
     public String danhSach(Model model) {
@@ -241,11 +243,16 @@ public class DotThucTapController {
         model.addAttribute("doanhNghiepList",
                 doanhNghiepRepo.findByTrangThai(TrangThaiDoanhNghiep.DangHopTac));
         // Phase 7 — 2 cot diem:
-        //   ketQuaMap : Map<maThucTap, Map<maVaiTro, KetQuaThucTap>>
-        //               de template render diem cho tung SV theo vai tro.
-        //   giangVienList : dropdown chon nguoi danh gia (khi nhap diem moi).
+        //   ketQuaMap     : Map<maThucTap, Map<maVaiTro, KetQuaThucTap>>
+        //                   de template render diem cho tung SV theo vai tro.
+        //   giangVienList : dropdown chon nguoi cham (cot GV — vai tro GV_HD/GV_PB).
+        //   nhanVienDNList: dropdown chon nguoi cham (cot DN — vai tro DN). Phase 7
+        //                   refactor: NV DN la NguoiDung loai DOANH_NGHIEP, lam viec
+        //                   tai mot DN cu the. Da fetch nguoiDung + doanhNghiep de
+        //                   render hoTen + tenDN trong template.
         model.addAttribute("ketQuaMap", dotTTService.getKetQuaMapByDot(id));
         model.addAttribute("giangVienList", giangVienRepo.findAllFetchNguoiDung());
+        model.addAttribute("nhanVienDNList", nhanVienDNRepo.findAllFetch());
         model.addAttribute("activeMenu", "thuc-tap");
         return "thuc-tap/chi-tiet";
     }
@@ -320,10 +327,15 @@ public class DotThucTapController {
                                 @RequestParam String vaiTro,
                                 @RequestParam(required = false) BigDecimal diem,
                                 @RequestParam(required = false) String nhanXet,
-                                @RequestParam(required = false) String maGiangVien,
+                                @RequestParam(name = "maNguoiDanhGia", required = false) String maNguoiDanhGia,
+                                @RequestParam(name = "maGiangVien", required = false) String maGiangVienLegacy,
                                 RedirectAttributes ra) {
         try {
-            dotTTService.capNhatDiem(maDanhSach, vaiTro, diem, nhanXet, maGiangVien);
+            // Phase 7 refactor: param mac dinh la maNguoiDanhGia (NguoiDung — co the
+            // la GV hoac NV DN). Fallback maGiangVien de tuong thich form cu.
+            String maNDG = (maNguoiDanhGia != null && !maNguoiDanhGia.isBlank())
+                    ? maNguoiDanhGia : maGiangVienLegacy;
+            dotTTService.capNhatDiem(maDanhSach, vaiTro, diem, nhanXet, maNDG);
             ra.addFlashAttribute("successMsg",
                     "Da cap nhat diem (" + vaiTro + ") cho sinh vien.");
         } catch (Exception e) {

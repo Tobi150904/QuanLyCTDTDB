@@ -110,23 +110,32 @@ public interface DotThucTapService {
      * Diem + NhanXet (va MaNguoiDanhGia neu duoc cap nhat); neu chua co thi
      * insert moi.
      *
-     * <p>Validate:</p>
+     * <p>Phase 7 refactor: nguoi danh gia la {@code NguoiDung} (khong qua
+     * GiangVien) — co the la NV DN (vai tro DN) hoac GV (vai tro GV_HD/GV_PB/CVHT).
+     * Validate role-consistency:</p>
+     * <ul>
+     *   <li>vai tro {@code DN}            -> NguoiDung phai la {@link com.ntu.quanlyctdtdb.enums.LoaiNguoiDung#DOANH_NGHIEP}</li>
+     *   <li>vai tro {@code GV_HD/GV_PB}   -> NguoiDung phai la GIANG_VIEN hoac CVHT</li>
+     *   <li>vai tro {@code CVHT}          -> NguoiDung phai la CVHT</li>
+     * </ul>
+     *
+     * <p>Other validate:</p>
      * <ul>
      *   <li>{@code maVaiTro} phai ton tai (GV_HD / GV_PB / DN / CVHT).</li>
      *   <li>{@code diem} (neu co) phai trong [0, 10].</li>
-     *   <li>{@code maGiangVienDanhGia} phai ton tai trong bang GiangVien.</li>
+     *   <li>{@code maNguoiDanhGia} phai ton tai trong bang NguoiDung.</li>
      *   <li>Khong cho phep nhap diem khi DanhSachThucTap dang o trang thai
      *       DaHuy.</li>
      * </ul>
      *
-     * @param maDanhSach        primary key cua DanhSachThucTap (= MaThucTap)
-     * @param maVaiTro          GV_HD | GV_PB | DN | CVHT
-     * @param diem              null neu chi nhap nhan xet, hoac 0..10
-     * @param nhanXet           text feedback, co the null/blank
-     * @param maGiangVienDanhGia ma GV nguoi dang nhap nhap diem (audit). Neu null,
-     *                          giu nguyen nguoi danh gia hien co.
+     * @param maDanhSach     primary key cua DanhSachThucTap (= MaThucTap)
+     * @param maVaiTro       GV_HD | GV_PB | DN | CVHT
+     * @param diem           null neu chi nhap nhan xet, hoac 0..10
+     * @param nhanXet        text feedback, co the null/blank
+     * @param maNguoiDanhGia ma NguoiDung nguoi danh gia (audit). Neu null,
+     *                       giu nguyen nguoi danh gia hien co.
      */
     KetQuaThucTap capNhatDiem(Integer maDanhSach, String maVaiTro,
                                 BigDecimal diem, String nhanXet,
-                                String maGiangVienDanhGia);
+                                String maNguoiDanhGia);
 }

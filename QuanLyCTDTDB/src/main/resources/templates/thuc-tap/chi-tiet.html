@@ -355,12 +355,12 @@
                                     <th class="text-center">
                                         Cột 1
                                         <small class="d-block fw-normal text-muted"
-                                               style="font-size:10.5px;">GV HD / DN</small>
+                                               style="font-size:10.5px;">GV Giám Sát / NV DN</small>
                                     </th>
                                     <th class="text-center">
                                         Cột 2
                                         <small class="d-block fw-normal text-muted"
-                                               style="font-size:10.5px;">GV PB / GV GS</small>
+                                               style="font-size:10.5px;">GV Phản Biện / GV Giám Sát</small>
                                     </th>
                                     <th class="text-center">TB</th>
                                     <th>Trạng Thái</th>
@@ -489,8 +489,11 @@
                                                             <input type="hidden" name="vaiTro" th:value="${vaiTro1}">
 
                                                             <div class="grade-form-header">
-                                                                <i class="bi" th:classappend="${isDN ? 'bi-building' : 'bi-mortarboard'}"></i>
-                                                                <span th:text="${isDN ? 'Cột 1 — Doanh Nghiệp' : 'Cột 1 — GV Hướng Dẫn'}">Cột 1</span>
+                                                                <i class="bi" th:classappend="${isDN ? 'bi-building' : 'bi-eye'}"></i>
+                                                                <!--/* Phase 7: dat ten cot 1 theo nghiep vu:
+                                                                       - Tai truong (vai tro GV_HD) -> "GV Giam Sat"
+                                                                       - Tai DN     (vai tro DN)    -> "Nhan Vien DN" */-->
+                                                                <span th:text="${isDN ? 'Cột 1 — Nhân Viên Doanh Nghiệp' : 'Cột 1 — GV Giám Sát'}">Cột 1</span>
                                                             </div>
 
                                                             <div class="row g-2">
@@ -509,17 +512,39 @@
                                                                     <label class="form-label small fw-medium mb-1">
                                                                         Người đánh giá
                                                                     </label>
-                                                                    <select name="maGiangVien"
+                                                                    <!--/* Phase 7 — dropdown role-aware:
+                                                                           - isDN: list NV DN cua DN tiep nhan (filter theo maDN)
+                                                                           - isTruong: list GV (giang vien giam sat)
+                                                                           Form field: maNguoiDanhGia (NguoiDung). */-->
+                                                                    <select name="maNguoiDanhGia"
                                                                             class="form-select form-select-sm"
                                                                             th:disabled="${!canEdit}">
                                                                         <option value="">-- Giữ nguyên / chọn --</option>
-                                                                        <option th:each="gv : ${giangVienList}"
-                                                                                th:value="${gv.maGV}"
-                                                                                th:selected="${kq1 != null
-                                                                                              and kq1.nguoiDanhGia != null
-                                                                                              and kq1.nguoiDanhGia.maGV == gv.maGV}"
-                                                                                th:text="${gv.maGV + ' — ' +
-                                                                                          (gv.nguoiDung != null ? gv.nguoiDung.hoTen : gv.maGV)}">GV</option>
+
+                                                                        <!-- isDN -> list NV DN cua DN cua SV -->
+                                                                        <th:block th:if="${isDN}">
+                                                                            <option th:each="nv : ${nhanVienDNList}"
+                                                                                    th:if="${ds.doanhNghiep == null
+                                                                                            or ds.doanhNghiep.maDoanhNghiep == nv.doanhNghiep.maDoanhNghiep}"
+                                                                                    th:value="${nv.nguoiDung.maNguoiDung}"
+                                                                                    th:selected="${kq1 != null
+                                                                                                  and kq1.nguoiDanhGia != null
+                                                                                                  and kq1.nguoiDanhGia.maNguoiDung == nv.nguoiDung.maNguoiDung}"
+                                                                                    th:text="${nv.nguoiDung.hoTen
+                                                                                              + (nv.chucVu != null ? ' — ' + nv.chucVu : '')}">NV</option>
+                                                                        </th:block>
+
+                                                                        <!-- isTruong -> list GV (giang vien giam sat) -->
+                                                                        <th:block th:if="${isTruong}">
+                                                                            <option th:each="gv : ${giangVienList}"
+                                                                                    th:value="${gv.nguoiDung != null ? gv.nguoiDung.maNguoiDung : gv.maGV}"
+                                                                                    th:selected="${kq1 != null
+                                                                                                  and kq1.nguoiDanhGia != null
+                                                                                                  and gv.nguoiDung != null
+                                                                                                  and kq1.nguoiDanhGia.maNguoiDung == gv.nguoiDung.maNguoiDung}"
+                                                                                    th:text="${gv.maGV + ' — ' +
+                                                                                              (gv.nguoiDung != null ? gv.nguoiDung.hoTen : gv.maGV)}">GV</option>
+                                                                        </th:block>
                                                                     </select>
                                                                 </div>
                                                             </div>
@@ -561,6 +586,9 @@
 
                                                             <div class="grade-form-header">
                                                                 <i class="bi" th:classappend="${isDN ? 'bi-eye' : 'bi-chat-square-quote'}"></i>
+                                                                <!--/* Phase 7: dat ten cot 2 theo nghiep vu:
+                                                                       - Tai truong (vai tro GV_PB) -> "GV Phan Bien"
+                                                                       - Tai DN     (vai tro GV_HD) -> "GV Giam Sat" (giam sat tu phia truong) */-->
                                                                 <span th:text="${isDN ? 'Cột 2 — GV Giám Sát' : 'Cột 2 — GV Phản Biện'}">Cột 2</span>
                                                             </div>
 
@@ -580,15 +608,18 @@
                                                                     <label class="form-label small fw-medium mb-1">
                                                                         Người đánh giá
                                                                     </label>
-                                                                    <select name="maGiangVien"
+                                                                    <!--/* Phase 7 — cot 2 luon la GV (GV_PB hoac GV_HD-giam-sat).
+                                                                           Value: nguoiDung.maNguoiDung (KetQuaThucTap.nguoiDanhGia FK -> NguoiDung). */-->
+                                                                    <select name="maNguoiDanhGia"
                                                                             class="form-select form-select-sm"
                                                                             th:disabled="${!canEdit}">
                                                                         <option value="">-- Giữ nguyên / chọn --</option>
                                                                         <option th:each="gv : ${giangVienList}"
-                                                                                th:value="${gv.maGV}"
+                                                                                th:value="${gv.nguoiDung != null ? gv.nguoiDung.maNguoiDung : gv.maGV}"
                                                                                 th:selected="${kq2 != null
                                                                                               and kq2.nguoiDanhGia != null
-                                                                                              and kq2.nguoiDanhGia.maGV == gv.maGV}"
+                                                                                              and gv.nguoiDung != null
+                                                                                              and kq2.nguoiDanhGia.maNguoiDung == gv.nguoiDung.maNguoiDung}"
                                                                                 th:text="${gv.maGV + ' — ' +
                                                                                           (gv.nguoiDung != null ? gv.nguoiDung.hoTen : gv.maGV)}">GV</option>
                                                                     </select>

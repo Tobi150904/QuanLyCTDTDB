@@ -3,6 +3,7 @@ package com.ntu.quanlyctdtdb.service.impl;
 import com.ntu.quanlyctdtdb.dto.DotThucTapDTO;
 import com.ntu.quanlyctdtdb.entity.*;
 import com.ntu.quanlyctdtdb.enums.LoaiHocPhan;
+import com.ntu.quanlyctdtdb.enums.LoaiNguoiDung;
 import com.ntu.quanlyctdtdb.enums.LoaiThucTap;
 import com.ntu.quanlyctdtdb.enums.TrangThaiDoanhNghiep;
 import com.ntu.quanlyctdtdb.enums.TrangThaiDotTT;
@@ -39,7 +40,6 @@ public class DotThucTapServiceImpl implements DotThucTapService {
     // Phase 7 — 2 cot diem
     private final KetQuaThucTapRepository ketQuaTTRepo;
     private final VaiTroThucTapRepository vaiTroRepo;
-    private final GiangVienRepository giangVienRepo;
 
     @Override
     @Transactional(readOnly = true)
@@ -423,12 +423,13 @@ public class DotThucTapServiceImpl implements DotThucTapService {
     @Override
     public KetQuaThucTap capNhatDiem(Integer maDanhSach, String maVaiTro,
                                       BigDecimal diem, String nhanXet,
-                                      String maGiangVienDanhGia) {
+                                      String maNguoiDanhGia) {
         // 1. Validate inputs
         if (maVaiTro == null || maVaiTro.isBlank()) {
             throw new BusinessException("Vai tro danh gia khong duoc trong.");
         }
-        VaiTroThucTap vaiTro = vaiTroRepo.findById(maVaiTro.trim())
+        final String maVaiTroTrim = maVaiTro.trim();
+        VaiTroThucTap vaiTro = vaiTroRepo.findById(maVaiTroTrim)
                 .orElseThrow(() -> new BusinessException(
                         "Vai tro '" + maVaiTro + "' khong ton tai. Chap nhan: GV_HD, GV_PB, DN, CVHT."));
 
@@ -449,27 +450,58 @@ public class DotThucTapServiceImpl implements DotThucTapService {
 
         // 2. Tim row hien co (theo UNIQUE MaThucTap + MaVaiTro). Upsert.
         KetQuaThucTap kq = ketQuaTTRepo
-                .findByDanhSachThucTap_MaThucTapAndVaiTroThucTap_MaVaiTro(maDanhSach, maVaiTro.trim())
+                .findByDanhSachThucTap_MaThucTapAndVaiTroThucTap_MaVaiTro(maDanhSach, maVaiTroTrim)
                 .orElse(null);
 
-        // 3. Resolve nguoi danh gia (GiangVien) — bat buoc khi tao moi.
-        GiangVien gvDanhGia = null;
-        if (maGiangVienDanhGia != null && !maGiangVienDanhGia.isBlank()) {
-            gvDanhGia = giangVienRepo.findById(maGiangVienDanhGia.trim())
+        // 3. Phase 7 refactor — nguoi danh gia la NguoiDung (khong qua GiangVien).
+        // Cho phep ca NV DN (vai tro DN) lan GV (vai tro GV_HD/GV_PB/CVHT) cham diem.
+        NguoiDung nguoiDanhGia = null;
+        if (maNguoiDanhGia != null && !maNguoiDanhGia.isBlank()) {
+            nguoiDanhGia = nguoiDungRepo.findById(maNguoiDanhGia.trim())
                     .orElseThrow(() -> new BusinessException(
-                            "Giang vien '" + maGiangVienDanhGia + "' khong ton tai."));
+                            "Nguoi danh gia '" + maNguoiDanhGia + "' khong ton tai."));
+
+            // Role-consistency theo nghiep vu (docs/03 §WF-08, user spec):
+            //   - vai tro DN          -> phai la NguoiDung loai DOANH_NGHIEP
+            //   - vai tro GV_HD/GV_PB -> phai la GIANG_VIEN hoac CVHT
+            //   - vai tro CVHT        -> phai la CVHT
+            LoaiNguoiDung loai = nguoiDanhGia.getLoaiNguoiDung();
+            switch (maVaiTroTrim) {
+                case "DN" -> {
+                    if (loai != LoaiNguoiDung.DOANH_NGHIEP) {
+                        throw new BusinessException(
+                                "Vai tro 'DN' yeu cau nguoi cham la nhan vien doanh nghiep "
+                                + "(NguoiDung loai DOANH_NGHIEP). Hien tai: " + loai + ".");
+                    }
+                }
+                case "GV_HD", "GV_PB" -> {
+                    if (loai != LoaiNguoiDung.GIANG_VIEN && loai != LoaiNguoiDung.CVHT) {
+                        throw new BusinessException(
+                                "Vai tro '" + maVaiTroTrim + "' yeu cau nguoi cham la giang vien (GV/CVHT). "
+                                + "Hien tai: " + loai + ".");
+                    }
+                }
+                case "CVHT" -> {
+                    if (loai != LoaiNguoiDung.CVHT && loai != LoaiNguoiDung.GIANG_VIEN) {
+                        throw new BusinessException(
+                                "Vai tro 'CVHT' yeu cau nguoi cham la CVHT (hoac GV). "
+                                + "Hien tai: " + loai + ".");
+                    }
+                }
+                default -> { /* no-op — vai tro la khong chuan da bi reject o tren */ }
+            }
         }
 
         if (kq == null) {
             // Tao moi -> nguoiDanhGia bat buoc (NOT NULL trong SQL).
-            if (gvDanhGia == null) {
+            if (nguoiDanhGia == null) {
                 throw new BusinessException(
-                        "Khi tao moi, can chi dinh nguoi danh gia (Ma GV).");
+                        "Khi tao moi, can chi dinh nguoi danh gia.");
             }
             kq = KetQuaThucTap.builder()
                     .danhSachThucTap(ds)
                     .vaiTroThucTap(vaiTro)
-                    .nguoiDanhGia(gvDanhGia)
+                    .nguoiDanhGia(nguoiDanhGia)
                     .diem(diem)
                     .nhanXet(nhanXet != null && !nhanXet.isBlank() ? nhanXet.trim() : null)
                     .build();
@@ -478,8 +510,8 @@ public class DotThucTapServiceImpl implements DotThucTapService {
             // de "xoa" diem.
             kq.setDiem(diem);
             kq.setNhanXet(nhanXet != null && !nhanXet.isBlank() ? nhanXet.trim() : null);
-            if (gvDanhGia != null) {
-                kq.setNguoiDanhGia(gvDanhGia);
+            if (nguoiDanhGia != null) {
+                kq.setNguoiDanhGia(nguoiDanhGia);
             }
         }
 
@@ -490,8 +522,8 @@ public class DotThucTapServiceImpl implements DotThucTapService {
             dsTTRepo.save(ds);
         }
 
-        log.info("[KetQuaThucTap] Upsert: maDS={}, vaiTro={}, diem={}, gv={}",
-                 maDanhSach, maVaiTro, diem, maGiangVienDanhGia);
+        log.info("[KetQuaThucTap] Upsert: maDS={}, vaiTro={}, diem={}, nguoiDanhGia={}",
+                 maDanhSach, maVaiTroTrim, diem, maNguoiDanhGia);
         return ketQuaTTRepo.save(kq);
     }
 
