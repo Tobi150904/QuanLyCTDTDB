@@ -159,18 +159,26 @@
                             </tr>
                             <tr th:each="lhp, stat : ${lopList}"
                                 th:with="hp=${hocPhanMap.get(lhp.id.maHocPhan)},
+                                         hk=${hocKyMap != null ? hocKyMap.get(lhp.id.maHocKy) : null},
                                          soCB=${canhBaoMap.get(lhp.id.maCTDT + '|' + lhp.id.maHocPhan + '|' + lhp.id.maHocKy + '|' + lhp.id.maLopHocPhan)}"
                                 class="gv-row"
                                 th:data-hocky="${lhp.id.maHocKy}"
                                 th:data-canhbao="${(soCB != null and soCB > 0) ? 'co' : 'khong'}"
                                 th:data-search="${lhp.id.maCTDT + ' ' + lhp.id.maHocPhan + ' ' + lhp.id.maHocKy + ' '
+                                                  + (hk != null ? hk.tenHocKy : '') + ' '
                                                   + (hp != null ? hp.tenHocPhan : '')}">
                                 <td class="text-muted" th:text="${stat.index + 1}">1</td>
                                 <td><code th:text="${lhp.id.maCTDT}">--</code></td>
                                 <td><code th:text="${lhp.id.maHocPhan}">--</code></td>
                                 <td class="fw-medium"
                                     th:text="${hp != null ? hp.tenHocPhan : '--'}">--</td>
-                                <td><code th:text="${lhp.id.maHocKy}">--</code></td>
+                                <!--/* Phase 7 fix: hien friendly tenHocKy + ma duoi dang muted */-->
+                                <td>
+                                    <div class="fw-medium small"
+                                         th:text="${hk != null ? hk.tenHocKy : lhp.id.maHocKy}">--</div>
+                                    <code class="small text-muted"
+                                          th:text="${lhp.id.maHocKy}">--</code>
+                                </td>
                                 <td class="text-center">
                                     <span class="badge bg-light text-dark"
                                           th:text="'N' + ${lhp.id.maLopHocPhan}">N1</span>
@@ -322,15 +330,23 @@
                                 </td>
                             </tr>
                             <tr th:each="nx, stat : ${nhanXetList}"
-                                th:with="hp=${hocPhanMap.get(nx.id.maHocPhan)}"
+                                th:with="hp=${hocPhanMap.get(nx.id.maHocPhan)},
+                                         hk=${hocKyMap != null ? hocKyMap.get(nx.id.maHocKy) : null}"
                                 class="sv-row"
                                 th:data-hocky="${nx.id.maHocKy}"
                                 th:data-status="${nx.daCanhBao ? 'cb' : 'bt'}"
                                 th:data-search="${nx.id.maHocPhan + ' ' + nx.id.maHocKy + ' '
+                                                  + (hk != null ? hk.tenHocKy : '') + ' '
                                                   + (hp != null ? hp.tenHocPhan : '') + ' '
                                                   + (nx.nhanXet != null ? nx.nhanXet : '')}">
                                 <td class="text-muted" th:text="${stat.index + 1}">1</td>
-                                <td><code th:text="${nx.id.maHocKy}">--</code></td>
+                                <!--/* Phase 7 fix: hien friendly tenHocKy + ma duoi dang muted */-->
+                                <td>
+                                    <div class="fw-medium small"
+                                         th:text="${hk != null ? hk.tenHocKy : nx.id.maHocKy}">--</div>
+                                    <code class="small text-muted"
+                                          th:text="${nx.id.maHocKy}">--</code>
+                                </td>
                                 <td><code th:text="${nx.id.maHocPhan}">--</code></td>
                                 <td th:text="${hp != null ? hp.tenHocPhan : '--'}">--</td>
                                 <td class="text-center">
@@ -383,18 +399,27 @@
 
         if (rows.length === 0) return;
 
-        // Auto-populate hoc-ky options
-        const hocKySet = new Set();
+        // Auto-populate hoc-ky options.
+        // Phase 7 fix: lay friendly tenHocKy tu cell ".fw-medium" trong row
+        // dau tien tim thay cua moi maHocKy. Truoc day chi hien ma — user nham.
+        const hocKyMap = new Map(); // maHocKy -> tenHocKy
         rows.forEach(r => {
             const hk = r.getAttribute('data-hocky');
-            if (hk) hocKySet.add(hk);
+            if (!hk || hocKyMap.has(hk)) return;
+            // Looks for the first ".fw-medium.small" cell that contains
+            // the human label printed by the template (right next to <code>).
+            const labelEl = r.querySelector('.fw-medium.small');
+            const label = labelEl ? labelEl.textContent.trim() : hk;
+            hocKyMap.set(hk, label);
         });
-        Array.from(hocKySet).sort().forEach(hk => {
-            const opt = document.createElement('option');
-            opt.value = hk;
-            opt.textContent = hk;
-            hocKyFilter.appendChild(opt);
-        });
+        Array.from(hocKyMap.entries())
+            .sort((a, b) => a[0].localeCompare(b[0]))
+            .forEach(([code, label]) => {
+                const opt = document.createElement('option');
+                opt.value = code;
+                opt.textContent = label === code ? code : (label + ' (' + code + ')');
+                hocKyFilter.appendChild(opt);
+            });
 
         function apply() {
             const q = normalize(searchInput.value.trim());

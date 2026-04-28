@@ -36,10 +36,14 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public String handleNotFound(ResourceNotFoundException ex, Model model) {
+    public String handleNotFound(ResourceNotFoundException ex,
+                                  HttpServletRequest req,
+                                  Model model) {
         log.warn("[ResourceNotFound] {}", ex.getMessage());
         model.addAttribute("errorMsg", ex.getMessage());
         model.addAttribute("statusCode", 404);
+        // Phase 7 — pass request URI to view de user nhan dien duong dan loi
+        model.addAttribute("requestUri", req.getRequestURI());
         return "error/404";
     }
 
@@ -95,10 +99,15 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(NoHandlerFoundException.class)
-    public String handleNoHandler(NoHandlerFoundException ex, Model model) {
+    public String handleNoHandler(NoHandlerFoundException ex,
+                                   HttpServletRequest req,
+                                   Model model) {
         log.warn("[NoHandlerFound] {} {}", ex.getHttpMethod(), ex.getRequestURL());
         model.addAttribute("errorMsg", "Trang bạn yêu cầu không tồn tại.");
         model.addAttribute("statusCode", 404);
+        // Phase 7 — show URL goc (uu tien getRequestURL co query string).
+        model.addAttribute("requestUri", ex.getRequestURL() != null
+                ? ex.getRequestURL() : req.getRequestURI());
         return "error/404";
     }
 
@@ -120,13 +129,31 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public String handleGeneral(Exception ex, HttpServletRequest req, Model model) {
+        // Phase 7 — sinh error reference de user co the gui cho admin / dev
+        // tra log: format ERR-yyMMddHHmmss-XXXX (random hex 4 char).
+        String errorRef = generateErrorRef();
         // Log full stack trace de ops/dev co the trace; user chi thay thong diep than thien.
-        log.error("[UnhandledException] path={} ", req.getRequestURI(), ex);
+        // Log them errorRef de map giua trang user thay va log backend.
+        log.error("[UnhandledException] ref={} path={} ", errorRef, req.getRequestURI(), ex);
         model.addAttribute("errorMsg",
                 "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau ít phút "
                         + "hoặc liên hệ quản trị viên nếu sự cố tiếp diễn.");
+        model.addAttribute("errorRef", errorRef);
         // Khong dua ex.getMessage() ra view de tranh lo thong tin nhay cam
         // (vi du: ten bang, SQL state). Dev xem chi tiet trong log backend.
         return "error/500";
+    }
+
+    /**
+     * Sinh error reference dang ERR-yyMMddHHmmss-XXXX (random 4 hex char).
+     * Khong can phai tuyet doi unique — chi can de tim trong log gan thoi
+     * diem user thay loi.
+     */
+    private static String generateErrorRef() {
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        String ts = now.format(java.time.format.DateTimeFormatter
+                .ofPattern("yyMMddHHmmss"));
+        int rand = (int) (Math.random() * 0x10000);
+        return String.format("ERR-%s-%04X", ts, rand);
     }
 }

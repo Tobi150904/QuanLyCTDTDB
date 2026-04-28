@@ -17,21 +17,55 @@
                 Trang bạn đang tìm không tồn tại hoặc đã được di chuyển.<br>
                 Vui lòng kiểm tra lại đường dẫn hoặc quay về trang chủ.
             </p>
+
+            <!--/* Phase 7: hien URL khong tim thay (truncate) de user xac nhan */-->
+            <div th:if="${requestUri}"
+                 class="d-inline-block px-3 py-2 mb-3 small"
+                 style="background: var(--surface-soft); border-radius: var(--radius-sm); max-width: 100%;">
+                <i class="bi bi-link-45deg me-1 text-muted" aria-hidden="true"></i>
+                <code class="text-truncate d-inline-block align-bottom"
+                      style="max-width: 360px;"
+                      th:text="${requestUri}">--</code>
+            </div>
+
             <p th:if="${errorMsg}" class="text-danger small mb-3" th:text="${errorMsg}"></p>
+
             <div class="d-flex justify-content-center gap-2 flex-wrap">
                 <a th:href="@{/dashboard}" class="btn btn-primary">
                     <i class="bi bi-house-door me-1" aria-hidden="true"></i>Về Trang Chủ
+                </a>
+                <a th:href="@{/tim-kiem}" class="btn btn-outline-primary">
+                    <i class="bi bi-search me-1" aria-hidden="true"></i>Tìm Kiếm
                 </a>
                 <button type="button" class="btn btn-outline-secondary"
                         onclick="history.back()">
                     <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Quay Lại
                 </button>
             </div>
+
             <hr class="soft-divider">
-            <p class="small text-muted mb-0">
-                <i class="bi bi-life-preserver me-1" aria-hidden="true"></i>
-                Cần hỗ trợ? Liên hệ Phòng Đào Tạo để được trợ giúp.
-            </p>
+
+            <!--/* Phase 7: shortcut den cac trang chinh thay vi text mo ho */-->
+            <div class="small">
+                <p class="text-muted mb-2">
+                    <i class="bi bi-signpost-2 me-1" aria-hidden="true"></i>
+                    Có thể bạn cần:
+                </p>
+                <div class="d-flex flex-wrap justify-content-center gap-2">
+                    <a th:href="@{/dashboard}"
+                       class="badge text-decoration-none bg-light text-dark border px-3 py-2">
+                        <i class="bi bi-speedometer2 me-1" aria-hidden="true"></i>Dashboard
+                    </a>
+                    <a th:href="@{/profile}"
+                       class="badge text-decoration-none bg-light text-dark border px-3 py-2">
+                        <i class="bi bi-person me-1" aria-hidden="true"></i>Hồ sơ cá nhân
+                    </a>
+                    <a th:href="@{/dang-ky}"
+                       class="badge text-decoration-none bg-light text-dark border px-3 py-2">
+                        <i class="bi bi-pencil-square me-1" aria-hidden="true"></i>Đăng ký học phần
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 </div>

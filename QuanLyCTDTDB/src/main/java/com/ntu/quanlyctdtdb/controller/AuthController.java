@@ -39,8 +39,29 @@ public class AuthController {
 
     /** Trang tu choi truy cap (403). */
     @GetMapping("/403")
-    public String accessDenied(Model model) {
+    public String accessDenied(jakarta.servlet.http.HttpServletRequest req, Model model) {
         model.addAttribute("activeMenu", "");
+        // Phase 7 — pass original request URI (truoc khi Spring Security forward
+        // sang /403) de view co the hien cho user dang bi tu choi cai gi. Spring
+        // luu URL goc trong attribute "jakarta.servlet.forward.request_uri".
+        Object original = req.getAttribute("jakarta.servlet.forward.request_uri");
+        if (original == null) {
+            original = req.getAttribute("javax.servlet.forward.request_uri");
+        }
+        if (original != null) {
+            String uri = original.toString();
+            Object qs = req.getAttribute("jakarta.servlet.forward.query_string");
+            if (qs == null) {
+                qs = req.getAttribute("javax.servlet.forward.query_string");
+            }
+            if (qs != null && !qs.toString().isEmpty()) {
+                uri = uri + "?" + qs;
+            }
+            model.addAttribute("requestUri", uri);
+        } else {
+            // Khong forwarded -> user truc tiep go /403 -> chi can hien dong dan hien tai
+            model.addAttribute("requestUri", req.getRequestURI());
+        }
         return "error/403";
     }
 }

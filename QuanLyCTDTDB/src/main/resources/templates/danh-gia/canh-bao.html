@@ -165,6 +165,7 @@
                         </tr>
                         <th:block th:each="cb, stat : ${canhBaoList}"
                                   th:with="hp=${hocPhanMap.get(cb.id.maHocPhan)},
+                                           hk=${hocKyMap != null ? hocKyMap.get(cb.id.maHocKy) : null},
                                            daXuLy=${cb.ketQuaXuLy != null and !#strings.isEmpty(cb.ketQuaXuLy)}">
                             <tr class="cb-row"
                                 th:data-status="${daXuLy ? 'da' : 'chua'}"
@@ -173,6 +174,8 @@
                                                    ? cb.sinhVien.nguoiDung.hoTen : '') + ' '
                                                 + cb.id.maSV + ' '
                                                 + cb.id.maHocPhan + ' '
+                                                + cb.id.maHocKy + ' '
+                                                + (hk != null ? hk.tenHocKy : '') + ' '
                                                 + (cb.sinhVien != null and cb.sinhVien.lopHanhChinh != null
                                                    ? cb.sinhVien.lopHanhChinh.maLopHC : '') + ' '
                                                 + (hp != null ? hp.tenHocPhan : '')}">
@@ -196,8 +199,12 @@
                                           th:if="${hp != null}"
                                           th:text="'— ' + ${hp.tenHocPhan}">--</span>
                                 </td>
-                                <td class="small text-muted">
-                                    <code th:text="${cb.id.maHocKy}">--</code>
+                                <!--/* Phase 7 fix: hien tenHocKy + ma muted */-->
+                                <td>
+                                    <div class="fw-medium small"
+                                         th:text="${hk != null ? hk.tenHocKy : cb.id.maHocKy}">--</div>
+                                    <code class="small text-muted"
+                                          th:text="${cb.id.maHocKy}">--</code>
                                 </td>
                                 <td class="small"
                                     th:text="${cb.nhanXet != null and !#strings.isEmpty(cb.nhanXet)
@@ -288,18 +295,25 @@
 
     if (!searchInput || rows.length === 0) return;
 
-    // Auto-populate hoc-ky options
-    const hocKySet = new Set();
+    // Auto-populate hoc-ky options.
+    // Phase 7 fix: lay friendly tenHocKy tu cell .fw-medium.small de label
+    // dropdown khong chi hien ma ("HK1-2024") ma ca ten ("Hoc ky 1 - 2024-2025").
+    const hocKyMap = new Map(); // code -> label
     rows.forEach(r => {
-        const hk = r.getAttribute('data-hocky');
-        if (hk) hocKySet.add(hk);
+        const code = r.getAttribute('data-hocky');
+        if (!code || hocKyMap.has(code)) return;
+        const labelEl = r.querySelector('.fw-medium.small');
+        const label = labelEl ? labelEl.textContent.trim() : code;
+        hocKyMap.set(code, label);
     });
-    Array.from(hocKySet).sort().forEach(hk => {
-        const opt = document.createElement('option');
-        opt.value = hk;
-        opt.textContent = hk;
-        hocKyFilter.appendChild(opt);
-    });
+    Array.from(hocKyMap.entries())
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .forEach(([code, label]) => {
+            const opt = document.createElement('option');
+            opt.value = code;
+            opt.textContent = label === code ? code : (label + ' (' + code + ')');
+            hocKyFilter.appendChild(opt);
+        });
 
     function normalize(s) {
         return (s || '').toString().toLowerCase()

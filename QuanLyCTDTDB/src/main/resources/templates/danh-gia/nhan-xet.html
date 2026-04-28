@@ -28,8 +28,12 @@
                     <span><code th:text="${lopId.maHocPhan}">--</code></span>
                     <span><i class="bi bi-mortarboard"></i>CTĐT
                         <code th:text="${lopId.maCTDT}">--</code></span>
-                    <span><i class="bi bi-calendar3"></i>HK
-                        <code th:text="${lopId.maHocKy}">--</code></span>
+                    <!--/* Phase 7 fix: hien tenHocKy thay vi maHocKy de tranh hieu nham */-->
+                    <span>
+                        <i class="bi bi-calendar3"></i>
+                        <strong th:text="${hocKy != null ? hocKy.tenHocKy : lopId.maHocKy}">HK</strong>
+                        <code class="ms-1 opacity-75" th:text="${lopId.maHocKy}">--</code>
+                    </span>
                     <span><i class="bi bi-collection"></i>
                         Nhóm <strong th:text="'N' + ${lopId.maLopHocPhan}">N1</strong></span>
                     <span><i class="bi bi-people"></i>

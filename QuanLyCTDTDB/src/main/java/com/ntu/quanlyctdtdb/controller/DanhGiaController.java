@@ -3,12 +3,14 @@ package com.ntu.quanlyctdtdb.controller;
 import com.ntu.quanlyctdtdb.dto.NhapNhanXetDTO;
 import com.ntu.quanlyctdtdb.entity.DanhSachSvLopHocPhan;
 import com.ntu.quanlyctdtdb.entity.GiangVien;
+import com.ntu.quanlyctdtdb.entity.HocKyNamHoc;
 import com.ntu.quanlyctdtdb.entity.HocPhan;
 import com.ntu.quanlyctdtdb.entity.LopHocPhan;
 import com.ntu.quanlyctdtdb.entity.LopHocPhanId;
 import com.ntu.quanlyctdtdb.entity.SinhVien;
 import com.ntu.quanlyctdtdb.repository.DanhSachSvLopHocPhanRepository;
 import com.ntu.quanlyctdtdb.repository.GiangVienRepository;
+import com.ntu.quanlyctdtdb.repository.HocKyNamHocRepository;
 import com.ntu.quanlyctdtdb.repository.HocPhanRepository;
 import com.ntu.quanlyctdtdb.repository.SinhVienRepository;
 import com.ntu.quanlyctdtdb.security.CustomUserDetails;
@@ -61,6 +63,9 @@ public class DanhGiaController {
     private final GiangVienRepository giangVienRepo;
     private final SinhVienRepository sinhVienRepo;
     private final DanhSachSvLopHocPhanRepository dssvRepo;
+    // Phase 7 — Bug fix: load HocKy de hien thi friendly name (truoc day chi
+    // hien ma "HK1-2024" -> user nham la khong dung HK).
+    private final HocKyNamHocRepository hocKyRepo;
 
     @ModelAttribute("activeMenu")
     public String activeMenu() { return "danh-gia"; }
@@ -76,6 +81,13 @@ public class DanhGiaController {
                 .anyMatch(a -> "ROLE_GIANG_VIEN".equals(a.getAuthority()));
         boolean isSV = ud != null && ud.getAuthorities().stream()
                 .anyMatch(a -> "ROLE_SINH_VIEN".equals(a.getAuthority()));
+
+        // Phase 7 fix: Bug "danh gia chua dung voi hoc ky lop hoc phan".
+        // Truoc day template chi hien lhp.id.maHocKy (vi du "HK1-2024") khien
+        // user khong nhan ra dung HK do. Load full HocKyNamHoc va build map
+        // de template hien th friendly name "HK1 nam hoc 2024-2025".
+        Map<String, HocKyNamHoc> hocKyMap = hocKyRepo.findAll().stream()
+                .collect(Collectors.toMap(HocKyNamHoc::getMaHocKy, Function.identity()));
 
         if (isGV) {
             // Lookup MaGV tu MaNguoiDung (NguoiDung 1-1 GiangVien).
@@ -94,6 +106,7 @@ public class DanhGiaController {
             model.addAttribute("vaiTro", "GV");
             model.addAttribute("lopList", lopList);
             model.addAttribute("hocPhanMap", hocPhanMap);
+            model.addAttribute("hocKyMap", hocKyMap);
             model.addAttribute("canhBaoMap", canhBaoMap);
             return "danh-gia/index";
         }
@@ -109,6 +122,7 @@ public class DanhGiaController {
             model.addAttribute("sinhVien", sv);
             model.addAttribute("nhanXetList", nhanXetList);
             model.addAttribute("hocPhanMap", hocPhanMap);
+            model.addAttribute("hocKyMap", hocKyMap);
             return "danh-gia/index";
         }
 
@@ -130,6 +144,8 @@ public class DanhGiaController {
         LopHocPhanId id = new LopHocPhanId(maCTDT, maHocPhan, maHocKy, maLop);
         List<DanhSachSvLopHocPhan> danhSachSV = danhGiaService.findDanhSachSvTrongLop(id);
         HocPhan hp = hocPhanRepo.findById(maHocPhan).orElse(null);
+        // Phase 7 — load HocKy de hien friendly ten ("HK1 2024-2025") trong hero.
+        HocKyNamHoc hocKy = hocKyRepo.findById(maHocKy).orElse(null);
 
         long soCanhBao = danhSachSV.stream()
                 .filter(d -> Boolean.TRUE.equals(d.getDaCanhBao()))
@@ -137,6 +153,7 @@ public class DanhGiaController {
 
         model.addAttribute("lopId", id);
         model.addAttribute("hocPhan", hp);
+        model.addAttribute("hocKy", hocKy);
         model.addAttribute("danhSachSV", danhSachSV);
         model.addAttribute("soCanhBao", soCanhBao);
         return "danh-gia/nhan-xet";
@@ -192,6 +209,9 @@ public class DanhGiaController {
         // Map maHocPhan -> HocPhan de template hien thi tenHocPhan
         Map<String, HocPhan> hocPhanMap = hocPhanRepo.findAll().stream()
                 .collect(Collectors.toMap(HocPhan::getMaHocPhan, Function.identity()));
+        // Phase 7 — Map maHocKy -> HocKyNamHoc de hien friendly name.
+        Map<String, HocKyNamHoc> hocKyMap = hocKyRepo.findAll().stream()
+                .collect(Collectors.toMap(HocKyNamHoc::getMaHocKy, Function.identity()));
 
         long soChuaXuLy = canhBaoList.stream()
                 .filter(d -> d.getKetQuaXuLy() == null || d.getKetQuaXuLy().isBlank())
@@ -199,6 +219,7 @@ public class DanhGiaController {
 
         model.addAttribute("canhBaoList", canhBaoList);
         model.addAttribute("hocPhanMap", hocPhanMap);
+        model.addAttribute("hocKyMap", hocKyMap);
         model.addAttribute("filterMode", filterMode);
         model.addAttribute("soChuaXuLy", soChuaXuLy);
         model.addAttribute("soDaXuLy", canhBaoList.size() - soChuaXuLy);
