@@ -1,35 +1,44 @@
 -- =============================================================================
--- 02_seed_data.sql
+-- 02_seed_data.sql  —  SEED FULL  (Phase 1 -> Phase 7, NV DN + 2 cot diem dung)
 -- =============================================================================
--- He Thong Quan Ly Chuong Trinh Dao Tao Xuat Sac (NTU)
--- Seed du lieu day du Phase 1 -> Phase 7 (Profile / Danh-gia / Error / Thuc-tap
--- 2 cot diem). File nay phai duoc chay SAU KHI 01_create_tables.sql da chay xong.
+-- He Thong Quan Ly Chuong Trinh Dao Tao Xuat Sac (Truong DH Nha Trang).
+-- Chay SAU KHI 01_create_tables.sql da chay xong.
 --
--- Pham vi du lieu:
---   - 5 hoc ky 2023-2026
---   - 1 admin + 12 giang vien + 30 sinh vien (4 khoa K22..K25 — co edge case
---     ThoiHoc / BaoLuu de minh hoa rule auto-add)
---   - 7 doanh nghiep dang hop tac + 2 doanh nghiep tam ngung
---   - 4 chuong trinh dao tao + 14 hoc phan + 19 lop hoc phan + 52 dang ky
---   - 5 dot kien tap (du moi trang thai workflow) + 20 SV-KT
---   - 3 dot thuc tap (DangThucHien / DaDuyet / ChuanBi) + 10 SV-TT
---   - 12 ket qua thuc tap minh hoa Phase 7 "2 cot diem":
---       * Truong       : GV_HD (cot 1) + GV_PB (cot 2)
---       * DoanhNghiep  : DN    (cot 1) + GV_HD (cot 2)
---     Vai tro 'GV' (legacy don nhat) van duoc giu lai trong VaiTroThucTap
---     de backward-compat voi du lieu cu, nhung KHONG con sinh ra row moi.
+-- ===== THAY DOI LON SO VOI BAN TRUOC (Phase 7 refactor) =====
+--   1. Them 7 nhan vien doanh nghiep (NV001..NV007) — moi DN dang hop tac co
+--      it nhat 1 nguoi phu trach SV thuc tap. Cac record nay vua co NguoiDung
+--      (de login + audit), vua co NhanVienDoanhNghiep (de gan voi DN).
+--
+--   2. **Case A** — NV DN dong thoi giang day thinh giang tai truong:
+--        NV001 (FPT)  -> GV013 LoaiGiangVien=GiangVienThinhGiang  (HP-LTW)
+--        NV002 (VNG)  -> GV014 LoaiGiangVien=GiangVienThinhGiang  (HP-AI)
+--      1 NguoiDung -> 2 record (NhanVienDoanhNghiep + GiangVien).
+--
+--   3. KetQuaThucTap.MaNguoiDanhGia hien tro ve NguoiDung:
+--        + LoaiThucTap='Truong'      : cot 1 = GV_HD (GV cua truong)
+--                                      cot 2 = GV_PB (GV cua truong)
+--        + LoaiThucTap='DoanhNghiep' : cot 1 = DN    (NV cua DN, vd NV001)
+--                                      cot 2 = GV_HD (GV cua truong, giam sat)
+--      => KHONG con gia lap GV001 cho cot DN. Bao cao thong ke chinh xac.
+--
+--   4. VaiTroThucTap.TenVaiTro chuan hoa:
+--        GV_HD -> "GV Giam Sat / Huong Dan"
+--        DN    -> "Nhan Vien Doanh Nghiep"
+--        ...
 --
 -- Convention:
---   - MaSV = MaNguoiDung, MaGV = MaNguoiDung, MaDoanhNghiep = MaNguoiDung
---     (rang buoc tham chieu cheo dat trong service layer va docs/02 §3.2).
---   - Mat khau test: Password@123  (BCrypt cost=10).
+--   - MaSV     = MaNguoiDung
+--   - MaGV     = MaNguoiDung (GV cua truong)
+--   - MaGV     = NV{xxx} cho thinh giang la NV DN (Case A) — vd GV013 ko,
+--                ma dung MaGV='GV013' nhung MaNguoiDung='NV001' (1-1 unique).
+--   - MaDoanhNghiep != MaNguoiDung (tach roi: DN001..007 NguoiDung la TK
+--                                    "dai dien DN", DN001..009 la company entity).
+--   - Mat khau: Password@123  (BCrypt cost=10).
 -- =============================================================================
 
 SET FOREIGN_KEY_CHECKS = 0;
 
--- ---------------------------------------------------------------------------
--- Truncate theo thu tu nguoc voi FK de tranh constraint violation.
--- ---------------------------------------------------------------------------
+-- ----- TRUNCATE theo thu tu nguoc voi FK -----
 TRUNCATE TABLE KetQuaThucTap;
 TRUNCATE TABLE DanhSachThucTap;
 TRUNCATE TABLE DotThucTap;
@@ -46,6 +55,7 @@ TRUNCATE TABLE BCN_ThanhVien;
 TRUNCATE TABLE ChuongTrinhDaoTao;
 TRUNCATE TABLE NhomNguoiDung;
 TRUNCATE TABLE VaiTroThucTap;
+TRUNCATE TABLE NhanVienDoanhNghiep;
 TRUNCATE TABLE DoanhNghiep;
 TRUNCATE TABLE GiangVien;
 TRUNCATE TABLE NguoiDung;
@@ -54,9 +64,7 @@ TRUNCATE TABLE HocKyNamHoc;
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- =============================================================================
--- 1. HocKyNamHoc  (doc lap)
---    Quy uoc: MaHocKy = HK{1|2}-{NamBatDau}    (vi du HK1-2024)
---    Chi 1 hoc ky 'DangDienRa' tai mot thoi diem (docs/02 §2).
+-- 1. HocKyNamHoc
 -- =============================================================================
 INSERT INTO HocKyNamHoc (MaHocKy, TenHocKy, NgayBatDau, NgayKetThuc, TrangThai) VALUES
 ('HK1-2023', 'Hoc Ky 1 Nam 2023-2024', '2023-09-04', '2024-01-12', 'DaKetThuc'),
@@ -66,12 +74,8 @@ INSERT INTO HocKyNamHoc (MaHocKy, TenHocKy, NgayBatDau, NgayKetThuc, TrangThai) 
 ('HK1-2025', 'Hoc Ky 1 Nam 2025-2026', '2025-09-01', '2026-01-09', 'SapDienRa');
 
 -- =============================================================================
--- 2. NguoiDung  (doc lap) — BCrypt hash cho Password@123
---    Format MaNguoiDung (docs/02 §1):
---      Admin  : AD + 3 so          -> AD001
---      GV     : GV + 3 so          -> GV001
---      SV     : SV + nam + 3 so    -> SV2024001
---      DN     : DN + 3 so          -> DN001
+-- 2. NguoiDung  (Admin + 12 GV + 30 SV + 7 DN-rep + 7 NV-DN = 57 row)
+--    BCrypt hash co dinh cho 'Password@123'.
 -- =============================================================================
 INSERT INTO NguoiDung
     (MaNguoiDung, TenDangNhap, MatKhauHash, Email, HoTen, SoDienThoai, TrangThaiTK, LoaiNguoiDung) VALUES
@@ -79,29 +83,25 @@ INSERT INTO NguoiDung
 -- ---- Admin ----
 ('AD001', 'admin', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'admin@ntu.edu.vn', 'Quan Tri Vien He Thong', '0909000001', 1, 'Admin'),
 
--- ---- Giang Vien: Phong Dao Tao / TTDTXS ----
+-- ---- Giang Vien: PDT / TTDTXS ----
 ('GV001', 'tran.van.an',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'tran.van.an@ntu.edu.vn',     'PGS.TS. Tran Van An',      '0912340001', 1, 'GiangVien'),
 ('GV002', 'le.thi.binh',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'le.thi.binh@ntu.edu.vn',     'TS. Le Thi Binh',          '0912340002', 1, 'GiangVien'),
 
--- ---- Giang Vien: CVHT + CNHP (CTDT K22) ----
+-- ---- Giang Vien: CVHT + CNHP (cac CTDT) ----
 ('GV003', 'nguyen.van.cuong','$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'nguyen.van.cuong@ntu.edu.vn','TS. Nguyen Van Cuong',     '0912340003', 1, 'GiangVien'),
 ('GV004', 'pham.thi.dung',   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'pham.thi.dung@ntu.edu.vn',   'ThS. Pham Thi Dung',       '0912340004', 1, 'GiangVien'),
-
--- ---- Giang Vien: CVHT + CNHP (CTDT K23) ----
 ('GV005', 'hoang.van.em',    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'hoang.van.em@ntu.edu.vn',    'ThS. Hoang Van Em',        '0912340005', 1, 'GiangVien'),
 ('GV006', 'vu.thi.giang',    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'vu.thi.giang@ntu.edu.vn',    'TS. Vu Thi Giang',         '0912340006', 1, 'GiangVien'),
-
--- ---- Giang Vien: CVHT + CNHP (CTDT K24) ----
 ('GV007', 'do.minh.hieu',    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'do.minh.hieu@ntu.edu.vn',    'ThS. Do Minh Hieu',        '0912340007', 1, 'GiangVien'),
 ('GV008', 'bui.thanh.ha',    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'bui.thanh.ha@ntu.edu.vn',    'ThS. Bui Thanh Ha',        '0912340008', 1, 'GiangVien'),
 
--- ---- Giang Vien: bo mon chuyen mon (giang day theo hoc phan + Phan bien thuc tap) ----
+-- ---- Giang Vien: Bo mon chuyen mon (giang day + GV_PB thuc tap) ----
 ('GV009', 'ngo.thi.lan',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'ngo.thi.lan@ntu.edu.vn',     'TS. Ngo Thi Lan',          '0912340009', 1, 'GiangVien'),
 ('GV010', 'dang.van.minh',   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'dang.van.minh@ntu.edu.vn',   'ThS. Dang Van Minh',       '0912340010', 1, 'GiangVien'),
 ('GV011', 'phan.thi.ngoc',   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'phan.thi.ngoc@ntu.edu.vn',   'TS. Phan Thi Ngoc',        '0912340011', 1, 'GiangVien'),
 ('GV012', 'ly.quoc.phong',   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'ly.quoc.phong@ntu.edu.vn',   'ThS. Ly Quoc Phong',       '0912340012', 1, 'GiangVien'),
 
--- ---- Sinh Vien: K24 (nam 1 — CNTT-K24A + CNTT-K24B) ----
+-- ---- Sinh Vien: K24 (nam 1) ----
 ('SV2024001', 'sv.2024001', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2024001@sv.ntu.edu.vn', 'Nguyen Thi Hoa',       '0978001001', 1, 'SinhVien'),
 ('SV2024002', 'sv.2024002', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2024002@sv.ntu.edu.vn', 'Tran Minh Khoa',       '0978001002', 1, 'SinhVien'),
 ('SV2024003', 'sv.2024003', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2024003@sv.ntu.edu.vn', 'Le Quoc Long',         '0978001003', 1, 'SinhVien'),
@@ -113,7 +113,7 @@ INSERT INTO NguoiDung
 ('SV2024009', 'sv.2024009', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2024009@sv.ntu.edu.vn', 'Ngo Van Thien',        '0978001009', 1, 'SinhVien'),
 ('SV2024010', 'sv.2024010', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2024010@sv.ntu.edu.vn', 'Ly Thanh Vy',          '0978001010', 1, 'SinhVien'),
 
--- ---- Sinh Vien: K23 (nam 2 — CNTT-K23A + CNTT-K23B) ----
+-- ---- Sinh Vien: K23 (nam 2) ----
 ('SV2023001', 'sv.2023001', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2023001@sv.ntu.edu.vn', 'Pham Ngoc Mai',        '0978002001', 1, 'SinhVien'),
 ('SV2023002', 'sv.2023002', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2023002@sv.ntu.edu.vn', 'Hoang Thi Nhu',        '0978002002', 1, 'SinhVien'),
 ('SV2023003', 'sv.2023003', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2023003@sv.ntu.edu.vn', 'Do Quoc Tuan',         '0978002003', 1, 'SinhVien'),
@@ -125,7 +125,7 @@ INSERT INTO NguoiDung
 ('SV2023009', 'sv.2023009', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2023009@sv.ntu.edu.vn', 'Phan Kim Anh',         '0978002009', 1, 'SinhVien'),
 ('SV2023010', 'sv.2023010', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2023010@sv.ntu.edu.vn', 'Bui Cong Dat',         '0978002010', 1, 'SinhVien'),
 
--- ---- Sinh Vien: K22 (nam 3 — di kien tap + chuan bi thuc tap) ----
+-- ---- Sinh Vien: K22 (nam 3-4 — di kien tap, thuc tap) ----
 ('SV2022001', 'sv.2022001', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2022001@sv.ntu.edu.vn', 'Vo Thanh Phong',       '0978003001', 1, 'SinhVien'),
 ('SV2022002', 'sv.2022002', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2022002@sv.ntu.edu.vn', 'Bui Thi Quynh',        '0978003002', 1, 'SinhVien'),
 ('SV2022003', 'sv.2022003', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2022003@sv.ntu.edu.vn', 'Ngo Van Tan',          '0978003003', 1, 'SinhVien'),
@@ -136,21 +136,32 @@ INSERT INTO NguoiDung
 ('SV2022009', 'sv.2022009', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2022009@sv.ntu.edu.vn', 'Pham Hoang Kim',       '0978003009', 1, 'SinhVien'),
 ('SV2022010', 'sv.2022010', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2022010@sv.ntu.edu.vn', 'Hoang Gia Bao',        '0978003010', 1, 'SinhVien'),
 
--- ---- Sinh Vien edge-case: KHAC trang thai DangHoc (de minh hoa auto-add chi lay DangHoc) ----
+-- ---- Sinh Vien edge-case: KHAC trang thai DangHoc ----
 ('SV2022005', 'sv.2022005', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'sv2022005@sv.ntu.edu.vn', 'Ly Thi Van',           '0978003005', 1, 'SinhVien'),
 
--- ---- Doanh Nghiep (tai khoan login cho nguoi dai dien DN) ----
+-- ---- Doanh Nghiep — TK login dai dien DN (NguoiDaiDien) ----
 ('DN001', 'dn.fpt',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'tuyendung@fpt.com.vn',      'FPT Software',           '0243768888', 1, 'DoanhNghiep'),
 ('DN002', 'dn.vng',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'thuctap@vng.com.vn',        'VNG Corporation',        '0283962828', 1, 'DoanhNghiep'),
 ('DN003', 'dn.tma',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'hr@tma.com.vn',             'TMA Solutions',          '0283997300', 1, 'DoanhNghiep'),
 ('DN004', 'dn.viettel', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'tuyendung@viettel.com.vn',  'Viettel Solutions',      '0243628400', 1, 'DoanhNghiep'),
 ('DN005', 'dn.misa',    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'tuyendung@misa.com.vn',     'Cong ty Co phan MISA',   '0243762868', 1, 'DoanhNghiep'),
 ('DN006', 'dn.kms',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'careers@kms-technology.com','KMS Technology',         '0283811999', 1, 'DoanhNghiep'),
-('DN007', 'dn.vnpay',   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'tuyendung@vnpay.vn',        'VNPay',                  '0247108998', 1, 'DoanhNghiep');
+('DN007', 'dn.vnpay',   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'tuyendung@vnpay.vn',        'VNPay',                  '0247108998', 1, 'DoanhNghiep'),
+
+-- ---- Nhan Vien Doanh Nghiep — TK ca nhan, cham diem cho cot DN ----
+-- NV001 + NV002 dong thoi la GV thinh giang tai truong (Case A)
+('NV001', 'nv.le.van.hung',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'le.van.hung@fpt.com.vn',         'Le Van Hung',          '0987001001', 1, 'DoanhNghiep'),
+('NV002', 'nv.tran.thi.mai',    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'tran.thi.mai@vng.com.vn',        'Tran Thi Mai',         '0987001002', 1, 'DoanhNghiep'),
+('NV003', 'nv.hoang.van.quoc',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'hoang.van.quoc@tma.com.vn',      'Hoang Van Quoc',       '0987001003', 1, 'DoanhNghiep'),
+('NV004', 'nv.dao.anh.tu',      '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'dao.anh.tu@viettel.com.vn',      'Dao Anh Tu',           '0987001004', 1, 'DoanhNghiep'),
+('NV005', 'nv.vu.thi.linh',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'vu.thi.linh@misa.com.vn',        'Vu Thi Linh',          '0987001005', 1, 'DoanhNghiep'),
+('NV006', 'nv.pham.quoc.khang', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'pham.quoc.khang@kms.com.vn',     'Pham Quoc Khang',      '0987001006', 1, 'DoanhNghiep'),
+('NV007', 'nv.bui.hoang.nam',   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'bui.hoang.nam@vnpay.vn',         'Bui Hoang Nam',        '0987001007', 1, 'DoanhNghiep');
 
 -- =============================================================================
 -- 3. GiangVien  <- NguoiDung
---    Rang buoc (docs/02 §3.2): MaGV = MaNguoiDung (khoa chinh trung).
+--    GV001..GV012: GV cua truong (12 row)
+--    GV013, GV014: thinh giang la NV DN (Case A) — MaNguoiDung tro NV001/NV002
 -- =============================================================================
 INSERT INTO GiangVien (MaGV, MaNguoiDung, HocHam, HocVi, ChuyenNganh, LoaiGiangVien) VALUES
 ('GV001', 'GV001', 'Pho Giao Su', 'Tien Si', 'Cong Nghe Phan Mem',  'GiangVienTruong'),
@@ -164,12 +175,13 @@ INSERT INTO GiangVien (MaGV, MaNguoiDung, HocHam, HocVi, ChuyenNganh, LoaiGiangV
 ('GV009', 'GV009', NULL,          'Tien Si', 'An Toan Thong Tin',   'GiangVienTruong'),
 ('GV010', 'GV010', NULL,          'Thac Si', 'Ky Thuat Phan Mem',   'GiangVienThinhGiang'),
 ('GV011', 'GV011', NULL,          'Tien Si', 'Phan Tich Thiet Ke',  'GiangVienTruong'),
-('GV012', 'GV012', NULL,          'Thac Si', 'Lap Trinh Di Dong',   'GiangVienThinhGiang');
+('GV012', 'GV012', NULL,          'Thac Si', 'Lap Trinh Di Dong',   'GiangVienThinhGiang'),
+-- Case A: NV DN dong thoi la thinh giang
+('GV013', 'NV001', NULL,          'Thac Si', 'Lap Trinh Web Doanh Nghiep', 'GiangVienThinhGiang'),
+('GV014', 'NV002', NULL,          'Thac Si', 'Tri Tue Nhan Tao Ung Dung',  'GiangVienThinhGiang');
 
 -- =============================================================================
--- 4. DoanhNghiep  (doc lap)
---    TrangThai: DangHopTac | TamNgung.
---    Business (docs/02 §3.7): DotKienTap chi tham chieu DN 'DangHopTac'.
+-- 4. DoanhNghiep
 -- =============================================================================
 INSERT INTO DoanhNghiep
     (MaDoanhNghiep, TenDoanhNghiep,                            LinhVuc,                          NguoiDaiDien,       Email,                       SoDienThoai,  DiaChiDN,                                                     TrangThai) VALUES
@@ -184,61 +196,61 @@ INSERT INTO DoanhNghiep
 ('DN009', 'Cong ty TNHH NashTech Viet Nam',                    'Phan mem & Dich vu CNTT',         'Vo Anh Tuan',      'hr@nashtechglobal.com',     '0283815555', 'So 117 Nguyen Cuu Van, Binh Thanh, TP. HCM',                  'TamNgung');
 
 -- =============================================================================
--- 5. VaiTroThucTap  (danh muc vai tro danh gia trong KetQuaThucTap)
---    docs/02 §3.9, docs/03 §6 + Phase 7 §4 (he thong 2 cot diem).
+-- 5. NhanVienDoanhNghiep  (Phase 7 — moi)
+--    Moi NV DN map 1 NguoiDung. LaCongTacVien=1 cho NV001/NV002 vi dong thoi
+--    la thinh giang (Case A — co GV row).
+-- =============================================================================
+INSERT INTO NhanVienDoanhNghiep
+    (MaNVDN,  MaNguoiDung, MaDoanhNghiep, ChucVu,                        PhongBan,                ChuyenMon,                              LaCongTacVien, GhiChu) VALUES
+('NVDN001', 'NV001', 'DN001', 'Senior Software Engineer',                'Phong Phat trien Web',  'Java Spring + ReactJS',                 1, 'Thinh giang HP-LTW tai truong (Case A).'),
+('NVDN002', 'NV002', 'DN002', 'Lead Mobile Developer',                   'Phong Game Studio',     'Android/iOS + Unity',                   1, 'Thinh giang HP-AI tai truong (Case A).'),
+('NVDN003', 'NV003', 'DN003', 'Tech Lead — Outsourcing Project',         'Phong Du an',           'NodeJS + Microservices',                0, 'Phu trach SV thuc tap tai TMA.'),
+('NVDN004', 'NV004', 'DN004', 'Solution Architect',                      'Phong Giai phap',       'Cloud (AWS/Azure) + Data Engineering',  0, 'Phu trach SV thuc tap tai Viettel Solutions.'),
+('NVDN005', 'NV005', 'DN005', 'Product Manager',                         'Phong San pham AMIS',   'Quan ly san pham + Agile',              0, 'Phu trach SV thuc tap tai MISA.'),
+('NVDN006', 'NV006', 'DN006', 'Senior QA Lead',                          'Phong Quality Assurance','Test Automation + Selenium',           0, 'Phu trach SV thuc tap tai KMS.'),
+('NVDN007', 'NV007', 'DN007', 'Senior Backend Engineer',                 'Phong Core Payment',    'Golang + High-availability systems',    0, 'Phu trach SV thuc tap tai VNPay.');
+
+-- =============================================================================
+-- 6. VaiTroThucTap  (danh muc — Phase 7 chuan hoa label)
 --
---    Phase 7 — He thong 2 cot diem:
---      + Truong       : GV_HD (cot 1) + GV_PB (cot 2)
---      + DoanhNghiep  : DN    (cot 1) + GV_HD (cot 2 — giam sat tu truong)
---    'GV' (legacy) van duoc giu lai trong bang de khong vo ket qua cu da seed
---    ngoai he thong (idempotent migration). UI moi se chi sinh GV_HD/GV_PB.
---
---    LUU Y: KetQuaThucTap.fk_kqtt_nguoidanhgia REFERENCES GiangVien(MaGV),
---    nen MaNguoiDanhGia luon la GV. SV nhan xet dinh tinh dung TEXT tren
---    DanhSachThucTap (chua co cot rieng — luu trong NhanXetGV neu co), KHONG
---    luu thanh KetQuaThucTap.
+--    He thong 2 cot diem:
+--      Truong       : Cot 1 = GV_HD,  Cot 2 = GV_PB
+--      DoanhNghiep  : Cot 1 = DN,     Cot 2 = GV_HD (giam sat tu truong)
+--    CVHT: tham khao "phan hoi 360 do", khong vao cong thuc TB.
+--    GV  : legacy back-compat (khong sinh moi).
 -- =============================================================================
 INSERT INTO VaiTroThucTap (MaVaiTro, TenVaiTro, MoTa) VALUES
 ('GV',    'Giang Vien (legacy)',          'Vai tro don nhat truoc Phase 7 — chi giu de back-compat. Khong dung cho ban ghi moi.'),
-('DN',    'Doanh Nghiep',                 'Can bo doanh nghiep phu trach SV thuc tap tai don vi. La cot diem 1 cho LoaiThucTap=DoanhNghiep.'),
-('CVHT',  'Co Van Hoc Tap',               'Co van hoc tap cua lop hanh chinh — danh gia tong the (khong thuoc 2 cot diem).'),
-('GV_HD', 'GV Huong Dan / Giam Sat',      'GV huong dan (Truong) hoac giam sat (DoanhNghiep). Cot diem 1 cho Truong, cot diem 2 cho DoanhNghiep.'),
-('GV_PB', 'GV Phan Bien',                 'GV phan bien — chi ap dung cho LoaiThucTap=Truong. La cot diem 2 doi voi loai do.');
+('DN',    'Nhan Vien Doanh Nghiep',       'Can bo doanh nghiep phu trach SV thuc tap tai DN. Cot diem 1 cho LoaiThucTap=DoanhNghiep.'),
+('CVHT',  'Co Van Hoc Tap',               'Co van hoc tap cua lop hanh chinh — phan hoi tham khao, khong vao 2 cot diem chinh.'),
+('GV_HD', 'GV Giam Sat / Huong Dan',      'Truong: GV huong dan (cot 1). DoanhNghiep: GV giam sat (cot 2). Luon la GV cua truong.'),
+('GV_PB', 'GV Phan Bien',                 'Chi ap dung cho LoaiThucTap=Truong. La cot diem 2 doi voi loai do.');
 
 -- =============================================================================
--- 6. NhomNguoiDung  <- NguoiDung (docs/02 §2)
---    Vai tro nghiep vu: PDT | TTDTXS | CVHT | CNHP
---    - GV001: Truong Phong Dao Tao + kiem vien TTDTXS
---    - GV002: TTDTXS
---    - GV003..GV008: CVHT tung lop (+ mot so kiem CNHP)
+-- 7. NhomNguoiDung  (vai tro nghiep vu phu)
 -- =============================================================================
 INSERT INTO NhomNguoiDung (MaNguoiDung, VaiTro) VALUES
--- Phong Dao Tao & TTDTXS
 ('GV001', 'PDT'),
 ('GV001', 'TTDTXS'),
 ('GV002', 'TTDTXS'),
--- Co Van Hoc Tap (moi GV phu trach 1 lop)
-('GV003', 'CVHT'),   -- CNTT-K22A
-('GV004', 'CVHT'),   -- CNTT-K22B
-('GV005', 'CVHT'),   -- CNTT-K23A
-('GV006', 'CVHT'),   -- CNTT-K23B
-('GV007', 'CVHT'),   -- CNTT-K24A
-('GV008', 'CVHT'),   -- CNTT-K24B
--- Chu Nhiem Hoc Phan
-('GV002', 'CNHP'),   -- HP-MMT, HP-OOP
-('GV003', 'CNHP'),   -- HP-HTTT, HP-KT
-('GV004', 'CNHP'),   -- HP-LTW, HP-PTTK
-('GV005', 'CNHP'),   -- HP-CSDL, HP-TTDL
-('GV006', 'CNHP'),   -- HP-AI
-('GV007', 'CNHP'),   -- HP-NNLT
-('GV008', 'CNHP'),   -- HP-GTDL
-('GV009', 'CNHP'),   -- HP-ATTT
-('GV011', 'CNHP');   -- HP-KLTN, HP-TT
+('GV003', 'CVHT'),
+('GV004', 'CVHT'),
+('GV005', 'CVHT'),
+('GV006', 'CVHT'),
+('GV007', 'CVHT'),
+('GV008', 'CVHT'),
+('GV002', 'CNHP'),
+('GV003', 'CNHP'),
+('GV004', 'CNHP'),
+('GV005', 'CNHP'),
+('GV006', 'CNHP'),
+('GV007', 'CNHP'),
+('GV008', 'CNHP'),
+('GV009', 'CNHP'),
+('GV011', 'CNHP');
 
 -- =============================================================================
--- 7. ChuongTrinhDaoTao  <- NguoiDung (NguoiTao + NguoiDuyet)
---    Business (docs/02 §3.4): NguoiDuyet KHAC NguoiTao; khi chuyen DaDuyet
---    -> service auto tao LopHocPhan theo SoLopDuKien.
+-- 8. ChuongTrinhDaoTao
 -- =============================================================================
 INSERT INTO ChuongTrinhDaoTao
     (MaCTDT,             TenCTDT,                                                     Khoa,   FileWord,                                               TrangThai, NguoiTao, NguoiDuyet, NgayDuyet) VALUES
@@ -248,9 +260,7 @@ INSERT INTO ChuongTrinhDaoTao
 ('CTDT-CNTT-2025', 'CTDT Xuat Sac Nganh Cong Nghe Thong Tin — Khoa 2025-2029', '2025', NULL,                                             'ChoDuyet','GV001', NULL,    NULL);
 
 -- =============================================================================
--- 8. BCN_ThanhVien  <- ChuongTrinhDaoTao, GiangVien
---    Chuc danh: ChuNhiem | ThuKy | UyVien. Rang buoc BizCt (docs/02 §3.4):
---    moi CTDT co DUY NHAT 1 ChuNhiem.
+-- 9. BCN_ThanhVien
 -- =============================================================================
 INSERT INTO BCN_ThanhVien (MaCTDT, MaGV, ChucDanh, NgayBoNhiem, GhiChu) VALUES
 ('CTDT-CNTT-2022', 'GV001', 'ChuNhiem', '2022-08-01', 'Truong ban, phu trach chuyen mon chung'),
@@ -270,9 +280,7 @@ INSERT INTO BCN_ThanhVien (MaCTDT, MaGV, ChucDanh, NgayBoNhiem, GhiChu) VALUES
 ('CTDT-CNTT-2025', 'GV008', 'UyVien',   '2025-06-01', NULL);
 
 -- =============================================================================
--- 9. HocPhan  <- GiangVien (ChuNhiemHP)
---    LoaiHocPhan: LyThuyet | ThucHanh | DoAn | ThucTap | KienTap
---    TrangThai:   BanNhap | ChoDuyet | DaDuyet
+-- 10. HocPhan
 -- =============================================================================
 INSERT INTO HocPhan
     (MaHocPhan, TenHocPhan,                              SoTinChi, LoaiHocPhan, ChuNhiemHP, FileDeCuong,                               TrangThai) VALUES
@@ -292,12 +300,9 @@ INSERT INTO HocPhan
 ('HP-KLTN', 'Khoa Luan Tot Nghiep',                       10, 'DoAn',     'GV001', 'hocphan/HP-KLTN_20230101_decuong.pdf',  'DaDuyet');
 
 -- =============================================================================
--- 10. DoiNguGiangVienHP  <- HocPhan, GiangVien
---     Business (docs/02 §3.3): Khi tao HocPhan, service TU DONG INSERT CNHP.
---     Cac GV khac trong doi ngu do CNHP bo sung sau. Seed mo phong day du.
+-- 11. DoiNguGiangVienHP  (Case A: GV013/GV014 tham gia thinh giang)
 -- =============================================================================
 INSERT INTO DoiNguGiangVienHP (MaHocPhan, MaGiangVien, TrangThai) VALUES
--- CNHP tu dong (bat buoc ton tai cho moi HP)
 ('HP-NNLT', 'GV007', 1),
 ('HP-GTDL', 'GV008', 1),
 ('HP-OOP',  'GV002', 1),
@@ -312,7 +317,7 @@ INSERT INTO DoiNguGiangVienHP (MaHocPhan, MaGiangVien, TrangThai) VALUES
 ('HP-KT',   'GV003', 1),
 ('HP-TT',   'GV001', 1),
 ('HP-KLTN', 'GV001', 1),
--- GV bo sung (do CNHP them vao doi ngu giang day)
+-- GV bo sung
 ('HP-NNLT', 'GV004', 1), ('HP-NNLT', 'GV010', 1),
 ('HP-GTDL', 'GV011', 1), ('HP-GTDL', 'GV002', 1),
 ('HP-OOP',  'GV004', 1), ('HP-OOP',  'GV010', 1), ('HP-OOP',  'GV012', 1),
@@ -320,15 +325,17 @@ INSERT INTO DoiNguGiangVienHP (MaHocPhan, MaGiangVien, TrangThai) VALUES
 ('HP-MMT',  'GV006', 1), ('HP-MMT',  'GV009', 1),
 ('HP-HTTT', 'GV001', 1), ('HP-HTTT', 'GV011', 1),
 ('HP-LTW',  'GV002', 1), ('HP-LTW',  'GV007', 1), ('HP-LTW',  'GV012', 1),
+('HP-LTW',  'GV013', 1),                                                  -- Case A: NV001 (FPT) thinh giang
 ('HP-TTDL', 'GV004', 1),
 ('HP-PTTK', 'GV003', 1), ('HP-PTTK', 'GV004', 1),
 ('HP-ATTT', 'GV002', 1), ('HP-ATTT', 'GV006', 1),
 ('HP-AI',   'GV008', 1), ('HP-AI',   'GV005', 1),
+('HP-AI',   'GV014', 1),                                                  -- Case A: NV002 (VNG) thinh giang
 ('HP-KT',   'GV001', 1), ('HP-KT',   'GV004', 1),
 ('HP-KLTN', 'GV002', 1), ('HP-KLTN', 'GV005', 1), ('HP-KLTN', 'GV006', 1);
 
 -- =============================================================================
--- 11. LopHanhChinh  <- ChuongTrinhDaoTao, GiangVien (MaCoVan)
+-- 12. LopHanhChinh
 -- =============================================================================
 INSERT INTO LopHanhChinh (MaLopHC, TenLop, MaCTDT, KhoaHoc, MaCoVan) VALUES
 ('CNTT-K22A', 'CNTT Xuat Sac K22 — Lop A', 'CTDT-CNTT-2022', '2022', 'GV003'),
@@ -339,7 +346,7 @@ INSERT INTO LopHanhChinh (MaLopHC, TenLop, MaCTDT, KhoaHoc, MaCoVan) VALUES
 ('CNTT-K24B', 'CNTT Xuat Sac K24 — Lop B', 'CTDT-CNTT-2024', '2024', 'GV008');
 
 -- =============================================================================
--- 12. SinhVien  <- NguoiDung, LopHanhChinh
+-- 13. SinhVien
 -- =============================================================================
 INSERT INTO SinhVien (MaSV, MaNguoiDung, MaLopHC, TrangThaiSV) VALUES
 -- K22A
@@ -348,13 +355,13 @@ INSERT INTO SinhVien (MaSV, MaNguoiDung, MaLopHC, TrangThaiSV) VALUES
 ('SV2022006', 'SV2022006', 'CNTT-K22A', 'DangHoc'),
 ('SV2022007', 'SV2022007', 'CNTT-K22A', 'DangHoc'),
 ('SV2022008', 'SV2022008', 'CNTT-K22A', 'DangHoc'),
--- K22B (+ 1 ThoiHoc)
+-- K22B (+ ThoiHoc edge)
 ('SV2022003', 'SV2022003', 'CNTT-K22B', 'DangHoc'),
 ('SV2022004', 'SV2022004', 'CNTT-K22B', 'DangHoc'),
 ('SV2022009', 'SV2022009', 'CNTT-K22B', 'DangHoc'),
 ('SV2022010', 'SV2022010', 'CNTT-K22B', 'DangHoc'),
 ('SV2022005', 'SV2022005', 'CNTT-K22B', 'ThoiHoc'),
--- K23A (+ 1 BaoLuu)
+-- K23A (+ BaoLuu edge)
 ('SV2023001', 'SV2023001', 'CNTT-K23A', 'DangHoc'),
 ('SV2023002', 'SV2023002', 'CNTT-K23A', 'DangHoc'),
 ('SV2023003', 'SV2023003', 'CNTT-K23A', 'DangHoc'),
@@ -380,7 +387,7 @@ INSERT INTO SinhVien (MaSV, MaNguoiDung, MaLopHC, TrangThaiSV) VALUES
 ('SV2024010', 'SV2024010', 'CNTT-K24B', 'DangHoc');
 
 -- =============================================================================
--- 13. CTDT_HocPhan  <- ChuongTrinhDaoTao, HocPhan
+-- 14. CTDT_HocPhan
 -- =============================================================================
 INSERT INTO CTDT_HocPhan (MaCTDT, MaHocPhan, HocKyThu, SoLopDuKien, BatBuoc, GhiChu, FileDeCuong) VALUES
 -- CTDT-CNTT-2022 (K22 — dang nam 3-4)
@@ -416,42 +423,41 @@ INSERT INTO CTDT_HocPhan (MaCTDT, MaHocPhan, HocKyThu, SoLopDuKien, BatBuoc, Ghi
 ('CTDT-CNTT-2024', 'HP-AI',   3, 1, 0, 'Hoc phan tu chon', NULL);
 
 -- =============================================================================
--- 14. LopHocPhan  <- CTDT_HocPhan, HocKyNamHoc, GiangVien
+-- 15. LopHocPhan
 -- =============================================================================
 INSERT INTO LopHocPhan
     (MaCTDT,            MaHocPhan, MaHocKy,   MaLopHocPhan, MaGiangVien, SiSoToiDa, SiSoThucTe, FileDeCuongChiTiet, TrangThai) VALUES
--- --- K22 — HK1-2023 (qua khu, DaDong) ---
+-- K22 — HK1-2023 (DaDong)
 ('CTDT-CNTT-2022', 'HP-NNLT', 'HK1-2023', 1, 'GV007', 45, 45, NULL, 'DaDong'),
 ('CTDT-CNTT-2022', 'HP-OOP',  'HK1-2023', 1, 'GV002', 45, 43, 'lophocphan/CTDT-CNTT-2022_HP-OOP_HK1-2023_1.pdf', 'DaDong'),
 ('CTDT-CNTT-2022', 'HP-OOP',  'HK1-2023', 2, 'GV004', 45, 42, NULL, 'DaDong'),
--- --- K22 — HK2-2023 (qua khu, DaDong) ---
+-- K22 — HK2-2023 (DaDong)
 ('CTDT-CNTT-2022', 'HP-CSDL', 'HK2-2023', 1, 'GV005', 45, 43, NULL, 'DaDong'),
 ('CTDT-CNTT-2022', 'HP-CSDL', 'HK2-2023', 2, 'GV001', 45, 41, NULL, 'DaDong'),
 ('CTDT-CNTT-2022', 'HP-MMT',  'HK2-2023', 1, 'GV002', 40, 38, NULL, 'DaDong'),
--- --- K22 — HK1-2024 (dang dien ra, DangMo) ---
+-- K22 — HK1-2024 (DangMo)
 ('CTDT-CNTT-2022', 'HP-HTTT', 'HK1-2024', 1, 'GV003', 45, 40, 'lophocphan/CTDT-CNTT-2022_HP-HTTT_HK1-2024_1.pdf', 'DangMo'),
 ('CTDT-CNTT-2022', 'HP-LTW',  'HK1-2024', 1, 'GV004', 45, 38, 'lophocphan/CTDT-CNTT-2022_HP-LTW_HK1-2024_1.pdf',  'DangMo'),
-('CTDT-CNTT-2022', 'HP-LTW',  'HK1-2024', 2, 'GV002', 45, 35, NULL, 'DangMo'),
+('CTDT-CNTT-2022', 'HP-LTW',  'HK1-2024', 2, 'GV013', 45, 35, NULL, 'DangMo'),  -- Case A: NV001 day lop 2
 ('CTDT-CNTT-2022', 'HP-TTDL', 'HK1-2024', 1, 'GV004', 35, 30, NULL, 'DangMo'),
 ('CTDT-CNTT-2022', 'HP-PTTK', 'HK1-2024', 1, 'GV011', 40, 32, NULL, 'DangMo'),
 ('CTDT-CNTT-2022', 'HP-KT',   'HK1-2024', 1, NULL,    35, 9,  NULL, 'DangMo'),
--- --- K23 — HK1-2024 (dang dien ra) ---
+-- K23 — HK1-2024 (DangMo)
 ('CTDT-CNTT-2023', 'HP-CSDL', 'HK1-2024', 1, 'GV005', 45, 36, NULL, 'DangMo'),
 ('CTDT-CNTT-2023', 'HP-CSDL', 'HK1-2024', 2, NULL,    45, 0,  NULL, 'DangMo'),
 ('CTDT-CNTT-2023', 'HP-GTDL', 'HK1-2024', 1, 'GV008', 45, 34, NULL, 'DangMo'),
--- --- K24 — HK1-2024 (sinh vien nam 1) ---
+-- K24 — HK1-2024 (DangMo)
 ('CTDT-CNTT-2024', 'HP-NNLT', 'HK1-2024', 1, 'GV007', 45, 40, NULL, 'DangMo'),
 ('CTDT-CNTT-2024', 'HP-NNLT', 'HK1-2024', 2, 'GV004', 45, 38, NULL, 'DangMo'),
 ('CTDT-CNTT-2024', 'HP-OOP',  'HK1-2024', 1, 'GV002', 45, 42, NULL, 'DangMo'),
 ('CTDT-CNTT-2024', 'HP-OOP',  'HK1-2024', 2, 'GV010', 45, 36, NULL, 'DangMo');
 
 -- =============================================================================
--- 15. DanhSachSinhVienLopHocPhan  <- SinhVien, LopHocPhan
---     DaCanhBao=1: khi GV danh dau canh bao (docs/02 §3.6).
+-- 16. DanhSachSinhVienLopHocPhan
 -- =============================================================================
 INSERT INTO DanhSachSinhVienLopHocPhan
     (MaSV, MaCTDT, MaHocPhan, MaHocKy, MaLopHocPhan, NhanXet, DaCanhBao, KetQuaXuLy) VALUES
--- ---- HK1-2023 (qua khu) — K22 hoc OOP ----
+-- HK1-2023 — K22 hoc OOP
 ('SV2022001', 'CTDT-CNTT-2022', 'HP-OOP', 'HK1-2023', 1, 'Tham gia day du, kien thuc vung vang.',           0, NULL),
 ('SV2022002', 'CTDT-CNTT-2022', 'HP-OOP', 'HK1-2023', 1, 'Hoc tap cham chi, co y thuc cau tien.',            0, NULL),
 ('SV2022006', 'CTDT-CNTT-2022', 'HP-OOP', 'HK1-2023', 1, 'Chu dong tham gia bai tap nhom.',                  0, NULL),
@@ -461,7 +467,7 @@ INSERT INTO DanhSachSinhVienLopHocPhan
 ('SV2022004', 'CTDT-CNTT-2022', 'HP-OOP', 'HK1-2023', 2, 'Co gang nhung can them ho tro.',                   0, NULL),
 ('SV2022009', 'CTDT-CNTT-2022', 'HP-OOP', 'HK1-2023', 2, NULL,                                                0, NULL),
 ('SV2022010', 'CTDT-CNTT-2022', 'HP-OOP', 'HK1-2023', 2, NULL,                                                0, NULL),
--- ---- HK1-2024 (dang dien ra) — K22 hoc LTW ----
+-- HK1-2024 — K22 hoc LTW
 ('SV2022001', 'CTDT-CNTT-2022', 'HP-LTW', 'HK1-2024', 1, NULL,                                                0, NULL),
 ('SV2022002', 'CTDT-CNTT-2022', 'HP-LTW', 'HK1-2024', 1, 'Sinh vien hoc tap tich cuc.',                       0, NULL),
 ('SV2022006', 'CTDT-CNTT-2022', 'HP-LTW', 'HK1-2024', 1, NULL,                                                0, NULL),
@@ -471,7 +477,7 @@ INSERT INTO DanhSachSinhVienLopHocPhan
 ('SV2022004', 'CTDT-CNTT-2022', 'HP-LTW', 'HK1-2024', 2, NULL,                                                0, NULL),
 ('SV2022009', 'CTDT-CNTT-2022', 'HP-LTW', 'HK1-2024', 2, NULL,                                                0, NULL),
 ('SV2022010', 'CTDT-CNTT-2022', 'HP-LTW', 'HK1-2024', 2, 'It tuong tac tren lop.',                            0, NULL),
--- ---- HK1-2024 — K22 hoc HTTT ----
+-- HK1-2024 — K22 hoc HTTT
 ('SV2022001', 'CTDT-CNTT-2022', 'HP-HTTT', 'HK1-2024', 1, 'Tham gia day du.',                                 0, NULL),
 ('SV2022002', 'CTDT-CNTT-2022', 'HP-HTTT', 'HK1-2024', 1, NULL,                                                0, NULL),
 ('SV2022003', 'CTDT-CNTT-2022', 'HP-HTTT', 'HK1-2024', 1, NULL,                                                0, NULL),
@@ -481,7 +487,7 @@ INSERT INTO DanhSachSinhVienLopHocPhan
 ('SV2022008', 'CTDT-CNTT-2022', 'HP-HTTT', 'HK1-2024', 1, NULL,                                                0, NULL),
 ('SV2022009', 'CTDT-CNTT-2022', 'HP-HTTT', 'HK1-2024', 1, 'Thuong xuyen di tre.',                             1, NULL),
 ('SV2022010', 'CTDT-CNTT-2022', 'HP-HTTT', 'HK1-2024', 1, NULL,                                                0, NULL),
--- ---- HK1-2024 — K23 dang ky HP-CSDL ----
+-- HK1-2024 — K23 hoc CSDL
 ('SV2023001', 'CTDT-CNTT-2023', 'HP-CSDL', 'HK1-2024', 1, NULL, 0, NULL),
 ('SV2023002', 'CTDT-CNTT-2023', 'HP-CSDL', 'HK1-2024', 1, NULL, 0, NULL),
 ('SV2023003', 'CTDT-CNTT-2023', 'HP-CSDL', 'HK1-2024', 1, NULL, 0, NULL),
@@ -491,14 +497,14 @@ INSERT INTO DanhSachSinhVienLopHocPhan
 ('SV2023008', 'CTDT-CNTT-2023', 'HP-CSDL', 'HK1-2024', 1, NULL, 0, NULL),
 ('SV2023009', 'CTDT-CNTT-2023', 'HP-CSDL', 'HK1-2024', 1, NULL, 0, NULL),
 ('SV2023010', 'CTDT-CNTT-2023', 'HP-CSDL', 'HK1-2024', 1, 'Thanh tich hoc tap tot.',                          0, NULL),
--- ---- HK1-2024 — K23 dang ky HP-GTDL ----
+-- HK1-2024 — K23 hoc GTDL
 ('SV2023001', 'CTDT-CNTT-2023', 'HP-GTDL', 'HK1-2024', 1, NULL, 0, NULL),
 ('SV2023002', 'CTDT-CNTT-2023', 'HP-GTDL', 'HK1-2024', 1, NULL, 0, NULL),
 ('SV2023003', 'CTDT-CNTT-2023', 'HP-GTDL', 'HK1-2024', 1, NULL, 0, NULL),
 ('SV2023005', 'CTDT-CNTT-2023', 'HP-GTDL', 'HK1-2024', 1, NULL, 0, NULL),
 ('SV2023006', 'CTDT-CNTT-2023', 'HP-GTDL', 'HK1-2024', 1, NULL, 0, NULL),
 ('SV2023007', 'CTDT-CNTT-2023', 'HP-GTDL', 'HK1-2024', 1, NULL, 0, NULL),
--- ---- HK1-2024 — K24 dang ky HP-NNLT ----
+-- HK1-2024 — K24 hoc NNLT
 ('SV2024001', 'CTDT-CNTT-2024', 'HP-NNLT', 'HK1-2024', 1, NULL, 0, NULL),
 ('SV2024002', 'CTDT-CNTT-2024', 'HP-NNLT', 'HK1-2024', 1, NULL, 0, NULL),
 ('SV2024003', 'CTDT-CNTT-2024', 'HP-NNLT', 'HK1-2024', 1, NULL, 0, NULL),
@@ -511,7 +517,7 @@ INSERT INTO DanhSachSinhVienLopHocPhan
 ('SV2024010', 'CTDT-CNTT-2024', 'HP-NNLT', 'HK1-2024', 2, 'SV moi, can theo doi them.',                       0, NULL);
 
 -- =============================================================================
--- 16. DotKienTap  <- LopHanhChinh, HocKyNamHoc, GiangVien, DoanhNghiep, NguoiDung
+-- 17. DotKienTap
 -- =============================================================================
 INSERT INTO DotKienTap
     (MaDotKT, TenDotKT,                                        MaLopHC,      MaHocKy,    ThoiGian,    MaGVPhuTrach, MaDoanhNghiep,
@@ -531,39 +537,32 @@ INSERT INTO DotKienTap
     NULL, NULL, NULL,                                           7500000,      375000,        'DaDuyet',    'GV001', 'GV002', '2025-02-20 11:00:00');
 
 -- =============================================================================
--- 17. DanhSachSinhVienKienTap  <- DotKienTap, SinhVien  (HYBRID RULE)
---     Edge-case: SV2022005 (ThoiHoc) + SV2023004 (BaoLuu) KHONG xuat hien —
---     auto-add chi lay 'DangHoc'.
+-- 18. DanhSachSinhVienKienTap
 -- =============================================================================
 INSERT INTO DanhSachSinhVienKienTap (MaDotKT, MaSV, DaThamGia) VALUES
--- Dot 1 (K22A @FPT) — 5 SV DangHoc, ca 5 tham gia
 (1, 'SV2022001', 1),
 (1, 'SV2022002', 1),
 (1, 'SV2022006', 1),
 (1, 'SV2022007', 1),
 (1, 'SV2022008', 1),
--- Dot 2 (K22B @VNG) — 4 SV DangHoc; SV2022004 toggle khong tham gia; SV2022005 ThoiHoc khong xuat hien
 (2, 'SV2022003', 1),
 (2, 'SV2022004', 0),
 (2, 'SV2022009', 1),
 (2, 'SV2022010', 1),
--- Dot 3 (K23A @TMA) — 5 SV DangHoc; SV2023004 BaoLuu khong xuat hien
 (3, 'SV2023001', 1),
 (3, 'SV2023002', 1),
 (3, 'SV2023003', 1),
 (3, 'SV2023005', 1),
 (3, 'SV2023006', 1),
--- Dot 4 (K23B @Viettel) — 4 SV DangHoc
 (4, 'SV2023007', 1),
 (4, 'SV2023008', 1),
 (4, 'SV2023009', 1),
 (4, 'SV2023010', 1),
--- Dot 5 (K22A @MISA bo sung) — 1 so SV dang ky lai
 (5, 'SV2022001', 1),
 (5, 'SV2022006', 1);
 
 -- =============================================================================
--- 18. DotThucTap  <- CTDT_HocPhan, HocKyNamHoc, NguoiDung
+-- 19. DotThucTap
 -- =============================================================================
 INSERT INTO DotThucTap
     (MaDotTT, TenDotTT,                                        MaCTDT,            MaHocPhan, MaHocKy,
@@ -576,110 +575,137 @@ INSERT INTO DotThucTap
     '2025-03-01', '2025-05-20', NULL,                             'ChuanBi',        'GV001', NULL,    NULL);
 
 -- =============================================================================
--- 19. DanhSachThucTap  <- DotThucTap, SinhVien, DoanhNghiep
+-- 20. DanhSachThucTap
 -- =============================================================================
 INSERT INTO DanhSachThucTap
     (MaThucTap, MaDotTT, MaSV,        LoaiThucTap,   MaDoanhNghiep, TrangThai) VALUES
--- Dot 1 (K22 — HK1-2024): 5 SV dang thuc tap thuc te
+-- Dot 1 (K22 — HK1-2024): 5 SV dang thuc tap
 (1,  1, 'SV2022001', 'DoanhNghiep', 'DN001', 'DangThucTap'),
 (2,  1, 'SV2022002', 'DoanhNghiep', 'DN002', 'DangThucTap'),
 (3,  1, 'SV2022003', 'DoanhNghiep', 'DN003', 'DangThucTap'),
-(4,  1, 'SV2022004', 'Truong',      NULL,    'DangThucTap'),   -- thuc tap tai truong
+(4,  1, 'SV2022004', 'Truong',      NULL,    'DangThucTap'),   -- Truong
 (5,  1, 'SV2022006', 'DoanhNghiep', 'DN005', 'DangThucTap'),
--- Dot 2 (K22 — HK2-2024): 3 SV chuan bi
+-- Dot 2 (K22 — HK2-2024)
 (6,  2, 'SV2022007', 'DoanhNghiep', 'DN001', 'DaPhanCong'),
 (7,  2, 'SV2022008', 'DoanhNghiep', 'DN006', 'DaPhanCong'),
 (8,  2, 'SV2022009', 'DoanhNghiep', 'DN007', 'DaPhanCong'),
 (9,  2, 'SV2022010', 'DoanhNghiep', 'DN008', 'DaPhanCong'),
--- Dot 3 (K23 — HK2-2024): chi moi dang ChuanBi
+-- Dot 3 (K23 — HK2-2024)
 (10, 3, 'SV2023001', 'DoanhNghiep', 'DN004', 'DaPhanCong');
 
 -- =============================================================================
--- 20. KetQuaThucTap — Phase 7: he thong 2 cot diem
+-- 21. KetQuaThucTap — Phase 7 he thong 2 cot diem
 --
---     Quy uoc:
---       - LoaiThucTap = 'Truong'      -> GV_HD (cot 1) + GV_PB (cot 2)
---       - LoaiThucTap = 'DoanhNghiep' -> DN    (cot 1) + GV_HD (cot 2)
---       - CVHT (neu co): cham diem tong the cua co van hoc tap, KHONG nam
---         trong 2 cot tinh diem ket thuc — chi tham khao.
---     UNIQUE (MaThucTap, MaVaiTro): moi vai tro chi 1 row / SV.
+--    LoaiThucTap='DoanhNghiep':
+--      Cot 1 (DN)    -> MaNguoiDanhGia = NV{xxx} (NguoiDung cua NhanVienDoanhNghiep)
+--      Cot 2 (GV_HD) -> MaNguoiDanhGia = GV{xxx} (NguoiDung cua GiangVien — giam sat)
+--    LoaiThucTap='Truong':
+--      Cot 1 (GV_HD) -> MaNguoiDanhGia = GV{xxx} (huong dan)
+--      Cot 2 (GV_PB) -> MaNguoiDanhGia = GV{xxx} (phan bien)
+--    Bo sung CVHT (tham khao, khong vao TB) cho 1 so SV.
 -- =============================================================================
 INSERT INTO KetQuaThucTap (MaThucTap, MaVaiTro, MaNguoiDanhGia, Diem, NhanXet) VALUES
--- ---- SV2022001 @FPT (DoanhNghiep) — du 2 cot diem + tham khao CVHT ----
-(1, 'DN',    'GV001', 9.00, 'Nhan vien thuc tap xuat sac, kha nang lam viec nhom va doc lap deu cao. De xuat tuyen dung sau tot nghiep.'),
+
+-- ---- (1) SV2022001 @FPT (DoanhNghiep) — 2 cot diem + tham khao CVHT ----
+(1, 'DN',    'NV001', 9.00, 'NV thuc tap xuat sac, kha nang lam viec nhom + doc lap deu cao. De xuat tuyen dung sau tot nghiep.'),
 (1, 'GV_HD', 'GV001', 8.50, 'Sinh vien hoan thanh tot nhiem vu, tu giac va co trach nhiem voi cong viec duoc giao. Bao cao tien do dung han.'),
 (1, 'CVHT',  'GV003', 8.75, 'Sinh vien co y thuc hoc tap tot, bao cao tien do deu dan voi co van.'),
 
--- ---- SV2022002 @VNG (DoanhNghiep) — moi co cot DN + tham khao CVHT ----
-(2, 'DN',    'GV001', 7.80, 'Nang luc kha, can chu dong hon. Phan dau dat hieu qua hon o nhung thang sau.'),
+-- ---- (2) SV2022002 @VNG (DoanhNghiep) — 2 cot diem + tham khao CVHT ----
+(2, 'DN',    'NV002', 7.80, 'Nang luc kha, can chu dong hon trong cac task team-work. Phan dau dat hieu qua hon o nhung thang sau.'),
 (2, 'GV_HD', 'GV001', 7.50, 'Sinh vien can chu dong hon trong viec tim hieu cong viec. Chat luong bao cao tam on.'),
-(2, 'CVHT',  'GV003', 7.75, 'Tham gia cac buoi sinh hoat lop day du.'),
+(2, 'CVHT',  'GV003', 7.75, 'Tham gia cac buoi sinh hoat lop day du, tinh than xay dung tap the tot.'),
 
--- ---- SV2022003 @TMA (DoanhNghiep) — du 2 cot diem ----
-(3, 'DN',    'GV001', 7.80, 'Tiep thu nhanh, can cai thien ky nang trinh bay va viet bao cao chuyen mon.'),
-(3, 'GV_HD', 'GV001', 8.00, 'Hoan thanh tot cac nhiem vu, tinh than hoc hoi cao. Code style on dinh.'),
+-- ---- (3) SV2022003 @TMA (DoanhNghiep) — du 2 cot diem ----
+(3, 'DN',    'NV003', 7.80, 'Tiep thu nhanh, can cai thien ky nang trinh bay va viet bao cao chuyen mon. Code-review feedback tich cuc.'),
+(3, 'GV_HD', 'GV001', 8.00, 'Hoan thanh tot cac nhiem vu, tinh than hoc hoi cao. Code style on dinh, follow chuan team TMA.'),
 
--- ---- SV2022004 tai Truong — du 2 cot diem (GV_HD + GV_PB) ----
-(4, 'GV_HD', 'GV001', 7.00, 'Tham gia nghien cuu de tai voi co van. Can tang toc do trien khai.'),
-(4, 'GV_PB', 'GV011', 7.50, 'Bao cao trinh bay ro rang, kien thuc nen tang vung. De xuat ke hoach qua chi tiet.'),
-(4, 'CVHT',  'GV004', 7.50, 'Sinh vien gap kho khan ca nhan, da duoc ho tro lich lam viec linh hoat.'),
+-- ---- (4) SV2022004 tai Truong — 2 cot diem (GV_HD + GV_PB) + CVHT ----
+(4, 'GV_HD', 'GV001', 7.00, 'Tham gia nghien cuu de tai cung GV. Can tang toc do trien khai. Ky nang code can ren them.'),
+(4, 'GV_PB', 'GV011', 7.50, 'Bao cao trinh bay ro rang, kien thuc nen tang vung. De xuat ke hoach qua chi tiet — can tinh chinh.'),
+(4, 'CVHT',  'GV004', 7.50, 'Sinh vien gap kho khan ca nhan, da duoc CVHT ho tro lich lam viec linh hoat.'),
 
--- ---- SV2022006 @MISA (DoanhNghiep) — du 2 cot diem ----
-(5, 'DN',    'GV001', 9.00, 'Thanh thao cac cong cu ke toan doanh nghiep, tu duy tot. De xuat hop tac dai han.'),
-(5, 'GV_HD', 'GV001', 9.20, 'Mot trong nhung sinh vien xuat sac cua dot. Bao cao chat luong cao, dung tien do.');
+-- ---- (5) SV2022006 @MISA (DoanhNghiep) — 2 cot diem ----
+(5, 'DN',    'NV005', 9.00, 'Thanh thao cac cong cu ke toan doanh nghiep, tu duy tot. De xuat hop tac dai han sau tot nghiep.'),
+(5, 'GV_HD', 'GV001', 9.20, 'Mot trong nhung sinh vien xuat sac cua dot. Bao cao chat luong cao, dung tien do, code-quality vuot ky vong.');
 
 -- =============================================================================
--- KIEM TRA NHANH SAU KHI CHAY  (SELECT thu cong de xac nhan)
+-- KIEM TRA NHANH SAU KHI CHAY  (uncomment de check)
 -- =============================================================================
--- SELECT COUNT(*) AS HocKyNamHoc      FROM HocKyNamHoc;                              -- 5
--- SELECT COUNT(*) AS NguoiDung        FROM NguoiDung;                                -- 50
--- SELECT COUNT(*) AS GiangVien        FROM GiangVien;                                -- 12
--- SELECT COUNT(*) AS DoanhNghiep      FROM DoanhNghiep;                              -- 9
--- SELECT COUNT(*) AS DN_DangHopTac    FROM DoanhNghiep WHERE TrangThai='DangHopTac'; -- 8
--- SELECT COUNT(*) AS VaiTroThucTap    FROM VaiTroThucTap;                            -- 5
--- SELECT COUNT(*) AS NhomNguoiDung    FROM NhomNguoiDung;                            -- 18
--- SELECT COUNT(*) AS CTDT             FROM ChuongTrinhDaoTao;                        -- 4
--- SELECT COUNT(*) AS BCN              FROM BCN_ThanhVien;                            -- 15
--- SELECT COUNT(*) AS HocPhan          FROM HocPhan;                                  -- 14
--- SELECT COUNT(*) AS DoiNguGV         FROM DoiNguGiangVienHP;                        -- 42
--- SELECT COUNT(*) AS LopHC            FROM LopHanhChinh;                             -- 6
--- SELECT COUNT(*) AS SinhVien         FROM SinhVien;                                 -- 30
--- SELECT COUNT(*) AS SV_DangHoc       FROM SinhVien WHERE TrangThaiSV='DangHoc';     -- 28
--- SELECT COUNT(*) AS CTDT_HP          FROM CTDT_HocPhan;                             -- 29
--- SELECT COUNT(*) AS LopHocPhan       FROM LopHocPhan;                               -- 19
--- SELECT COUNT(*) AS DSSV_LHP         FROM DanhSachSinhVienLopHocPhan;               -- 52
--- SELECT COUNT(*) AS CanhBaoChoXuLy   FROM DanhSachSinhVienLopHocPhan
---                                      WHERE DaCanhBao=1 AND KetQuaXuLy IS NULL;     -- 2
--- SELECT COUNT(*) AS DotKienTap       FROM DotKienTap;                               -- 5
--- SELECT COUNT(*) AS DSSV_KT          FROM DanhSachSinhVienKienTap;                  -- 20
--- SELECT COUNT(*) AS DotThucTap       FROM DotThucTap;                               -- 3
--- SELECT COUNT(*) AS DanhSachTT       FROM DanhSachThucTap;                          -- 10
--- SELECT COUNT(*) AS KetQuaTT         FROM KetQuaThucTap;                            -- 13
+-- SELECT COUNT(*) AS HocKyNamHoc       FROM HocKyNamHoc;                              -- 5
+-- SELECT COUNT(*) AS NguoiDung         FROM NguoiDung;                                -- 57 (1 AD + 12 GV + 30 SV + 7 DN + 7 NV)
+-- SELECT COUNT(*) AS GiangVien         FROM GiangVien;                                -- 14 (12 truong + 2 thinh giang Case A)
+-- SELECT COUNT(*) AS GV_ThinhGiang     FROM GiangVien WHERE LoaiGiangVien='GiangVienThinhGiang'; -- 4 (GV010,GV012,GV013,GV014)
+-- SELECT COUNT(*) AS DoanhNghiep       FROM DoanhNghiep;                              -- 9
+-- SELECT COUNT(*) AS DN_DangHopTac     FROM DoanhNghiep WHERE TrangThai='DangHopTac'; -- 8
+-- SELECT COUNT(*) AS NhanVienDN        FROM NhanVienDoanhNghiep;                      -- 7
+-- SELECT COUNT(*) AS NV_CongTacVien    FROM NhanVienDoanhNghiep WHERE LaCongTacVien=1;-- 2 (Case A)
+-- SELECT COUNT(*) AS VaiTroThucTap     FROM VaiTroThucTap;                            -- 5
+-- SELECT COUNT(*) AS NhomNguoiDung     FROM NhomNguoiDung;                            -- 18
+-- SELECT COUNT(*) AS CTDT              FROM ChuongTrinhDaoTao;                        -- 4
+-- SELECT COUNT(*) AS BCN               FROM BCN_ThanhVien;                            -- 15
+-- SELECT COUNT(*) AS HocPhan           FROM HocPhan;                                  -- 14
+-- SELECT COUNT(*) AS DoiNguGV          FROM DoiNguGiangVienHP;                        -- 44 (42 + 2 Case A)
+-- SELECT COUNT(*) AS LopHC             FROM LopHanhChinh;                             -- 6
+-- SELECT COUNT(*) AS SinhVien          FROM SinhVien;                                 -- 30
+-- SELECT COUNT(*) AS SV_DangHoc        FROM SinhVien WHERE TrangThaiSV='DangHoc';     -- 28
+-- SELECT COUNT(*) AS CTDT_HP           FROM CTDT_HocPhan;                             -- 29
+-- SELECT COUNT(*) AS LopHocPhan        FROM LopHocPhan;                               -- 19
+-- SELECT COUNT(*) AS DSSV_LHP          FROM DanhSachSinhVienLopHocPhan;               -- 52
+-- SELECT COUNT(*) AS DotKienTap        FROM DotKienTap;                               -- 5
+-- SELECT COUNT(*) AS DSSV_KT           FROM DanhSachSinhVienKienTap;                  -- 20
+-- SELECT COUNT(*) AS DotThucTap        FROM DotThucTap;                               -- 3
+-- SELECT COUNT(*) AS DanhSachTT        FROM DanhSachThucTap;                          -- 10
+-- SELECT COUNT(*) AS KetQuaTT          FROM KetQuaThucTap;                            -- 13
 -- SELECT MaVaiTro, COUNT(*) AS so_dong FROM KetQuaThucTap GROUP BY MaVaiTro;
 --   -> CVHT=3, DN=4, GV_HD=5, GV_PB=1
+-- -- VERIFY: cot DN luon do NV DN cham (khong con GV001 fake):
+-- SELECT k.MaThucTap, k.MaVaiTro, k.MaNguoiDanhGia, n.HoTen, n.LoaiNguoiDung
+--   FROM KetQuaThucTap k JOIN NguoiDung n ON k.MaNguoiDanhGia=n.MaNguoiDung
+--   WHERE k.MaVaiTro='DN';
+--   -> All MaNguoiDanhGia phai bat dau bang 'NV' va LoaiNguoiDung='DoanhNghiep'.
 
 -- =============================================================================
 -- TAI KHOAN TEST  (Mat khau: Password@123)
 -- =============================================================================
--- TenDangNhap          LoaiNguoiDung   Vai Tro                       Ghi chu
--- admin                Admin           ADMIN                          Toan quyen he thong
--- tran.van.an          GiangVien       PDT + TTDTXS                   Truong Phong Dao Tao
--- le.thi.binh          GiangVien       TTDTXS                         Thanh vien TT Dao Tao Xuat Sac
--- nguyen.van.cuong     GiangVien       CVHT + CNHP                    CVHT CNTT-K22A, CNHP HP-HTTT / HP-KT
--- pham.thi.dung        GiangVien       CVHT + CNHP                    CVHT CNTT-K22B, CNHP HP-LTW / HP-PTTK
--- hoang.van.em         GiangVien       CVHT + CNHP                    CVHT CNTT-K23A, CNHP HP-CSDL / HP-TTDL
--- vu.thi.giang         GiangVien       CVHT + CNHP                    CVHT CNTT-K23B, CNHP HP-AI
--- do.minh.hieu         GiangVien       CVHT + CNHP                    CVHT CNTT-K24A, CNHP HP-NNLT
--- bui.thanh.ha         GiangVien       CVHT + CNHP                    CVHT CNTT-K24B, CNHP HP-GTDL
--- ngo.thi.lan          GiangVien       CNHP                           CNHP HP-ATTT (cung kiem GV phan bien thuc tap)
--- phan.thi.ngoc        GiangVien       CNHP                           CNHP HP-PTTK / HP-KLTN — vai tro GV_PB
--- sv.2022001           SinhVien        -                              K22A, DangThucTap @FPT — du 3 chieu danh gia (DN+GV_HD+CVHT)
--- sv.2022003           SinhVien        -                              K22B, DaCanhBao HP-OOP (da xu ly)
--- sv.2022004           SinhVien        -                              K22B, Thuc tap TAI TRUONG — du 2 cot diem GV_HD+GV_PB
--- sv.2022005           SinhVien        -                              K22B, ThoiHoc — KHONG auto-add Dot KT
--- sv.2023004           SinhVien        -                              K23A, BaoLuu  — KHONG auto-add Dot KT
--- sv.2024001..010      SinhVien        -                              K24 — sinh vien nam 1
--- dn.fpt / dn.vng / ...DoanhNghiep     -                              7 doanh nghiep dang hop tac
+-- ===== Admin =====
+-- admin                 / Password@123          -> Toan quyen he thong
+--
+-- ===== Giang Vien (truong) =====
+-- tran.van.an           -> PDT + TTDTXS, BCN CTDT-2022/2023, GV_HD nhieu Dot TT
+-- le.thi.binh           -> TTDTXS, NguoiDuyet
+-- nguyen.van.cuong      -> CVHT CNTT-K22A, CNHP HP-HTTT/HP-KT
+-- pham.thi.dung         -> CVHT CNTT-K22B, CNHP HP-LTW/HP-PTTK
+-- hoang.van.em          -> CVHT CNTT-K23A, CNHP HP-CSDL/HP-TTDL
+-- vu.thi.giang          -> CVHT CNTT-K23B, CNHP HP-AI
+-- do.minh.hieu          -> CVHT CNTT-K24A, CNHP HP-NNLT
+-- bui.thanh.ha          -> CVHT CNTT-K24B, CNHP HP-GTDL
+-- ngo.thi.lan           -> CNHP HP-ATTT, GV_PB tham khao
+-- phan.thi.ngoc         -> CNHP HP-PTTK/HP-KLTN, GV_PB SV2022004
+-- dang.van.minh         -> Thinh giang HP-OOP/NNLT (free-lance)
+-- ly.quoc.phong         -> Thinh giang HP-OOP/LTW (free-lance)
+--
+-- ===== Sinh Vien =====
+-- sv.2022001  -> K22A, DangThucTap @FPT      (du DN+GV_HD+CVHT — Phase 7 demo)
+-- sv.2022002  -> K22A, DangThucTap @VNG      (du 2 cot diem + CVHT)
+-- sv.2022003  -> K22B, DangThucTap @TMA      (du 2 cot diem)
+-- sv.2022004  -> K22B, DangThucTap TAI TRUONG(GV_HD + GV_PB + CVHT)
+-- sv.2022006  -> K22A, DangThucTap @MISA     (du 2 cot diem)
+-- sv.2022005  -> K22B, ThoiHoc               (KHONG auto-add Dot KT)
+-- sv.2023004  -> K23A, BaoLuu                (KHONG auto-add Dot KT)
+-- sv.2024001..010                            (K24 — sinh vien nam 1)
+--
+-- ===== Doanh Nghiep (TK dai dien DN) =====
+-- dn.fpt / dn.vng / dn.tma / dn.viettel / dn.misa / dn.kms / dn.vnpay
+--
+-- ===== Nhan Vien Doanh Nghiep (TK ca nhan — cham diem cot DN) =====
+-- nv.le.van.hung        -> Senior SE @FPT      + Thinh giang HP-LTW (Case A)
+-- nv.tran.thi.mai       -> Lead Mobile @VNG    + Thinh giang HP-AI  (Case A)
+-- nv.hoang.van.quoc     -> Tech Lead @TMA
+-- nv.dao.anh.tu         -> Solution Architect @Viettel
+-- nv.vu.thi.linh        -> Product Manager @MISA
+-- nv.pham.quoc.khang    -> Senior QA Lead @KMS
+-- nv.bui.hoang.nam      -> Senior Backend @VNPay
 
 -- =============================================================================
 -- HET SEED

@@ -24,15 +24,18 @@ public interface KetQuaThucTapRepository extends JpaRepository<KetQuaThucTap, In
 
     /**
      * Phase 7 — fetch tat ca KetQua cua 1 dot thuc tap (nhieu SV).
-     * Tra ve da kem fetch vaiTro + nguoiDanhGia.nguoiDung de template
-     * render maNguoiDanhGia + tenVaiTro mà khong bi LazyInitException
-     * (open-in-view=false).
+     *
+     * <p>Sau refactor Phase 7, {@code nguoiDanhGia} la {@link com.ntu.quanlyctdtdb.entity.NguoiDung}
+     * (khong qua GiangVien nua) — co the la NV DN (vai tro DN) hoac GV
+     * (vai tro GV_HD/GV_PB/CVHT). Service tu phan giai role-based.</p>
+     *
+     * <p>Fetch da kem vaiTro + nguoiDanhGia de template render maNguoiDanhGia
+     * + hoTen + tenVaiTro ma khong bi LazyInitException (open-in-view=false).</p>
      */
     @Query("""
         SELECT kq FROM KetQuaThucTap kq
         LEFT JOIN FETCH kq.vaiTroThucTap
-        LEFT JOIN FETCH kq.nguoiDanhGia gv
-        LEFT JOIN FETCH gv.nguoiDung
+        LEFT JOIN FETCH kq.nguoiDanhGia
         WHERE kq.danhSachThucTap.dotThucTap.maDotTT = :maDotTT
         """)
     List<KetQuaThucTap> findByDotFetchAll(@Param("maDotTT") Integer maDotTT);
