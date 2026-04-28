@@ -100,7 +100,7 @@ INSERT INTO NguoiDung
 ('AD001', 'admin', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'admin@ntu.edu.vn', 'Quan Tri Vien He Thong', '0909000001', 1, 'Admin', NULL),
 
 -- ---- Giang Vien: PDT / TTDTXS ----
-('GV001', 'tran.van.an',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'tran.van.an@ntu.edu.vn',     'PGS.TS. Tran Van An',      '0912340001', 1, 'GiangVien', NULL),
+('GV001', 'tran.van.an',     '$2a$12$wLTGLpudCFHoINMfECVVB.mQkmghLA6DB4mAdYzG2yzZsVMSkjlBW', 'tran.van.an@ntu.edu.vn',     'PGS.TS. Tran Van An',      '0912340001', 1, 'GiangVien', NULL),
 ('GV002', 'le.thi.binh',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh13', 'le.thi.binh@ntu.edu.vn',     'TS. Le Thi Binh',          '0912340002', 1, 'GiangVien', NULL),
 
 -- ---- Giang Vien: CVHT + CNHP (cac CTDT) ----
@@ -212,19 +212,13 @@ INSERT INTO DoanhNghiep
 ('DN009', 'Cong ty TNHH NashTech Viet Nam',                    'Phan mem & Dich vu CNTT',         'Vo Anh Tuan',      'hr@nashtechglobal.com',     '0283815555', 'So 117 Nguyen Cuu Van, Binh Thanh, TP. HCM',                  'TamNgung');
 
 -- =============================================================================
--- 5. NhanVienDoanhNghiep  (Phase 7 — moi)
---    Moi NV DN map 1 NguoiDung. LaCongTacVien=1 cho NV001/NV002 vi dong thoi
---    la thinh giang (Case A — co GV row).
+-- 5. (DA BO) Bang NhanVienDoanhNghiep
+--    Refactor: Truong khong can quan ly chi tiet NV DN (chuc vu/phong ban/
+--    chuyen mon). NV DN gio chi la NguoiDung loai 'DoanhNghiep' voi FK
+--    MaDoanhNghiep (NV001..NV007 da co MaDoanhNghiep o phan 2 — NguoiDung).
+--    Truy van NV DN: SELECT * FROM NguoiDung WHERE LoaiNguoiDung='DoanhNghiep';
+--    Loc theo DN:    AND MaDoanhNghiep = '<MaDN>'.
 -- =============================================================================
-INSERT INTO NhanVienDoanhNghiep
-    (MaNVDN,  MaNguoiDung, MaDoanhNghiep, ChucVu,                        PhongBan,                ChuyenMon,                              LaCongTacVien, GhiChu) VALUES
-('NVDN001', 'NV001', 'DN001', 'Senior Software Engineer',                'Phong Phat trien Web',  'Java Spring + ReactJS',                 1, 'Thinh giang HP-LTW tai truong (Case A).'),
-('NVDN002', 'NV002', 'DN002', 'Lead Mobile Developer',                   'Phong Game Studio',     'Android/iOS + Unity',                   1, 'Thinh giang HP-AI tai truong (Case A).'),
-('NVDN003', 'NV003', 'DN003', 'Tech Lead — Outsourcing Project',         'Phong Du an',           'NodeJS + Microservices',                0, 'Phu trach SV thuc tap tai TMA.'),
-('NVDN004', 'NV004', 'DN004', 'Solution Architect',                      'Phong Giai phap',       'Cloud (AWS/Azure) + Data Engineering',  0, 'Phu trach SV thuc tap tai Viettel Solutions.'),
-('NVDN005', 'NV005', 'DN005', 'Product Manager',                         'Phong San pham AMIS',   'Quan ly san pham + Agile',              0, 'Phu trach SV thuc tap tai MISA.'),
-('NVDN006', 'NV006', 'DN006', 'Senior QA Lead',                          'Phong Quality Assurance','Test Automation + Selenium',           0, 'Phu trach SV thuc tap tai KMS.'),
-('NVDN007', 'NV007', 'DN007', 'Senior Backend Engineer',                 'Phong Core Payment',    'Golang + High-availability systems',    0, 'Phu trach SV thuc tap tai VNPay.');
 
 -- =============================================================================
 -- 6. VaiTroThucTap  (danh muc — Phase 7 chuan hoa label)
@@ -613,7 +607,7 @@ INSERT INTO DanhSachThucTap
 -- 21. KetQuaThucTap — Phase 7 he thong 2 cot diem
 --
 --    LoaiThucTap='DoanhNghiep':
---      Cot 1 (DN)    -> MaNguoiDanhGia = NV{xxx} (NguoiDung cua NhanVienDoanhNghiep)
+--      Cot 1 (DN)    -> MaNguoiDanhGia = NV{xxx} (NguoiDung loai 'DoanhNghiep' — NV DN cua DN tiep nhan SV)
 --      Cot 2 (GV_HD) -> MaNguoiDanhGia = GV{xxx} (NguoiDung cua GiangVien — giam sat)
 --    LoaiThucTap='Truong':
 --      Cot 1 (GV_HD) -> MaNguoiDanhGia = GV{xxx} (huong dan)
@@ -654,8 +648,8 @@ INSERT INTO KetQuaThucTap (MaThucTap, MaVaiTro, MaNguoiDanhGia, Diem, NhanXet) V
 -- SELECT COUNT(*) AS GV_ThinhGiang     FROM GiangVien WHERE LoaiGiangVien='GiangVienThinhGiang'; -- 4 (GV010,GV012,GV013,GV014)
 -- SELECT COUNT(*) AS DoanhNghiep       FROM DoanhNghiep;                              -- 9
 -- SELECT COUNT(*) AS DN_DangHopTac     FROM DoanhNghiep WHERE TrangThai='DangHopTac'; -- 8
--- SELECT COUNT(*) AS NhanVienDN        FROM NhanVienDoanhNghiep;                      -- 7
--- SELECT COUNT(*) AS NV_CongTacVien    FROM NhanVienDoanhNghiep WHERE LaCongTacVien=1;-- 2 (Case A)
+-- SELECT COUNT(*) AS NhanVienDN        FROM NguoiDung WHERE LoaiNguoiDung='DoanhNghiep' AND MaNguoiDung LIKE 'NV%'; -- 7
+-- SELECT COUNT(*) AS NV_KiemThinhGiang FROM NguoiDung nd JOIN GiangVien gv ON gv.MaNguoiDung=nd.MaNguoiDung WHERE nd.LoaiNguoiDung='DoanhNghiep'; -- 2 (Case A: NV001, NV002)
 -- SELECT COUNT(*) AS VaiTroThucTap     FROM VaiTroThucTap;                            -- 5
 -- SELECT COUNT(*) AS NhomNguoiDung     FROM NhomNguoiDung;                            -- 18
 -- SELECT COUNT(*) AS CTDT              FROM ChuongTrinhDaoTao;                        -- 4
