@@ -7,6 +7,7 @@ import com.ntu.quanlyctdtdb.enums.TrangThaiDoanhNghiep;
 import com.ntu.quanlyctdtdb.enums.TrangThaiDotTT;
 import com.ntu.quanlyctdtdb.repository.ChuongTrinhDaoTaoRepository;
 import com.ntu.quanlyctdtdb.repository.DoanhNghiepRepository;
+import com.ntu.quanlyctdtdb.repository.GiangVienRepository;
 import com.ntu.quanlyctdtdb.repository.HocKyNamHocRepository;
 import com.ntu.quanlyctdtdb.repository.HocPhanRepository;
 import com.ntu.quanlyctdtdb.security.CustomUserDetails;
@@ -21,6 +22,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 
@@ -55,6 +57,8 @@ public class DotThucTapController {
     private final HocPhanRepository hocPhanRepo;
     private final HocKyNamHocRepository hocKyRepo;
     private final DoanhNghiepRepository doanhNghiepRepo;
+    // Phase 7 — 2 cot diem
+    private final GiangVienRepository giangVienRepo;
 
     @GetMapping
     public String danhSach(Model model) {
@@ -188,6 +192,12 @@ public class DotThucTapController {
         // DN list cho dropdown trong cap-nhat-kq + import — chi DN dang hop tac.
         model.addAttribute("doanhNghiepList",
                 doanhNghiepRepo.findByTrangThai(TrangThaiDoanhNghiep.DangHopTac));
+        // Phase 7 — 2 cot diem:
+        //   ketQuaMap : Map<maThucTap, Map<maVaiTro, KetQuaThucTap>>
+        //               de template render diem cho tung SV theo vai tro.
+        //   giangVienList : dropdown chon nguoi danh gia (khi nhap diem moi).
+        model.addAttribute("ketQuaMap", dotTTService.getKetQuaMapByDot(id));
+        model.addAttribute("giangVienList", giangVienRepo.findAllFetchNguoiDung());
         model.addAttribute("activeMenu", "thuc-tap");
         return "thuc-tap/chi-tiet";
     }
@@ -237,6 +247,37 @@ public class DotThucTapController {
         try {
             dotTTService.capNhatKetQua(maDanhSach, loaiThucTap, maDoanhNghiep, nhanXet);
             ra.addFlashAttribute("successMsg", "Da cap nhat ket qua sinh vien.");
+        } catch (Exception e) {
+            ra.addFlashAttribute("errorMsg", e.getMessage());
+        }
+        return "redirect:/thuc-tap/chi-tiet/" + id;
+    }
+
+    /**
+     * Phase 7 — Nhap/cap nhat 1 cot diem cho SV theo vai tro.
+     *
+     * <p>UI cho phep nhap doc lap tung cot:</p>
+     * <ul>
+     *   <li>Tai Truong: vaiTro=GV_HD (cot 1) hoac vaiTro=GV_PB (cot 2)</li>
+     *   <li>Tai DN: vaiTro=DN (cot 1) hoac vaiTro=GV_HD (cot 2)</li>
+     * </ul>
+     *
+     * <p>Form post 4 fields: vaiTro, diem, nhanXet, maGiangVien (nguoi danh gia).
+     * Diem null cho phep "xoa" diem; nhanXet blank cho phep "xoa" nhan xet.</p>
+     */
+    @PreAuthorize("hasAnyRole('PDT','TTDTXS','ADMIN','GIANG_VIEN','CVHT','DOANH_NGHIEP')")
+    @PostMapping("/chi-tiet/{id}/cap-nhat-diem/{maDanhSach}")
+    public String capNhatDiem(@PathVariable Integer id,
+                                @PathVariable Integer maDanhSach,
+                                @RequestParam String vaiTro,
+                                @RequestParam(required = false) BigDecimal diem,
+                                @RequestParam(required = false) String nhanXet,
+                                @RequestParam(required = false) String maGiangVien,
+                                RedirectAttributes ra) {
+        try {
+            dotTTService.capNhatDiem(maDanhSach, vaiTro, diem, nhanXet, maGiangVien);
+            ra.addFlashAttribute("successMsg",
+                    "Da cap nhat diem (" + vaiTro + ") cho sinh vien.");
         } catch (Exception e) {
             ra.addFlashAttribute("errorMsg", e.getMessage());
         }

@@ -284,32 +284,81 @@
                           th:text="'Tổng: ' + ${#lists.size(danhSachSV)}">0</span>
                 </div>
                 <div class="card-body p-0">
+                    <!--/* Phase 7 — bang phan cong SV moi:
+                           - Hien 2 cot diem dua tren loai thuc tap.
+                           - Tai truong: Cot 1 = GV_HD, Cot 2 = GV_PB.
+                           - Tai DN:     Cot 1 = DN,    Cot 2 = GV_HD (giam sat).
+                           - Mac dinh chi 1 row tom tat — click "Chi tiet" mo
+                             panel inline voi 2-3 form rieng (1 form / cot diem
+                             + 1 form metadata loai/DN/trang thai).
+                           - Khong cho nhap khi DanhSachThucTap.trangThai = DaHuy. */-->
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
+                        <table class="table table-hover align-middle mb-0 grade-table">
+                            <colgroup>
+                                <col style="width:48px;">       <!-- STT -->
+                                <col style="width:96px;">       <!-- Ma SV -->
+                                <col>                            <!-- Ho ten -->
+                                <col style="width:84px;">       <!-- Lop -->
+                                <col style="width:96px;">       <!-- Loai TT -->
+                                <col style="width:120px;">      <!-- Diem 1 -->
+                                <col style="width:120px;">      <!-- Diem 2 -->
+                                <col style="width:90px;">       <!-- TB -->
+                                <col style="width:128px;">      <!-- Trang thai -->
+                                <!--/* Cot thao tac luon hien (rong cho role chi xem)
+                                       — colgroup khong support sec:authorize tren <col>
+                                       (void element). Cell <td> co sec:authorize rieng. */-->
+                                <col style="width:108px;">
+                            </colgroup>
                             <thead>
                                 <tr>
-                                    <th style="width:50px;">STT</th>
+                                    <th>STT</th>
                                     <th>Mã SV</th>
                                     <th>Họ Tên</th>
                                     <th>Lớp</th>
                                     <th>Loại TT</th>
-                                    <th>Doanh Nghiệp</th>
+                                    <th class="text-center">
+                                        Cột 1
+                                        <small class="d-block fw-normal text-muted"
+                                               style="font-size:10.5px;">GV HD / DN</small>
+                                    </th>
+                                    <th class="text-center">
+                                        Cột 2
+                                        <small class="d-block fw-normal text-muted"
+                                               style="font-size:10.5px;">GV PB / GV GS</small>
+                                    </th>
+                                    <th class="text-center">TB</th>
                                     <th>Trạng Thái</th>
                                     <th class="text-center"
-                                        sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN','GIANG_VIEN','CVHT','DOANH_NGHIEP')"
-                                        style="width:140px;">Cập Nhật</th>
+                                        sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN','GIANG_VIEN','CVHT','DOANH_NGHIEP')">
+                                        Thao Tác
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr th:if="${#lists.isEmpty(danhSachSV)}">
-                                    <td colspan="8">
+                                    <td colspan="10">
                                         <div class="empty-state">
                                             <i class="bi bi-person-x"></i>
                                             <p>Chưa có sinh viên nào được phân công.</p>
                                         </div>
                                     </td>
                                 </tr>
-                                <th:block th:each="ds, stat : ${danhSachSV}">
+                                <th:block th:each="ds, stat : ${danhSachSV}"
+                                          th:with="
+                                            loaiTT=${ds.loaiThucTap?.name()},
+                                            isTruong=${loaiTT == 'Truong'},
+                                            isDN=${loaiTT == 'DoanhNghiep'},
+                                            kqMap=${ketQuaMap[ds.maThucTap]},
+                                            vaiTro1=${isDN ? 'DN' : 'GV_HD'},
+                                            vaiTro2=${isDN ? 'GV_HD' : 'GV_PB'},
+                                            kq1=${kqMap != null ? kqMap[vaiTro1] : null},
+                                            kq2=${kqMap != null ? kqMap[vaiTro2] : null},
+                                            d1=${kq1 != null ? kq1.diem : null},
+                                            d2=${kq2 != null ? kq2.diem : null},
+                                            tb=${(d1 != null and d2 != null)
+                                                  ? T(java.math.BigDecimal).valueOf((d1.doubleValue() + d2.doubleValue()) / 2.0)
+                                                  : null},
+                                            canEdit=${ds.trangThai?.name() != 'DaHuy'}">
                                 <tr>
                                     <td class="text-muted" th:text="${stat.index + 1}">1</td>
                                     <td><code th:text="${ds.sinhVien.maSV}"></code></td>
@@ -323,15 +372,40 @@
                                     <td class="small">
                                         <span th:if="${ds.loaiThucTap != null}"
                                               class="chip"
-                                              th:with="loaiTT=${ds.loaiThucTap.name()}"
-                                              th:classappend="${loaiTT == 'Truong' ? 'chip-primary' : 'chip-accent'}"
-                                              th:text="${loaiTT == 'Truong' ? 'Tại Trường' : 'Tại DN'}">--</span>
+                                              th:classappend="${isTruong ? 'chip-primary' : 'chip-accent'}"
+                                              th:text="${isTruong ? 'Tại Trường' : 'Tại DN'}">--</span>
                                         <span th:unless="${ds.loaiThucTap != null}"
                                               class="text-muted fst-italic small">--</span>
                                     </td>
-                                    <td class="small"
-                                        th:text="${ds.doanhNghiep != null
-                                            ? ds.doanhNghiep.tenDoanhNghiep : '--'}">--</td>
+                                    <!-- Diem cot 1 -->
+                                    <td class="text-center">
+                                        <span th:if="${d1 != null}"
+                                              class="grade-pill"
+                                              th:classappend="${d1.doubleValue() >= 8.0 ? 'grade-good' :
+                                                              (d1.doubleValue() >= 5.0  ? 'grade-pass' : 'grade-fail')}"
+                                              th:text="${#numbers.formatDecimal(d1, 1, 1)}">--</span>
+                                        <span th:if="${d1 == null}"
+                                              class="text-muted small fst-italic">—</span>
+                                    </td>
+                                    <!-- Diem cot 2 -->
+                                    <td class="text-center">
+                                        <span th:if="${d2 != null}"
+                                              class="grade-pill"
+                                              th:classappend="${d2.doubleValue() >= 8.0 ? 'grade-good' :
+                                                              (d2.doubleValue() >= 5.0  ? 'grade-pass' : 'grade-fail')}"
+                                              th:text="${#numbers.formatDecimal(d2, 1, 1)}">--</span>
+                                        <span th:if="${d2 == null}"
+                                              class="text-muted small fst-italic">—</span>
+                                    </td>
+                                    <!-- TB -->
+                                    <td class="text-center">
+                                        <span th:if="${tb != null}" class="fw-semibold"
+                                              th:classappend="${tb.doubleValue() >= 8.0 ? 'text-success' :
+                                                              (tb.doubleValue() >= 5.0  ? 'text-primary' : 'text-danger')}"
+                                              th:text="${#numbers.formatDecimal(tb, 1, 2)}">--</span>
+                                        <span th:if="${tb == null}"
+                                              class="text-muted small fst-italic">—</span>
+                                    </td>
                                     <td>
                                         <span class="status-pill"
                                               th:with="t=${ds.trangThai?.name()}"
@@ -350,70 +424,239 @@
                                         <button class="btn btn-sm btn-outline-primary"
                                                 data-bs-toggle="collapse"
                                                 th:data-bs-target="'#collapseKQ-' + ${ds.maThucTap}"
-                                                aria-expanded="false">
-                                            <i class="bi bi-pencil me-1"></i>Cập Nhật
+                                                aria-expanded="false"
+                                                th:disabled="${!canEdit}"
+                                                th:title="${canEdit ? 'Mở/đóng panel nhập điểm' : 'Đã huỷ — không thể nhập điểm'}">
+                                            <i class="bi bi-pencil-square me-1"></i>Chi tiết
                                         </button>
                                     </td>
                                 </tr>
-                                <!-- Inline collapse row: form Cap nhat ket qua (immediate sibling) -->
-                                <tr class="bg-body-tertiary"
+                                <!-- Inline collapse row: 2 form nhap diem + 1 form metadata.
+                                     Chia 3 form rieng de UX submit doc lap (khong loi 1 form lon). -->
+                                <tr class="bg-body-tertiary grade-detail-row"
                                     sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN','GIANG_VIEN','CVHT','DOANH_NGHIEP')">
-                                    <td colspan="8" class="p-0 border-0">
+                                    <td colspan="10" class="p-0 border-0">
                                         <div class="collapse"
                                              th:id="'collapseKQ-' + ${ds.maThucTap}">
-                                            <form th:action="@{/thuc-tap/chi-tiet/{id}/cap-nhat-kq/{maDS}
-                                                              (id=${dot.maDotTT}, maDS=${ds.maThucTap})}"
-                                                  method="post" class="p-3">
-                                                <input type="hidden" th:name="${_csrf.parameterName}"
-                                                                      th:value="${_csrf.token}">
-                                                <div class="row g-2 align-items-end">
-                                                    <div class="col-md-3">
-                                                        <label class="form-label small fw-medium mb-1">
-                                                            Loại Thực Tập
-                                                        </label>
-                                                        <select class="form-select form-select-sm"
-                                                                name="loaiThucTap">
-                                                            <option value="">-- Giữ nguyên --</option>
-                                                            <option value="Truong"
-                                                                    th:selected="${ds.loaiThucTap?.name() == 'Truong'}">
-                                                                Tại Trường
-                                                            </option>
-                                                            <option value="DoanhNghiep"
-                                                                    th:selected="${ds.loaiThucTap?.name() == 'DoanhNghiep'}">
-                                                                Tại Doanh Nghiệp
-                                                            </option>
-                                                        </select>
+                                            <div class="p-3">
+                                                <div class="row g-3">
+
+                                                    <!-- ===== Form 1: Diem cot 1 (GV_HD hoac DN) ===== -->
+                                                    <div class="col-md-6">
+                                                        <form th:action="@{/thuc-tap/chi-tiet/{id}/cap-nhat-diem/{maDS}
+                                                                          (id=${dot.maDotTT}, maDS=${ds.maThucTap})}"
+                                                              method="post"
+                                                              class="grade-form-card">
+                                                            <input type="hidden"
+                                                                   th:name="${_csrf.parameterName}"
+                                                                   th:value="${_csrf.token}">
+                                                            <input type="hidden" name="vaiTro" th:value="${vaiTro1}">
+
+                                                            <div class="grade-form-header">
+                                                                <i class="bi" th:classappend="${isDN ? 'bi-building' : 'bi-mortarboard'}"></i>
+                                                                <span th:text="${isDN ? 'Cột 1 — Doanh Nghiệp' : 'Cột 1 — GV Hướng Dẫn'}">Cột 1</span>
+                                                            </div>
+
+                                                            <div class="row g-2">
+                                                                <div class="col-5">
+                                                                    <label class="form-label small fw-medium mb-1">
+                                                                        Điểm (0–10)
+                                                                    </label>
+                                                                    <input type="number" name="diem"
+                                                                           class="form-control form-control-sm"
+                                                                           min="0" max="10" step="0.1"
+                                                                           th:value="${d1}"
+                                                                           th:disabled="${!canEdit}"
+                                                                           placeholder="0.0">
+                                                                </div>
+                                                                <div class="col-7">
+                                                                    <label class="form-label small fw-medium mb-1">
+                                                                        Người đánh giá
+                                                                    </label>
+                                                                    <select name="maGiangVien"
+                                                                            class="form-select form-select-sm"
+                                                                            th:disabled="${!canEdit}">
+                                                                        <option value="">-- Giữ nguyên / chọn --</option>
+                                                                        <option th:each="gv : ${giangVienList}"
+                                                                                th:value="${gv.maGV}"
+                                                                                th:selected="${kq1 != null
+                                                                                              and kq1.nguoiDanhGia != null
+                                                                                              and kq1.nguoiDanhGia.maGV == gv.maGV}"
+                                                                                th:text="${gv.maGV + ' — ' +
+                                                                                          (gv.nguoiDung != null ? gv.nguoiDung.hoTen : gv.maGV)}">GV</option>
+                                                                    </select>
+                                                                </div>
+                                                            </div>
+                                                            <div class="mt-2">
+                                                                <label class="form-label small fw-medium mb-1">
+                                                                    Nhận xét
+                                                                </label>
+                                                                <textarea name="nhanXet" rows="2"
+                                                                          class="form-control form-control-sm"
+                                                                          th:disabled="${!canEdit}"
+                                                                          th:text="${kq1 != null ? kq1.nhanXet : ''}"
+                                                                          placeholder="Ghi nhận xét..."></textarea>
+                                                            </div>
+                                                            <div class="mt-2 d-flex justify-content-between align-items-center">
+                                                                <small class="text-muted"
+                                                                       th:if="${kq1 != null and kq1.updatedAt != null}"
+                                                                       th:text="|Cập nhật ${#temporals.format(kq1.updatedAt, 'dd/MM HH:mm')}|">--</small>
+                                                                <small class="text-muted"
+                                                                       th:if="${kq1 == null}">Chưa có điểm</small>
+                                                                <button type="submit"
+                                                                        class="btn btn-sm btn-primary"
+                                                                        th:disabled="${!canEdit}">
+                                                                    <i class="bi bi-save me-1"></i>Lưu cột 1
+                                                                </button>
+                                                            </div>
+                                                        </form>
                                                     </div>
-                                                    <div class="col-md-4">
-                                                        <label class="form-label small fw-medium mb-1">
-                                                            Doanh Nghiệp (nếu có)
-                                                        </label>
-                                                        <select class="form-select form-select-sm"
-                                                                name="maDoanhNghiep">
-                                                            <option value="">-- Không / Tại trường --</option>
-                                                            <option th:each="dn : ${doanhNghiepList}"
-                                                                    th:value="${dn.maDoanhNghiep}"
-                                                                    th:selected="${ds.doanhNghiep != null
-                                                                                   and ds.doanhNghiep.maDoanhNghiep == dn.maDoanhNghiep}"
-                                                                    th:text="${dn.tenDoanhNghiep}">DN</option>
-                                                        </select>
+
+                                                    <!-- ===== Form 2: Diem cot 2 (GV_PB hoac GV_HD) ===== -->
+                                                    <div class="col-md-6">
+                                                        <form th:action="@{/thuc-tap/chi-tiet/{id}/cap-nhat-diem/{maDS}
+                                                                          (id=${dot.maDotTT}, maDS=${ds.maThucTap})}"
+                                                              method="post"
+                                                              class="grade-form-card">
+                                                            <input type="hidden"
+                                                                   th:name="${_csrf.parameterName}"
+                                                                   th:value="${_csrf.token}">
+                                                            <input type="hidden" name="vaiTro" th:value="${vaiTro2}">
+
+                                                            <div class="grade-form-header">
+                                                                <i class="bi" th:classappend="${isDN ? 'bi-eye' : 'bi-chat-square-quote'}"></i>
+                                                                <span th:text="${isDN ? 'Cột 2 — GV Giám Sát' : 'Cột 2 — GV Phản Biện'}">Cột 2</span>
+                                                            </div>
+
+                                                            <div class="row g-2">
+                                                                <div class="col-5">
+                                                                    <label class="form-label small fw-medium mb-1">
+                                                                        Điểm (0–10)
+                                                                    </label>
+                                                                    <input type="number" name="diem"
+                                                                           class="form-control form-control-sm"
+                                                                           min="0" max="10" step="0.1"
+                                                                           th:value="${d2}"
+                                                                           th:disabled="${!canEdit}"
+                                                                           placeholder="0.0">
+                                                                </div>
+                                                                <div class="col-7">
+                                                                    <label class="form-label small fw-medium mb-1">
+                                                                        Người đánh giá
+                                                                    </label>
+                                                                    <select name="maGiangVien"
+                                                                            class="form-select form-select-sm"
+                                                                            th:disabled="${!canEdit}">
+                                                                        <option value="">-- Giữ nguyên / chọn --</option>
+                                                                        <option th:each="gv : ${giangVienList}"
+                                                                                th:value="${gv.maGV}"
+                                                                                th:selected="${kq2 != null
+                                                                                              and kq2.nguoiDanhGia != null
+                                                                                              and kq2.nguoiDanhGia.maGV == gv.maGV}"
+                                                                                th:text="${gv.maGV + ' — ' +
+                                                                                          (gv.nguoiDung != null ? gv.nguoiDung.hoTen : gv.maGV)}">GV</option>
+                                                                    </select>
+                                                                </div>
+                                                            </div>
+                                                            <div class="mt-2">
+                                                                <label class="form-label small fw-medium mb-1">
+                                                                    Nhận xét
+                                                                </label>
+                                                                <textarea name="nhanXet" rows="2"
+                                                                          class="form-control form-control-sm"
+                                                                          th:disabled="${!canEdit}"
+                                                                          th:text="${kq2 != null ? kq2.nhanXet : ''}"
+                                                                          placeholder="Ghi nhận xét..."></textarea>
+                                                            </div>
+                                                            <div class="mt-2 d-flex justify-content-between align-items-center">
+                                                                <small class="text-muted"
+                                                                       th:if="${kq2 != null and kq2.updatedAt != null}"
+                                                                       th:text="|Cập nhật ${#temporals.format(kq2.updatedAt, 'dd/MM HH:mm')}|">--</small>
+                                                                <small class="text-muted"
+                                                                       th:if="${kq2 == null}">Chưa có điểm</small>
+                                                                <button type="submit"
+                                                                        class="btn btn-sm btn-primary"
+                                                                        th:disabled="${!canEdit}">
+                                                                    <i class="bi bi-save me-1"></i>Lưu cột 2
+                                                                </button>
+                                                            </div>
+                                                        </form>
                                                     </div>
-                                                    <div class="col-md-3">
-                                                        <label class="form-label small fw-medium mb-1">
-                                                            Nhận xét
-                                                        </label>
-                                                        <input type="text" class="form-control form-control-sm"
-                                                               name="nhanXet"
-                                                               placeholder="Nhận xét ngắn...">
+
+                                                    <!-- ===== Form 3: Metadata (loai TT, DN, trang thai SV) ===== -->
+                                                    <div class="col-12">
+                                                        <form th:action="@{/thuc-tap/chi-tiet/{id}/cap-nhat-kq/{maDS}
+                                                                          (id=${dot.maDotTT}, maDS=${ds.maThucTap})}"
+                                                              method="post"
+                                                              class="grade-form-card grade-form-meta">
+                                                            <input type="hidden"
+                                                                   th:name="${_csrf.parameterName}"
+                                                                   th:value="${_csrf.token}">
+                                                            <div class="grade-form-header">
+                                                                <i class="bi bi-gear"></i>
+                                                                <span>Phân công &amp; trạng thái</span>
+                                                            </div>
+                                                            <div class="row g-2 align-items-end">
+                                                                <div class="col-md-3">
+                                                                    <label class="form-label small fw-medium mb-1">
+                                                                        Loại Thực Tập
+                                                                    </label>
+                                                                    <select class="form-select form-select-sm"
+                                                                            name="loaiThucTap"
+                                                                            th:disabled="${!canEdit}">
+                                                                        <option value="">-- Giữ nguyên --</option>
+                                                                        <option value="Truong"
+                                                                                th:selected="${isTruong}">
+                                                                            Tại Trường
+                                                                        </option>
+                                                                        <option value="DoanhNghiep"
+                                                                                th:selected="${isDN}">
+                                                                            Tại Doanh Nghiệp
+                                                                        </option>
+                                                                    </select>
+                                                                </div>
+                                                                <div class="col-md-5">
+                                                                    <label class="form-label small fw-medium mb-1">
+                                                                        Doanh Nghiệp (nếu có)
+                                                                    </label>
+                                                                    <select class="form-select form-select-sm"
+                                                                            name="maDoanhNghiep"
+                                                                            th:disabled="${!canEdit}">
+                                                                        <option value="">-- Không / Tại trường --</option>
+                                                                        <option th:each="dn : ${doanhNghiepList}"
+                                                                                th:value="${dn.maDoanhNghiep}"
+                                                                                th:selected="${ds.doanhNghiep != null
+                                                                                               and ds.doanhNghiep.maDoanhNghiep == dn.maDoanhNghiep}"
+                                                                                th:text="${dn.tenDoanhNghiep}">DN</option>
+                                                                    </select>
+                                                                </div>
+                                                                <div class="col-md-4">
+                                                                    <label class="form-label small fw-medium mb-1">
+                                                                        Ghi chú phân công
+                                                                    </label>
+                                                                    <div class="d-flex gap-2">
+                                                                        <input type="text" class="form-control form-control-sm"
+                                                                               name="nhanXet"
+                                                                               th:disabled="${!canEdit}"
+                                                                               placeholder="Tuỳ chọn...">
+                                                                        <button type="submit"
+                                                                                class="btn btn-sm btn-outline-secondary text-nowrap"
+                                                                                th:disabled="${!canEdit}">
+                                                                            <i class="bi bi-arrow-clockwise me-1"></i>Cập nhật
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <small class="text-muted d-block mt-2">
+                                                                <i class="bi bi-info-circle me-1"></i>
+                                                                Thay đổi loại thực tập chuyển đổi giữa <em>tại trường ↔ tại DN</em>.
+                                                                Cột điểm sẽ được tính lại theo cấu hình mới.
+                                                            </small>
+                                                        </form>
                                                     </div>
-                                                    <div class="col-md-2">
-                                                        <button type="submit"
-                                                                class="btn btn-sm btn-primary w-100">
-                                                            <i class="bi bi-save me-1"></i>Lưu
-                                                        </button>
-                                                    </div>
+
                                                 </div>
-                                            </form>
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>

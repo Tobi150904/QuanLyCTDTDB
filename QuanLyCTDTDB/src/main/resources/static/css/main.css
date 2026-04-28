@@ -2968,3 +2968,103 @@ a.kpi-card { text-decoration: none; color: inherit; }
     color: var(--text-subtle);
     font-size: 0.8rem;
 }
+
+/* =============================================================================
+   PHASE 7 — Grade table (thuc-tap chi-tiet 2 cot diem)
+   ============================================================================= */
+.grade-table thead th {
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-subtle);
+    background: var(--surface-soft);
+    border-bottom: 1px solid var(--border-color);
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+/* Grade pill: numeric score badge with color tone */
+.grade-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 48px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.92rem;
+    line-height: 1.2;
+    border: 1px solid transparent;
+    transition: var(--transition-fast);
+}
+.grade-pill.grade-good {
+    color: var(--success);
+    background: var(--success-bg);
+    border-color: var(--success-border);
+}
+.grade-pill.grade-pass {
+    color: var(--primary-lt);
+    background: var(--primary-soft);
+    border-color: rgba(31, 79, 138, 0.22);
+}
+.grade-pill.grade-fail {
+    color: var(--danger);
+    background: var(--danger-bg);
+    border-color: var(--danger-border);
+}
+
+/* Inline grade detail panel — 2 form-card columns side by side */
+.grade-detail-row > td {
+    background: linear-gradient(180deg,
+                rgba(31, 79, 138, 0.025) 0%,
+                rgba(31, 79, 138, 0.015) 100%);
+}
+.grade-form-card {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--surface-card);
+    padding: 14px 16px 12px;
+    box-shadow: var(--shadow-xs);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+.grade-form-card .grade-form-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: var(--text-strong);
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed var(--border-color);
+}
+.grade-form-card .grade-form-header i {
+    color: var(--primary-lt);
+    font-size: 1.05rem;
+}
+.grade-form-card.grade-form-meta {
+    background: var(--surface-soft);
+    border-style: dashed;
+}
+.grade-form-card .form-control,
+.grade-form-card .form-select {
+    border-color: var(--border-color);
+    background: var(--surface-card);
+}
+.grade-form-card .form-control:focus,
+.grade-form-card .form-select:focus {
+    border-color: var(--primary-lt);
+    box-shadow: 0 0 0 3px var(--primary-soft);
+}
+
+@media (max-width: 991.98px) {
+    /* On tablets/phones, stack the 2 grade cards vertically */
+    .grade-detail-row .col-md-6 + .col-md-6 {
+        margin-top: 4px;
+    }
+}

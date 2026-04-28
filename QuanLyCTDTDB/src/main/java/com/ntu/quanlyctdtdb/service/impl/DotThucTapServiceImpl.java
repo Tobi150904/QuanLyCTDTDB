@@ -18,8 +18,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -34,6 +36,10 @@ public class DotThucTapServiceImpl implements DotThucTapService {
     private final SinhVienRepository sinhVienRepo;
     private final DoanhNghiepRepository doanhNghiepRepo;
     private final NguoiDungRepository nguoiDungRepo;
+    // Phase 7 — 2 cot diem
+    private final KetQuaThucTapRepository ketQuaTTRepo;
+    private final VaiTroThucTapRepository vaiTroRepo;
+    private final GiangVienRepository giangVienRepo;
 
     @Override
     @Transactional(readOnly = true)
@@ -327,6 +333,104 @@ public class DotThucTapServiceImpl implements DotThucTapService {
         }
 
         return dsTTRepo.save(ds);
+    }
+
+    // -------------------------------------------------------------------------
+    // Phase 7 — He thong 2 cot diem cho Thuc Tap
+    // -------------------------------------------------------------------------
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<Integer, Map<String, KetQuaThucTap>> getKetQuaMapByDot(Integer maDotTT) {
+        // Group: maThucTap -> (maVaiTro -> KetQuaThucTap).
+        // Repo da fetch vaiTro + nguoiDanhGia.nguoiDung -> safe khi
+        // open-in-view=false va template render gv.hoTen.
+        List<KetQuaThucTap> all = ketQuaTTRepo.findByDotFetchAll(maDotTT);
+        return all.stream().collect(Collectors.groupingBy(
+                kq -> kq.getDanhSachThucTap().getMaThucTap(),
+                Collectors.toMap(
+                        kq -> kq.getVaiTroThucTap().getMaVaiTro(),
+                        kq -> kq,
+                        // Neu trung (khong xay ra do UNIQUE), giu cai moi nhat.
+                        (a, b) -> b.getUpdatedAt() != null
+                                && (a.getUpdatedAt() == null
+                                    || b.getUpdatedAt().isAfter(a.getUpdatedAt())) ? b : a
+                )));
+    }
+
+    @Override
+    public KetQuaThucTap capNhatDiem(Integer maDanhSach, String maVaiTro,
+                                      BigDecimal diem, String nhanXet,
+                                      String maGiangVienDanhGia) {
+        // 1. Validate inputs
+        if (maVaiTro == null || maVaiTro.isBlank()) {
+            throw new BusinessException("Vai tro danh gia khong duoc trong.");
+        }
+        VaiTroThucTap vaiTro = vaiTroRepo.findById(maVaiTro.trim())
+                .orElseThrow(() -> new BusinessException(
+                        "Vai tro '" + maVaiTro + "' khong ton tai. Chap nhan: GV_HD, GV_PB, DN, CVHT."));
+
+        if (diem != null && (diem.compareTo(BigDecimal.ZERO) < 0
+                            || diem.compareTo(BigDecimal.TEN) > 0)) {
+            throw new BusinessException("Diem phai trong khoang [0, 10]. Nhap: " + diem);
+        }
+
+        DanhSachThucTap ds = dsTTRepo.findById(maDanhSach)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "DanhSachThucTap", "MaThucTap", maDanhSach.toString()));
+
+        // Khong cho nhap diem cho SV da bi huy.
+        if (ds.getTrangThai() == TrangThaiThucTap.DaHuy) {
+            throw new BusinessException(
+                    "Khong the nhap diem cho SV da bi huy phan cong (" + ds.getSinhVien().getMaSV() + ").");
+        }
+
+        // 2. Tim row hien co (theo UNIQUE MaThucTap + MaVaiTro). Upsert.
+        KetQuaThucTap kq = ketQuaTTRepo
+                .findByDanhSachThucTap_MaThucTapAndVaiTroThucTap_MaVaiTro(maDanhSach, maVaiTro.trim())
+                .orElse(null);
+
+        // 3. Resolve nguoi danh gia (GiangVien) — bat buoc khi tao moi.
+        GiangVien gvDanhGia = null;
+        if (maGiangVienDanhGia != null && !maGiangVienDanhGia.isBlank()) {
+            gvDanhGia = giangVienRepo.findById(maGiangVienDanhGia.trim())
+                    .orElseThrow(() -> new BusinessException(
+                            "Giang vien '" + maGiangVienDanhGia + "' khong ton tai."));
+        }
+
+        if (kq == null) {
+            // Tao moi -> nguoiDanhGia bat buoc (NOT NULL trong SQL).
+            if (gvDanhGia == null) {
+                throw new BusinessException(
+                        "Khi tao moi, can chi dinh nguoi danh gia (Ma GV).");
+            }
+            kq = KetQuaThucTap.builder()
+                    .danhSachThucTap(ds)
+                    .vaiTroThucTap(vaiTro)
+                    .nguoiDanhGia(gvDanhGia)
+                    .diem(diem)
+                    .nhanXet(nhanXet != null && !nhanXet.isBlank() ? nhanXet.trim() : null)
+                    .build();
+        } else {
+            // Update — chi cap nhat field user truyen vao. Diem co the duoc set null
+            // de "xoa" diem.
+            kq.setDiem(diem);
+            kq.setNhanXet(nhanXet != null && !nhanXet.isBlank() ? nhanXet.trim() : null);
+            if (gvDanhGia != null) {
+                kq.setNguoiDanhGia(gvDanhGia);
+            }
+        }
+
+        // Khi co ket qua -> tu nang trang thai DaPhanCong -> DangThucTap
+        // (audit-safe: khong nang khi da DaKetThuc / DaHuy).
+        if (ds.getTrangThai() == TrangThaiThucTap.DaPhanCong) {
+            ds.setTrangThai(TrangThaiThucTap.DangThucTap);
+            dsTTRepo.save(ds);
+        }
+
+        log.info("[KetQuaThucTap] Upsert: maDS={}, vaiTro={}, diem={}, gv={}",
+                 maDanhSach, maVaiTro, diem, maGiangVienDanhGia);
+        return ketQuaTTRepo.save(kq);
     }
 
     @Override

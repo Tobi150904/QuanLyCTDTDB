@@ -3,8 +3,10 @@ package com.ntu.quanlyctdtdb.service;
 import com.ntu.quanlyctdtdb.dto.DotThucTapDTO;
 import com.ntu.quanlyctdtdb.entity.DanhSachThucTap;
 import com.ntu.quanlyctdtdb.entity.DotThucTap;
+import com.ntu.quanlyctdtdb.entity.KetQuaThucTap;
 import com.ntu.quanlyctdtdb.enums.LoaiThucTap;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -57,4 +59,51 @@ public interface DotThucTapService {
      *   daKetThuc    : DaKetThuc
      */
     Map<String, Long> getThongKe();
+
+    // -------------------------------------------------------------------------
+    // Phase 7 — He thong 2 cot diem cho Thuc Tap
+    //
+    // Yeu cau (theo nguoi dung):
+    //   - Tai truong:    Cot 1 = GV_HD (giang vien huong dan)
+    //                    Cot 2 = GV_PB (giang vien phan bien)
+    //   - Tai DN:        Cot 1 = DN    (nhan vien DN)
+    //                    Cot 2 = GV_HD (giang vien giam sat tu phia truong)
+    //
+    // Mo hinh du lieu: KetQuaThucTap UNIQUE(MaThucTap, MaVaiTro) -> moi
+    // (SV, vai tro) chi co 1 row diem. Co the upsert.
+    // -------------------------------------------------------------------------
+
+    /**
+     * Lay tat ca KetQuaThucTap cua mot dot, group theo MaThucTap (= maDanhSach
+     * = primary key cua DanhSachThucTap), trong moi nhom map theo MaVaiTro.
+     *
+     * <p>Output: Map&lt;maThucTap, Map&lt;maVaiTro, KetQuaThucTap&gt;&gt;
+     * giup template render bang voi 2 cot diem ma chi 1 lan query.</p>
+     */
+    Map<Integer, Map<String, KetQuaThucTap>> getKetQuaMapByDot(Integer maDotTT);
+
+    /**
+     * Upsert KetQuaThucTap cho 1 (DanhSach, VaiTro). Neu da co thi update
+     * Diem + NhanXet (va MaNguoiDanhGia neu duoc cap nhat); neu chua co thi
+     * insert moi.
+     *
+     * <p>Validate:</p>
+     * <ul>
+     *   <li>{@code maVaiTro} phai ton tai (GV_HD / GV_PB / DN / CVHT).</li>
+     *   <li>{@code diem} (neu co) phai trong [0, 10].</li>
+     *   <li>{@code maGiangVienDanhGia} phai ton tai trong bang GiangVien.</li>
+     *   <li>Khong cho phep nhap diem khi DanhSachThucTap dang o trang thai
+     *       DaHuy.</li>
+     * </ul>
+     *
+     * @param maDanhSach        primary key cua DanhSachThucTap (= MaThucTap)
+     * @param maVaiTro          GV_HD | GV_PB | DN | CVHT
+     * @param diem              null neu chi nhap nhan xet, hoac 0..10
+     * @param nhanXet           text feedback, co the null/blank
+     * @param maGiangVienDanhGia ma GV nguoi dang nhap nhap diem (audit). Neu null,
+     *                          giu nguyen nguoi danh gia hien co.
+     */
+    KetQuaThucTap capNhatDiem(Integer maDanhSach, String maVaiTro,
+                                BigDecimal diem, String nhanXet,
+                                String maGiangVienDanhGia);
 }
