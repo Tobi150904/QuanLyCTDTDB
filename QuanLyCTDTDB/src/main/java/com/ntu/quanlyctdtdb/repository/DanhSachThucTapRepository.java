@@ -28,4 +28,25 @@ public interface DanhSachThucTapRepository extends JpaRepository<DanhSachThucTap
          + "WHERE r.dotThucTap.maDotTT = :maDotTT "
          + "ORDER BY r.maThucTap")
     List<DanhSachThucTap> findByDotThucTap_MaDotTTFetchSV(@Param("maDotTT") Integer maDotTT);
+
+    /**
+     * Bug-fix phan quyen: lay 1 row DanhSachThucTap kem du quan he can thiet
+     * de verify ownership truoc khi cho phep cham diem:
+     *   - ds.doanhNghiep                   -> kiem tra DN cua SV (vai tro DN)
+     *   - ds.sinhVien.lopHanhChinh.coVan   -> kiem tra CVHT cua SV (vai tro CVHT)
+     *   - ds.dotThucTap.gvPhuTrach         -> N/A (DotThucTap khong co gvPhuTrach
+     *     nhu DotKienTap; phan cong GV cham la o LopHocPhan + KetQuaThucTap.nguoiDanhGia)
+     * Tranh LazyInitException khi OSIV=false.
+     */
+    @Query("SELECT r FROM DanhSachThucTap r "
+         + "JOIN FETCH r.sinhVien sv "
+         + "LEFT JOIN FETCH sv.nguoiDung "
+         + "LEFT JOIN FETCH sv.lopHanhChinh lhc "
+         + "LEFT JOIN FETCH lhc.coVan cv "
+         + "LEFT JOIN FETCH cv.nguoiDung "
+         + "LEFT JOIN FETCH r.doanhNghiep "
+         + "LEFT JOIN FETCH r.dotThucTap "
+         + "WHERE r.maThucTap = :maThucTap")
+    java.util.Optional<DanhSachThucTap> findByIdFetchOwnership(
+            @Param("maThucTap") Integer maThucTap);
 }

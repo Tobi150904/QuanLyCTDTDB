@@ -1,11 +1,15 @@
 package com.ntu.quanlyctdtdb.controller;
 
 import com.ntu.quanlyctdtdb.dto.DotThucTapDTO;
+import com.ntu.quanlyctdtdb.entity.DanhSachThucTap;
 import com.ntu.quanlyctdtdb.entity.DotThucTap;
+import com.ntu.quanlyctdtdb.entity.NguoiDung;
+import com.ntu.quanlyctdtdb.enums.LoaiNguoiDung;
 import com.ntu.quanlyctdtdb.enums.LoaiThucTap;
 import com.ntu.quanlyctdtdb.enums.TrangThaiDoanhNghiep;
 import com.ntu.quanlyctdtdb.enums.TrangThaiDotTT;
 import com.ntu.quanlyctdtdb.repository.ChuongTrinhDaoTaoRepository;
+import com.ntu.quanlyctdtdb.repository.DanhSachThucTapRepository;
 import com.ntu.quanlyctdtdb.repository.DoanhNghiepRepository;
 import com.ntu.quanlyctdtdb.repository.GiangVienRepository;
 import com.ntu.quanlyctdtdb.repository.HocKyNamHocRepository;
@@ -15,6 +19,7 @@ import com.ntu.quanlyctdtdb.security.CustomUserDetails;
 import com.ntu.quanlyctdtdb.service.DotThucTapService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -62,6 +67,9 @@ public class DotThucTapController {
     private final GiangVienRepository giangVienRepo;
     // Refactor: NV DN giờ là NguoiDung loại DoanhNghiep với FK doanhNghiep
     private final NguoiDungRepository nguoiDungRepo;
+    // Bug-fix phan quyen: lookup ds + sv.lopHC.coVan + ds.doanhNghiep de
+    // verify ownership truoc khi cho phep cham diem (chong impersonation).
+    private final DanhSachThucTapRepository dsThucTapRepo;
 
     @GetMapping
     public String danhSach(Model model) {
@@ -291,9 +299,17 @@ public class DotThucTapController {
         return "redirect:/thuc-tap/chi-tiet/" + id;
     }
 
-    // Per spec: PDT/TTDTXS/ADMIN cap nhat hang loat; GV/CVHT/DN cap nhat
-    // cho SV minh phu trach. Method-level @PreAuthorize chap nhan ca 6 role.
-    @PreAuthorize("hasAnyRole('PDT','TTDTXS','ADMIN','GIANG_VIEN','CVHT','DOANH_NGHIEP')")
+    /**
+     * Cap nhat metadata phan cong (loaiThucTap, doanhNghiep tiep nhan, ghi chu)
+     * cho 1 SV trong dot thuc tap.
+     *
+     * <p>Bug-fix phan quyen: TRUOC day endpoint nay mo cho ca GV/CVHT/DN — sai
+     * voi nghiep vu vi day la cap nhat metadata phan cong (vd doi SV tu thuc
+     * tap o truong sang DN tiep nhan), thuoc trach nhiem cua phong dao tao /
+     * TTDTXS / ADMIN. GV/CVHT/DN chi duoc cham diem qua endpoint
+     * {@code /cap-nhat-diem} — KHONG duoc doi loai TT, doi DN tiep nhan.</p>
+     */
+    @PreAuthorize("hasAnyRole('PDT','TTDTXS','ADMIN')")
     @PostMapping("/chi-tiet/{id}/cap-nhat-kq/{maDanhSach}")
     public String capNhatKetQua(@PathVariable Integer id,
                                   @PathVariable Integer maDanhSach,
@@ -331,12 +347,102 @@ public class DotThucTapController {
                                 @RequestParam(required = false) String nhanXet,
                                 @RequestParam(name = "maNguoiDanhGia", required = false) String maNguoiDanhGia,
                                 @RequestParam(name = "maGiangVien", required = false) String maGiangVienLegacy,
+                                @AuthenticationPrincipal CustomUserDetails ud,
                                 RedirectAttributes ra) {
         try {
             // Phase 7 refactor: param mac dinh la maNguoiDanhGia (NguoiDung — co the
             // la GV hoac NV DN). Fallback maGiangVien de tuong thich form cu.
             String maNDG = (maNguoiDanhGia != null && !maNguoiDanhGia.isBlank())
                     ? maNguoiDanhGia : maGiangVienLegacy;
+
+            // ================================================================
+            // Bug-fix phan quyen (user complaint "giang vien con sua diem,
+            // giang vien trong thuc tap?"):
+            //   Truoc day: bat ky GV/CVHT/DN nao da auth deu cham duoc diem
+            //   cho BAT KY SV nao cua BAT KY DotTT nao -> security hole +
+            //   du lieu lon xon (GV chua giang lop nay van cham diem SV cua
+            //   lop khac; DN ngoai cuoc co the cham diem cho SV cua DN khac).
+            //
+            //   Quy tac dung (docs/03 §WF-08.3 + so do quyen):
+            //   - PDT/TTDTXS/ADMIN: bypass (sua loi, cham thay).
+            //   - GIANG_VIEN: vai tro phai la GV_HD / GV_PB; force
+            //     maNguoiDanhGia = current.maNguoiDung (chong impersonate).
+            //   - CVHT: vai tro phai la CVHT, va phai la co van hoc tap
+            //     cua lop hanh chinh ma SV thuoc; force maNguoiDanhGia.
+            //   - DOANH_NGHIEP: vai tro phai la DN; SV phai dang thuc tap
+            //     tai chinh DN cua nhan vien nay (dn.maDoanhNghiep match);
+            //     force maNguoiDanhGia.
+            // ================================================================
+            boolean isStaff = ud != null && ud.getAuthorities().stream().anyMatch(a ->
+                      "ROLE_PDT".equals(a.getAuthority())
+                   || "ROLE_TTDTXS".equals(a.getAuthority())
+                   || "ROLE_ADMIN".equals(a.getAuthority()));
+
+            if (!isStaff && ud != null) {
+                String vaiTroTrim = vaiTro != null ? vaiTro.trim() : "";
+                NguoiDung caller = nguoiDungRepo.findById(ud.getMaNguoiDung())
+                        .orElseThrow(() -> new AccessDeniedException(
+                                "Khong tim thay nguoi dung hien tai."));
+                LoaiNguoiDung callerLoai = caller.getLoaiNguoiDung();
+
+                DanhSachThucTap ds = dsThucTapRepo
+                        .findByIdFetchOwnership(maDanhSach)
+                        .orElseThrow(() -> new AccessDeniedException(
+                                "Khong tim thay ban ghi thuc tap."));
+
+                boolean isGv   = callerLoai == LoaiNguoiDung.GiangVien;
+                boolean isDn   = callerLoai == LoaiNguoiDung.DoanhNghiep;
+                boolean isCvht = ud.getAuthorities().stream()
+                        .anyMatch(a -> "ROLE_CVHT".equals(a.getAuthority()));
+
+                // CVHT trong he thong nay = GiangVien co them VaiTro CVHT.
+                // Vi vay khi user cham voi vai tro 'CVHT' thi callerLoai phai
+                // la GiangVien va co ROLE_CVHT.
+                if ("CVHT".equals(vaiTroTrim)) {
+                    if (!(isGv && isCvht)) {
+                        throw new AccessDeniedException(
+                                "Vai tro 'CVHT' yeu cau ban la giang vien co quyen "
+                                + "co van hoc tap.");
+                    }
+                    String maCoVan = ds.getSinhVien() != null
+                            && ds.getSinhVien().getLopHanhChinh() != null
+                            && ds.getSinhVien().getLopHanhChinh().getCoVan() != null
+                            ? ds.getSinhVien().getLopHanhChinh().getCoVan().getMaGV()
+                            : null;
+                    if (maCoVan == null
+                            || !maCoVan.equals(ud.getMaNguoiDung())) {
+                        throw new AccessDeniedException(
+                                "Ban khong phai la co van hoc tap cua sinh vien nay.");
+                    }
+                } else if ("GV_HD".equals(vaiTroTrim) || "GV_PB".equals(vaiTroTrim)) {
+                    if (!isGv) {
+                        throw new AccessDeniedException(
+                                "Vai tro '" + vaiTroTrim + "' yeu cau ban la giang vien.");
+                    }
+                } else if ("DN".equals(vaiTroTrim)) {
+                    if (!isDn) {
+                        throw new AccessDeniedException(
+                                "Vai tro 'DN' yeu cau ban la nhan vien doanh nghiep.");
+                    }
+                    String dnSV = ds.getDoanhNghiep() != null
+                            ? ds.getDoanhNghiep().getMaDoanhNghiep() : null;
+                    String dnCaller = caller.getMaDoanhNghiep();
+                    if (dnCaller == null || dnSV == null
+                            || !dnCaller.equals(dnSV)) {
+                        throw new AccessDeniedException(
+                                "Ban chi duoc cham diem cho sinh vien thuc tap tai "
+                                + "doanh nghiep cua minh.");
+                    }
+                } else {
+                    throw new AccessDeniedException(
+                            "Vai tro '" + vaiTro + "' khong hop le.");
+                }
+
+                // Force maNguoiDanhGia = current de chong impersonation —
+                // GV/CVHT/DN khong duoc thay nguoi cham la nguoi khac.
+                maNDG = ud.getMaNguoiDung();
+            }
+
             dotTTService.capNhatDiem(maDanhSach, vaiTro, diem, nhanXet, maNDG);
             ra.addFlashAttribute("successMsg",
                     "Da cap nhat diem (" + vaiTro + ") cho sinh vien.");

@@ -159,6 +159,20 @@ public class LopHocPhanServiceImpl implements LopHocPhanService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<LopHocPhan> findByGiangVien(String maGV) {
+        if (maGV == null || maGV.isBlank()) return List.of();
+        return lopHocPhanRepo.findByGiangVienMaGVFetch(maGV);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<LopHocPhan> findBySinhVien(String maSV) {
+        if (maSV == null || maSV.isBlank()) return List.of();
+        return lopHocPhanRepo.findBySinhVienMaSVFetch(maSV);
+    }
+
+    @Override
     public DanhSachSvLopHocPhan dangKyLopHocPhan(LopHocPhanId lopId, String maSV) {
         LopHocPhan lhp = findById(lopId);
         if (lhp.getTrangThai() != TrangThaiLopHocPhan.DangMo) {

@@ -49,6 +49,19 @@ public interface LopHocPhanService {
     /** Lay danh sach cac lop chua co GV */
     List<LopHocPhan> findChuaPhanCongGV();
 
+    /**
+     * Bug-fix phan quyen: lay danh sach lop GV duoc phan cong day. Dung cho
+     * GV vao /lop-hoc-phan tu sidebar — auto-filter ve cac lop cua GV thay
+     * vi hien trang trong "vui long chon CTDT/HocKy".
+     */
+    List<LopHocPhan> findByGiangVien(String maGV);
+
+    /**
+     * Bug-fix phan quyen: lay danh sach lop SV co ten trong DanhSachSinhVien-
+     * LopHocPhan. Dung cho SV vao /lop-hoc-phan tu sidebar.
+     */
+    List<LopHocPhan> findBySinhVien(String maSV);
+
     /** Dang ky SV vao lop HP */
     DanhSachSvLopHocPhan dangKyLopHocPhan(LopHocPhanId lopId, String maSV);
 

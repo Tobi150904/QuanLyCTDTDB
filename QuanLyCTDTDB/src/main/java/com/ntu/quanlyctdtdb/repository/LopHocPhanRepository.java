@@ -97,4 +97,41 @@ public interface LopHocPhanRepository extends JpaRepository<LopHocPhan, LopHocPh
             @org.springframework.data.repository.query.Param("maHP") String maHP,
             @org.springframework.data.repository.query.Param("maHK") String maHK,
             @org.springframework.data.repository.query.Param("maLop") Integer maLop);
+
+    /**
+     * Bug-fix phan quyen: lay danh sach lop GV duoc phan cong day, kem fetch
+     * GV + NguoiDung de template render ho ten — tranh LazyInit khi OSIV=false.
+     * Dung cho GV menu sidebar "Lop Hoc Phan" (auto-filter ve cac lop cua GV
+     * thay vi hien empty state yeu cau chon CTDT/HocKy).
+     */
+    @Query("""
+        SELECT DISTINCT lhp FROM LopHocPhan lhp
+        LEFT JOIN FETCH lhp.giangVien gv
+        LEFT JOIN FETCH gv.nguoiDung
+        WHERE lhp.giangVien.maGV = :maGV
+        ORDER BY lhp.id.maHocKy DESC, lhp.id.maCTDT, lhp.id.maHocPhan, lhp.id.maLopHocPhan
+        """)
+    List<LopHocPhan> findByGiangVienMaGVFetch(
+            @org.springframework.data.repository.query.Param("maGV") String maGV);
+
+    /**
+     * Bug-fix phan quyen: lay tat ca lop ma SV co ten trong DanhSachSinhVienLopHocPhan,
+     * kem fetch GV + NguoiDung. Dung cho SV menu sidebar "Lop Hoc Phan".
+     */
+    @Query("""
+        SELECT DISTINCT lhp FROM LopHocPhan lhp
+        LEFT JOIN FETCH lhp.giangVien gv
+        LEFT JOIN FETCH gv.nguoiDung
+        WHERE EXISTS (
+            SELECT 1 FROM DanhSachSvLopHocPhan d
+            WHERE d.id.maSV       = :maSV
+              AND d.id.maCTDT     = lhp.id.maCTDT
+              AND d.id.maHocPhan  = lhp.id.maHocPhan
+              AND d.id.maHocKy    = lhp.id.maHocKy
+              AND d.id.maLopHocPhan = lhp.id.maLopHocPhan
+        )
+        ORDER BY lhp.id.maHocKy DESC, lhp.id.maCTDT, lhp.id.maHocPhan, lhp.id.maLopHocPhan
+        """)
+    List<LopHocPhan> findBySinhVienMaSVFetch(
+            @org.springframework.data.repository.query.Param("maSV") String maSV);
 }

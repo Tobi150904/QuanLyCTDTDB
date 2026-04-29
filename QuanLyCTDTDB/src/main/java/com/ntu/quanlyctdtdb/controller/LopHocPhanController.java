@@ -11,12 +11,17 @@ import com.ntu.quanlyctdtdb.repository.DoiNguGiangVienHpRepository;
 import com.ntu.quanlyctdtdb.repository.GiangVienRepository;
 import com.ntu.quanlyctdtdb.repository.HocKyNamHocRepository;
 import com.ntu.quanlyctdtdb.repository.HocPhanRepository;
+import com.ntu.quanlyctdtdb.repository.LopHocPhanRepository;
+import com.ntu.quanlyctdtdb.repository.SinhVienRepository;
+import com.ntu.quanlyctdtdb.security.CustomUserDetails;
 import com.ntu.quanlyctdtdb.service.LopHocPhanService;
 import com.ntu.quanlyctdtdb.util.CsvExportUtil;
 import com.ntu.quanlyctdtdb.util.HocKyUtil;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -50,6 +55,10 @@ public class LopHocPhanController {
     private final HocPhanRepository hocPhanRepo;
     private final CtdtHocPhanRepository ctdtHocPhanRepo;
     private final DoiNguGiangVienHpRepository doiNguRepo;
+    // Bug-fix phan quyen: can lookup MaGV/MaSV tu MaNguoiDung de auto-filter
+    // theo role; can verify ownership truoc khi cho GV canh-bao SV.
+    private final SinhVienRepository sinhVienRepo;
+    private final LopHocPhanRepository lopHocPhanRepo;
 
     @ModelAttribute("activeMenu")
     public String activeMenu() { return "lop-hoc-phan"; }
@@ -57,6 +66,7 @@ public class LopHocPhanController {
     @GetMapping
     public String danhSach(@RequestParam(required = false) String maCTDT,
                             @RequestParam(required = false) String maHocKy,
+                            @AuthenticationPrincipal CustomUserDetails ud,
                             Model model) {
         model.addAttribute("ctdtList", ctdtRepo.findAll());
         model.addAttribute("hocKyList", hocKyRepo.findAllByOrderByNgayBatDauDesc());
@@ -65,6 +75,69 @@ public class LopHocPhanController {
 
         boolean hasCTDT  = maCTDT  != null && !maCTDT.isBlank();
         boolean hasHocKy = maHocKy != null && !maHocKy.isBlank();
+
+        // ========================================================================
+        // Bug-fix phan quyen (user feedback "GV bam vao xem lop minh thi vao lop
+        // hoc phan trang trong khong logic"):
+        //   GV / SV vao /lop-hoc-phan tu sidebar -> KHONG bat phai chon CTDT/HocKy
+        //   truoc; auto-filter ve danh sach lop cua chinh ho. Khi ho chu dong
+        //   chon CTDT/HocKy, du lieu se duoc filter binh thuong (giu UX cu).
+        //   Cac role quan ly (PDT/TTDTXS/CNHP/ADMIN) van bat phai chon filter
+        //   de tranh load full bang LopHocPhan vai nghin record.
+        // ========================================================================
+        boolean isStaffView = ud != null && ud.getAuthorities().stream().anyMatch(a ->
+                  "ROLE_PDT".equals(a.getAuthority())
+               || "ROLE_TTDTXS".equals(a.getAuthority())
+               || "ROLE_CNHP".equals(a.getAuthority())
+               || "ROLE_ADMIN".equals(a.getAuthority()));
+        boolean isGV = ud != null && ud.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_GIANG_VIEN".equals(a.getAuthority()));
+        boolean isSV = ud != null && ud.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_SINH_VIEN".equals(a.getAuthority()));
+
+        boolean personalizedMode = false;
+        if (!hasCTDT && !hasHocKy && !isStaffView && (isGV || isSV)) {
+            List<LopHocPhan> myList = List.of();
+            String personalizedHint = null;
+            if (isGV) {
+                var gv = giangVienRepo.findByNguoiDung_MaNguoiDung(ud.getMaNguoiDung()).orElse(null);
+                if (gv != null) {
+                    myList = lopHPService.findByGiangVien(gv.getMaGV());
+                    personalizedHint = "Cac lop hoc phan ban duoc phan cong giang day.";
+                }
+            } else { // isSV
+                var sv = sinhVienRepo.findByNguoiDung_MaNguoiDung(ud.getMaNguoiDung()).orElse(null);
+                if (sv != null) {
+                    myList = lopHPService.findBySinhVien(sv.getMaSV());
+                    personalizedHint = "Cac lop hoc phan ban da dang ky.";
+                }
+            }
+            personalizedMode = true;
+            model.addAttribute("danhSach", myList);
+            model.addAttribute("personalizedMode", true);
+            model.addAttribute("personalizedHint", personalizedHint);
+
+            // GV/SV view rai nhieu CTDT + nhieu HK -> bat ca 2 cot phu de user
+            // dinh huong duoc lop nao thuoc CTDT/ky nao.
+            model.addAttribute("forceShowCtdtCol", true);
+            model.addAttribute("forceShowHkCol", true);
+
+            // Hien dem so lop da mo cho tung HP (chi co y nghia trong personalized
+            // view neu user tap trung 1 HP — bo qua cho gon UI).
+            // GV: hien thi them widget "Lop chua phan cong" KHONG ap dung — chi
+            // staff thay danh sach can xu ly. Set rong de template tu hide.
+            model.addAttribute("chuaPhanCong", List.of());
+            // Stat-card row: tat de UI personalized goon, focus vao danh sach.
+            model.addAttribute("thongKe", null);
+            // Map maHP -> HocPhan de hien thi tenHP trong bang.
+            Map<String, HocPhan> hocPhanMap = hocPhanRepo.findAll().stream()
+                    .collect(Collectors.toMap(HocPhan::getMaHocPhan, Function.identity()));
+            model.addAttribute("hocPhanMap", hocPhanMap);
+            // GV/SV khong duoc phep phan cong GV — bo dropdown.
+            model.addAttribute("giangVienList", List.of());
+            return "lop-hoc-phan/danh-sach";
+        }
+        model.addAttribute("personalizedMode", personalizedMode);
 
         // Cho phep tra cuu bang "hoac CTDT, hoac HocKy, hoac ca hai":
         //   - Chi CTDT         -> tat ca lop cua CTDT across nhieu ky (bao cao tong hop theo CTDT)
@@ -335,7 +408,16 @@ public class LopHocPhanController {
                "&maHocPhan=" + maHocPhan + "&maHocKy=" + maHocKy + "&maLop=" + maLop;
     }
 
-    /** Canh bao SV. Mo cho GV (nguoi day lop) + BCN/TTDTXS/CNHP/ADMIN. */
+    /**
+     * Canh bao SV. Mo cho GV (nguoi day lop) + BCN/TTDTXS/CNHP/ADMIN.
+     *
+     * <p>Bug-fix phan quyen: GV chi duoc canh bao SV thuoc lop minh duoc
+     * phan cong day. Truoc day endpoint nay thieu ownership check — bat
+     * ky GV nao cung co the danh dau canh bao SV trong bat ky lop nao
+     * (security hole). PDT/TTDTXS/CNHP/ADMIN bypass de ho tro support.
+     * CVHT KHONG dung endpoint nay; CVHT xu ly canh bao tai /danh-gia/canh-bao
+     * (set KetQuaXuLy) — quy tac docs/03 §6.2.
+     */
     @PreAuthorize("hasAnyRole('PDT','TTDTXS','CNHP','ADMIN','GIANG_VIEN')")
     @PostMapping("/canh-bao-sv")
     public String canhBaoSV(@RequestParam String maCTDT,
@@ -345,8 +427,35 @@ public class LopHocPhanController {
                               @RequestParam String maSV,
                               @RequestParam String nhanXet,
                               @RequestParam String emailCVHT,
+                              @AuthenticationPrincipal CustomUserDetails ud,
                               RedirectAttributes ra) {
         try {
+            // Ownership guard cho GIANG_VIEN: chi duoc canh bao SV o lop
+            // minh dang day. Cac role quan ly (PDT/TTDTXS/CNHP/CVHT/ADMIN)
+            // duoc bypass — ho dong vai tro giam sat / xu ly canh bao.
+            boolean isStaff = ud != null && ud.getAuthorities().stream().anyMatch(a ->
+                      "ROLE_PDT".equals(a.getAuthority())
+                   || "ROLE_TTDTXS".equals(a.getAuthority())
+                   || "ROLE_CNHP".equals(a.getAuthority())
+                   || "ROLE_ADMIN".equals(a.getAuthority()));
+            boolean isGv = ud != null && ud.getAuthorities().stream()
+                    .anyMatch(a -> "ROLE_GIANG_VIEN".equals(a.getAuthority()));
+            if (!isStaff && isGv) {
+                LopHocPhan lhp = lopHocPhanRepo
+                        .findByIdFetchGv(maCTDT, maHocPhan, maHocKy, maLop)
+                        .orElseThrow(() -> new AccessDeniedException(
+                                "Khong tim thay lop hoc phan."));
+                var gv = giangVienRepo
+                        .findByNguoiDung_MaNguoiDung(ud.getMaNguoiDung()).orElse(null);
+                String maGvCuaLop = lhp.getGiangVien() != null
+                        ? lhp.getGiangVien().getMaGV() : null;
+                if (gv == null || maGvCuaLop == null
+                        || !gv.getMaGV().equals(maGvCuaLop)) {
+                    throw new AccessDeniedException(
+                            "Ban khong phai la giang vien cua lop hoc phan nay, "
+                            + "khong the canh bao sinh vien.");
+                }
+            }
             LopHocPhanId id = new LopHocPhanId(maCTDT, maHocPhan, maHocKy, maLop);
             lopHPService.canhBaoSinhVien(id, maSV, nhanXet, emailCVHT);
             ra.addFlashAttribute("successMsg", "Da canh bao sinh vien va gui email!");
