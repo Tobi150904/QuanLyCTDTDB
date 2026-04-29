@@ -1410,108 +1410,119 @@ fieldset legend,
 }
 .skip-link:focus { top: 8px; outline: 2px solid var(--accent-lt); outline-offset: 2px; }
 
-/* Detail hero */
+/* ==========================================================================
+   DETAIL HERO — Phase 4 migration COMPLETED.
+   Truoc day .detail-hero la gradient navy + accent (mang dang "marketing"),
+   khong dong bo voi .detail-hero-flat moi (white surface). 9 trang chi-tiet
+   van dung markup `<header class="detail-hero">` voi `.detail-hero-eyebrow`,
+   `.detail-hero-title`, `.detail-hero-meta`, `.detail-hero-actions`,
+   `.detail-hero code`. Thay vi sua 9 file HTML, ta nang cap CSS de class cu
+   render giong .detail-hero-flat — toan he thong dong bo trong 1 patch.
+   .detail-hero-flat (markup moi voi icon block) van hoat dong song song.
+   ========================================================================== */
 .detail-hero {
-    background:
-        radial-gradient(circle at 100% 0%, rgba(244, 185, 68, 0.20) 0%, transparent 45%),
-        linear-gradient(135deg, var(--primary) 0%, var(--primary-dk) 100%);
-    color: #fff;
-    border-radius: var(--radius-lg);
-    padding: 24px 28px;
+    background: var(--surface-card);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    border-left: 4px solid var(--accent);
+    border-radius: var(--radius-md);
+    padding: 18px 22px;
     margin-bottom: 22px;
     position: relative;
     overflow: hidden;
-    box-shadow: var(--shadow-md);
+    box-shadow: var(--shadow-xs);
 }
-.detail-hero::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
-    background-size: 22px 22px;
-    mask-image: radial-gradient(ellipse 70% 60% at 80% 30%, black 30%, transparent 75%);
-    pointer-events: none;
-}
-.detail-hero::after {
-    content: '';
-    position: absolute;
-    right: -70px;
-    top: -70px;
-    width: 240px;
-    height: 240px;
-    background: radial-gradient(circle, rgba(232, 160, 32, 0.18) 0%, transparent 70%);
-    pointer-events: none;
-}
+.detail-hero::before,
+.detail-hero::after { content: none; }
+
 .detail-hero-eyebrow {
     text-transform: uppercase;
     font-size: 0.7rem;
-    letter-spacing: 1.4px;
-    opacity: 0.78;
-    font-weight: 600;
-    margin-bottom: 8px;
+    letter-spacing: 1.2px;
+    opacity: 1;
+    font-weight: 700;
+    margin-bottom: 6px;
     position: relative;
-    color: var(--accent-lt);
+    color: var(--text-subtle);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+.detail-hero-eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 14px;
+    height: 2px;
+    background: var(--accent);
+    border-radius: 2px;
+    flex-shrink: 0;
 }
 .detail-hero-title {
     font-family: var(--font-display);
-    font-size: 1.5rem;
+    font-size: 1.45rem;
     font-weight: 800;
-    margin-bottom: 12px;
-    letter-spacing: -0.022em;
+    margin-bottom: 10px;
+    letter-spacing: -0.018em;
     line-height: 1.25;
     position: relative;
-    color: #fff;
+    color: var(--text-strong);
     text-wrap: balance;
 }
 .detail-hero-meta {
     font-size: 0.86rem;
-    opacity: 0.92;
+    color: var(--text-muted);
     display: flex;
     flex-wrap: wrap;
-    gap: 10px 18px;
+    gap: 8px 16px;
     align-items: center;
     position: relative;
 }
 .detail-hero-meta > span { display: inline-flex; align-items: center; gap: 6px; }
-.detail-hero-meta i { opacity: 0.85; }
+.detail-hero-meta i { opacity: 0.95; color: var(--primary-lt); }
 .detail-hero-actions {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
     position: relative;
+    align-items: center;
 }
 .detail-hero code {
-    background: rgba(255, 255, 255, 0.20);
-    color: #fff;
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: var(--surface-alt);
+    color: var(--primary-dk);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-xs);
     padding: 2px 8px;
     font-size: 0.8rem;
     font-weight: 500;
 }
+/* Cu the cho buttons — markup cu dung btn-light / btn-outline-light vi
+   them tren bg navy. Sau migration nen alias lai cho phu hop white surface:
+     - btn-light  -> giu visual nhu primary nho (call-to-action chinh)
+     - btn-outline-light -> giu visual nhu outline-secondary (action phu) */
 .detail-hero .btn-light {
-    background: rgba(255, 255, 255, 0.96);
-    color: var(--primary);
-    border-color: transparent;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-lt) 100%);
+    color: #fff;
+    border: 1px solid var(--primary-dk);
     font-weight: 600;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+    box-shadow: 0 1px 2px rgba(8, 24, 47, 0.18);
 }
 .detail-hero .btn-light:hover {
-    background: #fff;
-    color: var(--primary-dk);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.24);
+    background: linear-gradient(135deg, var(--primary-lt) 0%, var(--primary) 100%);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(15, 45, 82, 0.28);
 }
 .detail-hero .btn-outline-light {
-    border-color: rgba(255, 255, 255, 0.40);
-    color: #fff;
-    background: rgba(255, 255, 255, 0.06);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid var(--border-strong);
+    color: var(--text-muted);
+    background: var(--surface-card);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    font-weight: 500;
 }
 .detail-hero .btn-outline-light:hover {
-    background: rgba(255, 255, 255, 0.18);
-    border-color: rgba(255, 255, 255, 0.65);
-    color: #fff;
+    background: var(--surface-hover);
+    border-color: var(--text-subtle);
+    color: var(--text-strong);
 }
 
 /* Filter toolbar */

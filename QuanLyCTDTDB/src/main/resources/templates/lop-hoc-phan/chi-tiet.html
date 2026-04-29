@@ -106,10 +106,12 @@
                             <tbody>
                                 <tr th:if="${#lists.isEmpty(danhSachSV)}">
                                     <td colspan="6">
-                                        <div class="empty-state">
-                                            <i class="bi bi-person-x"></i>
-                                            <p>Chưa có sinh viên nào đăng ký lớp này.</p>
-                                        </div>
+                                        <!-- UX polish: dung empty-state fragment thay vi
+                                             markup tu che — dong bo voi cac trang khac. -->
+                                        <div th:replace="~{fragments/_empty-state :: simple(
+                                              icon='bi-person-x',
+                                              title='Chưa có sinh viên',
+                                              desc='Lớp này chưa có sinh viên nào đăng ký.')}"></div>
                                     </td>
                                 </tr>
                                 <tr th:each="ds, stat : ${danhSachSV}">
@@ -133,17 +135,23 @@
                                     <td class="small text-muted"
                                         th:text="${ds.nhanXet ?: '--'}">--</td>
                                     <td class="text-center">
-                                        <button th:unless="${ds.daCanhBao}"
+                                        <!-- UX bug-fix: chi GV duoc phan cong day lop nay
+                                             + staff (PDT/TTDTXS/CNHP/ADMIN) moi thay nut
+                                             "Canh Bao". GV khong day lop / SV se khong
+                                             nhin thay nut nay -> tranh click vao bi 403. -->
+                                        <button th:if="${!ds.daCanhBao and canCanhBao}"
                                                 class="btn btn-sm btn-outline-warning"
-                                                sec:authorize="hasAnyRole('GIANG_VIEN','CVHT','ADMIN')"
                                                 data-bs-toggle="modal"
                                                 th:data-bs-target="'#modalCB-' + ${ds.sinhVien.maSV}"
                                                 data-bs-title="Cảnh Báo">
                                             <i class="bi bi-exclamation-triangle me-1"></i>Cảnh Báo
                                         </button>
+                                        <span th:if="${!ds.daCanhBao and !canCanhBao}"
+                                              class="text-muted small">--</span>
 
-                                        <!-- Modal cảnh báo SV -->
-                                        <div class="modal fade"
+                                        <!-- Modal cảnh báo SV (chi render khi co quyen) -->
+                                        <div th:if="${canCanhBao}"
+                                             class="modal fade"
                                              th:id="'modalCB-' + ${ds.sinhVien.maSV}"
                                              tabindex="-1" aria-hidden="true">
                                             <div class="modal-dialog">

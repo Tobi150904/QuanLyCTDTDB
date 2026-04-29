@@ -633,8 +633,15 @@
                                                         </form>
                                                     </div>
 
-                                                    <!-- ===== Form 3: Metadata (loai TT, DN, trang thai SV) ===== -->
-                                                    <div class="col-12">
+                                                    <!-- ===== Form 3: Metadata (loai TT, DN, trang thai SV) =====
+                                                         UX bug-fix (gan voi permission fix): truoc day form nay
+                                                         hien cho ca GV/CVHT/DN — ho thay 3 dropdown phan cong
+                                                         (loai TT, DN tiep nhan, ghi chu) trong panel cham diem
+                                                         nhung khi click "Cap nhat" se bi 403 vi endpoint chi
+                                                         mo cho PDT/TTDTXS/ADMIN. UX te. Wrap sec:authorize de
+                                                         GV/CVHT/DN khong nhin thay form. -->
+                                                    <div class="col-12"
+                                                         sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
                                                         <form th:action="@{/thuc-tap/chi-tiet/{id}/cap-nhat-kq/{maDS}
                                                                           (id=${dot.maDotTT}, maDS=${ds.maThucTap})}"
                                                               method="post"

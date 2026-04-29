@@ -380,11 +380,44 @@ public class LopHocPhanController {
                            @RequestParam String maHocPhan,
                            @RequestParam String maHocKy,
                            @RequestParam Integer maLop,
+                           @AuthenticationPrincipal CustomUserDetails ud,
                            Model model) {
         LopHocPhanId id = new LopHocPhanId(maCTDT, maHocPhan, maHocKy, maLop);
         model.addAttribute("lopId", id);
         model.addAttribute("danhSachSV", lopHPService.findSinhVienTrongLop(id));
         model.addAttribute("giangVienList", giangVienRepo.findAllFetchNguoiDung());
+
+        // ====================================================================
+        // UX bug-fix (gan voi permission fix): truoc day template hien nut
+        // "Canh Bao" cho moi GV/CVHT — GV khong day lop nay van thay nut, bam
+        // vao bi tu choi phia controller. Day la UX te. Tinh truoc canCanhBao
+        // dua tren role + ownership de UI hide nut khi user khong duoc dung,
+        // dong bo voi check phia POST /canh-bao-sv.
+        // ====================================================================
+        boolean canCanhBao = false;
+        if (ud != null) {
+            boolean isStaff = ud.getAuthorities().stream().anyMatch(a ->
+                      "ROLE_PDT".equals(a.getAuthority())
+                   || "ROLE_TTDTXS".equals(a.getAuthority())
+                   || "ROLE_CNHP".equals(a.getAuthority())
+                   || "ROLE_ADMIN".equals(a.getAuthority()));
+            boolean isGv = ud.getAuthorities().stream()
+                    .anyMatch(a -> "ROLE_GIANG_VIEN".equals(a.getAuthority()));
+            if (isStaff) {
+                canCanhBao = true;
+            } else if (isGv) {
+                LopHocPhan lhp = lopHocPhanRepo
+                        .findByIdFetchGv(maCTDT, maHocPhan, maHocKy, maLop)
+                        .orElse(null);
+                var gv = giangVienRepo
+                        .findByNguoiDung_MaNguoiDung(ud.getMaNguoiDung()).orElse(null);
+                String maGvCuaLop = lhp != null && lhp.getGiangVien() != null
+                        ? lhp.getGiangVien().getMaGV() : null;
+                canCanhBao = gv != null && maGvCuaLop != null
+                        && gv.getMaGV().equals(maGvCuaLop);
+            }
+        }
+        model.addAttribute("canCanhBao", canCanhBao);
         return "lop-hoc-phan/chi-tiet";
     }
 

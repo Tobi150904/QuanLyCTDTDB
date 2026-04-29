@@ -404,13 +404,17 @@ public class DotThucTapController {
                                 "Vai tro 'CVHT' yeu cau ban la giang vien co quyen "
                                 + "co van hoc tap.");
                     }
-                    String maCoVan = ds.getSinhVien() != null
+                    // Bug-fix: GiangVien.maGV != NguoiDung.maNguoiDung. So sanh
+                    // qua nguoiDung.maNguoiDung cua co van vs caller.maNguoiDung.
+                    // findByIdFetchOwnership da JOIN FETCH cv.nguoiDung nen
+                    // khong bi LazyInit khi truy cap.
+                    var coVan = ds.getSinhVien() != null
                             && ds.getSinhVien().getLopHanhChinh() != null
-                            && ds.getSinhVien().getLopHanhChinh().getCoVan() != null
-                            ? ds.getSinhVien().getLopHanhChinh().getCoVan().getMaGV()
-                            : null;
-                    if (maCoVan == null
-                            || !maCoVan.equals(ud.getMaNguoiDung())) {
+                            ? ds.getSinhVien().getLopHanhChinh().getCoVan() : null;
+                    String maNdCoVan = coVan != null && coVan.getNguoiDung() != null
+                            ? coVan.getNguoiDung().getMaNguoiDung() : null;
+                    if (maNdCoVan == null
+                            || !maNdCoVan.equals(ud.getMaNguoiDung())) {
                         throw new AccessDeniedException(
                                 "Ban khong phai la co van hoc tap cua sinh vien nay.");
                     }
