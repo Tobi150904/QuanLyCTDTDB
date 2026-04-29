@@ -338,7 +338,6 @@
                                 <col style="width:96px;">       <!-- Loai TT -->
                                 <col style="width:120px;">      <!-- Diem 1 -->
                                 <col style="width:120px;">      <!-- Diem 2 -->
-                                <col style="width:90px;">       <!-- TB -->
                                 <col style="width:128px;">      <!-- Trang thai -->
                                 <!--/* Cot thao tac luon hien (rong cho role chi xem)
                                        — colgroup khong support sec:authorize tren <col>
@@ -362,7 +361,6 @@
                                         <small class="d-block fw-normal text-muted"
                                                style="font-size:10.5px;">GV Phản Biện / GV Giám Sát</small>
                                     </th>
-                                    <th class="text-center">TB</th>
                                     <th>Trạng Thái</th>
                                     <th class="text-center"
                                         sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN','GIANG_VIEN','CVHT','DOANH_NGHIEP')">
@@ -372,7 +370,7 @@
                             </thead>
                             <tbody>
                                 <tr th:if="${#lists.isEmpty(danhSachSV)}">
-                                    <td colspan="10">
+                                    <td colspan="9">
                                         <div class="empty-state">
                                             <i class="bi bi-person-x"></i>
                                             <p>Chưa có sinh viên nào được phân công.</p>
@@ -391,9 +389,6 @@
                                             kq2=${kqMap != null ? kqMap.get(vaiTro2) : null},
                                             d1=${kq1 != null ? kq1.diem : null},
                                             d2=${kq2 != null ? kq2.diem : null},
-                                            tb=${(d1 != null and d2 != null)
-                                                  ? T(java.math.BigDecimal).valueOf((d1.doubleValue() + d2.doubleValue()) / 2.0)
-                                                  : null},
                                             canEdit=${ds.trangThai?.name() != 'DaHuy'}">
                                 <tr>
                                     <td class="text-muted" th:text="${stat.index + 1}">1</td>
@@ -413,33 +408,20 @@
                                         <span th:unless="${ds.loaiThucTap != null}"
                                               class="text-muted fst-italic small">--</span>
                                     </td>
-                                    <!-- Diem cot 1 -->
+                                    <!-- Diem cot 1 (khong to mau theo nguong) -->
                                     <td class="text-center">
                                         <span th:if="${d1 != null}"
-                                              class="grade-pill"
-                                              th:classappend="${d1.doubleValue() >= 8.0 ? 'grade-good' :
-                                                              (d1.doubleValue() >= 5.0  ? 'grade-pass' : 'grade-fail')}"
+                                              class="fw-semibold"
                                               th:text="${#numbers.formatDecimal(d1, 1, 1)}">--</span>
                                         <span th:if="${d1 == null}"
                                               class="text-muted small fst-italic">—</span>
                                     </td>
-                                    <!-- Diem cot 2 -->
+                                    <!-- Diem cot 2 (khong to mau theo nguong) -->
                                     <td class="text-center">
                                         <span th:if="${d2 != null}"
-                                              class="grade-pill"
-                                              th:classappend="${d2.doubleValue() >= 8.0 ? 'grade-good' :
-                                                              (d2.doubleValue() >= 5.0  ? 'grade-pass' : 'grade-fail')}"
+                                              class="fw-semibold"
                                               th:text="${#numbers.formatDecimal(d2, 1, 1)}">--</span>
                                         <span th:if="${d2 == null}"
-                                              class="text-muted small fst-italic">—</span>
-                                    </td>
-                                    <!-- TB -->
-                                    <td class="text-center">
-                                        <span th:if="${tb != null}" class="fw-semibold"
-                                              th:classappend="${tb.doubleValue() >= 8.0 ? 'text-success' :
-                                                              (tb.doubleValue() >= 5.0  ? 'text-primary' : 'text-danger')}"
-                                              th:text="${#numbers.formatDecimal(tb, 1, 2)}">--</span>
-                                        <span th:if="${tb == null}"
                                               class="text-muted small fst-italic">—</span>
                                     </td>
                                     <td>
@@ -471,7 +453,7 @@
                                      Chia 3 form rieng de UX submit doc lap (khong loi 1 form lon). -->
                                 <tr class="bg-body-tertiary grade-detail-row"
                                     sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN','GIANG_VIEN','CVHT','DOANH_NGHIEP')">
-                                    <td colspan="10" class="p-0 border-0">
+                                    <td colspan="9" class="p-0 border-0">
                                         <div class="collapse"
                                              th:id="'collapseKQ-' + ${ds.maThucTap}">
                                             <div class="p-3">
