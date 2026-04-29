@@ -19,15 +19,26 @@
         </ol>
     </nav>
 
-    <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
-        <div>
-            <p class="page-subtitle">Kiến Tập &amp; Thực Tập</p>
-            <h4 class="page-title mb-0">Quản Lý Đợt Kiến Tập</h4>
+    <!-- UI consistency fix: chuyen sang format page-header-block chuan. -->
+    <div class="page-header-block mb-4">
+        <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+            <div class="flex-grow-1 min-w-0">
+                <p class="page-subtitle mb-1">Kiến Tập &amp; Thực Tập</p>
+                <h1 class="page-title h4 mb-1 d-flex align-items-center gap-2">
+                    <i class="bi bi-briefcase text-primary" aria-hidden="true"></i>
+                    <span>Quản Lý Đợt Kiến Tập</span>
+                </h1>
+                <p class="text-muted small mb-0">
+                    Tổ chức đợt kiến tập theo lớp hành chính, phân công GV phụ trách và liên kết doanh nghiệp tiếp nhận.
+                </p>
+            </div>
+            <div class="action-slot d-flex gap-2 flex-wrap">
+                <a th:href="@{/kien-tap/them}" class="btn btn-primary btn-sm"
+                   sec:authorize="hasAnyRole('TTDTXS','CNHP','ADMIN')">
+                    <i class="bi bi-plus-lg me-1"></i>Tạo Đợt Kiến Tập
+                </a>
+            </div>
         </div>
-        <a th:href="@{/kien-tap/them}" class="btn btn-primary btn-sm"
-           sec:authorize="hasAnyRole('TTDTXS','CNHP','ADMIN')">
-            <i class="bi bi-plus-lg me-1"></i>Tạo Đợt Kiến Tập
-        </a>
     </div>
 
     <!-- Stat cards: 5 ô — Phase 3: dung canonical _stat-card fragment -->
@@ -86,14 +97,20 @@
                     <tbody>
                         <tr th:if="${#lists.isEmpty(danhSach)}">
                             <td colspan="9">
-                                <div class="empty-state">
-                                    <i class="bi bi-briefcase"></i>
-                                    <p>Chưa có đợt kiến tập nào.</p>
-                                    <a th:href="@{/kien-tap/them}" class="btn btn-primary btn-sm"
-                                       sec:authorize="hasAnyRole('TTDTXS','CNHP','ADMIN')">
-                                        <i class="bi bi-plus-lg me-1"></i>Tạo Đợt Kiến Tập Đầu Tiên
-                                    </a>
-                                </div>
+                                <!-- UI consistency: dung empty-state fragment chuan -->
+                                <div th:replace="~{fragments/_empty-state :: withCta(
+                                      icon='bi-briefcase',
+                                      title='Chưa có đợt kiến tập nào',
+                                      desc='Tạo đợt đầu tiên để giao việc kiến tập cho sinh viên.',
+                                      ctaHref='/kien-tap/them',
+                                      ctaLabel='Tạo Đợt Đầu Tiên',
+                                      ctaIcon='bi-plus-lg')}"
+                                     sec:authorize="hasAnyRole('TTDTXS','CNHP','ADMIN')"></div>
+                                <div th:replace="~{fragments/_empty-state :: simple(
+                                      icon='bi-briefcase',
+                                      title='Chưa có đợt kiến tập nào',
+                                      desc='Đợt kiến tập sẽ được tổ chức theo lịch của Trung Tâm.')}"
+                                     sec:authorize="!hasAnyRole('TTDTXS','CNHP','ADMIN')"></div>
                             </td>
                         </tr>
                         <tr th:each="dot, stat : ${danhSach}">

@@ -20,10 +20,13 @@
         </ol>
     </nav>
 
-    <!-- DETAIL HERO -->
+    <!-- DETAIL HERO — UI consistency: them icon block, clean inline rgba. -->
     <section class="detail-hero">
-        <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start">
-            <div style="min-width: 240px; flex: 1 1 60%;">
+        <div class="d-flex flex-wrap gap-3 align-items-start">
+            <div class="detail-hero-icon" aria-hidden="true">
+                <i class="bi bi-journal-bookmark"></i>
+            </div>
+            <div class="flex-grow-1 min-w-0" style="flex: 1 1 60%;">
                 <p class="detail-hero-eyebrow">Đào Tạo / Chương Trình Đào Tạo</p>
                 <h1 class="detail-hero-title" th:text="${ctdt.tenCTDT}">Tên CTĐT</h1>
                 <div class="detail-hero-meta">
@@ -40,8 +43,7 @@
                           th:with="s=${ctdt.trangThai.name()}"
                           th:classappend="${s == 'DaDuyet'  ? 'tone-success' :
                                           (s == 'ChoDuyet' ? 'tone-warning' :
-                                          (s == 'BanNhap'  ? 'tone-neutral' : 'tone-danger'))}"
-                          style="background: rgba(255,255,255,0.95);">
+                                          (s == 'BanNhap'  ? 'tone-neutral' : 'tone-danger'))}">
                         <span class="pill-dot" aria-hidden="true"></span>
                         <span th:text="${s == 'DaDuyet'  ? 'Đã Duyệt' :
                                        (s == 'ChoDuyet' ? 'Chờ Duyệt' :
@@ -145,16 +147,19 @@
                                 #temporals.format(tv.ngayBoNhiem, 'dd/MM/yyyy') : '--'}">--</td>
                         <td class="small text-muted" th:text="${tv.ghiChu ?: '--'}">--</td>
                         <td class="text-end">
+                            <!-- UX: thay native confirm bang confirm modal global -->
                             <form sec:authorize="hasAnyRole('PDT','ADMIN')"
                                   th:action="@{'/ctdt/chi-tiet/' + ${ctdt.maCTDT} + '/bcn/xoa'}"
-                                  method="post"
-                                  onsubmit="return confirm('Xoá thành viên BCN này?')">
+                                  method="post" class="d-inline m-0"
+                                  th:data-item-name="|${tv.giangVien != null ? tv.giangVien.hoTen : tv.id.maGV} khỏi BCN|"
+                                  onsubmit="return confirmDeleteFromForm(this, event)">
                                 <input type="hidden" th:name="${_csrf.parameterName}"
                                                       th:value="${_csrf.token}">
                                 <input type="hidden" name="maGV"    th:value="${tv.id.maGV}">
                                 <input type="hidden" name="chucDanh" th:value="${tv.id.chucDanh}">
                                 <button class="btn btn-sm btn-outline-danger"
-                                        data-bs-toggle="tooltip" data-bs-title="Xoá">
+                                        data-bs-toggle="tooltip" data-bs-title="Xoá thành viên BCN"
+                                        aria-label="Xoá thành viên BCN">
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </form>
@@ -271,15 +276,18 @@
                                           th:text="${item.batBuoc} ? 'Bắt Buộc' : 'Tự Chọn'"></span>
                                 </td>
                                 <td class="text-end">
+                                    <!-- UX: thay native confirm bang confirm modal global -->
                                     <form sec:authorize="hasAnyRole('PDT','ADMIN')"
                                           th:if="${ctdt.trangThai.name() != 'DaDuyet'}"
                                           th:action="@{'/ctdt/chi-tiet/' + ${ctdt.maCTDT} + '/xoa-hp/' + ${item.hocPhan.maHocPhan}}"
-                                          method="post"
-                                          onsubmit="return confirm('Xoá học phần này khỏi CTĐT?')">
+                                          method="post" class="d-inline m-0"
+                                          th:data-item-name="|học phần ${item.hocPhan.maHocPhan} khỏi CTĐT|"
+                                          onsubmit="return confirmDeleteFromForm(this, event)">
                                         <input type="hidden" th:name="${_csrf.parameterName}"
                                                               th:value="${_csrf.token}">
                                         <button class="btn btn-sm btn-outline-danger"
-                                                data-bs-toggle="tooltip" data-bs-title="Xoá">
+                                                data-bs-toggle="tooltip" data-bs-title="Xoá khỏi CTĐT"
+                                                aria-label="Xoá khỏi CTĐT">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </form>

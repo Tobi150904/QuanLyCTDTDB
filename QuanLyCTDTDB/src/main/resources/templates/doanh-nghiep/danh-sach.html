@@ -20,17 +20,25 @@
         </ol>
     </nav>
 
-    <!-- Page Header -->
-    <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
-        <div>
-            <p class="page-subtitle">Quản Trị</p>
-            <h4 class="page-title mb-0">Quản Lý Doanh Nghiệp</h4>
-        </div>
-        <div class="d-flex gap-2">
-            <a th:href="@{/doanh-nghiep/them}" class="btn btn-primary btn-sm"
-               sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
-                <i class="bi bi-plus-lg me-1"></i>Thêm Mới
-            </a>
+    <!-- Page Header — UI consistency fix: chuyen sang format page-header-block. -->
+    <div class="page-header-block mb-4">
+        <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+            <div class="flex-grow-1 min-w-0">
+                <p class="page-subtitle mb-1">Quản Trị</p>
+                <h1 class="page-title h4 mb-1 d-flex align-items-center gap-2">
+                    <i class="bi bi-building text-primary" aria-hidden="true"></i>
+                    <span>Quản Lý Doanh Nghiệp</span>
+                </h1>
+                <p class="text-muted small mb-0">
+                    Hồ sơ doanh nghiệp tiếp nhận thực tập / kiến tập, lĩnh vực và trạng thái hợp tác.
+                </p>
+            </div>
+            <div class="action-slot d-flex gap-2 flex-wrap">
+                <a th:href="@{/doanh-nghiep/them}" class="btn btn-primary btn-sm"
+                   sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
+                    <i class="bi bi-plus-lg me-1"></i>Thêm Mới
+                </a>
+            </div>
         </div>
     </div>
 
@@ -123,17 +131,26 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- Empty state -->
+                        <!-- Empty state — UI consistency: dung empty-state fragment chuan -->
                         <tr th:if="${pages == null or pages.isEmpty()}">
                             <td colspan="8">
-                                <div class="empty-state">
-                                    <i class="bi bi-inbox"></i>
-                                    <p>Chưa có doanh nghiệp nào phù hợp bộ lọc.</p>
-                                    <a th:href="@{/doanh-nghiep/them}" class="btn btn-primary btn-sm"
-                                       sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
-                                        <i class="bi bi-plus-lg me-1"></i>Thêm Doanh Nghiệp
-                                    </a>
-                                </div>
+                                <div th:if="${(keyword != null and keyword != '') or trangThaiFilter != null}"
+                                     th:replace="~{fragments/_empty-state :: withCta(
+                                            icon='bi-funnel',
+                                            title='Không có doanh nghiệp phù hợp',
+                                            desc='Thử xoá bộ lọc hoặc thay đổi từ khoá tìm kiếm.',
+                                            ctaHref='/doanh-nghiep',
+                                            ctaLabel='Xoá Bộ Lọc',
+                                            ctaIcon='bi-x-lg')}"></div>
+                                <div th:unless="${(keyword != null and keyword != '') or trangThaiFilter != null}"
+                                     th:replace="~{fragments/_empty-state :: withCta(
+                                            icon='bi-building',
+                                            title='Chưa có doanh nghiệp nào',
+                                            desc='Khai báo doanh nghiệp đầu tiên để liên kết với đợt kiến tập / thực tập.',
+                                            ctaHref='/doanh-nghiep/them',
+                                            ctaLabel='Thêm Doanh Nghiệp',
+                                            ctaIcon='bi-plus-lg')}"
+                                     sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')"></div>
                             </td>
                         </tr>
                         <!-- Data rows -->
@@ -212,33 +229,18 @@
             </div>
         </div>
 
-        <!-- Pagination -->
-        <div class="card-footer bg-transparent" th:if="${pages != null and pages.totalPages > 1}">
-            <nav aria-label="Phân trang doanh nghiệp">
-                <ul class="pagination pagination-sm justify-content-end mb-0">
-                    <li class="page-item" th:classappend="${pages.first} ? 'disabled'">
-                        <a class="page-link"
-                           th:href="@{/doanh-nghiep(page=${pages.number - 1}, keyword=${keyword}, trangThai=${trangThaiFilter})}"
-                           aria-label="Trang trước">
-                            <i class="bi bi-chevron-left"></i>
-                        </a>
-                    </li>
-                    <li class="page-item"
-                        th:each="i : ${#numbers.sequence(0, pages.totalPages - 1)}"
-                        th:classappend="${i == pages.number} ? 'active'">
-                        <a class="page-link"
-                           th:href="@{/doanh-nghiep(page=${i}, keyword=${keyword}, trangThai=${trangThaiFilter})}"
-                           th:text="${i + 1}">1</a>
-                    </li>
-                    <li class="page-item" th:classappend="${pages.last} ? 'disabled'">
-                        <a class="page-link"
-                           th:href="@{/doanh-nghiep(page=${pages.number + 1}, keyword=${keyword}, trangThai=${trangThaiFilter})}"
-                           aria-label="Trang sau">
-                            <i class="bi bi-chevron-right"></i>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
+        <!-- Pagination + page-size selector + summary
+             UI consistency: dung _pagination fragment chuan, dong bo voi
+             cac trang nguoi-dung va hoc-phan. -->
+        <div th:if="${pages != null and pages.totalElements > 0}"
+             class="card-footer p-0 border-top">
+            <div th:replace="~{fragments/_pagination :: bar(
+                  page=${pages},
+                  baseUrl='/doanh-nghiep',
+                  queryString=${
+                    (keyword != null and keyword != '' ? '&keyword=' + keyword : '') +
+                    (trangThaiFilter != null ? '&trangThai=' + trangThaiFilter.name() : '')
+                  })}"></div>
         </div>
     </div>
 

@@ -23,38 +23,38 @@
         </ol>
     </nav>
 
-    <!-- DETAIL HERO with avatar -->
+    <!-- DETAIL HERO with avatar — UI consistency: chuyen sang flex chuan
+         (avatar + content + actions) va remove inline rgba bg cua status-pill
+         (khong can vi hero da la white surface). sec:authorize cho nut Sua
+         de SV/GV tu xem ho so cua minh khong thay nut sai quyen. -->
     <section class="detail-hero">
-        <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start">
-            <div class="d-flex flex-wrap gap-3 align-items-center"
-                 style="min-width: 240px; flex: 1 1 60%;">
-                <div class="profile-avatar"
-                     th:text="${nguoiDung.hoTen != null and !nguoiDung.hoTen.isEmpty() ?
-                              #strings.toUpperCase(#strings.substring(nguoiDung.hoTen, 0, 1)) : 'U'}"
-                     aria-hidden="true">U</div>
-                <div style="min-width: 200px;">
-                    <p class="detail-hero-eyebrow">Quản Trị / Người Dùng</p>
-                    <h1 class="detail-hero-title mb-2" th:text="${nguoiDung.hoTen}">Chi Tiết</h1>
-                    <div class="detail-hero-meta">
-                        <span><i class="bi bi-person"></i>
-                            <code th:text="${nguoiDung.tenDangNhap}">user</code></span>
-                        <span><i class="bi bi-envelope"></i>
-                            <span th:text="${nguoiDung.email}">email</span></span>
-                        <span class="status-pill"
-                              th:classappend="${nguoiDung.trangThaiTK} ? 'tone-success' : 'tone-danger'"
-                              style="background: rgba(255,255,255,0.95);">
-                            <span class="pill-dot" aria-hidden="true"
-                                  th:if="${nguoiDung.trangThaiTK}"></span>
-                            <i class="bi bi-lock-fill" aria-hidden="true"
-                               th:unless="${nguoiDung.trangThaiTK}"></i>
-                            <span th:text="${nguoiDung.trangThaiTK} ? 'Hoạt Động' : 'Đã Khoá'">--</span>
-                        </span>
-                    </div>
+        <div class="d-flex flex-wrap gap-3 align-items-start">
+            <div class="profile-avatar"
+                 th:text="${nguoiDung.hoTen != null and !nguoiDung.hoTen.isEmpty() ?
+                          #strings.toUpperCase(#strings.substring(nguoiDung.hoTen, 0, 1)) : 'U'}"
+                 aria-hidden="true">U</div>
+            <div class="flex-grow-1 min-w-0" style="flex: 1 1 60%;">
+                <p class="detail-hero-eyebrow">Quản Trị / Người Dùng</p>
+                <h1 class="detail-hero-title mb-2" th:text="${nguoiDung.hoTen}">Chi Tiết</h1>
+                <div class="detail-hero-meta">
+                    <span><i class="bi bi-person"></i>
+                        <code th:text="${nguoiDung.tenDangNhap}">user</code></span>
+                    <span><i class="bi bi-envelope"></i>
+                        <span th:text="${nguoiDung.email}">email</span></span>
+                    <span class="status-pill"
+                          th:classappend="${nguoiDung.trangThaiTK} ? 'tone-success' : 'tone-danger'">
+                        <span class="pill-dot" aria-hidden="true"
+                              th:if="${nguoiDung.trangThaiTK}"></span>
+                        <i class="bi bi-lock-fill" aria-hidden="true"
+                           th:unless="${nguoiDung.trangThaiTK}"></i>
+                        <span th:text="${nguoiDung.trangThaiTK} ? 'Hoạt Động' : 'Đã Khoá'">--</span>
+                    </span>
                 </div>
             </div>
             <div class="detail-hero-actions">
                 <a th:href="@{/nguoi-dung/sua/{ma}(ma=${nguoiDung.maNguoiDung})}"
-                   class="btn btn-light btn-sm">
+                   class="btn btn-light btn-sm"
+                   sec:authorize="hasAnyRole('PDT','ADMIN')">
                     <i class="bi bi-pencil-square me-1"></i>Chỉnh Sửa
                 </a>
                 <a th:href="@{/nguoi-dung}" class="btn btn-outline-light btn-sm">

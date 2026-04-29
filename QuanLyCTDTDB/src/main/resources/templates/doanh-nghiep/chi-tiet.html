@@ -24,31 +24,44 @@
         </ol>
     </nav>
 
-    <!-- Page Header -->
-    <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
-        <div>
-            <p class="page-subtitle">Quản Trị / Doanh Nghiệp</p>
-            <h4 class="page-title mb-1" th:text="${doanhNghiep.tenDoanhNghiep}">Chi Tiết</h4>
-            <div class="text-muted small">
-                Mã: <code th:text="${doanhNghiep.maDoanhNghiep}"></code>
-                &bull; Trạng thái:
-                <span class="badge ms-1"
-                      th:classappend="${doanhNghiep.trangThai.name() == 'DangHopTac'} ? 'bg-success' : 'bg-secondary'"
-                      th:text="${doanhNghiep.trangThai.name() == 'DangHopTac' ? 'Đang Hợp Tác' : 'Tạm Ngưng'}"></span>
+    <!-- DETAIL HERO — UI consistency rework: chuyen tu raw <div d-flex>
+         sang format detail-hero chuan voi icon block + status-pill, dong bo
+         100% voi cac trang chi tiet khac (lop-hanh-chinh, hoc-phan...). -->
+    <section class="detail-hero">
+        <div class="d-flex flex-wrap gap-3 align-items-start">
+            <div class="detail-hero-icon" aria-hidden="true">
+                <i class="bi bi-building"></i>
+            </div>
+            <div class="flex-grow-1 min-w-0" style="flex: 1 1 60%;">
+                <p class="detail-hero-eyebrow">Quản Trị / Doanh Nghiệp</p>
+                <h1 class="detail-hero-title"
+                    th:text="${doanhNghiep.tenDoanhNghiep}">Chi Tiết</h1>
+                <div class="detail-hero-meta">
+                    <span><code th:text="${doanhNghiep.maDoanhNghiep}">--</code></span>
+                    <span th:if="${doanhNghiep.linhVuc != null and !doanhNghiep.linhVuc.isEmpty()}">
+                        <i class="bi bi-tag"></i>
+                        <span th:text="${doanhNghiep.linhVuc}">--</span>
+                    </span>
+                    <span class="status-pill"
+                          th:classappend="${doanhNghiep.trangThai.name() == 'DangHopTac'} ? 'tone-success' : 'tone-neutral'">
+                        <span class="pill-dot" aria-hidden="true"></span>
+                        <span th:text="${doanhNghiep.trangThai.name() == 'DangHopTac' ? 'Đang Hợp Tác' : 'Tạm Ngưng'}">--</span>
+                    </span>
+                </div>
+            </div>
+            <div class="detail-hero-actions">
+                <a th:href="@{/doanh-nghiep/sua/{ma}(ma=${doanhNghiep.maDoanhNghiep})}"
+                   class="btn btn-light btn-sm"
+                   sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')"
+                   aria-label="Chỉnh sửa doanh nghiệp">
+                    <i class="bi bi-pencil-square me-1"></i>Chỉnh Sửa
+                </a>
+                <a th:href="@{/doanh-nghiep}" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i>Quay Lại
+                </a>
             </div>
         </div>
-        <div class="d-flex gap-2">
-            <a th:href="@{/doanh-nghiep/sua/{ma}(ma=${doanhNghiep.maDoanhNghiep})}"
-               class="btn btn-primary btn-sm"
-               sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')"
-               aria-label="Chỉnh sửa doanh nghiệp">
-                <i class="bi bi-pencil-square me-1"></i>Chỉnh Sửa
-            </a>
-            <a th:href="@{/doanh-nghiep}" class="btn btn-outline-secondary btn-sm">
-                <i class="bi bi-arrow-left me-1"></i>Quay Lại
-            </a>
-        </div>
-    </div>
+    </section>
 
     <!-- Phase 4 — TAB NAV
          2 tab semantic: thong tin (read-only, all see) vs. thao tac quan tri
@@ -77,75 +90,75 @@
     <div class="tab-pane fade show active" id="pane-overview"
          role="tabpanel" aria-labelledby="tab-overview" tabindex="0">
 
-    <!-- Tab pane chiem full width — info card ko can chia col nua. -->
+    <!-- UI consistency rework: chuyen tu <table info-row> sang info-grid
+         fragment chuan, dong bo voi cac trang chi tiet khac. -->
     <div class="card">
-                <div class="card-header">
-                    <i class="bi bi-building me-2"></i>
-                    <span class="fw-semibold">Thông Tin Doanh Nghiệp</span>
+        <div class="card-header">
+            <i class="bi bi-building me-2"></i>
+            <span class="fw-semibold">Thông Tin Doanh Nghiệp</span>
+        </div>
+        <div class="card-body">
+            <div class="info-grid">
+                <div th:replace="~{fragments/_info-grid :: item(
+                      label='Mã Doanh Nghiệp', value=${doanhNghiep.maDoanhNghiep}, isCode=true)}"></div>
+                <div class="info-item">
+                    <span class="info-item-label">Tên Doanh Nghiệp</span>
+                    <span class="info-item-value fw-semibold"
+                          th:text="${doanhNghiep.tenDoanhNghiep}">--</span>
                 </div>
-                <div class="card-body">
-                    <table class="table table-borderless mb-0">
-                        <tbody>
-                            <tr class="info-row">
-                                <td class="info-label">Mã Doanh Nghiệp</td>
-                                <td><code th:text="${doanhNghiep.maDoanhNghiep}"></code></td>
-                            </tr>
-                            <tr class="info-row">
-                                <td class="info-label">Tên Doanh Nghiệp</td>
-                                <td class="fw-semibold" th:text="${doanhNghiep.tenDoanhNghiep}"></td>
-                            </tr>
-                            <tr class="info-row">
-                                <td class="info-label">Lĩnh Vực</td>
-                                <td th:text="${doanhNghiep.linhVuc ?: '--'}"></td>
-                            </tr>
-                            <tr class="info-row">
-                                <td class="info-label">Người Đại Diện</td>
-                                <td th:text="${doanhNghiep.nguoiDaiDien ?: '--'}"></td>
-                            </tr>
-                            <tr class="info-row">
-                                <td class="info-label">Email</td>
-                                <td>
-                                    <span th:if="${doanhNghiep.email == null or doanhNghiep.email.isEmpty()}"
-                                          class="text-muted">--</span>
-                                    <a th:if="${doanhNghiep.email != null and !doanhNghiep.email.isEmpty()}"
-                                       th:href="'mailto:' + ${doanhNghiep.email}"
-                                       th:text="${doanhNghiep.email}"
-                                       class="text-decoration-none"></a>
-                                </td>
-                            </tr>
-                            <tr class="info-row">
-                                <td class="info-label">Số Điện Thoại</td>
-                                <td th:text="${doanhNghiep.soDienThoai ?: '--'}"></td>
-                            </tr>
-                            <tr class="info-row">
-                                <td class="info-label">Địa Chỉ</td>
-                                <td th:text="${doanhNghiep.diaChiDN ?: '--'}"></td>
-                            </tr>
-                            <tr class="info-row">
-                                <td class="info-label">Trạng Thái</td>
-                                <td>
-                                    <span class="badge"
-                                          th:classappend="${doanhNghiep.trangThai.name() == 'DangHopTac'} ? 'bg-success' : 'bg-secondary'">
-                                        <i class="bi me-1" aria-hidden="true"
-                                           th:classappend="${doanhNghiep.trangThai.name() == 'DangHopTac'} ? 'bi-check-circle-fill' : 'bi-pause-fill'"></i>
-                                        <span th:text="${doanhNghiep.trangThai.name() == 'DangHopTac' ? 'Đang Hợp Tác' : 'Tạm Ngưng'}"></span>
-                                    </span>
-                                </td>
-                            </tr>
-                            <tr class="info-row">
-                                <td class="info-label">Tạo Lúc</td>
-                                <td class="text-muted" th:text="${doanhNghiep.createdAt != null ?
-                                    #temporals.format(doanhNghiep.createdAt, 'dd/MM/yyyy HH:mm') : '--'}"></td>
-                            </tr>
-                            <tr class="info-row">
-                                <td class="info-label">Cập Nhật Gần Nhất</td>
-                                <td class="text-muted" th:text="${doanhNghiep.updatedAt != null ?
-                                    #temporals.format(doanhNghiep.updatedAt, 'dd/MM/yyyy HH:mm') : '--'}"></td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div th:replace="~{fragments/_info-grid :: item(
+                      label='Lĩnh Vực', value=${doanhNghiep.linhVuc}, isCode=false)}"></div>
+                <div th:replace="~{fragments/_info-grid :: item(
+                      label='Người Đại Diện', value=${doanhNghiep.nguoiDaiDien}, isCode=false)}"></div>
+                <div class="info-item">
+                    <span class="info-item-label">Email</span>
+                    <span class="info-item-value">
+                        <span th:if="${doanhNghiep.email == null or doanhNghiep.email.isEmpty()}"
+                              class="text-muted">—</span>
+                        <a th:if="${doanhNghiep.email != null and !doanhNghiep.email.isEmpty()}"
+                           th:href="'mailto:' + ${doanhNghiep.email}"
+                           th:text="${doanhNghiep.email}"
+                           class="text-decoration-none">--</a>
+                    </span>
                 </div>
-            </div><!-- /card info -->
+                <div class="info-item">
+                    <span class="info-item-label">Số Điện Thoại</span>
+                    <span class="info-item-value">
+                        <a th:if="${doanhNghiep.soDienThoai != null and !doanhNghiep.soDienThoai.isEmpty()}"
+                           th:href="'tel:' + ${doanhNghiep.soDienThoai}"
+                           th:text="${doanhNghiep.soDienThoai}"
+                           class="text-decoration-none">--</a>
+                        <span th:if="${doanhNghiep.soDienThoai == null or doanhNghiep.soDienThoai.isEmpty()}"
+                              class="text-muted">—</span>
+                    </span>
+                </div>
+                <div th:replace="~{fragments/_info-grid :: item(
+                      label='Địa Chỉ', value=${doanhNghiep.diaChiDN}, isCode=false)}"></div>
+                <div class="info-item">
+                    <span class="info-item-label">Trạng Thái</span>
+                    <span class="info-item-value">
+                        <span class="status-pill"
+                              th:classappend="${doanhNghiep.trangThai.name() == 'DangHopTac'} ? 'tone-success' : 'tone-neutral'">
+                            <span class="pill-dot" aria-hidden="true"></span>
+                            <span th:text="${doanhNghiep.trangThai.name() == 'DangHopTac' ? 'Đang Hợp Tác' : 'Tạm Ngưng'}">--</span>
+                        </span>
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-item-label">Tạo Lúc</span>
+                    <span class="info-item-value text-muted"
+                          th:text="${doanhNghiep.createdAt != null ?
+                              #temporals.format(doanhNghiep.createdAt, 'dd/MM/yyyy HH:mm') : '—'}">--</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-item-label">Cập Nhật Gần Nhất</span>
+                    <span class="info-item-value text-muted"
+                          th:text="${doanhNghiep.updatedAt != null ?
+                              #temporals.format(doanhNghiep.updatedAt, 'dd/MM/yyyy HH:mm') : '—'}">--</span>
+                </div>
+            </div>
+        </div>
+    </div><!-- /card info -->
 
     </div><!-- /pane-overview -->
 
@@ -168,8 +181,13 @@
                            class="btn btn-outline-primary btn-sm">
                             <i class="bi bi-pencil me-2"></i>Chỉnh Sửa Thông Tin
                         </a>
+                        <!-- UX: them confirm modal cho action thay doi trang thai
+                             (truoc day click la doi luon, de bam nham). -->
                         <form th:action="@{/doanh-nghiep/doi-trang-thai/{ma}(ma=${doanhNghiep.maDoanhNghiep})}"
-                              method="post" class="m-0">
+                              method="post" class="m-0"
+                              th:data-item-name="|hợp tác với ${doanhNghiep.tenDoanhNghiep}|"
+                              th:attr="data-confirm-action=${doanhNghiep.trangThai.name() == 'DangHopTac' ? 'tạm ngưng' : 'kích hoạt lại'}"
+                              onsubmit="return confirmDeleteFromForm(this, event)">
                             <input type="hidden"
                                    th:name="${_csrf.parameterName}"
                                    th:value="${_csrf.token}">

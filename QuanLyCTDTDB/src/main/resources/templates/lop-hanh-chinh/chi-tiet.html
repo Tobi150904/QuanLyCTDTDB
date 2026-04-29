@@ -15,11 +15,15 @@
         </ol>
     </nav>
 
-    <!-- DETAIL HERO -->
+    <!-- DETAIL HERO — UI consistency fix: them icon block + sec:authorize
+         tren nut Sua, dong bo voi cac trang chi tiet khac (hoc-phan, ctdt). -->
     <section class="detail-hero">
-        <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start">
-            <div style="min-width: 240px; flex: 1 1 60%;">
-                <p class="detail-hero-eyebrow">Quản Lý / Lớp Hành Chính</p>
+        <div class="d-flex flex-wrap gap-3 align-items-start">
+            <div class="detail-hero-icon" aria-hidden="true">
+                <i class="bi bi-diagram-3"></i>
+            </div>
+            <div class="flex-grow-1 min-w-0" style="flex: 1 1 60%;">
+                <p class="detail-hero-eyebrow">Đào Tạo / Lớp Hành Chính</p>
                 <h1 class="detail-hero-title" th:text="${lop.tenLop}">Tên Lớp</h1>
                 <div class="detail-hero-meta">
                     <span><code th:text="${lop.maLopHC}">--</code></span>
@@ -35,7 +39,8 @@
             </div>
             <div class="detail-hero-actions">
                 <a th:href="@{/lop-hanh-chinh/sua/{ma}(ma=${lop.maLopHC})}"
-                   class="btn btn-light btn-sm">
+                   class="btn btn-light btn-sm"
+                   sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
                     <i class="bi bi-pencil me-1"></i>Chỉnh Sửa
                 </a>
                 <a th:href="@{/lop-hanh-chinh}" class="btn btn-outline-light btn-sm">
@@ -121,10 +126,10 @@
                             <tbody>
                                 <tr th:if="${#lists.isEmpty(sinhVienList)}">
                                     <td colspan="4">
-                                        <div class="empty-state">
-                                            <i class="bi bi-person-x"></i>
-                                            <p>Chưa có sinh viên trong lớp này.</p>
-                                        </div>
+                                        <div th:replace="~{fragments/_empty-state :: simple(
+                                              icon='bi-person-x',
+                                              title='Chưa có sinh viên',
+                                              desc='Chưa có sinh viên nào được phân về lớp này.')}"></div>
                                     </td>
                                 </tr>
                                 <tr th:each="sv, stat : ${sinhVienList}">

@@ -18,10 +18,13 @@
         </ol>
     </nav>
 
-    <!-- DETAIL HERO -->
+    <!-- DETAIL HERO — UI consistency: them icon block + clean inline rgba. -->
     <section class="detail-hero">
-        <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start">
-            <div style="min-width: 240px; flex: 1 1 60%;">
+        <div class="d-flex flex-wrap gap-3 align-items-start">
+            <div class="detail-hero-icon" aria-hidden="true">
+                <i class="bi bi-building-check"></i>
+            </div>
+            <div class="flex-grow-1 min-w-0" style="flex: 1 1 60%;">
                 <p class="detail-hero-eyebrow">Kiến Tập &amp; Thực Tập / Đợt Thực Tập</p>
                 <h1 class="detail-hero-title" th:text="${dot.tenDotTT}">Tên Đợt</h1>
                 <div class="detail-hero-meta">
@@ -42,8 +45,7 @@
                           th:classappend="${s == 'DaDuyet' or s == 'DaKetThuc' ? 'tone-success' :
                                           (s == 'ChoDuyet'      ? 'tone-warning' :
                                           (s == 'DangThucHien'  ? 'tone-info'    :
-                                          (s == 'DaHuy'         ? 'tone-danger'  : 'tone-neutral')))}"
-                          style="background: rgba(255,255,255,0.95);">
+                                          (s == 'DaHuy'         ? 'tone-danger'  : 'tone-neutral')))}">
                         <span class="pill-dot" aria-hidden="true"></span>
                         <span th:text="${s == 'ChuanBi'      ? 'Chuẩn Bị'        :
                                        (s == 'ChoDuyet'     ? 'Chờ Duyệt'       :
@@ -128,12 +130,16 @@
                     </button>
                 </form>
 
+                <!-- UX bug-fix: thay native confirm() bang confirm modal global
+                     cho cum state-transition (consistent voi cac action khac). -->
                 <!-- ChoDuyet -> DaDuyet -->
                 <form th:if="${s == 'ChoDuyet'}"
                       th:action="@{/thuc-tap/phe-duyet/{id}(id=${dot.maDotTT})}"
                       method="post" class="d-inline m-0"
                       sec:authorize="hasAnyRole('TTDTXS','ADMIN')"
-                      onsubmit="return confirm('Phê duyệt đợt thực tập này?')">
+                      th:data-item-name="|đợt thực tập ${dot.tenDotTT}|"
+                      data-confirm-action="phê duyệt"
+                      onsubmit="return confirmDeleteFromForm(this, event)">
                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                     <button class="btn btn-sm btn-success">
                         <i class="bi bi-check-lg me-1"></i>Phê Duyệt
@@ -145,7 +151,9 @@
                       th:action="@{/thuc-tap/bat-dau/{id}(id=${dot.maDotTT})}"
                       method="post" class="d-inline m-0"
                       sec:authorize="hasAnyRole('TTDTXS','ADMIN')"
-                      onsubmit="return confirm('Bắt đầu đợt thực tập? Sinh viên có thể nhập điểm và nhận xét.')">
+                      th:data-item-name="|đợt thực tập ${dot.tenDotTT}|"
+                      data-confirm-action="bắt đầu"
+                      onsubmit="return confirmDeleteFromForm(this, event)">
                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                     <button class="btn btn-sm btn-info text-white">
                         <i class="bi bi-play-circle me-1"></i>Bắt Đầu
@@ -157,7 +165,9 @@
                       th:action="@{/thuc-tap/ket-thuc/{id}(id=${dot.maDotTT})}"
                       method="post" class="d-inline m-0"
                       sec:authorize="hasAnyRole('TTDTXS','ADMIN')"
-                      onsubmit="return confirm('Kết thúc đợt thực tập? Trạng thái sinh viên sẽ được chốt và không thể chỉnh sửa.')">
+                      th:data-item-name="|đợt thực tập ${dot.tenDotTT}|"
+                      data-confirm-action="kết thúc"
+                      onsubmit="return confirmDeleteFromForm(this, event)">
                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                     <button class="btn btn-sm btn-success">
                         <i class="bi bi-flag-fill me-1"></i>Kết Thúc Đợt
@@ -169,7 +179,9 @@
                       th:action="@{/thuc-tap/huy/{id}(id=${dot.maDotTT})}"
                       method="post" class="d-inline m-0"
                       sec:authorize="hasAnyRole('TTDTXS','ADMIN')"
-                      onsubmit="return confirm('Huỷ đợt thực tập? Thao tác không thể hoàn tác.')">
+                      th:data-item-name="|đợt thực tập ${dot.tenDotTT}|"
+                      data-confirm-action="huỷ"
+                      onsubmit="return confirmDeleteFromForm(this, event)">
                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                     <button class="btn btn-sm btn-outline-danger">
                         <i class="bi bi-x-lg me-1"></i>Huỷ Đợt

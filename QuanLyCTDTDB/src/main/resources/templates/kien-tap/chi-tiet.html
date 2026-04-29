@@ -18,10 +18,13 @@
         </ol>
     </nav>
 
-    <!-- DETAIL HERO -->
+    <!-- DETAIL HERO — UI consistency: them icon block + clean inline rgba. -->
     <section class="detail-hero">
-        <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start">
-            <div style="min-width: 240px; flex: 1 1 60%;">
+        <div class="d-flex flex-wrap gap-3 align-items-start">
+            <div class="detail-hero-icon" aria-hidden="true">
+                <i class="bi bi-briefcase"></i>
+            </div>
+            <div class="flex-grow-1 min-w-0" style="flex: 1 1 60%;">
                 <p class="detail-hero-eyebrow">Kiến Tập &amp; Thực Tập / Đợt Kiến Tập</p>
                 <h1 class="detail-hero-title" th:text="${dot.tenDotKT}">Tên Đợt</h1>
                 <div class="detail-hero-meta">
@@ -41,8 +44,7 @@
                     <span class="status-pill"
                           th:classappend="${s == 'DaDuyet' or s == 'DaThucHien' ? 'tone-success' :
                                           (s == 'ChoDuyet' ? 'tone-warning' :
-                                          (s == 'DaHuy'    ? 'tone-danger'  : 'tone-neutral'))}"
-                          style="background: rgba(255,255,255,0.95);">
+                                          (s == 'DaHuy'    ? 'tone-danger'  : 'tone-neutral'))}">
                         <span class="pill-dot" aria-hidden="true"></span>
                         <span th:text="${s == 'ChuanBi'    ? 'Chuẩn Bị'      :
                                        (s == 'ChoDuyet'   ? 'Chờ Duyệt'     :
@@ -132,12 +134,15 @@
                     </button>
                 </form>
 
+                <!-- UX bug-fix: thay native confirm() bang confirm modal global. -->
                 <!-- ChoDuyet -> DaDuyet — success -->
                 <form th:if="${s == 'ChoDuyet'}"
                       th:action="@{/kien-tap/phe-duyet/{id}(id=${dot.maDotKT})}"
                       method="post" class="d-inline m-0"
                       sec:authorize="hasAnyRole('TTDTXS','ADMIN')"
-                      onsubmit="return confirm('Phê duyệt đợt kiến tập này?')">
+                      th:data-item-name="|đợt kiến tập ${dot.tenDotKT}|"
+                      data-confirm-action="phê duyệt"
+                      onsubmit="return confirmDeleteFromForm(this, event)">
                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                     <button class="btn btn-sm btn-success">
                         <i class="bi bi-check-lg me-1"></i>Phê Duyệt
@@ -150,7 +155,9 @@
                       th:action="@{/kien-tap/hoan-thanh/{id}(id=${dot.maDotKT})}"
                       method="post" class="d-inline m-0"
                       sec:authorize="hasAnyRole('TTDTXS','CNHP','ADMIN')"
-                      onsubmit="return confirm('Đánh dấu đợt đã thực hiện xong?')">
+                      th:data-item-name="|đợt kiến tập ${dot.tenDotKT}|"
+                      data-confirm-action="hoàn thành"
+                      onsubmit="return confirmDeleteFromForm(this, event)">
                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                     <button class="btn btn-sm btn-success">
                         <i class="bi bi-flag-fill me-1"></i>Hoàn Thành
@@ -161,7 +168,9 @@
                 <form th:action="@{/kien-tap/huy/{id}(id=${dot.maDotKT})}"
                       method="post" class="d-inline m-0"
                       sec:authorize="hasAnyRole('TTDTXS','CNHP','ADMIN')"
-                      onsubmit="return confirm('Huỷ đợt kiến tập này? Thao tác không thể hoàn tác.')">
+                      th:data-item-name="|đợt kiến tập ${dot.tenDotKT}|"
+                      data-confirm-action="huỷ"
+                      onsubmit="return confirmDeleteFromForm(this, event)">
                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                     <button class="btn btn-sm btn-outline-danger">
                         <i class="bi bi-x-lg me-1"></i>Huỷ Đợt

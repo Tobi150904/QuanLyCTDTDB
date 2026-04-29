@@ -19,15 +19,28 @@
         </ol>
     </nav>
 
-    <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
-        <div>
-            <p class="page-subtitle">Học Vụ</p>
-            <h4 class="page-title mb-0">Quản Lý Học Kỳ / Năm Học</h4>
+    <!-- UI consistency fix: chuyen page-header sang format chuan
+         (.page-header-block voi h1.page-title + icon + description), giong
+         cac trang chuan nguoi-dung/danh-sach va hoc-phan/danh-sach. -->
+    <div class="page-header-block mb-4">
+        <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+            <div class="flex-grow-1 min-w-0">
+                <p class="page-subtitle mb-1">Học Vụ</p>
+                <h1 class="page-title h4 mb-1 d-flex align-items-center gap-2">
+                    <i class="bi bi-calendar3 text-primary" aria-hidden="true"></i>
+                    <span>Quản Lý Học Kỳ / Năm Học</span>
+                </h1>
+                <p class="text-muted small mb-0">
+                    Khai báo lịch học kỳ, năm học và quản lý vòng đời (chuẩn bị, đang diễn ra, kết thúc).
+                </p>
+            </div>
+            <div class="action-slot d-flex gap-2 flex-wrap">
+                <a th:href="@{/hoc-ky/them}" class="btn btn-primary btn-sm"
+                   sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
+                    <i class="bi bi-plus-lg me-1"></i>Thêm Học Kỳ
+                </a>
+            </div>
         </div>
-        <a th:href="@{/hoc-ky/them}" class="btn btn-primary btn-sm"
-           sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
-            <i class="bi bi-plus-lg me-1"></i>Thêm Học Kỳ
-        </a>
     </div>
 
     <!-- Stat cards — Phase 3: dung canonical _stat-card fragment -->
@@ -82,14 +95,20 @@
                     <tbody>
                         <tr th:if="${#lists.isEmpty(hocKyList)}">
                             <td colspan="8">
-                                <div class="empty-state">
-                                    <i class="bi bi-inbox"></i>
-                                    <p>Chưa có học kỳ nào.</p>
-                                    <a th:href="@{/hoc-ky/them}" class="btn btn-primary btn-sm"
-                                       sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
-                                        <i class="bi bi-plus-lg me-1"></i>Tạo Học Kỳ Đầu Tiên
-                                    </a>
-                                </div>
+                                <!-- UI consistency: dung empty-state fragment chuan -->
+                                <div th:replace="~{fragments/_empty-state :: withCta(
+                                      icon='bi-calendar-plus',
+                                      title='Chưa có học kỳ nào',
+                                      desc='Tạo học kỳ đầu tiên để bắt đầu lập kế hoạch đào tạo.',
+                                      ctaHref='/hoc-ky/them',
+                                      ctaLabel='Tạo Học Kỳ Đầu Tiên',
+                                      ctaIcon='bi-plus-lg')}"
+                                     sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')"></div>
+                                <div th:replace="~{fragments/_empty-state :: simple(
+                                      icon='bi-calendar-plus',
+                                      title='Chưa có học kỳ nào',
+                                      desc='Phòng Đào Tạo sẽ khởi tạo học kỳ trong thời gian tới.')}"
+                                     sec:authorize="!hasAnyRole('PDT','TTDTXS','ADMIN')"></div>
                             </td>
                         </tr>
                         <tr th:each="hk, stat : ${hocKyList}"
@@ -133,11 +152,15 @@
                                          Neu user muon kich hoat som, chi can sua
                                          ngay bat dau trong form. -->
                                     <!-- Ket thuc som: DangDienRa -> DaKetThuc -->
+                                    <!-- UX fix: thay native confirm() bang confirm modal global,
+                                         dong bo voi cac trang khac (no UI). -->
                                     <form th:if="${hk.trangThai.name() == 'DangDienRa'}"
                                           th:action="@{/hoc-ky/doi-trang-thai/{ma}(ma=${hk.maHocKy})}"
                                           method="post" class="d-inline m-0"
                                           sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')"
-                                          onsubmit="return confirm('Kết thúc học kỳ này? Thao tác không thể hoàn tác.')">
+                                          th:data-item-name="|học kỳ ${hk.maHocKy}|"
+                                          data-confirm-action="kết thúc"
+                                          onsubmit="return confirmDeleteFromForm(this, event)">
                                         <input type="hidden" name="moi" value="DaKetThuc">
                                         <input type="hidden"
                                                th:name="${_csrf.parameterName}"

@@ -15,10 +15,14 @@
         </ol>
     </nav>
 
-    <!-- Detail hero header -->
+    <!-- Detail hero header — UI consistency: them icon block, remove inline
+         status-pill bg rgba (khong can vi hero now la white). -->
     <section class="detail-hero">
-        <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start">
-            <div style="min-width: 240px; flex: 1 1 60%;">
+        <div class="d-flex flex-wrap gap-3 align-items-start">
+            <div class="detail-hero-icon" aria-hidden="true">
+                <i class="bi bi-book"></i>
+            </div>
+            <div class="flex-grow-1 min-w-0" style="flex: 1 1 60%;">
                 <p class="detail-hero-eyebrow">Đào Tạo / Học Phần</p>
                 <h1 class="detail-hero-title" th:text="${hocPhan.tenHocPhan}">Tên Học Phần</h1>
                 <div class="detail-hero-meta">
@@ -37,8 +41,7 @@
                     <span class="status-pill"
                           th:with="s=${hocPhan.trangThai?.name()}"
                           th:classappend="${s == 'DaDuyet'  ? 'tone-success' :
-                                           (s == 'ChoDuyet' ? 'tone-warning' : 'tone-neutral')}"
-                          style="background: rgba(255,255,255,0.95);">
+                                           (s == 'ChoDuyet' ? 'tone-warning' : 'tone-neutral')}">
                         <span class="pill-dot" aria-hidden="true"></span>
                         <span th:text="${s == 'DaDuyet' ? 'Đã Duyệt' :
                                        (s == 'ChoDuyet' ? 'Chờ Duyệt' : 'Bản Nháp')}">--</span>
@@ -234,14 +237,17 @@
                                            th:classappend="${dn.trangThai} ? 'bi-pause-fill' : 'bi-play-fill'"></i>
                                     </button>
                                 </form>
+                                <!-- UX: thay native confirm bang confirm modal global -->
                                 <form th:action="@{'/hoc-phan/chi-tiet/' + ${hocPhan.maHocPhan} + '/doi-ngu/xoa'}"
-                                      method="post" class="d-inline"
-                                      onsubmit="return confirm('Xoá GV khỏi đội ngũ?')">
+                                      method="post" class="d-inline m-0"
+                                      th:data-item-name="|${dn.giangVien != null ? dn.giangVien.hoTen : dn.id.maGiangVien} khỏi đội ngũ|"
+                                      onsubmit="return confirmDeleteFromForm(this, event)">
                                     <input type="hidden" th:name="${_csrf.parameterName}"
                                                           th:value="${_csrf.token}">
                                     <input type="hidden" name="maGV" th:value="${dn.id.maGiangVien}">
                                     <button class="btn btn-sm btn-outline-danger"
-                                            data-bs-toggle="tooltip" data-bs-title="Xoá">
+                                            data-bs-toggle="tooltip" data-bs-title="Xoá khỏi đội ngũ"
+                                            aria-label="Xoá khỏi đội ngũ">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </form>
@@ -275,7 +281,7 @@
                             Giảng Viên <span class="text-danger">*</span>
                         </label>
                         <select class="form-select" th:field="*{maGV}" required>
-                            <option value="">-- Chọn --</option>
+                            <option value="">-- Ch��n --</option>
                             <option th:each="gv : ${giangVienList}"
                                     th:value="${gv.maGV}"
                                     th:text="${gv.maGV + ' - ' + gv.hoTen}"></option>
