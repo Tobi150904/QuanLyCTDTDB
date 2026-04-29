@@ -22,12 +22,13 @@
 
     <!-- DETAIL HERO -->
     <section class="detail-hero">
-        <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start">
-            <div style="min-width: 240px; flex: 1 1 60%;">
+        <div class="d-flex flex-wrap gap-3 align-items-start">
+            <div class="detail-hero-icon" aria-hidden="true">
+                <i class="bi bi-people-fill"></i>
+            </div>
+            <div class="flex-grow-1 min-w-0" style="flex: 1 1 60%;">
                 <p class="detail-hero-eyebrow">Đào Tạo / Lớp Học Phần</p>
-                <h1 class="detail-hero-title">
-                    Lớp Nhóm <span th:text="'N' + ${lopId.maLopHocPhan}">N1</span>
-                </h1>
+                <h1 class="detail-hero-title" th:text="'Lớp Nhóm N' + ${lopId.maLopHocPhan}">Lớp Nhóm N1</h1>
                 <div class="detail-hero-meta">
                     <span><i class="bi bi-mortarboard"></i>CTĐT
                         <code th:text="${lopId.maCTDT}">--</code></span>
@@ -41,7 +42,7 @@
             </div>
             <div class="detail-hero-actions">
                 <a th:href="@{/lop-hoc-phan(maCTDT=${lopId.maCTDT},maHocKy=${lopId.maHocKy})}"
-                   class="btn btn-outline-light btn-sm">
+                   class="btn btn-light btn-sm">
                     <i class="bi bi-arrow-left me-1"></i>Quay Lại
                 </a>
             </div>
