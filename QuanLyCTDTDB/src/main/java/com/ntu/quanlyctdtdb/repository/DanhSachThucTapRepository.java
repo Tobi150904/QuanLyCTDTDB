@@ -49,4 +49,28 @@ public interface DanhSachThucTapRepository extends JpaRepository<DanhSachThucTap
          + "WHERE r.maThucTap = :maThucTap")
     java.util.Optional<DanhSachThucTap> findByIdFetchOwnership(
             @Param("maThucTap") Integer maThucTap);
+
+    /**
+     * Bug-fix phan quyen (GV danh gia): kiem tra xem 1 giang vien co dung la
+     * nguoi day (giangVien) cua lop hoc phan ma sinh vien dang hoc khong.
+     * 
+     * Logic: SV -> DanhSachSvLopHocPhan -> LopHocPhan.maHocPhan
+     *        GV -> DoiNguGiangVienHp -> HocPhan.maHocPhan
+     * 
+     * Tra ve true neu GV day hoc phan cua SV dang tham gia.
+     */
+    @Query("SELECT CASE WHEN COUNT(dvgv) > 0 THEN true ELSE false END "
+         + "FROM DanhSachThucTap dtt "
+         + "JOIN DanhSachSvLopHocPhan dsvlhp ON dsvlhp.id.maSV = dtt.sinhVien.maSV "
+         + "JOIN LopHocPhan lhp ON lhp.id.maCTDT = dsvlhp.id.maCTDT "
+         + "  AND lhp.id.maHocPhan = dsvlhp.id.maHocPhan "
+         + "  AND lhp.id.maHocKy = dsvlhp.id.maHocKy "
+         + "  AND lhp.id.maLopHocPhan = dsvlhp.id.maLopHocPhan "
+         + "JOIN DoiNguGiangVienHp dvgv ON dvgv.id.maHocPhan = lhp.id.maHocPhan "
+         + "JOIN GiangVien gv ON gv.maGiangVien = dvgv.id.maGiangVien "
+         + "WHERE dtt.maThucTap = :maThucTap "
+         + "  AND gv.nguoiDung.maNguoiDung = :maNguoiDung")
+    boolean isGvTeachesStudent(
+            @Param("maThucTap") Integer maThucTap,
+            @Param("maNguoiDung") String maNguoiDung);
 }

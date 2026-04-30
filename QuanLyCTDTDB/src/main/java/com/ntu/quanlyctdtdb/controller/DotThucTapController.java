@@ -423,6 +423,15 @@ public class DotThucTapController {
                         throw new AccessDeniedException(
                                 "Vai tro '" + vaiTroTrim + "' yeu cau ban la giang vien.");
                     }
+                    // Bug-fix: GV chi duoc cham diem cho SV co trong lop giang vien nay day.
+                    // Kiem tra: GiangVien -> LopHocPhan.maHocPhan -> DanhSachSvLopHocPhan.maSV
+                    boolean gvTeachesStudent = dsThucTapRepo.isGvTeachesStudent(
+                            maDanhSach, ud.getMaNguoiDung());
+                    if (!gvTeachesStudent) {
+                        throw new AccessDeniedException(
+                                "Ban khong phai la giang vien day cho sinh vien nay. "
+                                + "Chi co the cham diem cho hoc sinh trong lop cua ban.");
+                    }
                 } else if ("DN".equals(vaiTroTrim)) {
                     if (!isDn) {
                         throw new AccessDeniedException(

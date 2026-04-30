@@ -509,38 +509,54 @@
                                                                     <!--/* Phase 7 — dropdown role-aware:
                                                                            - isDN: list NV DN cua DN tiep nhan (filter theo maDN)
                                                                            - isTruong: list GV (giang vien giam sat)
-                                                                           Form field: maNguoiDanhGia (NguoiDung). */-->
-                                                                    <select name="maNguoiDanhGia"
-                                                                            class="form-select form-select-sm"
-                                                                            th:disabled="${!canEdit}">
-                                                                        <option value="">-- Giữ nguyên / chọn --</option>
+                                                                           Form field: maNguoiDanhGia (NguoiDung).
+                                                                           
+                                                                           BUG-FIX phan quyen: chi cho PDT/TTDTXS/ADMIN chon nguoi cham.
+                                                                           GV/CVHT/DN se bi force maNguoiDanhGia = current user trong controller.
+                                                                           Nen UI khong cho phep ho thay doi. */-->
+                                                                    <sec:authorize access="hasAnyRole('PDT','TTDTXS','ADMIN')">
+                                                                        <select name="maNguoiDanhGia"
+                                                                                class="form-select form-select-sm"
+                                                                                th:disabled="${!canEdit}">
+                                                                            <option value="">-- Giữ nguyên / chọn --</option>
 
-                                                                        <!-- isDN -> list NV DN cua DN cua SV
-                                                                             Refactor: nhanVienDNList giờ là List<NguoiDung> (bỏ bảng NhanVienDoanhNghiep).
-                                                                             NguoiDung loại DoanhNghiep có FK doanhNghiep trực tiếp. -->
-                                                                        <th:block th:if="${isDN}">
-                                                                            <option th:each="nv : ${nhanVienDNList}"
-                                                                                    th:if="${ds.doanhNghiep == null
-                                                                                            or ds.doanhNghiep.maDoanhNghiep == nv.maDoanhNghiep}"
-                                                                                    th:value="${nv.maNguoiDung}"
-                                                                                    th:selected="${kq1 != null
-                                                                                                  and kq1.nguoiDanhGia != null
-                                                                                                  and kq1.nguoiDanhGia.maNguoiDung == nv.maNguoiDung}"
-                                                                                    th:text="${nv.hoTen + ' — ' + (nv.tenDoanhNghiep != null ? nv.tenDoanhNghiep : '')}">NV</option>
-                                                                        </th:block>
+                                                                            <!-- isDN -> list NV DN cua DN cua SV
+                                                                                 Refactor: nhanVienDNList giờ là List<NguoiDung> (bỏ bảng NhanVienDoanhNghiep).
+                                                                                 NguoiDung loại DoanhNghiep có FK doanhNghiep trực tiếp. -->
+                                                                            <th:block th:if="${isDN}">
+                                                                                <option th:each="nv : ${nhanVienDNList}"
+                                                                                        th:if="${ds.doanhNghiep == null
+                                                                                                or ds.doanhNghiep.maDoanhNghiep == nv.maDoanhNghiep}"
+                                                                                        th:value="${nv.maNguoiDung}"
+                                                                                        th:selected="${kq1 != null
+                                                                                                      and kq1.nguoiDanhGia != null
+                                                                                                      and kq1.nguoiDanhGia.maNguoiDung == nv.maNguoiDung}"
+                                                                                        th:text="${nv.hoTen + ' — ' + (nv.tenDoanhNghiep != null ? nv.tenDoanhNghiep : '')}">NV</option>
+                                                                            </th:block>
 
-                                                                        <!-- isTruong -> list GV (giang vien giam sat) -->
-                                                                        <th:block th:if="${isTruong}">
-                                                                            <option th:each="gv : ${giangVienList}"
-                                                                                    th:value="${gv.nguoiDung != null ? gv.nguoiDung.maNguoiDung : gv.maGV}"
-                                                                                    th:selected="${kq1 != null
-                                                                                                  and kq1.nguoiDanhGia != null
-                                                                                                  and gv.nguoiDung != null
-                                                                                                  and kq1.nguoiDanhGia.maNguoiDung == gv.nguoiDung.maNguoiDung}"
-                                                                                    th:text="${gv.maGV + ' — ' +
-                                                                                              (gv.nguoiDung != null ? gv.nguoiDung.hoTen : gv.maGV)}">GV</option>
-                                                                        </th:block>
-                                                                    </select>
+                                                                            <!-- isTruong -> list GV (giang vien giam sat) -->
+                                                                            <th:block th:if="${isTruong}">
+                                                                                <option th:each="gv : ${giangVienList}"
+                                                                                        th:value="${gv.nguoiDung != null ? gv.nguoiDung.maNguoiDung : gv.maGV}"
+                                                                                        th:selected="${kq1 != null
+                                                                                                      and kq1.nguoiDanhGia != null
+                                                                                                      and gv.nguoiDung != null
+                                                                                                      and kq1.nguoiDanhGia.maNguoiDung == gv.nguoiDung.maNguoiDung}"
+                                                                                        th:text="${gv.maGV + ' — ' +
+                                                                                                  (gv.nguoiDung != null ? gv.nguoiDung.hoTen : gv.maGV)}">GV</option>
+                                                                            </th:block>
+                                                                        </select>
+                                                                    </sec:authorize>
+                                                                    <sec:authorize access="!hasAnyRole('PDT','TTDTXS','ADMIN')">
+                                                                        <!-- GV/CVHT/DN khong duoc thay doi nguoi cham — force = current user -->
+                                                                        <div class="form-control form-control-sm bg-light" 
+                                                                             style="cursor: not-allowed; opacity: 0.7;">
+                                                                            <small class="text-muted">
+                                                                                <i class="bi bi-lock-fill me-1"></i>
+                                                                                Tự động gán: Bạn (người nhập điểm)
+                                                                            </small>
+                                                                        </div>
+                                                                    </sec:authorize>
                                                                 </div>
                                                             </div>
                                                             <div class="mt-2">
@@ -604,20 +620,36 @@
                                                                         Người đánh giá
                                                                     </label>
                                                                     <!--/* Phase 7 — cot 2 luon la GV (GV_PB hoac GV_HD-giam-sat).
-                                                                           Value: nguoiDung.maNguoiDung (KetQuaThucTap.nguoiDanhGia FK -> NguoiDung). */-->
-                                                                    <select name="maNguoiDanhGia"
-                                                                            class="form-select form-select-sm"
-                                                                            th:disabled="${!canEdit}">
-                                                                        <option value="">-- Giữ nguyên / chọn --</option>
-                                                                        <option th:each="gv : ${giangVienList}"
-                                                                                th:value="${gv.nguoiDung != null ? gv.nguoiDung.maNguoiDung : gv.maGV}"
-                                                                                th:selected="${kq2 != null
-                                                                                              and kq2.nguoiDanhGia != null
-                                                                                              and gv.nguoiDung != null
-                                                                                              and kq2.nguoiDanhGia.maNguoiDung == gv.nguoiDung.maNguoiDung}"
-                                                                                th:text="${gv.maGV + ' — ' +
-                                                                                          (gv.nguoiDung != null ? gv.nguoiDung.hoTen : gv.maGV)}">GV</option>
-                                                                    </select>
+                                                                           Value: nguoiDung.maNguoiDung (KetQuaThucTap.nguoiDanhGia FK -> NguoiDung).
+                                                                           
+                                                                           BUG-FIX phan quyen: chi cho PDT/TTDTXS/ADMIN chon nguoi cham.
+                                                                           GV/CVHT/DN se bi force maNguoiDanhGia = current user trong controller.
+                                                                           Nen UI khong cho phep ho thay doi. */-->
+                                                                    <sec:authorize access="hasAnyRole('PDT','TTDTXS','ADMIN')">
+                                                                        <select name="maNguoiDanhGia"
+                                                                                class="form-select form-select-sm"
+                                                                                th:disabled="${!canEdit}">
+                                                                            <option value="">-- Giữ nguyên / chọn --</option>
+                                                                            <option th:each="gv : ${giangVienList}"
+                                                                                    th:value="${gv.nguoiDung != null ? gv.nguoiDung.maNguoiDung : gv.maGV}"
+                                                                                    th:selected="${kq2 != null
+                                                                                                  and kq2.nguoiDanhGia != null
+                                                                                                  and gv.nguoiDung != null
+                                                                                                  and kq2.nguoiDanhGia.maNguoiDung == gv.nguoiDung.maNguoiDung}"
+                                                                                    th:text="${gv.maGV + ' — ' +
+                                                                                              (gv.nguoiDung != null ? gv.nguoiDung.hoTen : gv.maGV)}">GV</option>
+                                                                        </select>
+                                                                    </sec:authorize>
+                                                                    <sec:authorize access="!hasAnyRole('PDT','TTDTXS','ADMIN')">
+                                                                        <!-- GV/CVHT/DN khong duoc thay doi nguoi cham — force = current user -->
+                                                                        <div class="form-control form-control-sm bg-light" 
+                                                                             style="cursor: not-allowed; opacity: 0.7;">
+                                                                            <small class="text-muted">
+                                                                                <i class="bi bi-lock-fill me-1"></i>
+                                                                                Tự động gán: Bạn (người nhập điểm)
+                                                                            </small>
+                                                                        </div>
+                                                                    </sec:authorize>
                                                                 </div>
                                                             </div>
                                                             <div class="mt-2">
