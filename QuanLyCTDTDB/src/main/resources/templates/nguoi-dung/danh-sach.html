@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/base}">
+<head><title>Quản Lý Người Dùng</title></head>
+<body>
+<div layout:fragment="content">
+
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a th:href="@{/dashboard}" class="text-decoration-none">
+                    <i class="bi bi-house-door me-1"></i>Trang Chủ
+                </a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">Người Dùng</li>
+        </ol>
+    </nav>
+
+    <!-- Page Header — inline (multi-action) -->
+    <div class="page-header-block mb-4">
+        <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+            <div class="flex-grow-1 min-w-0">
+                <p class="page-subtitle">QUẢN TRỊ</p>
+                <h1 class="page-title h4 mb-1 d-flex align-items-center gap-2">
+                    <i class="bi bi-people-fill" aria-hidden="true"></i>
+                    Quản Lý Người Dùng
+                </h1>
+                <p class="text-muted small mb-0">
+                    Quản trị tài khoản giảng viên, sinh viên và doanh nghiệp.
+                </p>
+            </div>
+            <div class="action-slot d-flex align-items-center gap-2 flex-wrap">
+                <!-- Export CSV — moi role co quyen vao module deu duoc xuat -->
+                <a th:href="@{/nguoi-dung/export(keyword=${keyword}, loai=${loaiFilter})}"
+                   class="btn btn-sm btn-outline-success"
+                   data-bs-toggle="tooltip" data-bs-title="Xuất CSV (Excel-compatible UTF-8)">
+                    <i class="bi bi-download me-1" aria-hidden="true"></i>
+                    <span class="d-none d-md-inline">Xuất CSV</span>
+                </a>
+                <a sec:authorize="hasAnyRole('PDT','ADMIN')"
+                   th:href="@{/nguoi-dung/import}" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-upload me-1" aria-hidden="true"></i>
+                    <span class="d-none d-md-inline">Nhập Excel</span>
+                </a>
+                <a sec:authorize="hasAnyRole('PDT','ADMIN')"
+                   th:href="@{/nguoi-dung/them}" class="btn btn-sm btn-primary">
+                    <i class="bi bi-person-plus me-1" aria-hidden="true"></i>
+                    Thêm Mới
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stat Cards (fragment) -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-people', value=${thongKe['tongNguoiDung'] ?: 0},
+                  label='Tổng Cộng', variant='info', href=null)}"></div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-person-workspace', value=${thongKe['giangVien'] ?: 0},
+                  label='Giảng Viên', variant='success',
+                  href=${'/nguoi-dung?loai=GiangVien'})}"></div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-person-badge', value=${thongKe['sinhVien'] ?: 0},
+                  label='Sinh Viên', variant='teal',
+                  href=${'/nguoi-dung?loai=SinhVien'})}"></div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-building', value=${thongKe['doanhNghiep'] ?: 0},
+                  label='Doanh Nghiệp', variant='warning',
+                  href=${'/nguoi-dung?loai=DoanhNghiep'})}"></div>
+        </div>
+    </div>
+
+    <!-- Search & Filter (custom — multi-input) -->
+    <form th:action="@{/nguoi-dung}" method="get" class="filter-toolbar mb-3" role="search">
+        <div class="filter-toolbar-title">
+            <i class="bi bi-funnel" aria-hidden="true"></i>
+            <span>Tìm kiếm</span>
+        </div>
+        <div class="row g-2">
+            <div class="col-12 col-md-6">
+                <div class="input-group input-group-sm search-bar">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="search"
+                           class="form-control"
+                           name="keyword"
+                           th:value="${keyword}"
+                           placeholder="Tìm theo họ tên, tài khoản, email..."
+                           aria-label="Tìm kiếm người dùng">
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <select class="form-select form-select-sm" name="loai" aria-label="Lọc loại người dùng">
+                    <option value="">-- Tất Cả Loại --</option>
+                    <option th:each="l : ${loaiList}"
+                            th:value="${l.name()}"
+                            th:text="${l.name() == 'Admin'       ? 'Quản Trị Viên' :
+                                      (l.name() == 'GiangVien'   ? 'Giảng Viên'     :
+                                      (l.name() == 'SinhVien'    ? 'Sinh Viên'      :
+                                      (l.name() == 'DoanhNghiep' ? 'Doanh Nghiệp' : l.name())))}"
+                            th:selected="${loaiFilter != null and loaiFilter == l}">
+                    </option>
+                </select>
+            </div>
+            <div class="col-6 col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary btn-sm flex-grow-1">
+                    <i class="bi bi-search me-1" aria-hidden="true"></i>Tìm kiếm
+                </button>
+                <a th:href="@{/nguoi-dung}" class="btn btn-outline-secondary btn-sm"
+                   th:if="${(keyword != null and keyword != '') or loaiFilter != null}"
+                   data-bs-toggle="tooltip" data-bs-title="Xoá bộ lọc"
+                   aria-label="Xoá bộ lọc">
+                    <i class="bi bi-x-lg" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </form>
+
+    <!-- Bulk action bar — fixed bottom, hien khi co row selected -->
+    <div sec:authorize="hasAnyRole('PDT','ADMIN')" class="bulk-bar" id="bulkBar"
+         data-state="hidden" hidden>
+        <div class="bulk-bar-inner">
+            <span class="bulk-bar-count">
+                <i class="bi bi-check2-square me-1" aria-hidden="true"></i>
+                Đã chọn <strong id="bulkBarCount">0</strong> người dùng
+            </span>
+            <div class="bulk-bar-actions d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="bulkClearBtn">
+                    <i class="bi bi-x-lg me-1" aria-hidden="true"></i>
+                    <span class="d-none d-sm-inline">Bỏ chọn</span>
+                </button>
+                <!-- 1 form, 2 submit button. Button voi name="action" se gui
+                     gia tri tuong ung lay tu .value (form data submit chuan
+                     HTML). Don gian hon viec extend BulkSelect ho tro nhieu form. -->
+                <form th:action="@{/nguoi-dung/bulk-toggle}" method="post"
+                      id="bulkToggleForm" class="d-inline m-0 d-flex gap-2">
+                    <button type="submit" name="action" value="lock"
+                            class="btn btn-sm btn-outline-warning"
+                            data-bs-toggle="tooltip" data-bs-title="Khoá tất cả tài khoản đã chọn">
+                        <i class="bi bi-lock me-1" aria-hidden="true"></i>
+                        <span class="d-none d-sm-inline">Khoá</span>
+                    </button>
+                    <button type="submit" name="action" value="unlock"
+                            class="btn btn-sm btn-outline-success"
+                            data-bs-toggle="tooltip" data-bs-title="Mở khoá tất cả tài khoản đã chọn">
+                        <i class="bi bi-unlock me-1" aria-hidden="true"></i>
+                        <span class="d-none d-sm-inline">Mở khoá</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <span class="fw-semibold">
+                <i class="bi bi-table me-2" aria-hidden="true"></i>Danh Sách Người Dùng
+            </span>
+            <span class="badge bg-secondary" th:if="${pages != null}"
+                  th:text="'Tổng: ' + ${pages.totalElements}">0</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <!--/* data-sortable bat SortableTable.init() trong main.js. Click
+                       column header se reload trang voi sort=key,asc/desc. */-->
+                <table id="userTable"
+                       class="table table-hover align-middle mb-0 table-sticky"
+                       data-sortable
+                       th:attr="data-sort-current-key=${pages != null and !pages.sort.isEmpty()}
+                                  ? ${pages.sort.iterator().next().property}
+                                  : 'hoTen',
+                                data-sort-current-dir=${pages != null and !pages.sort.isEmpty()}
+                                  ? ${pages.sort.iterator().next().direction.name().toLowerCase()}
+                                  : 'asc'">
+                    <thead>
+                        <tr>
+                            <th sec:authorize="hasAnyRole('PDT','ADMIN')"
+                                style="width:36px;" class="text-center">
+                                <input type="checkbox" name="selectAll"
+                                       class="form-check-input"
+                                       aria-label="Chọn tất cả người dùng trên trang">
+                            </th>
+                            <th style="width:50px;">STT</th>
+                            <th class="sortable-th" data-sort-key="maNguoiDung">Mã</th>
+                            <th class="sortable-th" data-sort-key="hoTen">Họ Tên</th>
+                            <th class="sortable-th" data-sort-key="tenDangNhap">Tên Đăng Nhập</th>
+                            <th class="sortable-th" data-sort-key="email">Email</th>
+                            <th class="sortable-th" data-sort-key="loaiNguoiDung">Loại</th>
+                            <th>Vai Trò</th>
+                            <th class="sortable-th" data-sort-key="trangThaiTK">Trạng Thái</th>
+                            <th class="text-center" style="width:170px;">Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Empty state -->
+                        <tr th:if="${pages == null or pages.isEmpty()}">
+                            <td th:colspan="${#authorization.expression('hasAnyRole(''PDT'',''ADMIN'')')} ? 10 : 9">
+                                <div th:replace="~{fragments/_empty-state :: withCta(
+                                      icon='bi-inbox', title='Không có người dùng phù hợp',
+                                      desc='Thử xoá bộ lọc hoặc thêm người dùng mới.',
+                                      ctaHref='/nguoi-dung/them', ctaLabel='Thêm Người Dùng',
+                                      ctaIcon='bi-person-plus')}"></div>
+                            </td>
+                        </tr>
+                        <!-- Data rows -->
+                        <tr th:each="nd, stat : ${pages}">
+                            <td sec:authorize="hasAnyRole('PDT','ADMIN')" class="text-center">
+                                <input type="checkbox" name="selectedIds"
+                                       class="form-check-input"
+                                       th:value="${nd.maNguoiDung}"
+                                       th:aria-label="${'Chọn ' + nd.hoTen}">
+                            </td>
+                            <td class="text-muted"
+                                th:text="${pages.number * pages.size + stat.index + 1}">1</td>
+                            <td><code th:text="${nd.maNguoiDung}"></code></td>
+                            <td>
+                                <a th:href="@{/nguoi-dung/chi-tiet/{ma}(ma=${nd.maNguoiDung})}"
+                                   class="text-decoration-none fw-medium"
+                                   th:text="${nd.hoTen}">
+                                </a>
+                            </td>
+                            <td th:text="${nd.tenDangNhap}"></td>
+                            <td>
+                                <a th:href="'mailto:' + ${nd.email}"
+                                   class="text-decoration-none text-muted small"
+                                   th:text="${nd.email}">
+                                </a>
+                            </td>
+                            <td>
+                                <span class="badge"
+                                      th:classappend="${nd.loaiNguoiDung.name() == 'Admin'} ? 'bg-dark' :
+                                                     (${nd.loaiNguoiDung.name() == 'GiangVien'} ? 'bg-primary' :
+                                                     (${nd.loaiNguoiDung.name() == 'SinhVien'} ? 'bg-info text-dark' : 'bg-success'))"
+                                      th:text="${nd.loaiNguoiDung.name() == 'Admin'       ? 'Quản Trị Viên' :
+                                               (nd.loaiNguoiDung.name() == 'GiangVien'  ? 'Giảng Viên'     :
+                                               (nd.loaiNguoiDung.name() == 'SinhVien'   ? 'Sinh Viên'      :
+                                               (nd.loaiNguoiDung.name() == 'DoanhNghiep' ? 'Doanh Nghiệp' : nd.loaiNguoiDung.name())))}">
+                                </span>
+                            </td>
+                            <td>
+                                <span th:each="nhom : ${nd.nhomNguoiDungs}"
+                                      class="badge bg-secondary me-1"
+                                      th:with="v=${nhom.id.vaiTro.name()}"
+                                      th:title="${v == 'PDT'    ? 'Phòng Đào Tạo'            :
+                                                 (v == 'TTDTXS' ? 'Trung Tâm Đào Tạo Xuất Sắc' :
+                                                 (v == 'CVHT'   ? 'Cố Vấn Học Tập'            :
+                                                 (v == 'CNHP'   ? 'Chủ Nhiệm Học Phần'        : v)))}"
+                                      th:text="${v}">
+                                </span>
+                                <span th:if="${nd.nhomNguoiDungs == null or nd.nhomNguoiDungs.isEmpty()}"
+                                      class="text-muted small">--</span>
+                            </td>
+                            <td>
+                                <span th:if="${nd.trangThaiTK}" class="status-pill tone-success">
+                                    <span class="pill-dot" aria-hidden="true"></span>Hoạt Động
+                                </span>
+                                <span th:unless="${nd.trangThaiTK}" class="status-pill tone-danger">
+                                    <i class="bi bi-lock-fill" aria-hidden="true"></i>Đã Khoá
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <div class="action-cluster">
+                                    <a th:href="@{/nguoi-dung/chi-tiet/{ma}(ma=${nd.maNguoiDung})}"
+                                       class="btn btn-sm btn-outline-secondary"
+                                       data-bs-toggle="tooltip" data-bs-title="Xem Chi Tiết"
+                                       aria-label="Xem chi tiết">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a sec:authorize="hasAnyRole('PDT','ADMIN')"
+                                       th:href="@{/nguoi-dung/sua/{ma}(ma=${nd.maNguoiDung})}"
+                                       class="btn btn-sm btn-outline-primary"
+                                       data-bs-toggle="tooltip" data-bs-title="Chỉnh Sửa"
+                                       aria-label="Chỉnh sửa người dùng">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form sec:authorize="hasAnyRole('PDT','ADMIN')"
+                                          th:action="@{/nguoi-dung/toggle/{ma}(ma=${nd.maNguoiDung})}"
+                                          method="post" class="d-inline m-0">
+                                        <button type="submit" class="btn btn-sm"
+                                                th:classappend="${nd.trangThaiTK} ? 'btn-outline-warning' : 'btn-outline-success'"
+                                                th:data-bs-title="${nd.trangThaiTK} ? 'Khoá Tài Khoản' : 'Mở Khoá Tài Khoản'"
+                                                th:aria-label="${nd.trangThaiTK} ? 'Khoá tài khoản' : 'Mở khoá tài khoản'"
+                                                data-bs-toggle="tooltip">
+                                            <i class="bi"
+                                               th:classappend="${nd.trangThaiTK} ? 'bi-lock' : 'bi-unlock'"></i>
+                                        </button>
+                                    </form>
+                                    <form sec:authorize="hasAnyRole('ADMIN')"
+                                          th:action="@{/nguoi-dung/xoa/{ma}(ma=${nd.maNguoiDung})}"
+                                          method="post" class="d-inline m-0"
+                                          th:data-item-name="${nd.hoTen}"
+                                          onsubmit="return confirmDeleteFromForm(this, event)">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                data-bs-toggle="tooltip" data-bs-title="Xoá Vĩnh Viễn"
+                                                aria-label="Xoá người dùng">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination + page-size + summary -->
+        <div th:if="${pages != null and pages.totalElements > 0}"
+             class="card-footer p-0 border-top">
+            <div th:replace="~{fragments/_pagination :: bar(
+                  page=${pages},
+                  baseUrl='/nguoi-dung',
+                  queryString=${
+                    (keyword != null and keyword != '' ? '&keyword=' + keyword : '') +
+                    (loaiFilter != null ? '&loai=' + loaiFilter.name() : '') +
+                    (pages.sort != null and !pages.sort.isEmpty()
+                       ? '&sort=' + pages.sort.iterator().next().property
+                         + ',' + pages.sort.iterator().next().direction.name().toLowerCase()
+                       : '')
+                  })}"></div>
+        </div>
+    </div>
+
+    <!-- Init BulkSelect cho admin/PDT -->
+    <script sec:authorize="hasAnyRole('PDT','ADMIN')" th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', function () {
+            if (window.BulkSelect) {
+                window.BulkSelect.init({
+                    tableSelector: '#userTable',
+                    selectAllSelector: '#userTable input[name="selectAll"]',
+                    bulkFormId: 'bulkToggleForm',
+                    inputName: 'ids'
+                });
+            }
+        });
+    </script>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<!--/*
+ * fragments/_flash.html
+ *
+ * Flash messages (banner alert) cho 4 muc do: success, error, warning, info.
+ * Da bao trong aria-live polite de screen reader thong bao.
+ *
+ * Su dung:
+ *   <th:block th:replace="~{fragments/_flash :: flash}"></th:block>
+ *
+ * Ghi chu: ke tu Phase 1, success message se duoc convert tu dong sang toast
+ * o phia client (main.js Toast helper) khi co class .auto-dismiss + data-toast.
+ * Trong khi do banner van la fallback an toan khi JS chua chay.
+ */-->
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<th:block th:fragment="flash">
+    <div aria-live="polite" aria-atomic="true">
+
+        <div th:if="${successMsg}"
+             class="alert alert-success alert-dismissible fade show auto-dismiss"
+             role="alert" data-toast="success">
+            <i class="bi bi-check-circle-fill me-2" aria-hidden="true"></i>
+            <span th:text="${successMsg}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"
+                    aria-label="Đóng"></button>
+        </div>
+
+        <div th:if="${errorMsg}"
+             class="alert alert-danger alert-dismissible fade show"
+             role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2" aria-hidden="true"></i>
+            <span th:text="${errorMsg}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"
+                    aria-label="Đóng"></button>
+        </div>
+
+        <div th:if="${warningMsg}"
+             class="alert alert-warning alert-dismissible fade show"
+             role="alert">
+            <i class="bi bi-exclamation-circle-fill me-2" aria-hidden="true"></i>
+            <span th:text="${warningMsg}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"
+                    aria-label="Đóng"></button>
+        </div>
+
+        <div th:if="${infoMsg}"
+             class="alert alert-info alert-dismissible fade show auto-dismiss"
+             role="alert" data-toast="info">
+            <i class="bi bi-info-circle-fill me-2" aria-hidden="true"></i>
+            <span th:text="${infoMsg}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"
+                    aria-label="Đóng"></button>
+        </div>
+
+    </div>
+</th:block>
+
+</body>
+</html>

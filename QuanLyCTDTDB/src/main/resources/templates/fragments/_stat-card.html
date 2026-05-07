@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<!--/*
+ * fragments/_stat-card.html
+ *
+ * Stat card reusable — hien gia tri so + label + icon, optional accent variant.
+ *
+ * variant: '' | 'success' | 'warning' | 'info' | 'teal' | 'orange' | 'danger' | 'purple'
+ * href: optional — neu co thi wrap trong <a>, card co hover state.
+ *
+ * Su dung:
+ *   <div class="col-md-3">
+ *     <div th:replace="~{fragments/_stat-card :: card(
+ *         icon='bi-people', value=${tongSV}, label='Tổng SV',
+ *         variant='info', href='/nguoi-dung?role=SV')}"></div>
+ *   </div>
+ */-->
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<th:block th:fragment="card(icon, value, label, variant, href)">
+    <a th:if="${href}" th:href="@{${href}}"
+       th:class="${'stat-card variant-' + (variant ?: 'info')}"
+       style="text-decoration:none;color:inherit;display:flex;">
+        <span class="stat-card-icon" aria-hidden="true">
+            <i th:class="${'bi ' + icon}"></i>
+        </span>
+        <div class="flex-grow-1 min-w-0">
+            <div class="stat-card-value" th:text="${value}">0</div>
+            <div class="stat-card-label" th:text="${label}">Nhãn</div>
+        </div>
+    </a>
+
+    <div th:unless="${href}"
+         th:class="${'stat-card variant-' + (variant ?: 'info')}">
+        <span class="stat-card-icon" aria-hidden="true">
+            <i th:class="${'bi ' + icon}"></i>
+        </span>
+        <div class="flex-grow-1 min-w-0">
+            <div class="stat-card-value" th:text="${value}">0</div>
+            <div class="stat-card-label" th:text="${label}">Nhãn</div>
+        </div>
+    </div>
+</th:block>
+
+</body>
+</html>

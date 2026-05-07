@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head><title>Quản Lý Lớp Hành Chính</title></head>
+<body>
+<div layout:fragment="content">
+
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a th:href="@{/dashboard}"><i class="bi bi-house-door me-1"></i>Trang Chủ</a>
+            </li>
+            <li class="breadcrumb-item active">Lớp Hành Chính</li>
+        </ol>
+    </nav>
+
+    <!-- UI consistency fix + permission fix: chuyen page-header sang format
+         chuan, va them sec:authorize cho nut "Them Lop" (truoc day mo cho tat
+         ca dan toi GV/SV thay nut va bam vao bi 403). -->
+    <div class="page-header-block mb-4">
+        <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+            <div class="flex-grow-1 min-w-0">
+                <p class="page-subtitle mb-1">Đào Tạo</p>
+                <h1 class="page-title h4 mb-1 d-flex align-items-center gap-2">
+                    <i class="bi bi-diagram-3 text-primary" aria-hidden="true"></i>
+                    <span>Quản Lý Lớp Hành Chính</span>
+                </h1>
+                <p class="text-muted small mb-0">
+                    Khai báo lớp hành chính theo khoá tuyển sinh và phân công Cố Vấn Học Tập.
+                </p>
+            </div>
+            <div class="action-slot d-flex gap-2 flex-wrap">
+                <a th:href="@{/lop-hanh-chinh/them}" class="btn btn-primary btn-sm"
+                   sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
+                    <i class="bi bi-plus-lg me-1"></i>Thêm Lớp
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats — Phase 3: dung canonical _stat-card fragment -->
+    <div class="row g-3 mb-4" th:if="${thongKe != null}">
+        <div class="col-6 col-md-3">
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-collection', value=${thongKe['tong'] ?: 0},
+                  label='Tổng Lớp', variant='info', href=null)}"></div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-person-check-fill', value=${thongKe['daCoCVHT'] ?: 0},
+                  label='Đã Có CVHT', variant='success', href=null)}"></div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-person-x-fill', value=${thongKe['chuaCoCVHT'] ?: 0},
+                  label='Chưa Có CVHT', variant='warning', href=null)}"></div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-mortarboard-fill', value=${thongKe['soKhoaHoc'] ?: 0},
+                  label='Số Khóa', variant='teal', href=null)}"></div>
+        </div>
+    </div>
+
+    <!-- Flash messages da duoc render boi layout/base.html -->
+
+
+    <!-- Filter toolbar -->
+    <form th:action="@{/lop-hanh-chinh}" method="get" class="filter-toolbar mb-3" role="search">
+        <div class="filter-toolbar-title">
+            <i class="bi bi-funnel" aria-hidden="true"></i>
+            <span>Tìm kiếm</span>
+        </div>
+        <div class="row g-2">
+            <div class="col-12 col-md-5">
+                <div class="input-group input-group-sm search-bar">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="search" name="keyword" th:value="${keyword}"
+                           class="form-control"
+                           placeholder="Tìm mã lớp, tên lớp..."
+                           aria-label="Từ khoá">
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <select class="form-select form-select-sm" name="maCTDT" aria-label="Lọc CTĐT">
+                    <option value="">-- Tất Cả CTĐT --</option>
+                    <option th:each="c : ${ctdtList}"
+                            th:value="${c.maCTDT}"
+                            th:text="${c.maCTDT + ' - ' + c.tenCTDT}"
+                            th:selected="${maCTDT != null and maCTDT == c.maCTDT}"></option>
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <input type="text" name="khoaHoc" th:value="${khoaHoc}"
+                       class="form-control form-control-sm"
+                       placeholder="Khóa (62, 63...)"
+                       aria-label="Khóa học">
+            </div>
+            <div class="col-12 col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary btn-sm flex-grow-1">
+                    <i class="bi bi-search me-1" aria-hidden="true"></i>Tìm kiếm
+                </button>
+                <a th:href="@{/lop-hanh-chinh}" class="btn btn-outline-secondary btn-sm"
+                   th:if="${(keyword != null and keyword != '') or (maCTDT != null and maCTDT != '') or (khoaHoc != null and khoaHoc != '')}"
+                   data-bs-toggle="tooltip" data-bs-title="Xoá bộ lọc"
+                   aria-label="Xoá bộ lọc">
+                    <i class="bi bi-x-lg" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </form>
+
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span class="fw-semibold"><i class="bi bi-table me-2"></i>Danh Sách Lớp</span>
+            <span class="badge bg-light text-dark" th:text="'Tổng: ' + ${#lists.size(lopList)}">0</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width:50px;">STT</th>
+                            <th>Mã Lớp</th>
+                            <th>Tên Lớp</th>
+                            <th>Khóa</th>
+                            <th>CTĐT</th>
+                            <th>Cố Vấn HT</th>
+                            <th class="text-center" style="width:140px;">Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(lopList)}">
+                            <td colspan="7">
+                                <!-- UI consistency: dung empty-state fragment chuan.
+                                     Co 2 truong hop:
+                                       (a) co bo loc -> goi xoa loc;
+                                       (b) khong co data nao -> goi tao moi (chi staff). -->
+                                <div th:if="${(keyword != null and keyword != '') or
+                                              (maCTDT != null and maCTDT != '') or
+                                              (khoaHoc != null and khoaHoc != '')}"
+                                     th:replace="~{fragments/_empty-state :: withCta(
+                                            icon='bi-funnel',
+                                            title='Không có lớp nào phù hợp bộ lọc',
+                                            desc='Thử xoá bộ lọc hoặc thay đổi từ khoá tìm kiếm.',
+                                            ctaHref='/lop-hanh-chinh',
+                                            ctaLabel='Xoá Bộ Lọc',
+                                            ctaIcon='bi-x-lg')}"></div>
+                                <div th:unless="${(keyword != null and keyword != '') or
+                                                  (maCTDT != null and maCTDT != '') or
+                                                  (khoaHoc != null and khoaHoc != '')}"
+                                     th:replace="~{fragments/_empty-state :: withCta(
+                                            icon='bi-diagram-3',
+                                            title='Chưa có lớp hành chính nào',
+                                            desc='Tạo lớp đầu tiên cho khoá tuyển sinh mới.',
+                                            ctaHref='/lop-hanh-chinh/them',
+                                            ctaLabel='Tạo Lớp Đầu Tiên',
+                                            ctaIcon='bi-plus-lg')}"
+                                     sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')"></div>
+                            </td>
+                        </tr>
+                        <tr th:each="lop, stat : ${lopList}">
+                            <td class="text-muted" th:text="${stat.index + 1}">1</td>
+                            <td><code th:text="${lop.maLopHC}"></code></td>
+                            <td>
+                                <a th:href="@{/lop-hanh-chinh/chi-tiet/{ma}(ma=${lop.maLopHC})}"
+                                   class="text-decoration-none fw-medium"
+                                   th:text="${lop.tenLop}"></a>
+                            </td>
+                            <td><span class="chip chip-primary" th:text="'K' + ${lop.khoaHoc}"></span></td>
+                            <td class="small text-muted"
+                                th:text="${lop.chuongTrinhDaoTao != null ? lop.chuongTrinhDaoTao.maCTDT : '--'}">--</td>
+                            <td class="small">
+                                <span th:if="${lop.coVan != null}" th:text="${lop.coVan.hoTen}">--</span>
+                                <span th:unless="${lop.coVan != null}" class="text-muted fst-italic">Chưa phân công</span>
+                            </td>
+                            <td class="text-center">
+                                <div class="action-cluster">
+                                    <a th:href="@{/lop-hanh-chinh/chi-tiet/{ma}(ma=${lop.maLopHC})}"
+                                       class="btn btn-sm btn-outline-secondary"
+                                       data-bs-toggle="tooltip" data-bs-title="Chi Tiết"
+                                       aria-label="Xem chi tiết">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <!-- Permission fix: them sec:authorize cho nut Sua / Xoa
+                                         (truoc day mo cho moi user, GV/SV bam bi 403). -->
+                                    <a th:href="@{/lop-hanh-chinh/sua/{ma}(ma=${lop.maLopHC})}"
+                                       class="btn btn-sm btn-outline-primary"
+                                       sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')"
+                                       data-bs-toggle="tooltip" data-bs-title="Sửa"
+                                       aria-label="Chỉnh sửa lớp">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <!-- UX: thay native confirm bang confirm modal global. -->
+                                    <form th:action="@{/lop-hanh-chinh/xoa/{ma}(ma=${lop.maLopHC})}"
+                                          method="post" class="d-inline m-0"
+                                          sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')"
+                                          th:data-item-name="|lớp ${lop.maLopHC}|"
+                                          onsubmit="return confirmDeleteFromForm(this, event)">
+                                        <input type="hidden" th:name="${_csrf.parameterName}"
+                                                              th:value="${_csrf.token}">
+                                        <button class="btn btn-sm btn-outline-danger"
+                                                data-bs-toggle="tooltip" data-bs-title="Xoá"
+                                                aria-label="Xoá lớp">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

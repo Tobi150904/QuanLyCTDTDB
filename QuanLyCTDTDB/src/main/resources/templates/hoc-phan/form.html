@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<!--/*
+ * hoc-phan/form.html — Phase 5 redesign
+ *
+ * Form chia 2 section:
+ *   1. Thong tin co ban (ma, ten, tin chi, loai, chu nhiem)
+ *   2. Tai lieu de cuong (file upload)
+ */-->
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title th:text="${isEdit} ? 'Chỉnh Sửa Học Phần' : 'Tạo Học Phần'">Học Phần</title>
+</head>
+<body>
+<div layout:fragment="content">
+
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a th:href="@{/dashboard}" class="text-decoration-none">
+                    <i class="bi bi-house-door me-1"></i>Trang Chủ
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a th:href="@{/hoc-phan}" class="text-decoration-none">Học Phần</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page"
+                th:text="${isEdit} ? 'Chỉnh sửa' : 'Thêm mới'">Thêm mới</li>
+        </ol>
+    </nav>
+
+    <div class="page-header-block mb-4">
+        <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+            <div class="flex-grow-1 min-w-0">
+                <p class="page-subtitle">Đào Tạo</p>
+                <h1 class="page-title h4 mb-1 d-flex align-items-center gap-2">
+                    <i class="bi bi-book" aria-hidden="true"></i>
+                    <span th:text="${isEdit} ? 'Chỉnh Sửa Học Phần' : 'Tạo Học Phần Mới'">Tạo Học Phần Mới</span>
+                </h1>
+                <p class="text-muted small mb-0"
+                   th:text="${isEdit} ? 'Cập nhật thông tin & tài liệu học phần.' :
+                                        'Khai báo HP mới — chờ phê duyệt trước khi đưa vào CTĐT.'">Mô tả</p>
+            </div>
+            <div class="action-slot d-flex align-items-center gap-2 flex-wrap">
+                <a th:href="@{/hoc-phan}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i>Quay Lại
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Banner loi non-field — ngoai form -->
+    <div th:if="${errorMsg}"
+         class="alert alert-danger form-alert d-flex align-items-start mb-3" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2 mt-1"></i>
+        <div>
+            <strong class="d-block">Không thể lưu học phần</strong>
+            <span th:text="${errorMsg}"></span>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-xl-9">
+
+            <form th:action="${isEdit} ? @{/hoc-phan/sua/{ma}(ma=${hocPhanDTO.maHocPhan})} : @{/hoc-phan/them}"
+                  th:object="${hocPhanDTO}"
+                  method="post" enctype="multipart/form-data"
+                  data-unsaved-guard
+                  novalidate>
+
+                <!-- Banner loi validation (binding) -->
+                <div th:if="${#fields.hasErrors('*')}"
+                     class="alert alert-warning form-alert d-flex align-items-start mb-3" role="alert">
+                    <i class="bi bi-info-circle-fill me-2 mt-1"></i>
+                    <div>
+                        <strong class="d-block">Vui lòng kiểm tra lại các trường sau:</strong>
+                        <ul>
+                            <li th:each="err : ${#fields.allErrors()}" th:text="${err}"></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- SECTION 1 — Thong tin co ban -->
+                <div class="form-section">
+                    <div class="form-section-header">
+                        <i class="bi bi-journal-text" aria-hidden="true"></i>
+                        <span>Thông Tin Học Phần</span>
+                        <small class="form-section-hint">Bắt buộc</small>
+                    </div>
+                    <div class="form-section-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control"
+                                           th:classappend="${#fields.hasErrors('maHocPhan')} ? 'is-invalid'"
+                                           id="maHocPhan" th:field="*{maHocPhan}"
+                                           th:readonly="${isEdit}" placeholder="CS101"
+                                           aria-required="true" required>
+                                    <label for="maHocPhan">Mã HP <span class="req-mark">*</span></label>
+                                    <div class="invalid-feedback"
+                                         th:if="${#fields.hasErrors('maHocPhan')}"
+                                         th:errors="*{maHocPhan}"></div>
+                                </div>
+                                <small class="form-text text-muted" th:unless="${isEdit}">
+                                    <i class="bi bi-info-circle me-1"></i>Không thể đổi sau khi tạo.
+                                </small>
+                            </div>
+
+                            <div class="col-md-8">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control"
+                                           th:classappend="${#fields.hasErrors('tenHocPhan')} ? 'is-invalid'"
+                                           id="tenHocPhan" th:field="*{tenHocPhan}"
+                                           placeholder="Nhập tên học phần..."
+                                           aria-required="true" required>
+                                    <label for="tenHocPhan">Tên Học Phần <span class="req-mark">*</span></label>
+                                    <div class="invalid-feedback"
+                                         th:if="${#fields.hasErrors('tenHocPhan')}"
+                                         th:errors="*{tenHocPhan}"></div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-floating">
+                                    <input type="number" class="form-control"
+                                           th:classappend="${#fields.hasErrors('soTinChi')} ? 'is-invalid'"
+                                           id="soTinChi" th:field="*{soTinChi}"
+                                           min="1" max="15"
+                                           aria-required="true" required>
+                                    <label for="soTinChi">Số Tín Chỉ <span class="req-mark">*</span></label>
+                                    <div class="invalid-feedback"
+                                         th:if="${#fields.hasErrors('soTinChi')}"
+                                         th:errors="*{soTinChi}"></div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    <select class="form-select"
+                                            th:classappend="${#fields.hasErrors('loaiHocPhan')} ? 'is-invalid'"
+                                            id="loaiHocPhan" th:field="*{loaiHocPhan}"
+                                            aria-required="true" required>
+                                        <option value="">-- Chọn --</option>
+                                        <option th:each="l : ${loaiHPList}"
+                                                th:value="${l.name()}"
+                                                th:text="${l.name() == 'LyThuyet' ? 'Lý Thuyết' :
+                                                          (l.name() == 'ThucHanh' ? 'Thực Hành' :
+                                                          (l.name() == 'DoAn'     ? 'Đồ Án'     :
+                                                          (l.name() == 'ThucTap'  ? 'Thực Tập'  :
+                                                          (l.name() == 'KienTap'  ? 'Kiến Tập'  : l.name()))))}"></option>
+                                    </select>
+                                    <label for="loaiHocPhan">Loại HP <span class="req-mark">*</span></label>
+                                </div>
+                            </div>
+
+                            <div class="col-md-5">
+                                <div class="form-floating">
+                                    <select class="form-select"
+                                            th:classappend="${#fields.hasErrors('maChuNhiemHP')} ? 'is-invalid'"
+                                            id="maChuNhiemHP" th:field="*{maChuNhiemHP}"
+                                            aria-required="true" required>
+                                        <option value="">-- Chọn Chủ Nhiệm HP --</option>
+                                        <option th:each="gv : ${giangVienList}"
+                                                th:value="${gv.maGV}"
+                                                th:text="${gv.maGV + ' - ' + gv.hoTen}"></option>
+                                    </select>
+                                    <label for="maChuNhiemHP">Chủ Nhiệm HP <span class="req-mark">*</span></label>
+                                </div>
+                                <small class="form-text text-muted">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Giảng viên có vai trò CNHP sẽ phụ trách cập nhật &amp; phân công lớp.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 2 — De cuong -->
+                <div class="form-section">
+                    <div class="form-section-header">
+                        <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
+                        <span>Đề Cương Học Phần</span>
+                        <small class="form-section-hint">Tuỳ chọn</small>
+                    </div>
+                    <div class="form-section-body">
+                        <label for="fileDeCuong" class="form-label fw-medium">
+                            File Đề Cương (PDF/Word)
+                        </label>
+                        <input type="file" class="form-control" id="fileDeCuong"
+                               name="fileDeCuong" accept=".pdf,.doc,.docx">
+                        <small class="form-text text-muted">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Để trống nếu không đổi file hiện tại. Hỗ trợ <code>.pdf</code>,
+                            <code>.doc</code>, <code>.docx</code>.
+                        </small>
+                    </div>
+                </div>
+
+                <!-- Sticky footer -->
+                <div class="form-sticky-footer mt-3">
+                    <a th:href="@{/hoc-phan}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-lg me-1"></i>Huỷ
+                    </a>
+                    <button type="submit" class="btn btn-primary" onclick="showLoading(this)">
+                        <span class="spinner-border spinner-border-sm d-none me-1" role="status"></span>
+                        <i class="bi bi-save me-1"></i>
+                        <span th:text="${isEdit} ? 'Cập Nhật' : 'Tạo Mới'">Tạo Mới</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

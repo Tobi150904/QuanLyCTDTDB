@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<!--/*
+ * fragments/_filter-toolbar.html
+ *
+ * Filter toolbar reusable. Vi co rat nhieu loai filter khac nhau (1-N input/select),
+ * fragment chi cung cap khung — slot ben trong duoc trang tu render.
+ *
+ * Su dung:
+ *   <form th:action="@{/hoc-phan}" method="get"
+ *         th:replace="~{fragments/_filter-toolbar :: shell(action='/hoc-phan')}">
+ *      ... slot ben trong (search input, selects) ...
+ *   </form>
+ *
+ * Nhung Thymeleaf 3 khong ho tro slot. Vi vay viec dung bang APPROACH "MARKUP MAU":
+ *   <form th:action="@{/hoc-phan}" method="get" class="filter-toolbar mb-3">
+ *     <div class="filter-toolbar-title">
+ *       <i class="bi bi-funnel"></i><span>Tìm kiếm</span>
+ *     </div>
+ *     <div class="row g-2">
+ *       <div class="col-md-5"> ... search input ... </div>
+ *       <div class="col-md-3"> ... select ... </div>
+ *       <div class="col-md-2 d-flex gap-2 align-items-end">
+ *          <button class="btn btn-primary btn-sm flex-grow-1">Tìm kiếm</button>
+ *          <a class="btn btn-outline-secondary btn-sm" th:href="@{/hoc-phan}">
+ *            <i class="bi bi-x-lg"></i>
+ *          </a>
+ *       </div>
+ *     </div>
+ *   </form>
+ *
+ * O day fragment chi cung cap variants minimal:
+ *   - searchOnly(action, name, placeholder, currentValue)
+ *     Mot o tim kiem don gian + nut Loc/Reset.
+ */-->
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<form th:fragment="searchOnly(action, name, placeholder, currentValue)"
+      th:action="@{${action}}" method="get" class="filter-toolbar mb-3"
+      role="search">
+    <div class="filter-toolbar-title">
+        <i class="bi bi-funnel" aria-hidden="true"></i>
+        <span>Tìm kiếm</span>
+    </div>
+    <div class="row g-2">
+        <div class="col-md-9">
+            <div class="input-group input-group-sm search-bar">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="search"
+                       th:name="${name ?: 'q'}"
+                       th:value="${currentValue}"
+                       th:placeholder="${placeholder ?: 'Tìm kiếm...'}"
+                       class="form-control"
+                       aria-label="Tìm kiếm">
+            </div>
+        </div>
+        <div class="col-md-3 d-flex gap-2">
+            <button type="submit" class="btn btn-primary btn-sm flex-grow-1">
+                <i class="bi bi-search me-1" aria-hidden="true"></i>Tìm kiếm
+            </button>
+            <a th:href="@{${action}}" class="btn btn-outline-secondary btn-sm"
+               th:if="${currentValue != null and currentValue != ''}"
+               aria-label="Xoá bộ lọc">
+                <i class="bi bi-x-lg" aria-hidden="true"></i>
+            </a>
+        </div>
+    </div>
+</form>
+
+</body>
+</html>

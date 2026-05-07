@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/base}">
+<head><title>Chi Tiết Đợt Kiến Tập</title></head>
+<body>
+<div layout:fragment="content"
+     th:with="s=${dot.trangThai?.name()},
+              soThamGia=${#lists.size(danhSachSV.?[daThamGia])}">
+
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a th:href="@{/dashboard}">Trang Chủ</a></li>
+            <li class="breadcrumb-item"><a th:href="@{/kien-tap}">Kiến Tập</a></li>
+            <li class="breadcrumb-item active" th:text="${'#' + dot.maDotKT}">--</li>
+        </ol>
+    </nav>
+
+    <!-- DETAIL HERO — UI consistency: them icon block + clean inline rgba. -->
+    <section class="detail-hero">
+        <div class="d-flex flex-wrap gap-3 align-items-start">
+            <div class="detail-hero-icon" aria-hidden="true">
+                <i class="bi bi-briefcase"></i>
+            </div>
+            <div class="flex-grow-1 min-w-0" style="flex: 1 1 60%;">
+                <p class="detail-hero-eyebrow">Kiến Tập &amp; Thực Tập / Đợt Kiến Tập</p>
+                <h1 class="detail-hero-title" th:text="${dot.tenDotKT}">Tên Đợt</h1>
+                <div class="detail-hero-meta">
+                    <span><code th:text="${'KT' + dot.maDotKT}">KT1</code></span>
+                    <span th:if="${dot.lopHanhChinh != null}">
+                        <i class="bi bi-diagram-3"></i>
+                        <span th:text="${dot.lopHanhChinh.tenLop}">--</span>
+                    </span>
+                    <span th:if="${dot.hocKy != null}">
+                        <i class="bi bi-calendar3"></i>
+                        <span th:text="${dot.hocKy.tenHocKy}">--</span>
+                    </span>
+                    <span th:if="${dot.doanhNghiep != null}">
+                        <i class="bi bi-building"></i>
+                        <span th:text="${dot.doanhNghiep.tenDoanhNghiep}">--</span>
+                    </span>
+                    <span class="status-pill"
+                          th:classappend="${s == 'DaDuyet' or s == 'DaThucHien' ? 'tone-success' :
+                                          (s == 'ChoDuyet' ? 'tone-warning' :
+                                          (s == 'DaHuy'    ? 'tone-danger'  : 'tone-neutral'))}">
+                        <span class="pill-dot" aria-hidden="true"></span>
+                        <span th:text="${s == 'ChuanBi'    ? 'Chuẩn Bị'      :
+                                       (s == 'ChoDuyet'   ? 'Chờ Duyệt'     :
+                                       (s == 'DaDuyet'    ? 'Đã Duyệt'      :
+                                       (s == 'DaThucHien' ? 'Đã Thực Hiện'  :
+                                       (s == 'DaHuy'      ? 'Đã Huỷ'        : '--'))))}">--</span>
+                    </span>
+                </div>
+            </div>
+            <div class="detail-hero-actions">
+                <!--/* Phase 7 — chi cho sua khi ChuanBi hoac ChoDuyet. Service da chan
+                       voi DaDuyet/DaThucHien/DaHuy nhung UI van phai an button cho sach.
+                       Truoc day (Phase 4): th:if="${s != 'DaHuy' and s != 'DaThucHien'}"
+                       -> van hien voi DaDuyet, gay confuse + click vao -> error. */-->
+                <a sec:authorize="hasAnyRole('TTDTXS','CNHP','ADMIN')"
+                   th:if="${s == 'ChuanBi' or s == 'ChoDuyet'}"
+                   th:href="@{/kien-tap/sua/{id}(id=${dot.maDotKT})}"
+                   class="btn btn-light btn-sm">
+                    <i class="bi bi-pencil me-1"></i>Sửa
+                </a>
+                <a th:href="@{/kien-tap}" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i>Quay Lại
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Phase 4 — TAB NAV (3 tab semantic):
+           1. Tong quan: state-transition cluster + thong tin dot.
+           2. Sinh vien: bang danh sach SV tham gia + dong bo + danh dau.
+           3. Nhan xet: chi xuat hien khi DaDuyet/DaThucHien va co data.
+         Ly do tach: trang nay co qua nhieu thong tin (workflow + info + DS SV
+         + nhan xet) — scroll dai, kho navigate. Tab giup focus theo task.
+
+         Badge tren tab "Sinh vien" hien thi soThamGia / total. -->
+    <ul class="nav tab-nav-clean" role="tablist">
+        <li role="presentation">
+            <a class="tab-link active" id="tab-overview"
+               data-bs-toggle="tab" href="#pane-overview" role="tab"
+               aria-controls="pane-overview" aria-selected="true">
+                <i class="bi bi-info-circle"></i> Tổng Quan
+            </a>
+        </li>
+        <li role="presentation">
+            <a class="tab-link" id="tab-students"
+               data-bs-toggle="tab" href="#pane-students" role="tab"
+               aria-controls="pane-students" aria-selected="false">
+                <i class="bi bi-people"></i> Sinh Viên
+                <span class="badge bg-light text-dark ms-1"
+                      th:text="${soThamGia} + ' / ' + ${#lists.size(danhSachSV)}">0 / 0</span>
+            </a>
+        </li>
+        <li role="presentation"
+            th:if="${s == 'DaDuyet' or s == 'DaThucHien'}">
+            <a class="tab-link" id="tab-feedback"
+               data-bs-toggle="tab" href="#pane-feedback" role="tab"
+               aria-controls="pane-feedback" aria-selected="false">
+                <i class="bi bi-chat-left-text"></i> Nhận Xét
+            </a>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+
+    <!-- ====== TAB 1: TONG QUAN (state-transition + thong tin dot) ====== -->
+    <div class="tab-pane fade show active" id="pane-overview"
+         role="tabpanel" aria-labelledby="tab-overview" tabindex="0">
+
+    <!-- STATE-TRANSITION ACTION CLUSTER (docs/03 §WF-07.1) -->
+    <div class="card mb-4"
+    	sec:authorize="hasAnyRole('TTDTXS','CNHP','ADMIN')"
+         th:if="${s == 'ChuanBi' or s == 'ChoDuyet' or s == 'DaDuyet' or s == 'DaThucHien'}">
+        <div class="card-header">
+            <i class="bi bi-arrow-repeat"></i>
+            <span class="fw-semibold">Thao Tác Trạng Thái</span>
+        </div>
+        <div class="card-body">
+            <div class="d-flex flex-wrap gap-2">
+
+                <!-- ChuanBi -> ChoDuyet — mau warning theo §3.2 (Cho Duyet = warning) -->
+                <form th:if="${s == 'ChuanBi'}"
+                      th:action="@{/kien-tap/gui-phe-duyet/{id}(id=${dot.maDotKT})}"
+                      method="post" class="d-inline m-0"
+                      sec:authorize="hasAnyRole('TTDTXS','CNHP','ADMIN')">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <button class="btn btn-sm btn-warning text-dark">
+                        <i class="bi bi-send me-1"></i>Gửi Phê Duyệt
+                    </button>
+                </form>
+
+                <!-- UX bug-fix: thay native confirm() bang confirm modal global. -->
+                <!-- ChoDuyet -> DaDuyet — success -->
+                <form th:if="${s == 'ChoDuyet'}"
+                      th:action="@{/kien-tap/phe-duyet/{id}(id=${dot.maDotKT})}"
+                      method="post" class="d-inline m-0"
+                      sec:authorize="hasAnyRole('TTDTXS','ADMIN')"
+                      th:data-item-name="|đợt kiến tập ${dot.tenDotKT}|"
+                      data-confirm-action="phê duyệt"
+                      onsubmit="return confirmDeleteFromForm(this, event)">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <button class="btn btn-sm btn-success">
+                        <i class="bi bi-check-lg me-1"></i>Phê Duyệt
+                    </button>
+                </form>
+
+                <!-- DaDuyet -> DaThucHien — terminal positive, dung btn-success
+                     (§9.5: btn-primary danh cho Tao moi/Luu, khong dung cho state transition) -->
+                <form th:if="${s == 'DaDuyet'}"
+                      th:action="@{/kien-tap/hoan-thanh/{id}(id=${dot.maDotKT})}"
+                      method="post" class="d-inline m-0"
+                      sec:authorize="hasAnyRole('TTDTXS','CNHP','ADMIN')"
+                      th:data-item-name="|đợt kiến tập ${dot.tenDotKT}|"
+                      data-confirm-action="hoàn thành"
+                      onsubmit="return confirmDeleteFromForm(this, event)">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <button class="btn btn-sm btn-success">
+                        <i class="bi bi-flag-fill me-1"></i>Hoàn Thành
+                    </button>
+                </form>
+
+                <!-- {ChuanBi,ChoDuyet,DaDuyet,DaThucHien} -> DaHuy -->
+                <form th:action="@{/kien-tap/huy/{id}(id=${dot.maDotKT})}"
+                      method="post" class="d-inline m-0"
+                      sec:authorize="hasAnyRole('TTDTXS','CNHP','ADMIN')"
+                      th:data-item-name="|đợt kiến tập ${dot.tenDotKT}|"
+                      data-confirm-action="huỷ"
+                      onsubmit="return confirmDeleteFromForm(this, event)">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <button class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-x-lg me-1"></i>Huỷ Đợt
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- THONG TIN DOT -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="bi bi-info-circle"></i>
+            <span class="fw-semibold">Thông Tin Đợt</span>
+        </div>
+        <div class="card-body">
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-item-label">Mã Đợt</span>
+                    <span class="info-item-value"><code th:text="${'KT' + dot.maDotKT}"></code></span>
+                </div>
+                <div class="info-item">
+                    <span class="info-item-label">Tên Đợt</span>
+                    <span class="info-item-value fw-semibold" th:text="${dot.tenDotKT}">--</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-item-label">Lớp Hành Chính</span>
+                    <span class="info-item-value">
+                        <span th:if="${dot.lopHanhChinh != null}"
+                              th:text="${dot.lopHanhChinh.maLopHC + ' — ' + dot.lopHanhChinh.tenLop}">--</span>
+                        <span th:unless="${dot.lopHanhChinh != null}"
+                              class="text-muted fst-italic">--</span>
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-item-label">Học Kỳ</span>
+                    <span class="info-item-value">
+                        <span th:if="${dot.hocKy != null}"
+                              th:text="${dot.hocKy.maHocKy + ' — ' + dot.hocKy.tenHocKy}">--</span>
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-item-label">Thời Gian</span>
+                    <span class="info-item-value"
+                          th:text="${dot.thoiGian != null ?
+                              #temporals.format(dot.thoiGian, 'dd/MM/yyyy') : '--'}">--</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-item-label">GV Phụ Trách</span>
+                    <span class="info-item-value">
+                        <span th:if="${dot.gvPhuTrach != null}"
+                              th:text="${dot.gvPhuTrach.maGV + ' — ' + dot.gvPhuTrach.hoTen}">--</span>
+                        <span th:unless="${dot.gvPhuTrach != null}"
+                              class="text-muted fst-italic">Chưa phân công</span>
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-item-label">Doanh Nghiệp Tiếp Đón</span>
+                    <span class="info-item-value">
+                        <span th:if="${dot.doanhNghiep != null}"
+                              th:text="${dot.doanhNghiep.tenDoanhNghiep}">--</span>
+                        <span th:unless="${dot.doanhNghiep != null}"
+                              class="text-muted fst-italic">--</span>
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-item-label">Kinh Phí Chung</span>
+                    <span class="info-item-value">
+                        <span th:if="${dot.kinhPhiChung != null}"
+                              th:text="${#numbers.formatDecimal(dot.kinhPhiChung, 0, 'COMMA', 0, 'POINT') + ' VNĐ'}">--</span>
+                        <span th:unless="${dot.kinhPhiChung != null}"
+                              class="text-muted fst-italic">--</span>
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-item-label">Kinh Phí / SV</span>
+                    <span class="info-item-value">
+                        <span th:if="${dot.kinhPhiTungSV != null}"
+                              th:text="${#numbers.formatDecimal(dot.kinhPhiTungSV, 0, 'COMMA', 0, 'POINT') + ' VNĐ'}">--</span>
+                        <span th:unless="${dot.kinhPhiTungSV != null}"
+                              class="text-muted fst-italic">--</span>
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-item-label">File Minh Chứng</span>
+                    <span class="info-item-value">
+                        <a th:if="${dot.fileMinhChung != null and !#strings.isEmpty(dot.fileMinhChung)}"
+                           th:href="@{'/uploads/' + ${dot.fileMinhChung}}"
+                           target="_blank" class="text-decoration-none">
+                            <i class="bi bi-file-earmark-pdf me-1"></i>Xem file
+                        </a>
+                        <span th:unless="${dot.fileMinhChung != null and !#strings.isEmpty(dot.fileMinhChung)}"
+                              class="text-muted fst-italic">Chưa có</span>
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-item-label">Người Tạo</span>
+                    <span class="info-item-value"
+                          th:text="${dot.nguoiTao != null ? dot.nguoiTao.hoTen : '--'}">--</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-item-label">Người Duyệt</span>
+                    <span class="info-item-value">
+                        <span th:if="${dot.nguoiDuyet != null}">
+                            <span th:text="${dot.nguoiDuyet.hoTen}">--</span>
+                            <small class="text-muted d-block"
+                                   th:if="${dot.ngayDuyet != null}"
+                                   th:text="${#temporals.format(dot.ngayDuyet, 'dd/MM/yyyy HH:mm')}">--</small>
+                        </span>
+                        <span th:unless="${dot.nguoiDuyet != null}"
+                              class="text-muted fst-italic">Chưa duyệt</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    </div><!-- /pane-overview -->
+
+    <!-- ====== TAB 2: SINH VIEN ====== -->
+    <div class="tab-pane fade" id="pane-students"
+         role="tabpanel" aria-labelledby="tab-students" tabindex="0">
+
+    <!-- DANH SACH SV THAM GIA — Phase 4: bo mb-4 (tab pane co spacing rieng),
+         bo badge tren card-header (da co tren tab nav). -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span class="fw-semibold">
+                <i class="bi bi-people me-2"></i>Danh Sách Sinh Viên Tham Gia
+            </span>
+            <form th:action="@{/kien-tap/chi-tiet/{id}/dong-bo(id=${dot.maDotKT})}"
+                  method="post" class="d-inline m-0"
+                  sec:authorize="hasAnyRole('TTDTXS','CNHP','ADMIN')">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <button class="btn btn-sm btn-outline-primary"
+                        th:disabled="${s == 'DaHuy'}"
+                        data-bs-toggle="tooltip"
+                        data-bs-title="Thêm SV DangHoc mới của lớp vào danh sách">
+                    <i class="bi bi-arrow-repeat me-1"></i>Đồng Bộ Danh Sách
+                </button>
+            </form>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width:50px;">STT</th>
+                            <th>Mã SV</th>
+                            <th>Họ Tên</th>
+                            <th>Lớp</th>
+                            <th>Trạng Thái SV</th>
+                            <th class="text-center">Tham Gia</th>
+                            <th class="text-center" sec:authorize="hasAnyRole('TTDTXS','CNHP','ADMIN')"
+                                style="width:160px;">Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(danhSachSV)}">
+                            <td colspan="7">
+                                <div class="empty-state">
+                                    <i class="bi bi-person-x"></i>
+                                    <p>Chưa có sinh viên trong danh sách. Bấm "Đồng Bộ Danh Sách" để thêm SV DangHoc của lớp.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:each="ds, stat : ${danhSachSV}">
+                            <td class="text-muted" th:text="${stat.index + 1}">1</td>
+                            <td><code th:text="${ds.sinhVien.maSV}"></code></td>
+                            <td class="fw-medium"
+                                th:text="${ds.sinhVien.nguoiDung != null
+                                    ? ds.sinhVien.nguoiDung.hoTen
+                                    : ds.sinhVien.maSV}">--</td>
+                            <td class="small text-muted"
+                                th:text="${ds.sinhVien.lopHanhChinh != null
+                                    ? ds.sinhVien.lopHanhChinh.maLopHC : '--'}">--</td>
+                            <td>
+                                <span class="status-pill"
+                                      th:with="t=${ds.sinhVien.trangThaiSV?.name()}"
+                                      th:classappend="${t == 'DangHoc'   ? 'tone-success' :
+                                                      (t == 'BaoLuu'    ? 'tone-warning' :
+                                                      (t == 'TotNghiep' ? 'tone-info'    : 'tone-neutral'))}">
+                                    <span class="pill-dot" aria-hidden="true"></span>
+                                    <span th:text="${t == 'DangHoc'   ? 'Đang Học'   :
+                                                   (t == 'BaoLuu'    ? 'Bảo Lưu'   :
+                                                   (t == 'TotNghiep' ? 'Tốt Nghiệp' :
+                                                   (t == 'NghiHoc'   ? 'Nghỉ Học'   :
+                                                   (t == 'BiDuoi'    ? 'Bị Đuổi'    : (t ?: '--')))))}">--</span>
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <span th:if="${ds.daThamGia}" class="badge bg-success">
+                                    <i class="bi bi-check-lg"></i> Có
+                                </span>
+                                <span th:unless="${ds.daThamGia}" class="badge bg-secondary">
+                                    <i class="bi bi-dash"></i> Không
+                                </span>
+                            </td>
+                            <td class="text-center" sec:authorize="hasAnyRole('TTDTXS','CNHP','ADMIN')">
+                                <form th:action="@{/kien-tap/chi-tiet/{id}/sv/{maSV}/danh-dau
+                                                  (id=${dot.maDotKT}, maSV=${ds.sinhVien.maSV})}"
+                                      method="post" class="d-inline m-0">
+                                    <input type="hidden" th:name="${_csrf.parameterName}"
+                                                          th:value="${_csrf.token}">
+                                    <input type="hidden" name="daThamGia"
+                                           th:value="${!ds.daThamGia}">
+                                    <button class="btn btn-sm"
+                                            th:classappend="${ds.daThamGia} ? 'btn-outline-secondary' : 'btn-outline-success'"
+                                            th:disabled="${s == 'DaHuy'}"
+                                            data-bs-toggle="tooltip"
+                                            th:attr="data-bs-title=${ds.daThamGia ? 'Đánh dấu KHÔNG tham gia' : 'Đánh dấu CÓ tham gia'}">
+                                        <i class="bi"
+                                           th:classappend="${ds.daThamGia} ? 'bi-x-lg' : 'bi-check-lg'"></i>
+                                        <span th:text="${ds.daThamGia} ? 'Bỏ' : 'Thêm'">--</span>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    </div><!-- /pane-students -->
+
+    <!-- ====== TAB 3: NHAN XET (chi neu DaDuyet hoac DaThucHien) ====== -->
+    <div class="tab-pane fade" id="pane-feedback"
+         role="tabpanel" aria-labelledby="tab-feedback" tabindex="0"
+         th:if="${s == 'DaDuyet' or s == 'DaThucHien'}">
+
+    <!-- NHAN XET — editable cho GVPhuTrach / DNTiepDon -->
+    <div class="row g-4"
+         th:if="${laGVPhuTrach or laDNTiepDon}">
+
+        <!-- Nhan xet GV phu trach -->
+        <div class="col-lg-6" th:if="${laGVPhuTrach}">
+            <div class="card h-100">
+                <div class="card-header">
+                    <i class="bi bi-chat-left-text"></i>
+                    <span class="fw-semibold">Nhận Xét Của GV Phụ Trách</span>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/kien-tap/nhan-xet-gv/{id}(id=${dot.maDotKT})}"
+                          method="post">
+                        <input type="hidden" th:name="${_csrf.parameterName}"
+                                              th:value="${_csrf.token}">
+                        <div class="mb-3">
+                            <label for="nhanXetGV" class="form-label fw-medium">
+                                Nội dung nhận xét
+                            </label>
+                            <textarea class="form-control" id="nhanXetGV"
+                                      name="nhanXet" rows="5"
+                                      placeholder="Nhập nhận xét về quá trình kiến tập của sinh viên..."
+                                      th:text="${dot.nhanXetGV}"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="bi bi-save me-1"></i>Lưu Nhận Xét
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Nhan xet DN tiep don -->
+        <div class="col-lg-6" th:if="${laDNTiepDon}">
+            <div class="card h-100">
+                <div class="card-header">
+                    <i class="bi bi-building-check"></i>
+                    <span class="fw-semibold">Nhận Xét Của Doanh Nghiệp</span>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/kien-tap/nhan-xet-dn/{id}(id=${dot.maDotKT})}"
+                          method="post">
+                        <input type="hidden" th:name="${_csrf.parameterName}"
+                                              th:value="${_csrf.token}">
+                        <div class="mb-3">
+                            <label for="nhanXetDN" class="form-label fw-medium">
+                                Nội dung nhận xét
+                            </label>
+                            <textarea class="form-control" id="nhanXetDN"
+                                      name="nhanXet" rows="5"
+                                      placeholder="Nhập nhận xét về sinh viên trong quá trình kiến tập..."
+                                      th:text="${dot.nhanXetDN}"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="bi bi-save me-1"></i>Lưu Nhận Xét
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hien thi nhan xet (read-only) cho cac role khac khi da co nhan xet.
+         Phase 4: bo dieu kien (s == DaDuyet/DaThucHien) — da duoc handle boi
+         tab visibility o tren. -->
+    <div class="row g-4 mt-1"
+         th:if="${!laGVPhuTrach and !laDNTiepDon
+                 and (dot.nhanXetGV != null or dot.nhanXetDN != null)}">
+        <div class="col-lg-6" th:if="${dot.nhanXetGV != null and !#strings.isEmpty(dot.nhanXetGV)}">
+            <div class="card h-100">
+                <div class="card-header">
+                    <i class="bi bi-chat-left-text"></i>
+                    <span class="fw-semibold">Nhận Xét Của GV Phụ Trách</span>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0" style="white-space: pre-wrap;" th:text="${dot.nhanXetGV}">--</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6" th:if="${dot.nhanXetDN != null and !#strings.isEmpty(dot.nhanXetDN)}">
+            <div class="card h-100">
+                <div class="card-header">
+                    <i class="bi bi-building-check"></i>
+                    <span class="fw-semibold">Nhận Xét Của Doanh Nghiệp</span>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0" style="white-space: pre-wrap;" th:text="${dot.nhanXetDN}">--</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    </div><!-- /pane-feedback -->
+
+    </div><!-- /tab-content -->
+
+</div>
+</body>
+</html>

@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/base}">
+<head><title>Đánh Giá Sinh Viên</title></head>
+<body>
+<div layout:fragment="content">
+
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a th:href="@{/dashboard}" class="text-decoration-none">
+                    <i class="bi bi-house-door me-1"></i>Trang Chủ
+                </a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">Đánh Giá</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
+        <div>
+            <p class="page-subtitle">Đánh Giá &amp; Cảnh Báo</p>
+            <h4 class="page-title mb-0"
+                th:text="${vaiTro == 'GV'} ? 'Lớp Học Phần Đang Dạy'
+                                            : 'Nhận Xét &amp; Cảnh Báo Của Tôi'">--</h4>
+        </div>
+        <a th:if="${vaiTro == 'GV'}"
+           sec:authorize="hasAnyRole('CVHT','PDT','ADMIN')"
+           th:href="@{/danh-gia/canh-bao}" class="btn btn-outline-warning btn-sm">
+            <i class="bi bi-bell me-1"></i>Xem Cảnh Báo
+        </a>
+    </div>
+
+    <!-- ============================================================
+         GV VIEW — Lop dang day + so canh bao
+    ============================================================ -->
+    <div th:if="${vaiTro == 'GV'}"
+         th:with="tongLop=${#lists.size(lopList)},
+                  tongCanhBao=${canhBaoMap.values().?[#this > 0].size()}">
+
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-4">
+                <div class="stat-card variant-info">
+                    <div class="stat-card-icon"><i class="bi bi-collection"></i></div>
+                    <div>
+                        <div class="stat-card-value" th:text="${tongLop}">0</div>
+                        <div class="stat-card-label">Lớp Đang Dạy</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4">
+                <div class="stat-card variant-warning">
+                    <div class="stat-card-icon"><i class="bi bi-exclamation-triangle"></i></div>
+                    <div>
+                        <div class="stat-card-value" th:text="${tongCanhBao}">0</div>
+                        <div class="stat-card-label">Lớp Có Cảnh Báo</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-4">
+                <div class="stat-card variant-teal">
+                    <div class="stat-card-icon"><i class="bi bi-clipboard-check"></i></div>
+                    <div>
+                        <div class="stat-card-value">
+                            <i class="bi bi-arrow-right-short"></i>
+                        </div>
+                        <div class="stat-card-label">Click 1 lớp để nhập nhận xét</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span class="fw-semibold">
+                    <i class="bi bi-collection me-2"></i>Danh Sách Lớp Học Phần
+                </span>
+                <span class="badge bg-light text-dark">
+                    <span id="gvHienThi" th:text="${tongLop}">0</span> / <span th:text="${tongLop}">0</span>
+                </span>
+            </div>
+
+            <!-- Filter / Search toolbar (client-side) -->
+            <div class="card-body border-bottom py-3" th:if="${tongLop > 0}">
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-5">
+                        <label for="gvSearchInput" class="form-label small fw-medium mb-1">
+                            <i class="bi bi-search me-1"></i>Tìm kiếm
+                        </label>
+                        <input type="search" id="gvSearchInput"
+                               class="form-control form-control-sm"
+                               placeholder="Mã HP, tên HP, CTĐT, học kỳ...">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="gvHocKyFilter" class="form-label small fw-medium mb-1">
+                            <i class="bi bi-calendar3 me-1"></i>Học kỳ
+                        </label>
+                        <select id="gvHocKyFilter" class="form-select form-select-sm">
+                            <option value="">Tất cả</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="gvCanhBaoFilter" class="form-label small fw-medium mb-1">
+                            <i class="bi bi-funnel me-1"></i>Cảnh báo
+                        </label>
+                        <select id="gvCanhBaoFilter" class="form-select form-select-sm">
+                            <option value="">Tất cả</option>
+                            <option value="co">Có cảnh báo</option>
+                            <option value="khong">Không cảnh báo</option>
+                        </select>
+                    </div>
+                    <div class="col-md-1">
+                        <button type="button" id="gvResetFilter"
+                                class="btn btn-sm btn-outline-secondary w-100"
+                                title="Xoá bộ lọc">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" id="gvTable">
+                        <thead>
+                            <tr>
+                                <th style="width:50px;">STT</th>
+                                <th>CTĐT</th>
+                                <th>Mã HP</th>
+                                <th>Tên Học Phần</th>
+                                <th>Học Kỳ</th>
+                                <th class="text-center">Nhóm</th>
+                                <th class="text-center">Sĩ Số</th>
+                                <th class="text-center">Cảnh Báo</th>
+                                <th class="text-end" style="width:160px;">Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${#lists.isEmpty(lopList)}">
+                                <td colspan="9">
+                                    <div class="empty-state">
+                                        <i class="bi bi-collection"></i>
+                                        <p>Bạn chưa được phân công dạy lớp nào.</p>
+                                        <small class="text-muted d-block">
+                                            Liên hệ Phòng Đào Tạo để được phân công lớp học phần.
+                                        </small>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr id="gvEmptyFilter" class="d-none">
+                                <td colspan="9">
+                                    <div class="empty-state">
+                                        <i class="bi bi-funnel"></i>
+                                        <p>Không có lớp nào phù hợp với bộ lọc.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:each="lhp, stat : ${lopList}"
+                                th:with="hp=${hocPhanMap.get(lhp.id.maHocPhan)},
+                                         hk=${hocKyMap != null ? hocKyMap.get(lhp.id.maHocKy) : null},
+                                         soCB=${canhBaoMap.get(lhp.id.maCTDT + '|' + lhp.id.maHocPhan + '|' + lhp.id.maHocKy + '|' + lhp.id.maLopHocPhan)}"
+                                class="gv-row"
+                                th:data-hocky="${lhp.id.maHocKy}"
+                                th:data-canhbao="${(soCB != null and soCB > 0) ? 'co' : 'khong'}"
+                                th:data-search="${lhp.id.maCTDT + ' ' + lhp.id.maHocPhan + ' ' + lhp.id.maHocKy + ' '
+                                                  + (hk != null ? hk.tenHocKy : '') + ' '
+                                                  + (hp != null ? hp.tenHocPhan : '')}">
+                                <td class="text-muted" th:text="${stat.index + 1}">1</td>
+                                <td><code th:text="${lhp.id.maCTDT}">--</code></td>
+                                <td><code th:text="${lhp.id.maHocPhan}">--</code></td>
+                                <td class="fw-medium"
+                                    th:text="${hp != null ? hp.tenHocPhan : '--'}">--</td>
+                                <!--/* Phase 7 fix: hien friendly tenHocKy + ma duoi dang muted */-->
+                                <td>
+                                    <div class="fw-medium small"
+                                         th:text="${hk != null ? hk.tenHocKy : lhp.id.maHocKy}">--</div>
+                                    <code class="small text-muted"
+                                          th:text="${lhp.id.maHocKy}">--</code>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-light text-dark"
+                                          th:text="'N' + ${lhp.id.maLopHocPhan}">N1</span>
+                                </td>
+                                <td class="text-center small"
+                                    th:with="key=${lhp.id.maCTDT + '|' + lhp.id.maHocPhan + '|' + lhp.id.maHocKy + '|' + lhp.id.maLopHocPhan},
+                                             ht=${siSoMap != null ? (siSoMap.get(key) ?: 0) : 0}"
+                                    th:text="${ht + '/' + (lhp.siSoToiDa ?: 0)}">0/0</td>
+                                <td class="text-center">
+                                    <span th:if="${soCB != null and soCB > 0}"
+                                          class="status-pill tone-warning">
+                                        <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+                                        <span th:text="${soCB}">0</span>
+                                    </span>
+                                    <span th:unless="${soCB != null and soCB > 0}"
+                                          class="text-muted small">0</span>
+                                </td>
+                                <td class="text-end">
+                                    <a th:href="@{/danh-gia/lop(maCTDT=${lhp.id.maCTDT},
+                                                                  maHocPhan=${lhp.id.maHocPhan},
+                                                                  maHocKy=${lhp.id.maHocKy},
+                                                                  maLop=${lhp.id.maLopHocPhan})}"
+                                       class="btn btn-sm btn-primary">
+                                        <i class="bi bi-pencil-square me-1"></i>Nhập Nhận Xét
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         SV VIEW — Nhan xet ve toi
+    ============================================================ -->
+    <div th:if="${vaiTro == 'SV'}"
+         th:with="tong=${#lists.size(nhanXetList)},
+                  soCB=${#lists.size(nhanXetList.?[daCanhBao])}">
+
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-4">
+                <div class="stat-card variant-info">
+                    <div class="stat-card-icon"><i class="bi bi-chat-square-text"></i></div>
+                    <div>
+                        <div class="stat-card-value" th:text="${tong}">0</div>
+                        <div class="stat-card-label">Tổng Nhận Xét</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4">
+                <div class="stat-card variant-warning">
+                    <div class="stat-card-icon"><i class="bi bi-exclamation-triangle"></i></div>
+                    <div>
+                        <div class="stat-card-value" th:text="${soCB}">0</div>
+                        <div class="stat-card-label">Số Lần Bị Cảnh Báo</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-4">
+                <div class="stat-card variant-success">
+                    <div class="stat-card-icon"><i class="bi bi-person-check"></i></div>
+                    <div>
+                        <div class="stat-card-value"
+                             th:text="${sinhVien != null ? (sinhVien.maSV) : '--'}">--</div>
+                        <div class="stat-card-label">Mã Sinh Viên</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span class="fw-semibold">
+                    <i class="bi bi-chat-square-text me-2"></i>Lịch Sử Nhận Xét
+                </span>
+                <span class="badge bg-light text-dark">
+                    <span id="svHienThi" th:text="${tong}">0</span> / <span th:text="${tong}">0</span>
+                </span>
+            </div>
+
+            <!-- Filter / Search toolbar -->
+            <div class="card-body border-bottom py-3" th:if="${tong > 0}">
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-5">
+                        <label for="svSearchInput" class="form-label small fw-medium mb-1">
+                            <i class="bi bi-search me-1"></i>Tìm kiếm
+                        </label>
+                        <input type="search" id="svSearchInput"
+                               class="form-control form-control-sm"
+                               placeholder="Mã HP, tên HP, học kỳ, nhận xét...">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="svHocKyFilter" class="form-label small fw-medium mb-1">
+                            <i class="bi bi-calendar3 me-1"></i>Học kỳ
+                        </label>
+                        <select id="svHocKyFilter" class="form-select form-select-sm">
+                            <option value="">Tất cả</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="svStatusFilter" class="form-label small fw-medium mb-1">
+                            <i class="bi bi-funnel me-1"></i>Trạng thái
+                        </label>
+                        <select id="svStatusFilter" class="form-select form-select-sm">
+                            <option value="">Tất cả</option>
+                            <option value="cb">Cảnh báo</option>
+                            <option value="bt">Bình thường</option>
+                        </select>
+                    </div>
+                    <div class="col-md-1">
+                        <button type="button" id="svResetFilter"
+                                class="btn btn-sm btn-outline-secondary w-100"
+                                title="Xoá bộ lọc">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" id="svTable">
+                        <thead>
+                            <tr>
+                                <th style="width:50px;">STT</th>
+                                <th>Học Kỳ</th>
+                                <th>Mã HP</th>
+                                <th>Tên Học Phần</th>
+                                <th class="text-center">Nhóm</th>
+                                <th>Nhận Xét</th>
+                                <th class="text-center">Trạng Thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${#lists.isEmpty(nhanXetList)}">
+                                <td colspan="7">
+                                    <div class="empty-state">
+                                        <i class="bi bi-chat-left"></i>
+                                        <p>Chưa có nhận xét nào.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr id="svEmptyFilter" class="d-none">
+                                <td colspan="7">
+                                    <div class="empty-state">
+                                        <i class="bi bi-funnel"></i>
+                                        <p>Không có nhận xét nào phù hợp với bộ lọc.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:each="nx, stat : ${nhanXetList}"
+                                th:with="hp=${hocPhanMap.get(nx.id.maHocPhan)},
+                                         hk=${hocKyMap != null ? hocKyMap.get(nx.id.maHocKy) : null}"
+                                class="sv-row"
+                                th:data-hocky="${nx.id.maHocKy}"
+                                th:data-status="${nx.daCanhBao ? 'cb' : 'bt'}"
+                                th:data-search="${nx.id.maHocPhan + ' ' + nx.id.maHocKy + ' '
+                                                  + (hk != null ? hk.tenHocKy : '') + ' '
+                                                  + (hp != null ? hp.tenHocPhan : '') + ' '
+                                                  + (nx.nhanXet != null ? nx.nhanXet : '')}">
+                                <td class="text-muted" th:text="${stat.index + 1}">1</td>
+                                <!--/* Phase 7 fix: hien friendly tenHocKy + ma duoi dang muted */-->
+                                <td>
+                                    <div class="fw-medium small"
+                                         th:text="${hk != null ? hk.tenHocKy : nx.id.maHocKy}">--</div>
+                                    <code class="small text-muted"
+                                          th:text="${nx.id.maHocKy}">--</code>
+                                </td>
+                                <td><code th:text="${nx.id.maHocPhan}">--</code></td>
+                                <td th:text="${hp != null ? hp.tenHocPhan : '--'}">--</td>
+                                <td class="text-center">
+                                    <span class="badge bg-light text-dark"
+                                          th:text="'N' + ${nx.id.maLopHocPhan}">N1</span>
+                                </td>
+                                <td class="small"
+                                    th:text="${nx.nhanXet != null and !#strings.isEmpty(nx.nhanXet)
+                                                ? nx.nhanXet : '--'}">--</td>
+                                <td class="text-center">
+                                    <span th:if="${nx.daCanhBao}" class="status-pill tone-warning">
+                                        <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+                                        Cảnh Báo
+                                    </span>
+                                    <span th:unless="${nx.daCanhBao}" class="status-pill tone-success">
+                                        <span class="pill-dot" aria-hidden="true"></span>
+                                        Bình Thường
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<th:block layout:fragment="scripts">
+<script>
+(function() {
+    'use strict';
+
+    function normalize(s) {
+        return (s || '').toString().toLowerCase()
+            .normalize('NFD').replace(/[u0300-u036f]/g, '')
+            .replace(/đ/g, 'd');
+    }
+
+    function setupFilter(config) {
+        const searchInput = document.getElementById(config.search);
+        if (!searchInput) return; // view not active
+        const hocKyFilter = document.getElementById(config.hocKy);
+        const extraFilter = config.extra ? document.getElementById(config.extra) : null;
+        const resetBtn = document.getElementById(config.reset);
+        const counterEl = document.getElementById(config.counter);
+        const emptyRow = document.getElementById(config.emptyRow);
+        const rows = document.querySelectorAll(config.rowSelector);
+
+        if (rows.length === 0) return;
+
+        // Auto-populate hoc-ky options.
+        // Phase 7 fix: lay friendly tenHocKy tu cell ".fw-medium" trong row
+        // dau tien tim thay cua moi maHocKy. Truoc day chi hien ma — user nham.
+        const hocKyMap = new Map(); // maHocKy -> tenHocKy
+        rows.forEach(r => {
+            const hk = r.getAttribute('data-hocky');
+            if (!hk || hocKyMap.has(hk)) return;
+            // Looks for the first ".fw-medium.small" cell that contains
+            // the human label printed by the template (right next to <code>).
+            const labelEl = r.querySelector('.fw-medium.small');
+            const label = labelEl ? labelEl.textContent.trim() : hk;
+            hocKyMap.set(hk, label);
+        });
+        Array.from(hocKyMap.entries())
+            .sort((a, b) => a[0].localeCompare(b[0]))
+            .forEach(([code, label]) => {
+                const opt = document.createElement('option');
+                opt.value = code;
+                opt.textContent = label === code ? code : (label + ' (' + code + ')');
+                hocKyFilter.appendChild(opt);
+            });
+
+        function apply() {
+            const q = normalize(searchInput.value.trim());
+            const hk = hocKyFilter.value;
+            const extra = extraFilter ? extraFilter.value : '';
+            let visible = 0;
+
+            rows.forEach(row => {
+                const haystack = normalize(row.getAttribute('data-search'));
+                const rowHk = row.getAttribute('data-hocky');
+                const rowExtra = extraFilter ? row.getAttribute(config.extraAttr) : '';
+
+                const matchSearch = !q || haystack.indexOf(q) !== -1;
+                const matchHk = !hk || rowHk === hk;
+                const matchExtra = !extra || rowExtra === extra;
+
+                const show = matchSearch && matchHk && matchExtra;
+                row.classList.toggle('d-none', !show);
+                if (show) visible++;
+            });
+
+            if (counterEl) counterEl.textContent = visible;
+            if (emptyRow) emptyRow.classList.toggle('d-none', visible !== 0);
+        }
+
+        searchInput.addEventListener('input', apply);
+        hocKyFilter.addEventListener('change', apply);
+        if (extraFilter) extraFilter.addEventListener('change', apply);
+        resetBtn.addEventListener('click', function() {
+            searchInput.value = '';
+            hocKyFilter.value = '';
+            if (extraFilter) extraFilter.value = '';
+            apply();
+        });
+    }
+
+    // GV view
+    setupFilter({
+        search: 'gvSearchInput',
+        hocKy: 'gvHocKyFilter',
+        extra: 'gvCanhBaoFilter',
+        extraAttr: 'data-canhbao',
+        reset: 'gvResetFilter',
+        counter: 'gvHienThi',
+        emptyRow: 'gvEmptyFilter',
+        rowSelector: '.gv-row'
+    });
+
+    // SV view
+    setupFilter({
+        search: 'svSearchInput',
+        hocKy: 'svHocKyFilter',
+        extra: 'svStatusFilter',
+        extraAttr: 'data-status',
+        reset: 'svResetFilter',
+        counter: 'svHienThi',
+        emptyRow: 'svEmptyFilter',
+        rowSelector: '.sv-row'
+    });
+})();
+</script>
+</th:block>
+
+</body>
+</html>

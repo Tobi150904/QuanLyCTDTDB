@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<!--/*
+ * fragments/_toast-container.html
+ *
+ * Container Bootstrap 5 toast — duoc main.js (Toast.success/error/info)
+ * dung de stack toast moi.
+ *
+ * Vi tri: bottom-right, fixed, ngoai luong tai lieu.
+ *
+ * Su dung:
+ *   <th:block th:replace="~{fragments/_toast-container :: container}"></th:block>
+ */-->
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<th:block th:fragment="container">
+    <div class="toast-stack" id="toastStack"
+         aria-live="polite" aria-atomic="true">
+        <!--/* Toast moi se duoc append vao day boi main.js Toast helper */-->
+    </div>
+</th:block>
+
+</body>
+</html>

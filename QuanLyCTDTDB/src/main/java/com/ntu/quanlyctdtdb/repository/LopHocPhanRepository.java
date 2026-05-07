@@ -16,6 +16,8 @@ public interface LopHocPhanRepository extends JpaRepository<LopHocPhan, LopHocPh
     List<LopHocPhan> findByTrangThai(TrangThaiLopHocPhan trangThai);
     List<LopHocPhan> findByGiangVien_MaGV(String maGV);
 
+    long countByTrangThai(TrangThaiLopHocPhan trangThai);
+
     @Query("""
         SELECT lhp FROM LopHocPhan lhp
         WHERE lhp.id.maCTDT = :maCTDT
@@ -25,7 +27,111 @@ public interface LopHocPhanRepository extends JpaRepository<LopHocPhan, LopHocPh
         """)
     List<LopHocPhan> findByCtdtHocPhanAndHocKy(String maCTDT, String maHocPhan, String maHocKy);
 
-    // Lop khong co GV (can phan cong)
-    @Query("SELECT lhp FROM LopHocPhan lhp WHERE lhp.giangVien IS NULL AND lhp.trangThai = 'DangMo'")
+    // Lop khong co GV (can phan cong) - fetch GV.nguoiDung de render template
+    @Query("""
+        SELECT lhp FROM LopHocPhan lhp
+        LEFT JOIN FETCH lhp.giangVien gv
+        LEFT JOIN FETCH gv.nguoiDung
+        WHERE lhp.giangVien IS NULL AND lhp.trangThai = 'DangMo'
+        """)
     List<LopHocPhan> findChuaPhanCongGiangVien();
+
+    /**
+     * List view theo CTDT + HocKy: fetch GV + NguoiDung tranh LazyInit
+     * khi template hien thi hoTen giang vien (open-in-view=false).
+     */
+    @Query("""
+        SELECT DISTINCT lhp FROM LopHocPhan lhp
+        LEFT JOIN FETCH lhp.giangVien gv
+        LEFT JOIN FETCH gv.nguoiDung
+        WHERE lhp.id.maCTDT = :maCTDT
+        AND lhp.id.maHocKy = :maHocKy
+        ORDER BY lhp.id.maHocPhan, lhp.id.maLopHocPhan
+        """)
+    List<LopHocPhan> findByCtdtAndHocKyFetch(String maCTDT, String maHocKy);
+
+    /**
+     * List view chi theo CTDT (tat ca hoc ky): dung khi nguoi dung muon
+     * xem toan bo lop cua mot CTDT across nhieu ky — phuc vu bao cao
+     * tong hop ("tat ca cac lop da/dang mo cho CTDT X").
+     * <p>ORDER theo maHocKy DESC de nhung ky moi nhat hien len truoc.
+     */
+    @Query("""
+        SELECT DISTINCT lhp FROM LopHocPhan lhp
+        LEFT JOIN FETCH lhp.giangVien gv
+        LEFT JOIN FETCH gv.nguoiDung
+        WHERE lhp.id.maCTDT = :maCTDT
+        ORDER BY lhp.id.maHocKy DESC, lhp.id.maHocPhan, lhp.id.maLopHocPhan
+        """)
+    List<LopHocPhan> findByCtdtFetch(String maCTDT);
+
+    /**
+     * List view chi theo HocKy (tat ca CTDT): dung khi TTDTXS/PDT muon
+     * xem tong hop toan bo lop mo trong mot hoc ky across CTDT — phuc
+     * vu xep lich, theo doi tinh trang phan cong GV cap truong.
+     */
+    @Query("""
+        SELECT DISTINCT lhp FROM LopHocPhan lhp
+        LEFT JOIN FETCH lhp.giangVien gv
+        LEFT JOIN FETCH gv.nguoiDung
+        WHERE lhp.id.maHocKy = :maHocKy
+        ORDER BY lhp.id.maCTDT, lhp.id.maHocPhan, lhp.id.maLopHocPhan
+        """)
+    List<LopHocPhan> findByHocKyFetch(String maHocKy);
+
+    /**
+     * Phase 7 — Lay 1 LopHocPhan kem giang vien (fetch eager) de DanhGia
+     * controller verify ownership cua GV truoc khi cho phep nhap nhan xet.
+     * Tranh LazyInitException khi OSIV=false.
+     */
+    @Query("""
+        SELECT lhp FROM LopHocPhan lhp
+        LEFT JOIN FETCH lhp.giangVien
+        WHERE lhp.id.maCTDT = :maCTDT
+          AND lhp.id.maHocPhan = :maHP
+          AND lhp.id.maHocKy = :maHK
+          AND lhp.id.maLopHocPhan = :maLop
+        """)
+    java.util.Optional<LopHocPhan> findByIdFetchGv(
+            @org.springframework.data.repository.query.Param("maCTDT") String maCTDT,
+            @org.springframework.data.repository.query.Param("maHP") String maHP,
+            @org.springframework.data.repository.query.Param("maHK") String maHK,
+            @org.springframework.data.repository.query.Param("maLop") Integer maLop);
+
+    /**
+     * Bug-fix phan quyen: lay danh sach lop GV duoc phan cong day, kem fetch
+     * GV + NguoiDung de template render ho ten — tranh LazyInit khi OSIV=false.
+     * Dung cho GV menu sidebar "Lop Hoc Phan" (auto-filter ve cac lop cua GV
+     * thay vi hien empty state yeu cau chon CTDT/HocKy).
+     */
+    @Query("""
+        SELECT DISTINCT lhp FROM LopHocPhan lhp
+        LEFT JOIN FETCH lhp.giangVien gv
+        LEFT JOIN FETCH gv.nguoiDung
+        WHERE lhp.giangVien.maGV = :maGV
+        ORDER BY lhp.id.maHocKy DESC, lhp.id.maCTDT, lhp.id.maHocPhan, lhp.id.maLopHocPhan
+        """)
+    List<LopHocPhan> findByGiangVienMaGVFetch(
+            @org.springframework.data.repository.query.Param("maGV") String maGV);
+
+    /**
+     * Bug-fix phan quyen: lay tat ca lop ma SV co ten trong DanhSachSinhVienLopHocPhan,
+     * kem fetch GV + NguoiDung. Dung cho SV menu sidebar "Lop Hoc Phan".
+     */
+    @Query("""
+        SELECT DISTINCT lhp FROM LopHocPhan lhp
+        LEFT JOIN FETCH lhp.giangVien gv
+        LEFT JOIN FETCH gv.nguoiDung
+        WHERE EXISTS (
+            SELECT 1 FROM DanhSachSvLopHocPhan d
+            WHERE d.id.maSV       = :maSV
+              AND d.id.maCTDT     = lhp.id.maCTDT
+              AND d.id.maHocPhan  = lhp.id.maHocPhan
+              AND d.id.maHocKy    = lhp.id.maHocKy
+              AND d.id.maLopHocPhan = lhp.id.maLopHocPhan
+        )
+        ORDER BY lhp.id.maHocKy DESC, lhp.id.maCTDT, lhp.id.maHocPhan, lhp.id.maLopHocPhan
+        """)
+    List<LopHocPhan> findBySinhVienMaSVFetch(
+            @org.springframework.data.repository.query.Param("maSV") String maSV);
 }

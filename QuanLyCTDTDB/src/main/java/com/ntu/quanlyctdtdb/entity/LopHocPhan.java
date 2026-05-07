@@ -18,16 +18,9 @@ public class LopHocPhan {
     @EmbeddedId
     private LopHocPhanId id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumns({
-        @JoinColumn(name = "MaCTDT", referencedColumnName = "MaCTDT", insertable = false, updatable = false),
-        @JoinColumn(name = "MaHocPhan", referencedColumnName = "MaHocPhan", insertable = false, updatable = false)
-    })
-    private CtdtHocPhan ctdtHocPhan;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "MaHocKy", insertable = false, updatable = false)
-    private HocKyNamHoc hocKy;
+    // ctdtHocPhan va hocKy duoc lay qua Repository bang ID trong EmbeddedId
+    // Khong map truc tiep de tranh Hibernate 7 duplicate column error
+    // (MaCTDT, MaHocPhan, MaHocKy da co trong LopHocPhanId @EmbeddedId)
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "MaGiangVien")
@@ -46,9 +39,9 @@ public class LopHocPhan {
     @Column(name = "TrangThai", length = 20)
     private TrangThaiLopHocPhan trangThai = TrangThaiLopHocPhan.DangMo;
 
-    @OneToMany(mappedBy = "lopHocPhan", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @Builder.Default
-    private List<DanhSachSvLopHocPhan> danhSachSinhViens = new ArrayList<>();
+    // Inverse collection cua DanhSachSvLopHocPhan da bi bo
+    // vi entity DanhSachSvLopHocPhan khong con field 'lopHocPhan' (da xoa de tranh duplicate column).
+    // Truy van danh sach SV qua DanhSachSvLopHocPhanRepository bang LopHocPhanId.
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

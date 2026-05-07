@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<!--/*
+ * fragments/_table-toolbar.html
+ *
+ * Table toolbar: bulk action bar (an mac dinh, hien khi co row selected) +
+ * export buttons.
+ *
+ * Bulk bar duoc kich hoat boi main.js BulkSelect — nguon su that la
+ * checkbox header (th:input[name='selectAll']) + checkbox tung row
+ * (th:input[name='selectedIds']).
+ *
+ * Goi:
+ *   <div th:replace="~{fragments/_table-toolbar :: bulk(
+ *       formAction='/hoc-phan/bulk-delete',
+ *       exportUrl='/hoc-phan/export.csv')}"></div>
+ *
+ * formAction (optional): neu null, khong hien nut "Xoa".
+ * exportUrl (optional): neu null, khong hien nut "Export".
+ */-->
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+
+<th:block th:fragment="bulk(formAction, exportUrl)">
+
+    <!-- Bulk-bar — fixed o duoi tren md+, sticky tren xs.
+         Hien khi BulkSelect.init() phat hien co >=1 checkbox selected. -->
+    <div class="bulk-bar" id="bulkBar" data-state="hidden" hidden>
+        <div class="bulk-bar-inner">
+            <span class="bulk-bar-count">
+                <i class="bi bi-check2-square me-1" aria-hidden="true"></i>
+                Đã chọn <strong id="bulkBarCount">0</strong> mục
+            </span>
+            <div class="bulk-bar-actions d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary"
+                        id="bulkClearBtn">
+                    <i class="bi bi-x-lg me-1" aria-hidden="true"></i>
+                    <span class="d-none d-sm-inline">Bỏ chọn</span>
+                </button>
+
+                <!-- Bulk delete form — submit voi danh sach IDs duoc collect tu
+                     main.js. CSRF tu Spring Security tu inject qua filter. -->
+                <form th:if="${formAction}"
+                      th:action="@{${formAction}}" method="post"
+                      id="bulkDeleteForm"
+                      class="d-inline m-0"
+                      data-item-name="các mục đã chọn"
+                      onsubmit="return confirmDeleteFromForm(this, event)">
+                    <!-- Hidden inputs duoc main.js fill tu selected checkboxes -->
+                    <button type="submit" class="btn btn-sm btn-danger">
+                        <i class="bi bi-trash me-1" aria-hidden="true"></i>
+                        <span class="d-none d-sm-inline">Xoá đã chọn</span>
+                        <span class="d-inline d-sm-none">Xoá</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!--/* Export buttons — dat trong card-header cua list table.
+           Day chi la fragment "extra" — thuong duoc inline o tung trang. */-->
+    <th:block th:if="${exportUrl}">
+        <a th:href="@{${exportUrl}}" class="btn btn-sm btn-outline-success"
+           data-bs-toggle="tooltip" data-bs-title="Tải xuống CSV (Excel)">
+            <i class="bi bi-download me-1" aria-hidden="true"></i>
+            <span class="d-none d-md-inline">CSV</span>
+        </a>
+    </th:block>
+
+</th:block>
+
+</body>
+</html>

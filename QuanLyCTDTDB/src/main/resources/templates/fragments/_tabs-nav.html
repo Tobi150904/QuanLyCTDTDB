@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<!--/*
+ * fragments/_tabs-nav.html
+ *
+ * Bootstrap nav-tabs voi URL hash sync (ho tro #thong-tin, #lich-su, ...).
+ * URL hash sync la mot enhancement client-side — tab van hoat dong khi
+ * khong co JS (chi mat phan luu trang thai trong URL).
+ *
+ * Vi tab content rat dong nen fragment chi cung cap NAV bar — content
+ * panel viet INLINE trong trang.
+ *
+ * Goi:
+ *   <ul class="nav nav-tabs tabs-modern" id="hpTabs" role="tablist">
+ *      <li class="nav-item" role="presentation">
+ *        <button class="nav-link active" data-bs-toggle="tab"
+ *                data-bs-target="#tab-info" type="button" role="tab">
+ *          <i class="bi bi-info-circle me-1"></i>Thông tin
+ *        </button>
+ *      </li>
+ *      ...
+ *   </ul>
+ *
+ * Vi cac tab content khac nhau giua trang, fragment chi xuat NAV markup voi
+ * cac tab da khai bao tu trang qua model attribute "tabs" (List<Map>).
+ *
+ * Goi don gian:
+ *   <div th:replace="~{fragments/_tabs-nav :: nav(
+ *       tabs=${ {
+ *         {id: 'tab-info', label: 'Thông tin', icon: 'bi-info-circle', active: true},
+ *         {id: 'tab-list', label: 'Danh sách HP', icon: 'bi-list'}
+ *       } }, ariaLabel='Thông tin chi tiết')}"></div>
+ *
+ * Note: Thymeleaf 3 voi Spring co the gap kho khi parse list-of-map literal,
+ * nen approach inline markup (viet ul.nav-tabs trong tung trang) van la
+ * cach an toan nhat. Fragment "nav" o duoi de SAFETY cho truong hop don gian.
+ */-->
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<ul th:fragment="nav(tabs, ariaLabel)"
+    class="nav nav-tabs tabs-modern" role="tablist"
+    th:aria-label="${ariaLabel ?: 'Tab chi tiết'}">
+    <li class="nav-item" role="presentation"
+        th:each="tab : ${tabs}">
+        <button th:class="${'nav-link' + (tab.active != null and tab.active ? ' active' : '')}"
+                data-bs-toggle="tab"
+                th:data-bs-target="${'#' + tab.id}"
+                type="button" role="tab"
+                th:id="${tab.id + '-tab'}"
+                th:aria-controls="${tab.id}"
+                th:aria-selected="${tab.active != null and tab.active ? 'true' : 'false'}">
+            <i th:if="${tab.icon}" th:class="${'bi ' + tab.icon + ' me-1'}"
+               aria-hidden="true"></i>
+            <span th:text="${tab.label}">Tab</span>
+        </button>
+    </li>
+</ul>
+
+</body>
+</html>

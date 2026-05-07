@@ -14,6 +14,25 @@ public interface GiangVienRepository extends JpaRepository<GiangVien, String> {
     Optional<GiangVien> findByNguoiDung_MaNguoiDung(String maNguoiDung);
     List<GiangVien> findByLoaiGiangVien(LoaiGiangVien loai);
 
-    @Query("SELECT gv FROM GiangVien gv JOIN gv.nguoiDung nd WHERE nd.trangThaiTK = true ORDER BY nd.hoTen")
+    /**
+     * Fetch GV + NguoiDung (trang thai active) cho dropdown/list view.
+     * Can LEFT JOIN FETCH thay vi JOIN FETCH de gv khong co NguoiDung
+     * (edge case du lieu loi) van hien thi.
+     * Dung khi template render gv.hoTen / gv.email (open-in-view=false).
+     */
+    @Query("""
+        SELECT gv FROM GiangVien gv
+        LEFT JOIN FETCH gv.nguoiDung nd
+        WHERE nd.trangThaiTK = true
+        ORDER BY nd.hoTen
+        """)
     List<GiangVien> findAllActive();
+
+    /** Tat ca GV (ke ca inactive) co fetch NguoiDung cho dropdown/list view. */
+    @Query("""
+        SELECT gv FROM GiangVien gv
+        LEFT JOIN FETCH gv.nguoiDung nd
+        ORDER BY COALESCE(nd.hoTen, gv.maGV)
+        """)
+    List<GiangVien> findAllFetchNguoiDung();
 }

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<!--/*
+ * fragments/_form-section.html
+ *
+ * Section card cho form dai (chia thanh nhom field "Thong tin co ban",
+ * "Lien he", "Tai khoan", v.v.).
+ *
+ * Vi noi dung trong tung section khac nhau, fragment chi cung cap khung
+ * mo (header) — phan content viet inline trong trang.
+ *
+ * Approach: trang viet inline markup theo pattern:
+ *
+ *   <div class="form-section card mb-3">
+ *     <div class="form-section-header">
+ *       <i class="bi bi-person-vcard"></i>
+ *       <span>Thông tin cơ bản</span>
+ *       <small class="form-section-hint">Bắt buộc</small>
+ *     </div>
+ *     <div class="form-section-body">
+ *       ...field...
+ *     </div>
+ *   </div>
+ *
+ * Fragment "header" duoi day chi giup chuan hoa header.
+ */-->
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="header(icon, title, hint)" class="form-section-header">
+    <i th:if="${icon}" th:class="${'bi ' + icon}" aria-hidden="true"></i>
+    <span th:text="${title}">Tiêu đề section</span>
+    <small th:if="${hint}" class="form-section-hint" th:text="${hint}">Hint</small>
+</div>
+
+</body>
+</html>

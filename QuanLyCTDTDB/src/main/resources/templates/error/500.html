@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head><title>500 — Lỗi Hệ Thống</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="error-page">
+        <div class="error-card" role="alert" aria-labelledby="errTitle">
+            <div class="error-icon-wrap tone-danger" aria-hidden="true">
+                <i class="bi bi-exclamation-octagon-fill"></i>
+            </div>
+            <p class="error-code">Lỗi 500</p>
+            <h1 id="errTitle" class="error-title">Đã Xảy Ra Lỗi Hệ Thống</h1>
+            <p class="error-desc">
+                Hệ thống gặp sự cố không mong muốn trong quá trình xử lý yêu cầu.<br>
+                Vui lòng thử lại sau ít phút. Nếu lỗi tiếp diễn, hãy thông báo cho quản trị viên.
+            </p>
+
+            <!--/* Phase 7: hien error reference de user copy gui cho admin debug */-->
+            <div th:if="${errorRef != null and !errorRef.isEmpty()}"
+                 class="d-inline-flex align-items-center gap-2 px-3 py-2 mb-3 small"
+                 style="background: var(--surface-soft); border-radius: var(--radius-sm);">
+                <i class="bi bi-bug text-muted" aria-hidden="true"></i>
+                <span class="text-muted">Mã lỗi:</span>
+                <code id="errRef" th:text="${errorRef}">REF-XXXXXX</code>
+                <button type="button" class="btn btn-sm btn-outline-secondary"
+                        onclick="copyErrRef(this)" title="Sao chép mã lỗi"
+                        aria-label="Sao chép mã lỗi">
+                    <i class="bi bi-clipboard" aria-hidden="true"></i>
+                </button>
+            </div>
+
+            <p th:if="${errorMsg}" class="text-danger small mb-1" th:text="${errorMsg}"></p>
+            <p th:if="${detail}"
+               class="text-secondary small mb-3 text-truncate"
+               style="max-width: 420px; margin-left:auto; margin-right:auto;"
+               th:text="${detail}"
+               th:title="${detail}"></p>
+
+            <div class="d-flex justify-content-center gap-2 flex-wrap">
+                <a th:href="@{/dashboard}" class="btn btn-primary">
+                    <i class="bi bi-house-door me-1" aria-hidden="true"></i>Về Trang Chủ
+                </a>
+                <button type="button" class="btn btn-outline-secondary"
+                        onclick="window.location.reload()">
+                    <i class="bi bi-arrow-clockwise me-1" aria-hidden="true"></i>Thử Lại
+                </button>
+                <button type="button" class="btn btn-outline-secondary"
+                        onclick="history.back()">
+                    <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Quay Lại
+                </button>
+            </div>
+
+            <hr class="soft-divider">
+            <p class="small text-muted mb-0">
+                <i class="bi bi-life-preserver me-1" aria-hidden="true"></i>
+                Sự cố đã được ghi nhận. Đội kỹ thuật sẽ kiểm tra và khắc phục sớm nhất.
+            </p>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="scripts">
+<script>
+    function copyErrRef(btn) {
+        var code = document.getElementById('errRef');
+        if (!code) return;
+        var text = code.textContent.trim();
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(function () {
+                var icon = btn.querySelector('i');
+                if (icon) {
+                    icon.classList.remove('bi-clipboard');
+                    icon.classList.add('bi-clipboard-check');
+                    btn.classList.add('btn-success');
+                    btn.classList.remove('btn-outline-secondary');
+                    setTimeout(function () {
+                        icon.classList.add('bi-clipboard');
+                        icon.classList.remove('bi-clipboard-check');
+                        btn.classList.remove('btn-success');
+                        btn.classList.add('btn-outline-secondary');
+                    }, 1500);
+                }
+            });
+        }
+    }
+</script>
+</th:block>
+</body>
+</html>

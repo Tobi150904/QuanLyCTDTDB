@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<!--/*
+ * doanh-nghiep/form-cua-toi.html — Bug-fix A2 (P1)
+ *
+ * Form danh cho ROLE_DOANH_NGHIEP tu cap nhat thong tin lien he cua chinh
+ * doanh nghiep minh. CHI 4 field duoc sua: NguoiDaiDien, Email, SoDienThoai,
+ * DiaChiDN.
+ *
+ * Cac field IMMUTABLE doi voi DN (chi PDT/TTDTXS/ADMIN duoc sua qua route
+ * /doanh-nghiep/sua/{ma}): MaDoanhNghiep, TenDoanhNghiep, LinhVuc,
+ * TrangThai (DangHopTac/TamNgung). Cac field nay van duoc render dang
+ * read-only de DN biet thong tin nhung khong post duoc.
+ *
+ * <p>activeMenu = "doanh-nghiep" (dong bo voi controller).</p>
+ */-->
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Hồ Sơ Doanh Nghiệp Của Tôi</title>
+</head>
+<body>
+<div layout:fragment="content">
+
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a th:href="@{/dashboard}" class="text-decoration-none">
+                    <i class="bi bi-house-door me-1"></i>Trang Chủ
+                </a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">Hồ Sơ Doanh Nghiệp</li>
+        </ol>
+    </nav>
+
+    <div class="page-header-block mb-4">
+        <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+            <div class="flex-grow-1 min-w-0">
+                <p class="page-subtitle">Doanh Nghiệp / Hồ Sơ Của Tôi</p>
+                <h1 class="page-title h4 mb-1 d-flex align-items-center gap-2">
+                    <i class="bi bi-building-gear" aria-hidden="true"></i>
+                    <span>Hồ Sơ Doanh Nghiệp Của Tôi</span>
+                </h1>
+                <p class="text-muted small mb-0">
+                    Cập nhật thông tin liên hệ — người đại diện, email, số điện thoại, địa chỉ.
+                    Tên doanh nghiệp / lĩnh vực / trạng thái hợp tác chỉ TT Đào Tạo XS có thể chỉnh.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Cot trai: card thong tin co dinh (read-only) -->
+        <div class="col-xl-5">
+            <div class="form-section h-100">
+                <div class="form-section-header">
+                    <i class="bi bi-shield-lock" aria-hidden="true"></i>
+                    <span>Thông Tin Cố Định</span>
+                    <small class="form-section-hint">Chỉ TTĐTXS được sửa</small>
+                </div>
+                <div class="form-section-body">
+                    <dl class="row mb-0">
+                        <dt class="col-5 text-muted small">Mã Doanh Nghiệp</dt>
+                        <dd class="col-7 fw-semibold">
+                            <code th:text="${doanhNghiep.maDoanhNghiep}">DN001</code>
+                        </dd>
+
+                        <dt class="col-5 text-muted small">Tên Doanh Nghiệp</dt>
+                        <dd class="col-7 fw-semibold"
+                            th:text="${doanhNghiep.tenDoanhNghiep}">--</dd>
+
+                        <dt class="col-5 text-muted small">Lĩnh Vực</dt>
+                        <dd class="col-7"
+                            th:text="${doanhNghiep.linhVuc != null ? doanhNghiep.linhVuc : '--'}">--</dd>
+
+                        <dt class="col-5 text-muted small">Trạng Thái Hợp Tác</dt>
+                        <dd class="col-7">
+                            <span class="status-pill"
+                                  th:with="t=${doanhNghiep.trangThai?.name()}"
+                                  th:classappend="${t == 'DangHopTac' ? 'tone-success' : 'tone-warning'}">
+                                <span class="pill-dot" aria-hidden="true"></span>
+                                <span th:text="${t == 'DangHopTac' ? 'Đang Hợp Tác' : 'Tạm Ngưng'}">--</span>
+                            </span>
+                        </dd>
+                    </dl>
+                    <hr class="my-3"/>
+                    <p class="small text-muted mb-0">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Nếu cần đổi tên DN / lĩnh vực hoặc trạng thái hợp tác,
+                        vui lòng liên hệ <strong>Trung Tâm Đào Tạo Xuất Sắc</strong>
+                        để được cập nhật.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cot phai: form sua thong tin lien he -->
+        <div class="col-xl-7">
+            <form th:action="@{/doanh-nghiep/cua-toi}"
+                  th:object="${doanhNghiepCuaToiDTO}"
+                  method="post"
+                  data-unsaved-guard
+                  novalidate>
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+
+                <!-- Banner loi validation -->
+                <div th:if="${#fields.hasErrors('*')}"
+                     class="alert alert-warning form-alert d-flex align-items-start mb-3" role="alert">
+                    <i class="bi bi-info-circle-fill me-2 mt-1"></i>
+                    <div>
+                        <strong class="d-block">Vui lòng kiểm tra lại:</strong>
+                        <ul class="mb-0">
+                            <li th:each="err : ${#fields.allErrors()}" th:text="${err}"></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="form-section-header">
+                        <i class="bi bi-telephone" aria-hidden="true"></i>
+                        <span>Liên Hệ &amp; Địa Chỉ</span>
+                        <small class="form-section-hint">Có thể chỉnh sửa</small>
+                    </div>
+                    <div class="form-section-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text"
+                                           class="form-control"
+                                           th:classappend="${#fields.hasErrors('nguoiDaiDien')} ? 'is-invalid'"
+                                           id="nguoiDaiDien"
+                                           th:field="*{nguoiDaiDien}"
+                                           placeholder="Người đại diện"
+                                           autocomplete="name"
+                                           maxlength="100">
+                                    <label for="nguoiDaiDien">Người Đại Diện</label>
+                                    <div class="invalid-feedback"
+                                         th:if="${#fields.hasErrors('nguoiDaiDien')}"
+                                         th:errors="*{nguoiDaiDien}"></div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="tel"
+                                           class="form-control"
+                                           th:classappend="${#fields.hasErrors('soDienThoai')} ? 'is-invalid'"
+                                           id="soDienThoai"
+                                           th:field="*{soDienThoai}"
+                                           placeholder="Số điện thoại"
+                                           autocomplete="tel"
+                                           maxlength="15">
+                                    <label for="soDienThoai">Số Điện Thoại</label>
+                                    <div class="invalid-feedback"
+                                         th:if="${#fields.hasErrors('soDienThoai')}"
+                                         th:errors="*{soDienThoai}"></div>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="form-floating">
+                                    <input type="email"
+                                           class="form-control"
+                                           th:classappend="${#fields.hasErrors('email')} ? 'is-invalid'"
+                                           id="email"
+                                           th:field="*{email}"
+                                           placeholder="Email"
+                                           autocomplete="email"
+                                           maxlength="100">
+                                    <label for="email">Email</label>
+                                    <div class="invalid-feedback"
+                                         th:if="${#fields.hasErrors('email')}"
+                                         th:errors="*{email}"></div>
+                                </div>
+                                <small class="form-text text-muted">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Email phải duy nhất trong hệ thống — dùng cho liên lạc tự động.
+                                </small>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="form-floating">
+                                    <textarea class="form-control"
+                                              th:classappend="${#fields.hasErrors('diaChiDN')} ? 'is-invalid'"
+                                              id="diaChiDN"
+                                              th:field="*{diaChiDN}"
+                                              placeholder="Địa chỉ"
+                                              maxlength="255"
+                                              style="height: 90px;"></textarea>
+                                    <label for="diaChiDN">Địa Chỉ</label>
+                                    <div class="invalid-feedback"
+                                         th:if="${#fields.hasErrors('diaChiDN')}"
+                                         th:errors="*{diaChiDN}"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sticky footer -->
+                <div class="form-sticky-footer mt-3">
+                    <a th:href="@{/dashboard}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-lg me-1"></i>Huỷ
+                    </a>
+                    <button type="submit" class="btn btn-primary" onclick="showLoading(this)">
+                        <span class="spinner-border spinner-border-sm d-none me-1" role="status"></span>
+                        <i class="bi bi-save me-1"></i>
+                        <span>Cập Nhật Thông Tin</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

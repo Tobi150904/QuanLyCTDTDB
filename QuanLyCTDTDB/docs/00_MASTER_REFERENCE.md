@@ -10,11 +10,11 @@
 |----------------|------------------------------------------------------|
 | Ten he thong   | He Thong Quan Ly Dao Tao Xuat Sac                   |
 | Package goc    | com.ntu.quanlyctdtdb                                 |
-| Spring Boot    | 4.0.5                                                |
+| Spring Boot    | 3.5.6 (da ha tu 4.0.5 do layout-dialect khong tuong thich Groovy 5) |
 | Java           | 17                                                   |
 | Database       | MySQL 8+ (XAMPP), schema: QuanLyCTDTDB               |
-| Frontend       | Thymeleaf + Bootstrap 5 + Bootstrap Icons            |
-| Build tool     | Maven (mvnw)                                         |
+| Frontend       | Thymeleaf 3.1 + Layout Dialect 3.3 + Bootstrap 5 + Bootstrap Icons |
+| Build tool     | Maven Wrapper (`./mvnw`)                             |
 | Port           | 8080                                                 |
 
 ### Muc dich
@@ -53,21 +53,26 @@ Quan ly toan bo quy trinh dao tao xuat sac cua truong dai hoc, bao gom:
 [MySQL 8+ Database]        <- QuanLyCTDTDB
 ```
 
-### Package structure
+### Package structure (thuc te)
 ```
 com.ntu.quanlyctdtdb/
   config/          SecurityConfig, WebMvcConfig
-  controller/      1 controller per module
+  controller/      1 controller per module (Auth, Dashboard, NguoiDung, Profile,
+                   HocKyNamHoc, LopHanhChinh, DoanhNghiep, HocPhan, CTDT,
+                   LopHocPhan, DotKienTap, DotThucTap, DanhGia)
   dto/             Data Transfer Objects (form binding + Excel import)
-  entity/          JPA Entities + EmbeddedId classes
-  enums/           All enum types (13 enums)
+  entity/          20 JPA Entities + 7 @Embeddable Id classes
+  enums/           15 enum types (state machines + kinds)
   exception/       BusinessException, ResourceNotFoundException, GlobalExceptionHandler
-  repository/      Spring Data JPA repositories
-  security/        UserDetailsServiceImpl, CustomUserDetails, CustomAuthenticationProvider
-  service/         Service interfaces
-  service/impl/    Service implementations
+  repository/      20 Spring Data JPA repositories
+  security/        UserDetailsServiceImpl, CustomUserDetails
+                   (KHONG co CustomAuthenticationProvider — dung DaoAuthenticationProvider qua AuthenticationManagerBuilder)
+  service/         Service interfaces (bao gom EmailService)
+  service/impl/    Service implementations (bao gom MockEmailServiceImpl cho dev)
   util/            ExcelImportUtil, FileStorageUtil
 ```
+
+> Chi tiet coverage module + gap analysis: `06_PROJECT_SCAFFOLD.md`.
 
 ---
 
@@ -127,11 +132,13 @@ com.ntu.quanlyctdtdb/
 
 ---
 
-## 5. ENUMS — 10 ENUM TYPES
+## 5. ENUMS — 15 ENUM TYPES
 
 | Enum class            | Values                                                      | Dung trong bang              |
 |-----------------------|-------------------------------------------------------------|------------------------------|
 | TrangThaiHocKy        | SapDienRa, DangDienRa, DaKetThuc                           | HocKyNamHoc                  |
+|                       | **BATCH 4**: Status auto-derive tu `deriveStatus(ngayBatDau, ngayKetThuc)` |                              |
+|                       | khong user input. DoiTrangThai() validate before accept. |                              |
 | LoaiNguoiDung         | Admin, GiangVien, SinhVien, DoanhNghiep                    | NguoiDung                    |
 | VaiTro                | PDT, TTDTXS, CVHT, CNHP                                    | NhomNguoiDung                |
 | TrangThaiCTDT         | BanNhap, ChoDuyet, DaDuyet, DaHuy                          | ChuongTrinhDaoTao            |
@@ -143,7 +150,7 @@ com.ntu.quanlyctdtdb/
 | TrangThaiLopHocPhan   | DangMo, DaDong, DaHuy                                      | LopHocPhan                   |
 | TrangThaiSinhVien     | DangHoc, BaoLuu, ThoiHoc, TotNghiep                       | SinhVien                     |
 | TrangThaiDotKT        | ChuanBi, ChoDuyet, DaDuyet, DaThucHien, DaHuy             | DotKienTap                   |
-| TrangThaiDotTT        | ChuanBi, ChoDuyet, DaDuyet, DangThucHien, DaKetThuc       | DotThucTap                   |
+| TrangThaiDotTT        | ChuanBi, ChoDuyet, DaDuyet, DangThucHien, DaKetThuc, DaHuy | DotThucTap                   |
 | TrangThaiThucTap      | DaPhanCong, DangThucTap, DaKetThuc, DaHuy                 | DanhSachThucTap              |
 | LoaiThucTap           | Truong, DoanhNghiep                                        | DanhSachThucTap              |
 
@@ -153,29 +160,51 @@ com.ntu.quanlyctdtdb/
 
 ### 6.1 Luong quan ly Hoc Phan
 ```
-BCN tao HP (BanNhap)
-  -> BCN nop len (ChoDuyet)
-    -> TTDTXS phe duyet (DaDuyet)  |  TTDTXS tu choi (BanNhap + ly do)
-BCN them GV vao DoiNguGiangVienHP
-CNHP quan ly doi ngu GV, upload de cuong
+CNHP tao HP (BanNhap, ChuNhiemHP = maGV)
+  -> CNHP nop len (ChoDuyet)
+    -> TTDTXS phe duyet (DaDuyet) + email CNHP
+    -> TTDTXS tu choi (BanNhap + ly do) + email CNHP
+CNHP/TTDTXS/PDT/ADMIN quan ly DoiNguGiangVienHP qua trang
+  /hoc-phan/chi-tiet/{ma} (tab "Doi Ngu Giang Vien"):
+    - Them GV       : POST .../doi-ngu/them
+    - Toggle dang day: POST .../doi-ngu/toggle   (soft disable bang TrangThai=0/1)
+    - Xoa hoan toan : POST .../doi-ngu/xoa      (service chan khi GV = ChuNhiemHP)
+CNHP upload tai lieu / de cuong chi tiet.
 ```
 
 ### 6.2 Luong quan ly CTDT
 ```
 BCN tao CTDT (BanNhap)
-  -> BCN them HocPhan vao CTDT qua bang CTDT_HocPhan (HocKyThu, SoLopDuKien)
+  -> BCN them HocPhan vao CTDT qua bang CTDT_HocPhan (HocKyThu, SoLopDuKien, BatBuoc)
+  -> BCN quan ly Ban Chu Nhiem (BCN_ThanhVien) qua tab "Ban Chu Nhiem"
+     trong trang /ctdt/chi-tiet/{ma}: them/xoa Chu Nhiem + Thu Ky + Uy Vien
+     (rang buoc: 1 CTDT chi co DUY NHAT 1 Chu Nhiem).
   -> BCN nop len (ChoDuyet)
-    -> TTDTXS phe duyet (DaDuyet)
-      => He thong TU DONG tao LopHocPhan theo SoLopDuKien cho tung HP trong CTDT
-         (MaLopHocPhan = 1..N, MaGiangVien = NULL)
+    -> TTDTXS phe duyet (DaDuyet) — set NguoiDuyet + NgayDuyet (audit)
   -> BCN gan LopHanhChinh vao CTDT
+
+LopHocPhan KHONG duoc tao tu dong khi CTDT DaDuyet. Ly do: nghiep vu can
+user chon ro HocKy muon mo lop + cho phep override SoLop per-HP theo
+tinh hinh tuyen sinh thuc te cua tung ky (vd ky 1-2023 mo 3 lop CNTT101,
+ky 1-2024 chi mo 2 lop). User goi manual action:
+
+  POST /lop-hoc-phan/tao-hang-loat?maCTDT=&maHocKy=
+       hpCode[i], soLop[i]    -> override SoLopDuKien theo ky
+  => Chi tao lop cho HP co CtdtHocPhan.HocKyThu trung voi so ky parse
+     tu MaHocKy (format HKn-YYYY). Idempotent: lop da ton tai -> skip.
 ```
 
 ### 6.3 Luong phan cong Lop Hoc Phan
 ```
 BCN/TTDTXS xem danh sach LopHocPhan chua co GV
-  -> Gan GiangVien cho LopHocPhan
-     (Neu GV khong trong DoiNguGiangVienHP -> canh bao nhung van cho phep)
+  -> Gan GiangVien cho LopHocPhan (POST /lop-hoc-phan/phan-cong)
+     SOFT CHECK (khong chan cung):
+       - Truoc khi goi service, controller truy van
+         DoiNguGiangVienHp (MaHocPhan, MaGV) + TrangThai=true.
+       - Neu GV THUOC doi ngu va dang hoat dong -> flash successMsg.
+       - Neu GV KHONG thuoc doi ngu (hoac bi TrangThai=false)
+         -> van gan (UPDATE LopHocPhan.MaGiangVien) + flash warningMsg
+            huong dan bo sung GV vao doi ngu tai trang Chi Tiet Hoc Phan.
 GV thay LopHocPhan cua minh
   -> Upload TaiLieu (DeCuongChiTiet, DeThiGiuaKy, DeThiCuoiKy)
   -> Nhap nhan xet SV (DanhSachSinhVienLopHocPhan)
@@ -183,28 +212,60 @@ GV thay LopHocPhan cua minh
 CVHT xu ly canh bao (DaCanhBao=1, KetQuaXuLy)
 ```
 
-### 6.4 Luong Kien Tap
+### 6.4 Luong Kien Tap (Hybrid Auto-Add + Toggle DaThamGia)
 ```
-BCN/TTDTXS tao DotKienTap (ChuanBi)
-  -> Chon LopHanhChinh + DoanhNghiep + GVPhuTrach
+BCN/TTDTXS tao DotKienTap (TrangThai='ChuanBi', NguoiTao=currentUser)
+  -> Chon LopHanhChinh + DoanhNghiep (bat buoc DangHopTac) + GVPhuTrach + HocKy
   -> Upload FileMinhChung
-  -> Nop len (ChoDuyet)
-    -> TTDTXS duyet (DaDuyet -> DaThucHien)
-He thong lay danh sach SV tu LopHanhChinh -> DanhSachSinhVienKienTap
-GV nhap NhanXetGV
-DN login nhap NhanXetDN
+  -> AUTO-ADD: he thong select SinhVien WHERE MaLopHC=? AND TrangThaiSV='DangHoc'
+               INSERT DanhSachSinhVienKienTap (..., DaThamGia=1) cho TAT CA SV du dieu kien.
+               (SV BaoLuu/ThoiHoc/TotNghiep KHONG duoc them tu dong.)
+Admin/BCN co the TOGGLE DaThamGia (POST /kien-tap/chi-tiet/{id}/sv/{maSV}/danh-dau):
+  -> Danh dau "Khong tham gia" giu lai ban ghi (audit), chi dao cac loai bao cao
+     "thuc te tham gia".
+  -> Chi khoa toggle khi dot da o trang thai DaHuy.
+Nut "Dong bo danh sach" re-sync khi lop co SV moi (chi INSERT, khong XOA).
+Nop len (ChoDuyet) -> TTDTXS duyet (set NguoiDuyet+NgayDuyet, -> DaDuyet)
+  -> BCN/TTDTXS xac nhan hoan thanh (DaDuyet -> DaThucHien)
+  -> BCN/TTDTXS huy bat ky trang thai nao (tru DaHuy) -> DaHuy
+GV (MaGVPhuTrach)     nhap NhanXetGV  (doc lap)
+DN (MaDoanhNghiep)    nhap NhanXetDN  (doc lap, khong ghi de)
 ```
 
 ### 6.5 Luong Thuc Tap
 ```
-PDT/TTDTXS tao DotThucTap (ChuanBi)
-  -> Chon CTDT_HocPhan (bat buoc la HP loai ThucTap/KienTap) + HocKy
-  -> Nop len (ChoDuyet) -> TTDTXS duyet (DaDuyet -> DangThucHien)
+PDT/TTDTXS tao DotThucTap (ChuanBi, NguoiTao=currentUser)
+  -> Chon CTDT_HocPhan (bat buoc la HP loai ThucTap/KienTap, DaDuyet) + HocKy
+  -> Nop len (ChoDuyet) -> TTDTXS duyet (set NguoiDuyet+NgayDuyet, -> DaDuyet)
+  -> TTDTXS bat dau (DaDuyet -> DangThucHien)
+  -> TTDTXS ket thuc (DangThucHien -> DaKetThuc + cascade DanhSachThucTap.TrangThai)
+  -> TTDTXS huy bat ky truoc DaKetThuc -> DaHuy
 PDT import Excel phan cong (DanhSachThucTap): MaSV, LoaiThucTap, MaDoanhNghiep
   -> UNIQUE (MaDotTT, MaSV) - bo qua ban ghi trung
+  -> Validate: LoaiThucTap='DoanhNghiep' BAT BUOC MaDN + DN DangHopTac;
+               LoaiThucTap='Truong' BAT BUOC MaDN=NULL.
 DN / GV / CVHT nhap KetQuaThucTap (Diem, NhanXet theo VaiTroThucTap)
-SV nhap NhanXet (cam nhan)
+  -> Upsert theo (MaThucTap, MaVaiTro) - 1 vai tro 1 ban ghi.
 PDT xuat bao cao Excel
+```
+
+### 6.6 Luong Danh Gia & Canh Bao Sinh Vien (Phase 4)
+```
+GV xem danh sach lop hoc phan minh dang day (GET /danh-gia)
+  -> Vao tung lop -> nhap NhanXet + DaCanhBao cho tung SV
+     (POST /danh-gia/nhan-xet/{maSV}/{maCTDT}/{maHocPhan}/{maHocKy}/{maLopHocPhan})
+  -> Rising-edge: chi gui email khi (DaCanhBao_old=false && new=true).
+     EmailService gui den LopHanhChinh.coVan.email cua SV (CVHT lop SV).
+     Subject: "[CANH BAO] SV {hoTen} - {tenHocPhan}".
+CVHT vao /danh-gia/canh-bao -> thay danh sach canh bao chua xu ly toan lop minh phu trach
+  -> Inline form xu ly: nhap KetQuaXuLy -> SET nguoiXuLy + ngayXuLy.
+  -> Ban ghi van giu DaCanhBao=1 (lich su, KHONG xoa).
+PDT/ADMIN cung vao /danh-gia/canh-bao thay TAT CA canh bao toan truong (giam sat).
+SV vao /danh-gia thay nhan xet + canh bao ve minh (read-only).
+RBAC:
+  - /danh-gia/nhan-xet/**         GV (currentUser == LopHocPhan.MaGiangVien)
+  - /danh-gia/canh-bao/**/xu-ly   CVHT (currentUser == LopHanhChinh.MaCoVan)
+                                  hoac PDT/ADMIN.
 ```
 
 ---
@@ -240,11 +301,13 @@ PDT xuat bao cao Excel
 | spring.datasource.username            | root                                    |
 | spring.datasource.password            | (trong)                                 |
 | spring.jpa.hibernate.ddl-auto         | validate                                |
+| spring.jpa.open-in-view               | false (BAT BUOC — xem § 9)              |
 | spring.thymeleaf.cache                | false (dev), true (prod)                |
 | file.upload-dir                       | uploads/                                |
 | server.servlet.session.timeout        | 30m                                     |
 
-> Tat ca config chi tiet o: src/main/resources/application.properties
+> Tat ca config chi tiet o: `src/main/resources/application.properties`
+> Huong dan setup moi truong: `README.md` (root)
 
 ---
 
@@ -272,16 +335,24 @@ PDT xuat bao cao Excel
 - Dung RedirectAttributes: `addFlashAttribute("successMsg", "...")` hoac `"errorMsg"`
 - Template tu dong hien thi qua layout base.html
 
+### Lazy loading & open-in-view
+- `spring.jpa.open-in-view=false` — KHONG duoc doc collection LAZY ngoai transaction.
+- Neu template (Thymeleaf) can iterate `@OneToMany` / `@ManyToMany` LAZY, repository PHAI dung `@EntityGraph(attributePaths = "...")` hoac `JOIN FETCH` trong `@Query`.
+- Truong hop muon giu LAZY nhung can iterate mot lan: bo sung method `findXxxWithAssoc(...)` tra entity da fetch sang, KHONG bat `open-in-view` lai.
+
 ---
 
 ## 10. TAI LIEU LIEN QUAN
 
 | File                        | Noi dung                                           |
 |-----------------------------|----------------------------------------------------|
-| 01_ERD_SCHEMA.md            | So do ERD day du, mo ta tung bang va cot           |
-| 02_Data.md                  | Quy uoc du lieu, format, rang buoc nghiep vu       |
-| 03_WORKFLOW.md              | Workflow chi tiet A-Z tung module (co flowchart)   |
-| 04_DEV_CHECKLIST.md         | Checklist phat trien theo phase, kiem tra truoc demo|
-| 05_UI_DESIGN_SYSTEM.md      | Design tokens, component rules, Thymeleaf helpers  |
-| scripts/01_create_tables.sql| DDL tao 20 bang                                    |
-| scripts/02_seed_data.sql    | DML du lieu mau test day du                        |
+| 01_ERD_SCHEMA.md                      | So do ERD day du, mo ta tung bang va cot           |
+| 02_Mô Tả & Thiết kế dữ liệu.md        | Quy uoc du lieu, format, rang buoc nghiep vu       |
+| 03_WORKFLOW.md                        | Workflow chi tiet A-Z tung module (co flowchart)   |
+| 04_DEV_CHECKLIST.md                   | Checklist phat trien theo phase, kiem tra truoc demo|
+| 05_UI_DESIGN_SYSTEM.md                | Design tokens, component rules, Thymeleaf helpers  |
+| 06_PROJECT_SCAFFOLD.md                | Cau truc thuc te + ma tran coverage + tech debt    |
+| 07_ROADMAP.md                         | Ke hoach lam viec chi tiet theo phase              |
+| scripts/README.md                     | Huong dan chay SQL + quy tac migration             |
+| scripts/01_create_tables.sql          | DDL tao database + 20 bang                         |
+| scripts/02_seed_data.sql              | DML du lieu mau test day du (20 user, 12 SV, 3 CTDT, test case DaThamGia=0, SV BaoLuu, ThoiHoc) |

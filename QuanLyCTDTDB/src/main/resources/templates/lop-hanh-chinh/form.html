@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<!--/*
+ * lop-hanh-chinh/form.html — Phase 5 redesign
+ *
+ * Form Lop Hanh Chinh chia 2 section:
+ *   1. Thong tin lop (ma, ten, khoa, CTDT)
+ *   2. Phan cong (CVHT)
+ */-->
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title th:text="${isEdit} ? 'Chỉnh Sửa Lớp' : 'Tạo Lớp'">Lớp Hành Chính</title>
+</head>
+<body>
+<div layout:fragment="content">
+
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a th:href="@{/dashboard}" class="text-decoration-none">
+                    <i class="bi bi-house-door me-1"></i>Trang Chủ
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a th:href="@{/lop-hanh-chinh}" class="text-decoration-none">Lớp Hành Chính</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page"
+                th:text="${isEdit} ? 'Chỉnh sửa' : 'Thêm mới'">Thêm mới</li>
+        </ol>
+    </nav>
+
+    <div class="page-header-block mb-4">
+        <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+            <div class="flex-grow-1 min-w-0">
+                <p class="page-subtitle">Đào Tạo</p>
+                <h1 class="page-title h4 mb-1 d-flex align-items-center gap-2">
+                    <i class="bi bi-people" aria-hidden="true"></i>
+                    <span th:text="${isEdit} ? 'Chỉnh Sửa Lớp Hành Chính' : 'Tạo Lớp Hành Chính Mới'">Tạo Lớp Hành Chính Mới</span>
+                </h1>
+                <p class="text-muted small mb-0"
+                   th:text="${isEdit} ? 'Cập nhật thông tin lớp & phân công CVHT.' :
+                                        'Khai báo lớp hành chính cho khoá tuyển sinh mới.'">Mô tả</p>
+            </div>
+            <div class="action-slot d-flex align-items-center gap-2 flex-wrap">
+                <a th:href="@{/lop-hanh-chinh}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i>Quay Lại
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-xl-9">
+
+            <form th:action="${isEdit} ? @{/lop-hanh-chinh/sua/{ma}(ma=${lopDTO.maLopHC})} : @{/lop-hanh-chinh/them}"
+                  th:object="${lopDTO}"
+                  method="post"
+                  data-unsaved-guard
+                  novalidate>
+
+                <!-- Banner loi validation -->
+                <div th:if="${#fields.hasErrors('*')}"
+                     class="alert alert-warning form-alert d-flex align-items-start mb-3" role="alert">
+                    <i class="bi bi-info-circle-fill me-2 mt-1"></i>
+                    <div>
+                        <strong class="d-block">Vui lòng kiểm tra lại:</strong>
+                        <ul>
+                            <li th:each="err : ${#fields.allErrors()}" th:text="${err}"></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- SECTION 1 — Thong tin co ban -->
+                <div class="form-section">
+                    <div class="form-section-header">
+                        <i class="bi bi-info-circle" aria-hidden="true"></i>
+                        <span>Thông Tin Lớp</span>
+                        <small class="form-section-hint">Bắt buộc</small>
+                    </div>
+                    <div class="form-section-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control"
+                                           th:classappend="${#fields.hasErrors('maLopHC')} ? 'is-invalid'"
+                                           id="maLopHC" th:field="*{maLopHC}"
+                                           th:readonly="${isEdit}" placeholder="62KMT"
+                                           aria-required="true" required>
+                                    <label for="maLopHC">Mã Lớp <span class="req-mark">*</span></label>
+                                    <div class="invalid-feedback"
+                                         th:if="${#fields.hasErrors('maLopHC')}"
+                                         th:errors="*{maLopHC}"></div>
+                                </div>
+                                <small class="form-text text-muted" th:unless="${isEdit}">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Quy ước: <code>K</code><em>khoá</em> + mã CTĐT viết tắt.
+                                </small>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control"
+                                           th:classappend="${#fields.hasErrors('tenLop')} ? 'is-invalid'"
+                                           id="tenLop" th:field="*{tenLop}"
+                                           placeholder="62 - Kỹ Thuật Máy Tính"
+                                           aria-required="true" required>
+                                    <label for="tenLop">Tên Lớp <span class="req-mark">*</span></label>
+                                    <div class="invalid-feedback"
+                                         th:if="${#fields.hasErrors('tenLop')}"
+                                         th:errors="*{tenLop}"></div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-2">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control"
+                                           th:classappend="${#fields.hasErrors('khoaHoc')} ? 'is-invalid'"
+                                           id="khoaHoc" th:field="*{khoaHoc}"
+                                           placeholder="62"
+                                           aria-required="true" required>
+                                    <label for="khoaHoc">Khoá <span class="req-mark">*</span></label>
+                                    <div class="invalid-feedback"
+                                         th:if="${#fields.hasErrors('khoaHoc')}"
+                                         th:errors="*{khoaHoc}"></div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-12">
+                                <div class="form-floating">
+                                    <select class="form-select"
+                                            th:classappend="${#fields.hasErrors('maCTDT')} ? 'is-invalid'"
+                                            id="maCTDT" th:field="*{maCTDT}"
+                                            aria-required="true" required>
+                                        <option value="">-- Chọn CTĐT --</option>
+                                        <option th:each="c : ${ctdtList}"
+                                                th:value="${c.maCTDT}"
+                                                th:text="${c.maCTDT + ' - ' + c.tenCTDT}"></option>
+                                    </select>
+                                    <label for="maCTDT">Chương Trình Đào Tạo <span class="req-mark">*</span></label>
+                                    <div class="invalid-feedback"
+                                         th:if="${#fields.hasErrors('maCTDT')}"
+                                         th:errors="*{maCTDT}"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 2 — Phan cong CVHT -->
+                <div class="form-section">
+                    <div class="form-section-header">
+                        <i class="bi bi-person-check" aria-hidden="true"></i>
+                        <span>Cố Vấn Học Tập</span>
+                        <small class="form-section-hint">Tuỳ chọn</small>
+                    </div>
+                    <div class="form-section-body">
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <div class="form-floating">
+                                    <select class="form-select" id="maCoVan" th:field="*{maCoVan}">
+                                        <option value="">-- Không / Chưa phân công --</option>
+                                        <option th:each="gv : ${giangVienList}"
+                                                th:value="${gv.maGV}"
+                                                th:text="${gv.maGV + ' - ' + gv.hoTen}"></option>
+                                    </select>
+                                    <label for="maCoVan">Cố Vấn Học Tập (CVHT)</label>
+                                </div>
+                                <small class="form-text text-muted">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Chỉ giảng viên có vai trò CVHT mới hiển thị trong danh sách. Có thể bỏ trống và phân công sau.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sticky footer -->
+                <div class="form-sticky-footer mt-3">
+                    <a th:href="@{/lop-hanh-chinh}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-lg me-1"></i>Huỷ
+                    </a>
+                    <button type="submit" class="btn btn-primary" onclick="showLoading(this)">
+                        <span class="spinner-border spinner-border-sm d-none me-1" role="status"></span>
+                        <i class="bi bi-save me-1"></i>
+                        <span th:text="${isEdit} ? 'Cập Nhật' : 'Tạo Mới'">Tạo Mới</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

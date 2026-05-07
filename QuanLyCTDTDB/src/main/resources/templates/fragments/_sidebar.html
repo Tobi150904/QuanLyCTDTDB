@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<!--/*
+ * fragments/_sidebar.html
+ *
+ * Sidebar dieu huong chinh — tach ra tu base.html de:
+ *   - giam kich thuoc base.html, de maintain
+ *   - cho phep tai su dung neu can render sidebar tach biet
+ *
+ * Su dung trong base.html:
+ *   <th:block th:replace="~{fragments/_sidebar :: sidebar}"></th:block>
+ *
+ * Yeu cau: model phai co activeMenu (string) — fallback la chuoi rong.
+ * Cac gia tri activeMenu duoc dung:
+ *   dashboard, nguoi-dung, doanh-nghiep, hoc-ky, lop-hanh-chinh,
+ *   hoc-phan, ctdt, lop-hoc-phan, danh-gia, danh-gia-canh-bao,
+ *   kien-tap, thuc-tap, profile.
+ */-->
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+
+<th:block th:fragment="sidebar">
+    <!-- Mobile overlay (re-uses #sidebarOverlay id duoc main.js xu ly) -->
+    <div class="sidebar-overlay d-lg-none" id="sidebarOverlay"></div>
+
+    <nav id="sidebar" class="sidebar" aria-label="Điều hướng chính">
+        <div class="sidebar-body">
+            <ul class="nav flex-column">
+
+                <!-- TRANG CHỦ -->
+                <li class="nav-item">
+                    <a class="nav-link"
+                       th:href="@{/dashboard}"
+                       th:classappend="${activeMenu == 'dashboard'} ? ' active' : ''">
+                        <i class="bi bi-speedometer2 me-2" aria-hidden="true"></i>
+                        <span>Trang Chủ</span>
+                    </a>
+                </li>
+
+                <!-- ============== QUẢN TRỊ ============== -->
+                <li class="sidebar-section-header"
+                    sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
+                    <span>Quản Trị</span>
+                </li>
+
+                <li class="nav-item" sec:authorize="hasAnyRole('PDT','ADMIN')">
+                    <a class="nav-link"
+                       th:href="@{/nguoi-dung}"
+                       th:classappend="${activeMenu == 'nguoi-dung'} ? ' active' : ''">
+                        <i class="bi bi-people me-2" aria-hidden="true"></i>
+                        <span>Người Dùng</span>
+                    </a>
+                </li>
+
+                <li class="nav-item" sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
+                    <a class="nav-link"
+                       th:href="@{/doanh-nghiep}"
+                       th:classappend="${activeMenu == 'doanh-nghiep'} ? ' active' : ''">
+                        <i class="bi bi-building me-2" aria-hidden="true"></i>
+                        <span>Doanh Nghiệp</span>
+                    </a>
+                </li>
+
+                <li class="nav-item" sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
+                    <a class="nav-link"
+                       th:href="@{/hoc-ky}"
+                       th:classappend="${activeMenu == 'hoc-ky'} ? ' active' : ''">
+                        <i class="bi bi-calendar3 me-2" aria-hidden="true"></i>
+                        <span>Học Kỳ - Năm Học</span>
+                    </a>
+                </li>
+
+                <li class="nav-item" sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
+                    <a class="nav-link"
+                       th:href="@{/lop-hanh-chinh}"
+                       th:classappend="${activeMenu == 'lop-hanh-chinh'} ? ' active' : ''">
+                        <i class="bi bi-diagram-3 me-2" aria-hidden="true"></i>
+                        <span>Lớp Hành Chính</span>
+                    </a>
+                </li>
+
+                <!-- ============== ĐÀO TẠO ============== -->
+                <li class="sidebar-section-header"
+                    sec:authorize="hasAnyRole('PDT','TTDTXS','CNHP','ADMIN','GIANG_VIEN','SINH_VIEN')">
+                    <span>Đào Tạo</span>
+                </li>
+
+                <li class="nav-item"
+                    sec:authorize="hasAnyRole('PDT','CNHP','TTDTXS','ADMIN','GIANG_VIEN','SINH_VIEN')">
+                    <a class="nav-link"
+                       th:href="@{/hoc-phan}"
+                       th:classappend="${activeMenu == 'hoc-phan'} ? ' active' : ''">
+                        <i class="bi bi-book me-2" aria-hidden="true"></i>
+                        <span>Học Phần</span>
+                    </a>
+                </li>
+
+                <li class="nav-item"
+                    sec:authorize="hasAnyRole('PDT','TTDTXS','CNHP','ADMIN','GIANG_VIEN','SINH_VIEN')">
+                    <a class="nav-link"
+                       th:href="@{/ctdt}"
+                       th:classappend="${activeMenu == 'ctdt'} ? ' active' : ''">
+                        <i class="bi bi-journal-bookmark me-2" aria-hidden="true"></i>
+                        <span>Chương Trình Đào Tạo</span>
+                    </a>
+                </li>
+
+                <li class="nav-item"
+                    sec:authorize="hasAnyRole('PDT','TTDTXS','CNHP','ADMIN','GIANG_VIEN','SINH_VIEN')">
+                    <a class="nav-link"
+                       th:href="@{/lop-hoc-phan}"
+                       th:classappend="${activeMenu == 'lop-hoc-phan'} ? ' active' : ''">
+                        <i class="bi bi-collection me-2" aria-hidden="true"></i>
+                        <span>Lớp Học Phần</span>
+                    </a>
+                </li>
+
+                <!-- ============== ĐÁNH GIÁ ============== -->
+                <li class="sidebar-section-header"
+                    sec:authorize="hasAnyRole('GIANG_VIEN','CVHT','SINH_VIEN','PDT','ADMIN')">
+                    <span>Đánh Giá</span>
+                </li>
+
+                <li class="nav-item"
+                    sec:authorize="hasAnyRole('GIANG_VIEN','SINH_VIEN','ADMIN')">
+                    <a class="nav-link"
+                       th:href="@{/danh-gia}"
+                       th:classappend="${activeMenu == 'danh-gia'} ? ' active' : ''">
+                        <i class="bi bi-clipboard-check me-2" aria-hidden="true"></i>
+                        <span sec:authorize="hasRole('SINH_VIEN')">Nhận Xét Của Tôi</span>
+                        <span sec:authorize="!hasRole('SINH_VIEN')">Đánh Giá Sinh Viên</span>
+                    </a>
+                </li>
+
+                <li class="nav-item" sec:authorize="hasAnyRole('CVHT','PDT','ADMIN')">
+                    <a class="nav-link"
+                       th:href="@{/danh-gia/canh-bao}"
+                       th:classappend="${activeMenu == 'danh-gia-canh-bao'} ? ' active' : ''">
+                        <i class="bi bi-exclamation-triangle me-2" aria-hidden="true"></i>
+                        <span>Cảnh Báo Sinh Viên</span>
+                    </a>
+                </li>
+                
+                <li class="nav-item" sec:authorize="hasRole('CVHT')">
+                    <a class="nav-link"
+                       th:href="@{/danh-gia/lop-cua-toi}"
+                       data-testid="sidebar-lop-cua-toi-link"
+                       th:classappend="${activeMenu == 'danh-gia-lop-cua-toi'} ? ' active' : ''">
+                        <i class="bi bi-clipboard-data me-2" aria-hidden="true"></i>
+                        <span>Nhận Xét Lớp Tôi</span>
+                    </a>
+                </li>
+
+                <!-- ============== KIẾN TẬP / THỰC TẬP ============== -->
+                <li class="sidebar-section-header"
+                    sec:authorize="hasAnyRole('PDT','TTDTXS','CNHP','ADMIN','GIANG_VIEN','DOANH_NGHIEP','SINH_VIEN')">
+                    <span>Kiến Tập &amp; Thực Tập</span>
+                </li>
+
+                <li class="nav-item"
+                    sec:authorize="hasAnyRole('TTDTXS','CNHP','ADMIN','GIANG_VIEN','DOANH_NGHIEP')">
+                    <a class="nav-link"
+                       th:href="@{/kien-tap}"
+                       th:classappend="${activeMenu == 'kien-tap'} ? ' active' : ''">
+                        <i class="bi bi-briefcase me-2" aria-hidden="true"></i>
+                        <span>Kiến Tập</span>
+                    </a>
+                </li>
+
+                <li class="nav-item"
+                    sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN','GIANG_VIEN','CVHT','DOANH_NGHIEP','SINH_VIEN')">
+                    <a class="nav-link"
+                       th:href="@{/thuc-tap}"
+                       th:classappend="${activeMenu == 'thuc-tap'} ? ' active' : ''">
+                        <i class="bi bi-building-check me-2" aria-hidden="true"></i>
+                        <span>Thực Tập</span>
+                    </a>
+                </li>
+                
+                <!-- ============== HỒ SƠ DN (chỉ DN) ============== -->
+                <li class="sidebar-section-header"
+                    sec:authorize="hasRole('DOANH_NGHIEP')">
+                    <span>Hồ Sơ Của Tôi</span>
+                </li>
+                <li class="nav-item" sec:authorize="hasRole('DOANH_NGHIEP')">
+                    <a class="nav-link"
+                       th:href="@{/doanh-nghiep/cua-toi}"
+                       th:classappend="${activeMenu == 'doanh-nghiep'} ? ' active' : ''">
+                        <i class="bi bi-building-gear me-2" aria-hidden="true"></i>
+                        <span>Hồ Sơ Doanh Nghiệp</span>
+                    </a>
+                </li>
+
+            </ul>
+        </div>
+    </nav>
+</th:block>
+
+</body>
+</html>

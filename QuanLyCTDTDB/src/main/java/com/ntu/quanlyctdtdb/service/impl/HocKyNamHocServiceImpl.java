@@ -1,0 +1,350 @@
+package com.ntu.quanlyctdtdb.service.impl;
+
+import com.ntu.quanlyctdtdb.dto.HocKyNamHocDTO;
+import com.ntu.quanlyctdtdb.entity.HocKyNamHoc;
+import com.ntu.quanlyctdtdb.enums.TrangThaiHocKy;
+import com.ntu.quanlyctdtdb.exception.BusinessException;
+import com.ntu.quanlyctdtdb.exception.ResourceNotFoundException;
+import com.ntu.quanlyctdtdb.repository.DotKienTapRepository;
+import com.ntu.quanlyctdtdb.repository.DotThucTapRepository;
+import com.ntu.quanlyctdtdb.repository.HocKyNamHocRepository;
+import com.ntu.quanlyctdtdb.service.HocKyNamHocService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+/**
+ * Service quan ly HocKyNamHoc.
+ *
+ * Business rules:
+ *  - MaHocKy format: HK[1-3]-YYYY (YYYY la nam bat dau nam hoc) — enforced o DTO via @Pattern.
+ *  - NgayBatDau phai truoc NgayKetThuc.
+ *  - Khong duoc chuyen TrangThai tu `DaKetThuc` nguoc tro lai `DangDienRa` / `SapDienRa`.
+ *  - Toi da 1 HocKy `DangDienRa` tai moi thoi diem.
+ *  - Khong xoa duoc HocKy neu dang co DotKienTap / DotThucTap tham chieu.
+ */
+@Service
+@RequiredArgsConstructor
+@Transactional
+public class HocKyNamHocServiceImpl implements HocKyNamHocService {
+
+    private final HocKyNamHocRepository hocKyRepo;
+    private final DotKienTapRepository dotKienTapRepo;
+    private final DotThucTapRepository dotThucTapRepo;
+
+    @Override
+    public List<HocKyNamHoc> findAll() {
+        // Auto-resync trang thai moi lan list danh sach: neu ngay hien tai
+        // da qua/vao khoang ngayBatDau..ngayKetThuc ma trang thai chua cap
+        // nhat (do nguoi tao set sai / du lieu cu trong DB), tu dong dong
+        // bo lai de hien thi dung. Khong dong "DaKetThuc" vi state do la
+        // final (xem update()).
+        resyncStatuses();
+        return hocKyRepo.findAllByOrderByNgayBatDauDesc();
+    }
+
+    /**
+     * Dong bo trang thai cua tat ca HK theo ngay hien tai. Quy tac:
+     *  - today < ngayBatDau                     -&gt; SapDienRa
+     *  - ngayBatDau &lt;= today &lt;= ngayKetThuc      -&gt; DangDienRa
+     *  - today &gt; ngayKetThuc                   -&gt; DaKetThuc
+     *
+     * Update 2026-04: khong con skip DaKetThuc. Neu admin sua ngay ket thuc
+     * cua 1 HK da dong sang tuong lai, sync nay se tu "revive" no thanh
+     * DangDienRa / SapDienRa tuong ung - khop voi update() vua sua.
+     */
+    private void resyncStatuses() {
+        hocKyRepo.findAll().forEach(h -> {
+            if (h.getNgayBatDau() == null || h.getNgayKetThuc() == null) return;
+            TrangThaiHocKy expected = deriveStatus(h.getNgayBatDau(), h.getNgayKetThuc());
+            if (expected != h.getTrangThai()) {
+                h.setTrangThai(expected);
+                hocKyRepo.save(h);
+            }
+        });
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public HocKyNamHoc findById(String maHocKy) {
+        return hocKyRepo.findById(maHocKy)
+                .orElseThrow(() -> new ResourceNotFoundException("HocKyNamHoc", "MaHocKy", maHocKy));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<HocKyNamHoc> findDangDienRa() {
+        return hocKyRepo.findByTrangThai(TrangThaiHocKy.DangDienRa);
+    }
+
+    @Override
+    public HocKyNamHoc create(HocKyNamHocDTO dto) {
+        validateDates(dto.getNgayBatDau(), dto.getNgayKetThuc());
+        validateNamHoc(dto);
+
+        // Suy MaHocKy neu user chua cung cap (form chi nhap hocKyThu + namBatDau)
+        String maHocKy = dto.getMaHocKy();
+        if (maHocKy == null || maHocKy.isBlank()) {
+            maHocKy = buildMaHocKy(dto.getHocKyThu(), dto.getNamBatDau());
+        }
+        if (hocKyRepo.existsById(maHocKy)) {
+            throw new BusinessException("Hoc ky voi ma " + maHocKy + " da ton tai.");
+        }
+
+        String tenHocKy = dto.getTenHocKy();
+        if (tenHocKy == null || tenHocKy.isBlank()) {
+            tenHocKy = buildTenHocKy(dto.getHocKyThu(), dto.getNamBatDau(), dto.getNamKetThuc());
+        }
+
+        // Quy tac: trang thai PHAI khop voi ngay bat dau/ket thuc so voi hom
+        // nay. Neu user chon sai (vd chon "Da Ket Thuc" trong khi ngay ket
+        // thuc lai o tuong lai) -> throw BusinessException de UI hien thi loi
+        // va user quay lai form sua; KHONG duoc silent-override.
+        TrangThaiHocKy derived = deriveStatus(dto.getNgayBatDau(), dto.getNgayKetThuc());
+        TrangThaiHocKy chosen  = dto.getTrangThai();
+        TrangThaiHocKy trangThai;
+        if (chosen == null) {
+            trangThai = derived;
+        } else if (chosen != derived) {
+            throw new BusinessException(
+                    "Trang thai \"" + trangThaiLabel(chosen)
+                    + "\" khong khop voi khoang ngay da nhap (" + dto.getNgayBatDau()
+                    + " - " + dto.getNgayKetThuc()
+                    + "). Hom nay la " + LocalDate.now()
+                    + ", trang thai hop le phai la \"" + trangThaiLabel(derived)
+                    + "\". Hay chon lai trang thai hoac dieu chinh ngay.");
+        } else {
+            trangThai = chosen;
+        }
+        if (trangThai == TrangThaiHocKy.DangDienRa) {
+            // Tu dong dong HK cu dang DangDienRa (neu co) truoc khi kich hoat HK moi.
+            autoCloseOtherActive(null);
+        }
+        HocKyNamHoc e = HocKyNamHoc.builder()
+                .maHocKy(maHocKy)
+                .tenHocKy(tenHocKy)
+                .ngayBatDau(dto.getNgayBatDau())
+                .ngayKetThuc(dto.getNgayKetThuc())
+                .trangThai(trangThai)
+                .build();
+        return hocKyRepo.save(e);
+    }
+
+    @Override
+    public HocKyNamHoc update(String maHocKy, HocKyNamHocDTO dto) {
+        HocKyNamHoc e = findById(maHocKy);
+        validateDates(dto.getNgayBatDau(), dto.getNgayKetThuc());
+        validateNamHoc(dto);
+
+        // Khong duoc doi primary key: neu form submit khac, tu chi nhan gia tri URL.
+        // Dong thoi hocKyThu/namBatDau khi sua se readonly o template; neu bi doi
+        // du lieu POST -> bao loi ro rang.
+        String derived = buildMaHocKy(dto.getHocKyThu(), dto.getNamBatDau());
+        if (!maHocKy.equals(derived)) {
+            throw new BusinessException(
+                    "Khong duoc doi Ky / Nam Bat Dau cua Hoc Ky. Neu can, hay xoa va tao moi.");
+        }
+        if (dto.getMaHocKy() != null && !dto.getMaHocKy().isBlank()
+                && !maHocKy.equals(dto.getMaHocKy())) {
+            throw new BusinessException(
+                    "Khong duoc doi Ma Hoc Ky. Neu can, hay xoa va tao moi.");
+        }
+
+        // Quy tac (update) - source of truth la ngay:
+        //   - Trang thai user chon PHAI khop derive(dates). Khong khop -> throw.
+        //   - Neu user khong gui trang thai (null) -> dung derive.
+        //   - HK DaKetThuc VAN co the bi "revive" neu user sua ngay ket thuc
+        //     sang tuong lai VA chon lai trang thai tuong ung. Truoc day code
+        //     hardcode cu==DaKetThuc -> moi=DaKetThuc lam user khong the sua
+        //     bat ki dieu gi co y nghia tren HK da dong.
+        TrangThaiHocKy cu = e.getTrangThai();
+        TrangThaiHocKy derivedUpd = deriveStatus(dto.getNgayBatDau(), dto.getNgayKetThuc());
+        TrangThaiHocKy chosenUpd  = dto.getTrangThai();
+        TrangThaiHocKy moi;
+        if (chosenUpd == null) {
+            moi = derivedUpd;
+        } else if (chosenUpd != derivedUpd) {
+            throw new BusinessException(
+                    "Trang thai \"" + trangThaiLabel(chosenUpd)
+                    + "\" khong khop voi khoang ngay da nhap (" + dto.getNgayBatDau()
+                    + " - " + dto.getNgayKetThuc()
+                    + "). Hom nay la " + LocalDate.now()
+                    + ", trang thai hop le phai la \"" + trangThaiLabel(derivedUpd)
+                    + "\". Hay chon lai trang thai hoac dieu chinh ngay.");
+        } else {
+            moi = chosenUpd;
+        }
+
+        if (moi == TrangThaiHocKy.DangDienRa && cu != TrangThaiHocKy.DangDienRa) {
+            autoCloseOtherActive(maHocKy);
+        }
+
+        String tenHocKy = dto.getTenHocKy();
+        if (tenHocKy == null || tenHocKy.isBlank()) {
+            tenHocKy = buildTenHocKy(dto.getHocKyThu(), dto.getNamBatDau(), dto.getNamKetThuc());
+        }
+        e.setTenHocKy(tenHocKy);
+        e.setNgayBatDau(dto.getNgayBatDau());
+        e.setNgayKetThuc(dto.getNgayKetThuc());
+        e.setTrangThai(moi);
+        return hocKyRepo.save(e);
+    }
+
+    @Override
+    public HocKyNamHoc doiTrangThai(String maHocKy, TrangThaiHocKy moi) {
+        HocKyNamHoc e = findById(maHocKy);
+        TrangThaiHocKy cu = e.getTrangThai();
+
+        // Khong duoc chuyen HK DaKetThuc nguoc tro lai - final state.
+        if (cu == TrangThaiHocKy.DaKetThuc && moi != TrangThaiHocKy.DaKetThuc) {
+            throw new BusinessException(
+                    "Hoc ky " + maHocKy + " da ket thuc. Muon hoi sinh, hay vao "
+                    + "\"Sua\" de dieu chinh ngay ket thuc sang tuong lai.");
+        }
+
+        // Kich hoat (SapDienRa -> DangDienRa): CHI duoc phep khi hom nay da
+        // vao khoang [ngayBatDau, ngayKetThuc]. Truoc day thieu check nay nen
+        // user bam Kich hoat 1 HK Sap Dien Ra (today < ngayBatDau) van thanh
+        // cong + tu dong dong HK Dang Dien Ra khac -> sai nghiep vu.
+        if (moi == TrangThaiHocKy.DangDienRa) {
+            LocalDate today = LocalDate.now();
+            if (e.getNgayBatDau() == null || e.getNgayKetThuc() == null) {
+                throw new BusinessException(
+                        "Hoc ky " + maHocKy + " chua co ngay bat dau / ngay ket thuc, "
+                        + "khong the kich hoat.");
+            }
+            if (today.isBefore(e.getNgayBatDau())) {
+                throw new BusinessException(
+                        "Chua the kich hoat hoc ky " + maHocKy + ": ngay bat dau la "
+                        + e.getNgayBatDau() + " (hom nay " + today + ").");
+            }
+            if (today.isAfter(e.getNgayKetThuc())) {
+                throw new BusinessException(
+                        "Khong the kich hoat hoc ky " + maHocKy + ": ngay ket thuc ("
+                        + e.getNgayKetThuc() + ") da qua. Hay tao HK moi hoac sua ngay.");
+            }
+            if (cu != TrangThaiHocKy.DangDienRa) {
+                // Roadmap §3.1: tu dong chuyen HK khac dang DangDienRa ve
+                // DaKetThuc de dam bao toi da 1 HK active cung luc.
+                autoCloseOtherActive(maHocKy);
+            }
+        }
+
+        // Ket thuc som (DangDienRa -> DaKetThuc): cho phep nhung chi khi HK
+        // thuc su dang DienRa. Giu nguyen hanh vi cu.
+        if (moi == TrangThaiHocKy.DaKetThuc && cu != TrangThaiHocKy.DangDienRa
+                && cu != TrangThaiHocKy.DaKetThuc) {
+            throw new BusinessException(
+                    "Chi duoc ket thuc hoc ky dang \"Dang Dien Ra\". HK "
+                    + maHocKy + " hien dang \"" + trangThaiLabel(cu) + "\".");
+        }
+
+        e.setTrangThai(moi);
+        return hocKyRepo.save(e);
+    }
+
+    @Override
+    public void delete(String maHocKy) {
+        HocKyNamHoc e = findById(maHocKy);
+        long dotKT = dotKienTapRepo.findByHocKy_MaHocKy(maHocKy).size();
+        long dotTT = dotThucTapRepo.findByHocKy_MaHocKy(maHocKy).size();
+        if (dotKT > 0 || dotTT > 0) {
+            throw new BusinessException(
+                    "Khong the xoa hoc ky: dang co " + dotKT + " dot kien tap va "
+                  + dotTT + " dot thuc tap tham chieu.");
+        }
+        hocKyRepo.delete(e);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, Object> getThongKe() {
+        List<HocKyNamHoc> all = hocKyRepo.findAll();
+        Map<String, Object> m = new HashMap<>();
+        m.put("tong", all.size());
+        m.put("dangDienRa", all.stream()
+                .filter(h -> h.getTrangThai() == TrangThaiHocKy.DangDienRa).count());
+        m.put("sapDienRa", all.stream()
+                .filter(h -> h.getTrangThai() == TrangThaiHocKy.SapDienRa).count());
+        m.put("daKetThuc", all.stream()
+                .filter(h -> h.getTrangThai() == TrangThaiHocKy.DaKetThuc).count());
+        return m;
+    }
+
+    /* ================ Helpers ================ */
+
+    /**
+     * Tu dong chuyen cac HK dang DangDienRa khac sang DaKetThuc (tru HK duoc
+     * loai tru). Dam bao rang buoc "toi da 1 HK DangDienRa cung luc" van dung,
+     * nhung cho phep user kich hoat HK moi ma khong phai tat HK cu tay.
+     * Roadmap §3.1.
+     */
+    private void autoCloseOtherActive(String excludeMaHocKy) {
+        hocKyRepo.findAll().stream()
+                .filter(h -> h.getTrangThai() == TrangThaiHocKy.DangDienRa)
+                .filter(h -> excludeMaHocKy == null || !excludeMaHocKy.equals(h.getMaHocKy()))
+                .forEach(h -> {
+                    h.setTrangThai(TrangThaiHocKy.DaKetThuc);
+                    hocKyRepo.save(h);
+                });
+    }
+
+    /** Label tieng Viet cho message loi (khop voi option text trong form). */
+    private String trangThaiLabel(TrangThaiHocKy t) {
+        if (t == null) return "";
+        return switch (t) {
+            case SapDienRa   -> "Sap Dien Ra";
+            case DangDienRa  -> "Dang Dien Ra";
+            case DaKetThuc   -> "Da Ket Thuc";
+        };
+    }
+
+    /**
+     * Suy ra trang thai HK theo ngay hien tai.
+     * Tham chieu {@link #resyncStatuses} cho quy tac day du.
+     */
+    private TrangThaiHocKy deriveStatus(LocalDate start, LocalDate end) {
+        LocalDate today = LocalDate.now();
+        if (start == null || end == null) return TrangThaiHocKy.SapDienRa;
+        if (today.isBefore(start))   return TrangThaiHocKy.SapDienRa;
+        if (today.isAfter(end))      return TrangThaiHocKy.DaKetThuc;
+        return TrangThaiHocKy.DangDienRa;
+    }
+
+    private void validateDates(LocalDate start, LocalDate end) {
+        if (start == null || end == null) {
+            throw new BusinessException("Ngay bat dau va ngay ket thuc khong duoc de trong.");
+        }
+        if (!start.isBefore(end)) {
+            throw new BusinessException("Ngay bat dau phai truoc ngay ket thuc.");
+        }
+    }
+
+    private void validateNamHoc(HocKyNamHocDTO dto) {
+        if (dto.getHocKyThu() == null || dto.getNamBatDau() == null || dto.getNamKetThuc() == null) {
+            throw new BusinessException("Ky, Nam Bat Dau va Nam Ket Thuc khong duoc de trong.");
+        }
+        if (dto.getHocKyThu() < 1 || dto.getHocKyThu() > 3) {
+            throw new BusinessException("Ky phai tu 1 den 3 (1, 2 hoac 3 - Hoc Ky He).");
+        }
+        if (dto.getNamKetThuc() != dto.getNamBatDau() + 1) {
+            throw new BusinessException("Nam Ket Thuc phai bang Nam Bat Dau + 1.");
+        }
+    }
+
+    /** Format PK theo quy uoc {@code HKn-YYYY} — xem {@code docs/02_Data § 1}. */
+    private String buildMaHocKy(Integer hocKyThu, Integer namBatDau) {
+        return "HK" + hocKyThu + "-" + namBatDau;
+    }
+
+    private String buildTenHocKy(Integer hocKyThu, Integer namBatDau, Integer namKetThuc) {
+        String kyLabel = hocKyThu == 3 ? "He" : String.valueOf(hocKyThu);
+        return "Hoc Ky " + kyLabel + " Nam " + namBatDau + "-" + namKetThuc;
+    }
+}

@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/base}">
+<head><title>Quản Lý Học Phần</title></head>
+<body>
+<div layout:fragment="content">
+
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a th:href="@{/dashboard}" class="text-decoration-none">
+                    <i class="bi bi-house-door me-1"></i>Trang Chủ
+                </a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">Học Phần</li>
+        </ol>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="page-header-block mb-4">
+        <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+            <div class="flex-grow-1 min-w-0">
+                <p class="page-subtitle">ĐÀO TẠO</p>
+                <h1 class="page-title h4 mb-1 d-flex align-items-center gap-2">
+                    <i class="bi bi-journal-text" aria-hidden="true"></i>
+                    Quản Lý Học Phần
+                </h1>
+                <p class="text-muted small mb-0">
+                    Khai báo học phần, đề cương, chủ nhiệm HP và quy trình duyệt.
+                </p>
+            </div>
+            <div class="action-slot d-flex align-items-center gap-2 flex-wrap">
+                <a th:href="@{/hoc-phan/export(keyword=${keyword},
+                                                loai=${loaiFilter},
+                                                trangThai=${trangThaiFilter})}"
+                   class="btn btn-sm btn-outline-success"
+                   data-bs-toggle="tooltip" data-bs-title="Xuất CSV theo bộ lọc hiện tại">
+                    <i class="bi bi-download me-1" aria-hidden="true"></i>
+                    <span class="d-none d-md-inline">Xuất CSV</span>
+                </a>
+                <a sec:authorize="hasAnyRole('CNHP','TTDTXS','ADMIN')"
+                   th:href="@{/hoc-phan/them}" class="btn btn-sm btn-primary">
+                    <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>
+                    Tạo Học Phần
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stat Cards (Phase 2) -->
+    <div class="row g-3 mb-4" th:if="${thongKe != null}">
+        <div class="col-6 col-md-3">
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-journal-text', value=${thongKe['tongHocPhan'] ?: 0},
+                  label='Tổng Học Phần', variant='info', href=null)}"></div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-patch-check-fill', value=${thongKe['daDuyet'] ?: 0},
+                  label='Đã Duyệt', variant='success',
+                  href=${'/hoc-phan?trangThai=DaDuyet'})}"></div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-hourglass-split', value=${thongKe['choDuyet'] ?: 0},
+                  label='Chờ Duyệt', variant='warning',
+                  href=${'/hoc-phan?trangThai=ChoDuyet'})}"></div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-pencil-square', value=${thongKe['banNhap'] ?: 0},
+                  label='Bản Nháp', variant='orange',
+                  href=${'/hoc-phan?trangThai=BanNhap'})}"></div>
+        </div>
+    </div>
+
+    <!-- Filter toolbar -->
+    <form th:action="@{/hoc-phan}" method="get" class="filter-toolbar mb-3" role="search">
+        <div class="filter-toolbar-title">
+            <i class="bi bi-funnel" aria-hidden="true"></i>
+            <span>Tìm kiếm</span>
+        </div>
+        <div class="row g-2">
+            <div class="col-12 col-md-5">
+                <div class="input-group input-group-sm search-bar">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="search" name="keyword" th:value="${keyword}"
+                           class="form-control"
+                           placeholder="Tìm theo mã / tên học phần..."
+                           aria-label="Từ khoá">
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <select class="form-select form-select-sm" name="loai" aria-label="Loại HP">
+                    <option value="">-- Tất cả loại HP --</option>
+                    <option th:each="l : ${loaiHPList}"
+                            th:value="${l.name()}"
+                            th:selected="${loaiFilter != null and loaiFilter == l}"
+                            th:text="${l.name() == 'LyThuyet' ? 'Lý Thuyết' :
+                                      (l.name() == 'ThucHanh' ? 'Thực Hành' :
+                                      (l.name() == 'DoAn'     ? 'Đồ Án' :
+                                      (l.name() == 'ThucTap'  ? 'Thực Tập' :
+                                      (l.name() == 'KienTap'  ? 'Kiến Tập' : l.name()))))}">
+                    </option>
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <select class="form-select form-select-sm" name="trangThai" aria-label="Trạng thái HP">
+                    <option value="">-- Trạng thái --</option>
+                    <option th:each="t : ${trangThaiHPList}"
+                            th:value="${t.name()}"
+                            th:selected="${trangThaiFilter != null and trangThaiFilter == t}"
+                            th:text="${t.name() == 'BanNhap'  ? 'Bản Nháp' :
+                                      (t.name() == 'ChoDuyet' ? 'Chờ Duyệt' :
+                                      (t.name() == 'DaDuyet'  ? 'Đã Duyệt' : t.name()))}">
+                    </option>
+                </select>
+            </div>
+            <div class="col-12 col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary btn-sm flex-grow-1">
+                    <i class="bi bi-search me-1" aria-hidden="true"></i>Tìm kiếm
+                </button>
+                <a th:href="@{/hoc-phan}" class="btn btn-outline-secondary btn-sm"
+                   th:if="${(keyword != null and keyword != '') or loaiFilter != null or trangThaiFilter != null}"
+                   data-bs-toggle="tooltip" data-bs-title="Xoá bộ lọc"
+                   aria-label="Xoá bộ lọc">
+                    <i class="bi bi-x-lg" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </form>
+
+    <!-- Table -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <span class="fw-semibold">
+                <i class="bi bi-journal-text me-2" aria-hidden="true"></i>Danh Sách Học Phần
+            </span>
+            <span class="badge bg-secondary"
+                  th:if="${pages != null}"
+                  th:text="'Tổng: ' + ${pages.totalElements}">0</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table id="hpTable"
+                       class="table table-hover align-middle mb-0 table-sticky"
+                       data-sortable
+                       th:attr="data-sort-current-key=${pages != null and !pages.sort.isEmpty()}
+                                  ? ${pages.sort.iterator().next().property}
+                                  : 'maHocPhan',
+                                data-sort-current-dir=${pages != null and !pages.sort.isEmpty()}
+                                  ? ${pages.sort.iterator().next().direction.name().toLowerCase()}
+                                  : 'asc'">
+                    <thead>
+                        <tr>
+                            <th style="width:50px;">STT</th>
+                            <th class="sortable-th" data-sort-key="maHocPhan">Mã HP</th>
+                            <th class="sortable-th" data-sort-key="tenHocPhan">Tên Học Phần</th>
+                            <th class="sortable-th text-center" data-sort-key="soTinChi" style="width:60px;">TC</th>
+                            <th class="sortable-th" data-sort-key="loaiHocPhan">Loại</th>
+                            <th>Chủ Nhiệm HP</th>
+                            <th>Đề Cương</th>
+                            <th class="sortable-th" data-sort-key="trangThai">Trạng Thái</th>
+                            <th class="text-center" style="width:200px;">Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Empty -->
+                        <tr th:if="${pages == null or pages.isEmpty()}">
+                            <td colspan="9">
+                                <div th:replace="~{fragments/_empty-state :: withCta(
+                                      icon='bi-inbox', title='Không có học phần phù hợp',
+                                      desc='Thử xoá bộ lọc hoặc tạo học phần mới.',
+                                      ctaHref='/hoc-phan/them', ctaLabel='Tạo Học Phần',
+                                      ctaIcon='bi-plus-lg')}"></div>
+                            </td>
+                        </tr>
+                        <!-- Data -->
+                        <tr th:each="hp, stat : ${pages}">
+                            <td class="text-muted"
+                                th:text="${pages.number * pages.size + stat.index + 1}">1</td>
+                            <td><code th:text="${hp.maHocPhan}"></code></td>
+                            <td>
+                                <a th:href="@{/hoc-phan/chi-tiet/{ma}(ma=${hp.maHocPhan})}"
+                                   class="text-decoration-none fw-medium"
+                                   th:text="${hp.tenHocPhan}"></a>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-primary" th:text="${hp.soTinChi}">0</span>
+                            </td>
+                            <td class="small text-muted"
+                                th:with="l=${hp.loaiHocPhan?.name()}"
+                                th:text="${l == 'LyThuyet'  ? 'Lý Thuyết'  :
+                                          (l == 'ThucHanh' ? 'Thực Hành' :
+                                          (l == 'DoAn'     ? 'Đồ Án'     :
+                                          (l == 'ThucTap'  ? 'Thực Tập'  :
+                                          (l == 'KienTap'  ? 'Kiến Tập'  : '--'))))}">--</td>
+                            <td class="small"
+                                th:text="${hp.chuNhiemHP != null ? hp.chuNhiemHP.hoTen : '--'}">--</td>
+                            <td>
+                                <a th:if="${hp.fileDeCuong != null and !hp.fileDeCuong.isEmpty()}"
+                                   th:href="@{'/uploads/' + ${hp.fileDeCuong}}" target="_blank"
+                                   class="small text-decoration-none">
+                                    <i class="bi bi-file-earmark-pdf me-1"></i>Xem
+                                </a>
+                                <span th:unless="${hp.fileDeCuong != null and !hp.fileDeCuong.isEmpty()}"
+                                      class="text-muted small">--</span>
+                            </td>
+                            <td>
+                                <span class="status-pill"
+                                      th:with="s=${hp.trangThai?.name()}"
+                                      th:classappend="${s == 'DaDuyet'  ? 'tone-success'  :
+                                                       (s == 'ChoDuyet' ? 'tone-warning' :
+                                                                          'tone-neutral')}">
+                                    <span class="pill-dot" aria-hidden="true"></span>
+                                    <span th:text="${s == 'DaDuyet'  ? 'Đã Duyệt' :
+                                                   (s == 'ChoDuyet' ? 'Chờ Duyệt' : 'Bản Nháp')}">--</span>
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <div class="action-cluster">
+                                    <a th:href="@{/hoc-phan/chi-tiet/{ma}(ma=${hp.maHocPhan})}"
+                                       class="btn btn-sm btn-outline-secondary"
+                                       data-bs-toggle="tooltip" data-bs-title="Chi Tiết"
+                                       aria-label="Chi tiết">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a sec:authorize="hasAnyRole('CNHP','ADMIN')"
+                                       th:if="${hp.trangThai?.name() != 'DaDuyet'}"
+                                       th:href="@{/hoc-phan/sua/{ma}(ma=${hp.maHocPhan})}"
+                                       class="btn btn-sm btn-outline-primary"
+                                       data-bs-toggle="tooltip" data-bs-title="Chỉnh sửa"
+                                       aria-label="Chỉnh sửa">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form sec:authorize="hasAnyRole('CNHP','ADMIN')"
+                                          th:if="${hp.trangThai?.name() == 'BanNhap'}"
+                                          th:action="@{/hoc-phan/gui-cho-duyet/{ma}(ma=${hp.maHocPhan})}"
+                                          method="post" class="d-inline m-0">
+                                        <button class="btn btn-sm btn-outline-info"
+                                                data-bs-toggle="tooltip" data-bs-title="Gửi chờ duyệt"
+                                                aria-label="Gửi chờ duyệt">
+                                            <i class="bi bi-send"></i>
+                                        </button>
+                                    </form>
+                                    <form sec:authorize="hasAnyRole('TTDTXS','ADMIN')"
+                                          th:if="${hp.trangThai?.name() == 'ChoDuyet'}"
+                                          th:action="@{/hoc-phan/phe-duyet/{ma}(ma=${hp.maHocPhan})}"
+                                          method="post" class="d-inline m-0">
+                                        <button class="btn btn-sm btn-outline-success"
+                                                data-bs-toggle="tooltip" data-bs-title="Phê duyệt"
+                                                aria-label="Phê duyệt">
+                                            <i class="bi bi-check-lg"></i>
+                                        </button>
+                                    </form>
+                                    <button sec:authorize="hasAnyRole('TTDTXS','ADMIN')"
+                                            th:if="${hp.trangThai?.name() == 'ChoDuyet'}"
+                                            type="button"
+                                            class="btn btn-sm btn-outline-danger"
+                                            data-bs-toggle="modal"
+                                            th:data-bs-target="'#modalTuChoi-' + ${hp.maHocPhan}"
+                                            data-bs-title="Từ chối"
+                                            aria-label="Từ chối">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>
+                                </div>
+
+                                <!-- Modal Tu Choi (giu nguyen tu version cu) -->
+                                <div sec:authorize="hasAnyRole('TTDTXS','ADMIN')"
+                                     th:if="${hp.trangThai?.name() == 'ChoDuyet'}"
+                                     class="modal fade text-start"
+                                     th:id="'modalTuChoi-' + ${hp.maHocPhan}"
+                                     tabindex="-1" aria-hidden="true">
+                                  <div class="modal-dialog">
+                                    <form th:action="@{/hoc-phan/tu-choi/{ma}(ma=${hp.maHocPhan})}"
+                                          method="post" class="modal-content">
+                                      <div class="modal-header">
+                                        <h5 class="modal-title">Từ Chối Học Phần</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                                      </div>
+                                      <div class="modal-body">
+                                        <label class="form-label">Lý Do <span class="text-danger">*</span></label>
+                                        <textarea class="form-control" name="lyDo" rows="3" required></textarea>
+                                      </div>
+                                      <div class="modal-footer">
+                                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Huỷ</button>
+                                        <button type="submit" class="btn btn-danger">Xác Nhận Từ Chối</button>
+                                      </div>
+                                    </form>
+                                  </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination + size -->
+        <div th:if="${pages != null and pages.totalElements > 0}"
+             class="card-footer p-0 border-top">
+            <div th:replace="~{fragments/_pagination :: bar(
+                  page=${pages},
+                  baseUrl='/hoc-phan',
+                  queryString=${
+                    (keyword != null and keyword != '' ? '&keyword=' + keyword : '') +
+                    (loaiFilter != null ? '&loai=' + loaiFilter.name() : '') +
+                    (trangThaiFilter != null ? '&trangThai=' + trangThaiFilter.name() : '') +
+                    (pages.sort != null and !pages.sort.isEmpty()
+                       ? '&sort=' + pages.sort.iterator().next().property
+                         + ',' + pages.sort.iterator().next().direction.name().toLowerCase()
+                       : '')
+                  })}"></div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

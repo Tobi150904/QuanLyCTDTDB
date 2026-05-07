@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/base}">
+<head><title>Chi Tiết Doanh Nghiệp</title></head>
+<body>
+<div layout:fragment="content">
+
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a th:href="@{/dashboard}" class="text-decoration-none">
+                    <i class="bi bi-house-door me-1"></i>Trang Chủ
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a th:href="@{/doanh-nghiep}" class="text-decoration-none">Doanh Nghiệp</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page"
+                th:text="${doanhNghiep.tenDoanhNghiep}">Chi Tiết</li>
+        </ol>
+    </nav>
+
+    <!-- DETAIL HERO — UI consistency rework: chuyen tu raw <div d-flex>
+         sang format detail-hero chuan voi icon block + status-pill, dong bo
+         100% voi cac trang chi tiet khac (lop-hanh-chinh, hoc-phan...). -->
+    <section class="detail-hero">
+        <div class="d-flex flex-wrap gap-3 align-items-start">
+            <div class="detail-hero-icon" aria-hidden="true">
+                <i class="bi bi-building"></i>
+            </div>
+            <div class="flex-grow-1 min-w-0" style="flex: 1 1 60%;">
+                <p class="detail-hero-eyebrow">Quản Trị / Doanh Nghiệp</p>
+                <h1 class="detail-hero-title"
+                    th:text="${doanhNghiep.tenDoanhNghiep}">Chi Tiết</h1>
+                <div class="detail-hero-meta">
+                    <span><code th:text="${doanhNghiep.maDoanhNghiep}">--</code></span>
+                    <span th:if="${doanhNghiep.linhVuc != null and !doanhNghiep.linhVuc.isEmpty()}">
+                        <i class="bi bi-tag"></i>
+                        <span th:text="${doanhNghiep.linhVuc}">--</span>
+                    </span>
+                    <span class="status-pill"
+                          th:classappend="${doanhNghiep.trangThai.name() == 'DangHopTac'} ? 'tone-success' : 'tone-neutral'">
+                        <span class="pill-dot" aria-hidden="true"></span>
+                        <span th:text="${doanhNghiep.trangThai.name() == 'DangHopTac' ? 'Đang Hợp Tác' : 'Tạm Ngưng'}">--</span>
+                    </span>
+                </div>
+            </div>
+            <div class="detail-hero-actions">
+                <a th:href="@{/doanh-nghiep/sua/{ma}(ma=${doanhNghiep.maDoanhNghiep})}"
+                   class="btn btn-light btn-sm"
+                   sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')"
+                   aria-label="Chỉnh sửa doanh nghiệp">
+                    <i class="bi bi-pencil-square me-1"></i>Chỉnh Sửa
+                </a>
+                <a th:href="@{/doanh-nghiep}" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i>Quay Lại
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Phase 4 — TAB NAV
+         2 tab semantic: thong tin (read-only, all see) vs. thao tac quan tri
+         (chi PDT/TTDTXS/ADMIN see). Tab 2 chi render khi user co quyen. -->
+    <ul class="nav tab-nav-clean" role="tablist">
+        <li role="presentation">
+            <a class="tab-link active" id="tab-overview"
+               data-bs-toggle="tab" href="#pane-overview" role="tab"
+               aria-controls="pane-overview" aria-selected="true">
+                <i class="bi bi-info-circle"></i> Tổng Quan
+            </a>
+        </li>
+        <li role="presentation"
+            sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
+            <a class="tab-link" id="tab-actions"
+               data-bs-toggle="tab" href="#pane-actions" role="tab"
+               aria-controls="pane-actions" aria-selected="false">
+                <i class="bi bi-lightning"></i> Thao Tác Quản Trị
+            </a>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+
+    <!-- ====== TAB 1: TONG QUAN ====== -->
+    <div class="tab-pane fade show active" id="pane-overview"
+         role="tabpanel" aria-labelledby="tab-overview" tabindex="0">
+
+    <!-- UI consistency rework: chuyen tu <table info-row> sang info-grid
+         fragment chuan, dong bo voi cac trang chi tiet khac. -->
+    <div class="card">
+        <div class="card-header">
+            <i class="bi bi-building me-2"></i>
+            <span class="fw-semibold">Thông Tin Doanh Nghiệp</span>
+        </div>
+        <div class="card-body">
+            <div class="info-grid">
+                <div th:replace="~{fragments/_info-grid :: item(
+                      label='Mã Doanh Nghiệp', value=${doanhNghiep.maDoanhNghiep}, isCode=true)}"></div>
+                <div class="info-item">
+                    <span class="info-item-label">Tên Doanh Nghiệp</span>
+                    <span class="info-item-value fw-semibold"
+                          th:text="${doanhNghiep.tenDoanhNghiep}">--</span>
+                </div>
+                <div th:replace="~{fragments/_info-grid :: item(
+                      label='Lĩnh Vực', value=${doanhNghiep.linhVuc}, isCode=false)}"></div>
+                <div th:replace="~{fragments/_info-grid :: item(
+                      label='Người Đại Diện', value=${doanhNghiep.nguoiDaiDien}, isCode=false)}"></div>
+                <div class="info-item">
+                    <span class="info-item-label">Email</span>
+                    <span class="info-item-value">
+                        <span th:if="${doanhNghiep.email == null or doanhNghiep.email.isEmpty()}"
+                              class="text-muted">—</span>
+                        <a th:if="${doanhNghiep.email != null and !doanhNghiep.email.isEmpty()}"
+                           th:href="'mailto:' + ${doanhNghiep.email}"
+                           th:text="${doanhNghiep.email}"
+                           class="text-decoration-none">--</a>
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-item-label">Số Điện Thoại</span>
+                    <span class="info-item-value">
+                        <a th:if="${doanhNghiep.soDienThoai != null and !doanhNghiep.soDienThoai.isEmpty()}"
+                           th:href="'tel:' + ${doanhNghiep.soDienThoai}"
+                           th:text="${doanhNghiep.soDienThoai}"
+                           class="text-decoration-none">--</a>
+                        <span th:if="${doanhNghiep.soDienThoai == null or doanhNghiep.soDienThoai.isEmpty()}"
+                              class="text-muted">—</span>
+                    </span>
+                </div>
+                <div th:replace="~{fragments/_info-grid :: item(
+                      label='Địa Chỉ', value=${doanhNghiep.diaChiDN}, isCode=false)}"></div>
+                <div class="info-item">
+                    <span class="info-item-label">Trạng Thái</span>
+                    <span class="info-item-value">
+                        <span class="status-pill"
+                              th:classappend="${doanhNghiep.trangThai.name() == 'DangHopTac'} ? 'tone-success' : 'tone-neutral'">
+                            <span class="pill-dot" aria-hidden="true"></span>
+                            <span th:text="${doanhNghiep.trangThai.name() == 'DangHopTac' ? 'Đang Hợp Tác' : 'Tạm Ngưng'}">--</span>
+                        </span>
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-item-label">Tạo Lúc</span>
+                    <span class="info-item-value text-muted"
+                          th:text="${doanhNghiep.createdAt != null ?
+                              #temporals.format(doanhNghiep.createdAt, 'dd/MM/yyyy HH:mm') : '—'}">--</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-item-label">Cập Nhật Gần Nhất</span>
+                    <span class="info-item-value text-muted"
+                          th:text="${doanhNghiep.updatedAt != null ?
+                              #temporals.format(doanhNghiep.updatedAt, 'dd/MM/yyyy HH:mm') : '—'}">--</span>
+                </div>
+            </div>
+        </div>
+    </div><!-- /card info -->
+
+    </div><!-- /pane-overview -->
+
+    <!-- ====== TAB 2: THAO TAC QUAN TRI ====== -->
+    <div class="tab-pane fade" id="pane-actions"
+         role="tabpanel" aria-labelledby="tab-actions" tabindex="0"
+         sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
+
+        <!-- Action card — chiem max 6/7 col tren md+ de khong dan trai bttn. -->
+        <div class="row g-4">
+        <div class="col-md-7 col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-lightning me-2"></i>
+                    <span class="fw-semibold">Thao Tác</span>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-column gap-2">
+                        <a th:href="@{/doanh-nghiep/sua/{ma}(ma=${doanhNghiep.maDoanhNghiep})}"
+                           class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-pencil me-2"></i>Chỉnh Sửa Thông Tin
+                        </a>
+                        <!-- UX: them confirm modal cho action thay doi trang thai
+                             (truoc day click la doi luon, de bam nham). -->
+                        <form th:action="@{/doanh-nghiep/doi-trang-thai/{ma}(ma=${doanhNghiep.maDoanhNghiep})}"
+                              method="post" class="m-0"
+                              th:data-item-name="|hợp tác với ${doanhNghiep.tenDoanhNghiep}|"
+                              th:attr="data-confirm-action=${doanhNghiep.trangThai.name() == 'DangHopTac' ? 'tạm ngưng' : 'kích hoạt lại'}"
+                              onsubmit="return confirmDeleteFromForm(this, event)">
+                            <input type="hidden"
+                                   th:name="${_csrf.parameterName}"
+                                   th:value="${_csrf.token}">
+                            <button type="submit"
+                                    class="btn btn-sm w-100"
+                                    th:classappend="${doanhNghiep.trangThai.name() == 'DangHopTac'} ? 'btn-outline-warning' : 'btn-outline-success'">
+                                <i class="bi me-2"
+                                   th:classappend="${doanhNghiep.trangThai.name() == 'DangHopTac'} ? 'bi-pause' : 'bi-play'"></i>
+                                <span th:text="${doanhNghiep.trangThai.name() == 'DangHopTac' ? 'Tạm Ngưng Hợp Tác' : 'Kích Hoạt Hợp Tác'}"></span>
+                            </button>
+                        </form>
+                        <form th:action="@{/doanh-nghiep/xoa/{ma}(ma=${doanhNghiep.maDoanhNghiep})}"
+                              method="post" class="m-0"
+                              th:attr="data-item-name=${doanhNghiep.tenDoanhNghiep}"
+                              onsubmit="return confirmDeleteFromForm(this, event)">
+                            <input type="hidden"
+                                   th:name="${_csrf.parameterName}"
+                                   th:value="${_csrf.token}">
+                            <button type="submit" class="btn btn-sm btn-outline-danger w-100">
+                                <i class="bi bi-trash me-2"></i>Xoá Doanh Nghiệp
+                            </button>
+                        </form>
+                    </div>
+                    <hr class="soft-divider">
+                    <p class="text-muted small mb-0">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Doanh nghiệp đang được tham chiếu bởi các Đợt Kiến Tập / Thực Tập
+                        sẽ không thể xoá trực tiếp. Hãy chuyển sang <strong>Tạm Ngưng</strong>
+                        để bảo toàn dữ liệu lịch sử.
+                    </p>
+                </div>
+            </div>
+        </div>
+        </div><!-- /row g-4 -->
+    </div><!-- /pane-actions -->
+
+    </div><!-- /tab-content -->
+
+</div>
+</body>
+</html>

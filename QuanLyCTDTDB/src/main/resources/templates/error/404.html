@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/base}">
+<head><title>404 — Không Tìm Thấy Trang</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="error-page">
+        <div class="error-card" role="alert" aria-labelledby="errTitle">
+            <div class="error-icon-wrap tone-info" aria-hidden="true">
+                <i class="bi bi-compass"></i>
+            </div>
+            <p class="error-code">Lỗi 404</p>
+            <h1 id="errTitle" class="error-title">Không Tìm Thấy Trang</h1>
+            <p class="error-desc">
+                Trang bạn đang tìm không tồn tại hoặc đã được di chuyển.<br>
+                Vui lòng kiểm tra lại đường dẫn hoặc quay về trang chủ.
+            </p>
+
+            <!--/* Phase 7: hien URL khong tim thay (truncate) de user xac nhan */-->
+            <div th:if="${requestUri}"
+                 class="d-inline-block px-3 py-2 mb-3 small"
+                 style="background: var(--surface-soft); border-radius: var(--radius-sm); max-width: 100%;">
+                <i class="bi bi-link-45deg me-1 text-muted" aria-hidden="true"></i>
+                <code class="text-truncate d-inline-block align-bottom"
+                      style="max-width: 360px;"
+                      th:text="${requestUri}">--</code>
+            </div>
+
+            <p th:if="${errorMsg}" class="text-danger small mb-3" th:text="${errorMsg}"></p>
+
+            <div class="d-flex justify-content-center gap-2 flex-wrap">
+                <a th:href="@{/dashboard}" class="btn btn-primary">
+                    <i class="bi bi-house-door me-1" aria-hidden="true"></i>Về Trang Chủ
+                </a>
+                <button type="button" class="btn btn-outline-secondary"
+                        onclick="history.back()">
+                    <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Quay Lại
+                </button>
+            </div>
+
+            <hr class="soft-divider">
+
+            <!--/* Phase 7: shortcut den cac trang chinh — chi link toi route co
+                  thuc te trong he thong (chua co /tim-kiem hay /dang-ky doc lap). */-->
+            <div class="small" sec:authorize="isAuthenticated()">
+                <p class="text-muted mb-2">
+                    <i class="bi bi-signpost-2 me-1" aria-hidden="true"></i>
+                    Có thể bạn cần:
+                </p>
+                <div class="d-flex flex-wrap justify-content-center gap-2">
+                    <a th:href="@{/dashboard}"
+                       class="badge text-decoration-none bg-light text-dark border px-3 py-2">
+                        <i class="bi bi-speedometer2 me-1" aria-hidden="true"></i>Dashboard
+                    </a>
+                    <a th:href="@{/profile}"
+                       class="badge text-decoration-none bg-light text-dark border px-3 py-2">
+                        <i class="bi bi-person me-1" aria-hidden="true"></i>Hồ sơ cá nhân
+                    </a>
+                    <a th:href="@{/lop-hoc-phan}"
+                       class="badge text-decoration-none bg-light text-dark border px-3 py-2"
+                       sec:authorize="hasAnyRole('PDT','TTDTXS','GIANG_VIEN','SINH_VIEN','ADMIN')">
+                        <i class="bi bi-collection me-1" aria-hidden="true"></i>Lớp học phần
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

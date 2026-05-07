@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/base}">
+<head><title>Chi Tiết Lớp Học Phần</title></head>
+<body>
+<div layout:fragment="content">
+
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a th:href="@{/dashboard}"><i class="bi bi-house-door me-1"></i>Trang Chủ</a>
+            </li>
+            <li class="breadcrumb-item">
+                <a th:href="@{/lop-hoc-phan}">Lớp Học Phần</a>
+            </li>
+            <li class="breadcrumb-item active">Chi Tiết</li>
+        </ol>
+    </nav>
+
+    <!-- DETAIL HERO -->
+    <section class="detail-hero">
+        <div class="d-flex flex-wrap gap-3 align-items-start">
+            <div class="detail-hero-icon" aria-hidden="true">
+                <i class="bi bi-people-fill"></i>
+            </div>
+            <div class="flex-grow-1 min-w-0" style="flex: 1 1 60%;">
+                <p class="detail-hero-eyebrow">Đào Tạo / Lớp Học Phần</p>
+                <h1 class="detail-hero-title" th:text="'Lớp Nhóm N' + ${lopId.maLopHocPhan}">Lớp Nhóm N1</h1>
+                <div class="detail-hero-meta">
+                    <span><i class="bi bi-mortarboard"></i>CTĐT
+                        <code th:text="${lopId.maCTDT}">--</code></span>
+                    <span><i class="bi bi-journal-text"></i>HP
+                        <code th:text="${lopId.maHocPhan}">--</code></span>
+                    <span><i class="bi bi-calendar3"></i>HK
+                        <code th:text="${lopId.maHocKy}">--</code></span>
+                    <span><i class="bi bi-people"></i>
+                        <strong th:text="${#lists.size(danhSachSV)}">0</strong>&nbsp;SV</span>
+                </div>
+            </div>
+            <div class="detail-hero-actions">
+                <a th:href="@{/lop-hoc-phan(maCTDT=${lopId.maCTDT},maHocKy=${lopId.maHocKy})}"
+                   class="btn btn-light btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i>Quay Lại
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Flash messages da duoc render boi layout/base.html -->
+
+
+    <!-- Phase 4 — TAB NAV
+         2 tab semantic:
+           1. Sinh vien: table SV + modal canh bao (all see).
+           2. Dang ky SV: form dang ky moi (chi PDT/TTDTXS/ADMIN see).
+         Tab 2 chi render khi user co quyen — non-priv user thay 1 tab. -->
+    <ul class="nav tab-nav-clean" role="tablist">
+        <li role="presentation">
+            <a class="tab-link active" id="tab-students"
+               data-bs-toggle="tab" href="#pane-students" role="tab"
+               aria-controls="pane-students" aria-selected="true">
+                <i class="bi bi-people"></i> Danh Sách Sinh Viên
+                <span class="badge bg-light text-dark ms-1"
+                      th:text="${#lists.size(danhSachSV)}">0</span>
+            </a>
+        </li>
+        <li role="presentation"
+            sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
+            <a class="tab-link" id="tab-register"
+               data-bs-toggle="tab" href="#pane-register" role="tab"
+               aria-controls="pane-register" aria-selected="false">
+                <i class="bi bi-person-plus"></i> Đăng Ký SV
+            </a>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+
+    <!-- ====== TAB 1: SINH VIEN ====== -->
+    <div class="tab-pane fade show active" id="pane-students"
+         role="tabpanel" aria-labelledby="tab-students" tabindex="0">
+
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span class="fw-semibold">
+                <i class="bi bi-people me-2"></i>Danh Sách Sinh Viên
+            </span>
+            <span class="badge bg-light"
+                  th:text="'Tổng: ' + ${#lists.size(danhSachSV)}">0</span>
+        </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th style="width:50px;">STT</th>
+                                    <th>Mã SV</th>
+                                    <th>Họ Tên</th>
+                                    <th class="text-center">Trạng Thái</th>
+                                    <th>Nhận Xét</th>
+                                    <th class="text-center" style="width:140px;">Thao Tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:if="${#lists.isEmpty(danhSachSV)}">
+                                    <td colspan="6">
+                                        <!-- UX polish: dung empty-state fragment thay vi
+                                             markup tu che — dong bo voi cac trang khac. -->
+                                        <div th:replace="~{fragments/_empty-state :: simple(
+                                              icon='bi-person-x',
+                                              title='Chưa có sinh viên',
+                                              desc='Lớp này chưa có sinh viên nào đăng ký.')}"></div>
+                                    </td>
+                                </tr>
+                                <tr th:each="ds, stat : ${danhSachSV}">
+                                    <td class="text-muted" th:text="${stat.index + 1}">1</td>
+                                    <td><code th:text="${ds.sinhVien.maSV}"></code></td>
+                                    <td class="fw-medium"
+                                        th:text="${ds.sinhVien.nguoiDung != null
+                                            ? ds.sinhVien.nguoiDung.hoTen
+                                            : ds.sinhVien.maSV}">--</td>
+                                    <td class="text-center">
+                                        <span class="status-pill"
+                                              th:classappend="${ds.daCanhBao} ? 'tone-warning' : 'tone-success'">
+                                            <span class="pill-dot" aria-hidden="true"
+                                                  th:unless="${ds.daCanhBao}"></span>
+                                            <i class="bi bi-exclamation-triangle-fill"
+                                               aria-hidden="true"
+                                               th:if="${ds.daCanhBao}"></i>
+                                            <span th:text="${ds.daCanhBao} ? 'Đã Cảnh Báo' : 'Bình Thường'">--</span>
+                                        </span>
+                                    </td>
+                                    <td class="small text-muted"
+                                        th:text="${ds.nhanXet ?: '--'}">--</td>
+                                    <td class="text-center">
+                                        <!-- UX bug-fix: chi GV duoc phan cong day lop nay
+                                             + staff (PDT/TTDTXS/CNHP/ADMIN) moi thay nut
+                                             "Canh Bao". GV khong day lop / SV se khong
+                                             nhin thay nut nay -> tranh click vao bi 403. -->
+                                        <button th:if="${!ds.daCanhBao and canCanhBao}"
+                                                class="btn btn-sm btn-outline-warning"
+                                                data-bs-toggle="modal"
+                                                th:data-bs-target="'#modalCB-' + ${ds.sinhVien.maSV}"
+                                                data-bs-title="Cảnh Báo">
+                                            <i class="bi bi-exclamation-triangle me-1"></i>Cảnh Báo
+                                        </button>
+                                        <span th:if="${!ds.daCanhBao and !canCanhBao}"
+                                              class="text-muted small">--</span>
+
+                                        <!-- Modal cảnh báo SV (chi render khi co quyen) -->
+                                        <div th:if="${canCanhBao}"
+                                             class="modal fade"
+                                             th:id="'modalCB-' + ${ds.sinhVien.maSV}"
+                                             tabindex="-1" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <form th:action="@{/lop-hoc-phan/canh-bao-sv}" method="post"
+                                                      class="modal-content text-start">
+                                                    <input type="hidden" th:name="${_csrf.parameterName}"
+                                                                          th:value="${_csrf.token}">
+                                                    <input type="hidden" name="maCTDT"    th:value="${lopId.maCTDT}">
+                                                    <input type="hidden" name="maHocPhan" th:value="${lopId.maHocPhan}">
+                                                    <input type="hidden" name="maHocKy"   th:value="${lopId.maHocKy}">
+                                                    <input type="hidden" name="maLop"     th:value="${lopId.maLopHocPhan}">
+                                                    <input type="hidden" name="maSV"      th:value="${ds.sinhVien.maSV}">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">Cảnh Báo Sinh Viên</h5>
+                                                        <button class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Sinh Viên</label>
+                                                            <input type="text" class="form-control-plaintext"
+                                                                   readonly
+                                                                   th:value="${ds.sinhVien.maSV + ' - ' +
+                                                                     (ds.sinhVien.nguoiDung != null
+                                                                       ? ds.sinhVien.nguoiDung.hoTen
+                                                                       : ds.sinhVien.maSV)}">
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Nhận Xét <span class="text-danger">*</span></label>
+                                                            <textarea class="form-control" name="nhanXet"
+                                                                      rows="3" required></textarea>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Email CVHT <span class="text-danger">*</span></label>
+                                                            <input type="email" class="form-control"
+                                                                   name="emailCVHT" required
+                                                                   placeholder="email-cvht@ntu.edu.vn">
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-outline-secondary"
+                                                                data-bs-dismiss="modal">Huỷ</button>
+                                                        <button type="submit" class="btn btn-warning">
+                                                            <i class="bi bi-send me-1"></i>Gửi Cảnh Báo
+                                                        </button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div><!-- /card -->
+
+    </div><!-- /pane-students -->
+
+    <!-- ====== TAB 2: DANG KY SV ====== -->
+    <div class="tab-pane fade" id="pane-register"
+         role="tabpanel" aria-labelledby="tab-register" tabindex="0"
+         sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
+
+        <!-- Form dang ky — Phase 4: bo wrapper col, do tab da chiem full width.
+             Card khong sticky-top vi pane co the bi switch out anytime. -->
+        <div class="row g-4">
+        <div class="col-lg-6 col-xl-5">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-person-plus"></i>
+                    <span class="fw-semibold">Đăng Ký Sinh Viên</span>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/lop-hoc-phan/dang-ky-sv}" method="post">
+                        <input type="hidden" th:name="${_csrf.parameterName}"
+                                              th:value="${_csrf.token}">
+                        <input type="hidden" name="maCTDT"    th:value="${lopId.maCTDT}">
+                        <input type="hidden" name="maHocPhan" th:value="${lopId.maHocPhan}">
+                        <input type="hidden" name="maHocKy"   th:value="${lopId.maHocKy}">
+                        <input type="hidden" name="maLop"     th:value="${lopId.maLopHocPhan}">
+
+                        <div class="mb-3">
+                            <label class="form-label fw-medium small">
+                                Mã Sinh Viên <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" name="maSV"
+                                   placeholder="Nhập mã SV..." required>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-plus-lg me-1"></i>Đăng Ký
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        </div><!-- /row g-4 -->
+    </div><!-- /pane-register -->
+
+    </div><!-- /tab-content -->
+
+</div>
+</body>
+</html>

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/base}">
+<head><title>Quản Lý Học Kỳ</title></head>
+<body>
+<div layout:fragment="content">
+
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a th:href="@{/dashboard}" class="text-decoration-none">
+                    <i class="bi bi-house-door me-1"></i>Trang Chủ
+                </a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">Học Kỳ - Năm Học</li>
+        </ol>
+    </nav>
+
+    <!-- UI consistency fix: chuyen page-header sang format chuan
+         (.page-header-block voi h1.page-title + icon + description), giong
+         cac trang chuan nguoi-dung/danh-sach va hoc-phan/danh-sach. -->
+    <div class="page-header-block mb-4">
+        <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+            <div class="flex-grow-1 min-w-0">
+                <p class="page-subtitle mb-1">Học Vụ</p>
+                <h1 class="page-title h4 mb-1 d-flex align-items-center gap-2">
+                    <i class="bi bi-calendar3 text-primary" aria-hidden="true"></i>
+                    <span>Quản Lý Học Kỳ / Năm Học</span>
+                </h1>
+                <p class="text-muted small mb-0">
+                    Khai báo lịch học kỳ, năm học và quản lý vòng đời (chuẩn bị, đang diễn ra, kết thúc).
+                </p>
+            </div>
+            <div class="action-slot d-flex gap-2 flex-wrap">
+                <a th:href="@{/hoc-ky/them}" class="btn btn-primary btn-sm"
+                   sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
+                    <i class="bi bi-plus-lg me-1"></i>Thêm Học Kỳ
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stat cards — Phase 3: dung canonical _stat-card fragment -->
+    <div class="row g-3 mb-4" th:if="${thongKe != null}">
+        <div class="col-6 col-md-3">
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-calendar3', value=${thongKe['tong'] ?: 0},
+                  label='Tổng Cộng', variant='info', href=null)}"></div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-play-circle-fill', value=${thongKe['dangDienRa'] ?: 0},
+                  label='Đang Diễn Ra', variant='success', href=null)}"></div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-hourglass-split', value=${thongKe['sapDienRa'] ?: 0},
+                  label='Sắp Diễn Ra', variant='teal', href=null)}"></div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-check2-square', value=${thongKe['daKetThuc'] ?: 0},
+                  label='Đã Kết Thúc', variant='neutral', href=null)}"></div>
+        </div>
+    </div>
+
+    <!-- Flash messages are rendered by layout/base.html -->
+
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span class="fw-semibold">
+                <i class="bi bi-list-task me-2"></i>Danh Sách Học Kỳ
+            </span>
+            <span class="badge bg-light text-dark"
+                  th:text="'Tổng: ' + ${#lists.size(hocKyList)}">0</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width:50px;">STT</th>
+                            <th>Mã Học Kỳ</th>
+                            <th class="text-center">Kỳ</th>
+                            <th>Năm Học</th>
+                            <th>Ngày Bắt Đầu</th>
+                            <th>Ngày Kết Thúc</th>
+                            <th>Trạng Thái</th>
+                            <th class="text-center" style="width:180px;">Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(hocKyList)}">
+                            <td colspan="8">
+                                <!-- UI consistency: dung empty-state fragment chuan -->
+                                <div th:replace="~{fragments/_empty-state :: withCta(
+                                      icon='bi-calendar-plus',
+                                      title='Chưa có học kỳ nào',
+                                      desc='Tạo học kỳ đầu tiên để bắt đầu lập kế hoạch đào tạo.',
+                                      ctaHref='/hoc-ky/them',
+                                      ctaLabel='Tạo Học Kỳ Đầu Tiên',
+                                      ctaIcon='bi-plus-lg')}"
+                                     sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')"></div>
+                                <div th:replace="~{fragments/_empty-state :: simple(
+                                      icon='bi-calendar-plus',
+                                      title='Chưa có học kỳ nào',
+                                      desc='Phòng Đào Tạo sẽ khởi tạo học kỳ trong thời gian tới.')}"
+                                     sec:authorize="!hasAnyRole('PDT','TTDTXS','ADMIN')"></div>
+                            </td>
+                        </tr>
+                        <tr th:each="hk, stat : ${hocKyList}"
+                            th:classappend="${hk.trangThai.name() == 'DangDienRa'} ? 'row-active-hk'">
+                            <td class="text-muted" th:text="${stat.index + 1}">1</td>
+                            <td><code th:text="${hk.maHocKy}"></code></td>
+                            <td class="text-center">
+                                <span class="chip chip-primary"
+                                      th:text="${hk.hocKyThu == 3 ? 'HK Hè' : 'HK ' + hk.hocKyThu}">HK 1</span>
+                            </td>
+                            <td th:text="${hk.namBatDau} + ' - ' + ${hk.namKetThuc}">--</td>
+                            <td class="small text-muted"
+                                th:text="${hk.ngayBatDau != null ?
+                                    #temporals.format(hk.ngayBatDau, 'dd/MM/yyyy') : '--'}">--</td>
+                            <td class="small text-muted"
+                                th:text="${hk.ngayKetThuc != null ?
+                                    #temporals.format(hk.ngayKetThuc, 'dd/MM/yyyy') : '--'}">--</td>
+                            <td>
+                                <span class="status-pill"
+                                      th:with="s=${hk.trangThai.name()}"
+                                      th:classappend="${s == 'DangDienRa' ? 'tone-success' :
+                                                      (s == 'SapDienRa'  ? 'tone-info'    : 'tone-neutral')}">
+                                    <span class="pill-dot" aria-hidden="true"></span>
+                                    <span th:text="${s == 'DangDienRa' ? 'Đang Diễn Ra' :
+                                                   (s == 'SapDienRa'  ? 'Sắp Diễn Ra'  : 'Đã Kết Thúc')}">--</span>
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <div class="action-cluster">
+                                    <a th:href="@{/hoc-ky/sua/{ma}(ma=${hk.maHocKy})}"
+                                       class="btn btn-sm btn-outline-primary"
+                                       sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')"
+                                       data-bs-toggle="tooltip" data-bs-title="Chỉnh Sửa"
+                                       aria-label="Chỉnh sửa học kỳ">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <!-- Nut "Kich Hoat" thu cong da bi bo:
+                                         trang thai HK giờ duoc derive tu ngay bat
+                                         dau / ket thuc va auto-resync moi lan mo
+                                         trang danh sach (xem HocKyNamHocServiceImpl.resyncStatuses).
+                                         Neu user muon kich hoat som, chi can sua
+                                         ngay bat dau trong form. -->
+                                    <!-- Ket thuc som: DangDienRa -> DaKetThuc -->
+                                    <!-- UX fix: thay native confirm() bang confirm modal global,
+                                         dong bo voi cac trang khac (no UI). -->
+                                    <form th:if="${hk.trangThai.name() == 'DangDienRa'}"
+                                          th:action="@{/hoc-ky/doi-trang-thai/{ma}(ma=${hk.maHocKy})}"
+                                          method="post" class="d-inline m-0"
+                                          sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')"
+                                          th:data-item-name="|học kỳ ${hk.maHocKy}|"
+                                          data-confirm-action="kết thúc"
+                                          onsubmit="return confirmDeleteFromForm(this, event)">
+                                        <input type="hidden" name="moi" value="DaKetThuc">
+                                        <input type="hidden"
+                                               th:name="${_csrf.parameterName}"
+                                               th:value="${_csrf.token}">
+                                        <button class="btn btn-sm btn-outline-warning"
+                                                data-bs-toggle="tooltip"
+                                                data-bs-title="Kết Thúc Học Kỳ"
+                                                aria-label="Kết thúc học kỳ">
+                                            <i class="bi bi-stop"></i>
+                                        </button>
+                                    </form>
+                                    <form th:action="@{/hoc-ky/xoa/{ma}(ma=${hk.maHocKy})}"
+                                          method="post" class="d-inline m-0"
+                                          sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')"
+                                          th:attr="data-item-name=${hk.maHocKy}"
+                                          onsubmit="return confirmDeleteFromForm(this, event)">
+                                        <input type="hidden"
+                                               th:name="${_csrf.parameterName}"
+                                               th:value="${_csrf.token}">
+                                        <button class="btn btn-sm btn-outline-danger"
+                                                data-bs-toggle="tooltip"
+                                                data-bs-title="Xoá" aria-label="Xoá học kỳ">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

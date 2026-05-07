@@ -5,311 +5,549 @@
 
 ---
 
-## PHASE 0: SETUP MOI TRUONG
+## PHASE 0: SETUP MOI TRUONG (DA XONG)
 
 ### Database (MySQL XAMPP)
-- [ ] Chay `scripts/01_create_tables.sql` -> 20 bang duoc tao thanh cong
-- [ ] Chay `scripts/02_seed_data.sql` -> du lieu mau sac thuc te
-- [ ] Kiem tra 20 bang ton tai: `SHOW TABLES IN QuanLyCTDTDB;`
-- [ ] Kiem tra FK dung: `SELECT * FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA='QuanLyCTDTDB';`
-- [ ] Kiem tra encoding: `SHOW CREATE DATABASE QuanLyCTDTDB;` -> utf8mb4_unicode_ci
+- [x] Chay `scripts/01_create_tables.sql` -> 20 bang duoc tao thanh cong
+- [x] Chay `scripts/02_seed_data.sql` -> du lieu mau sac thuc te
+- [x] Kiem tra 20 bang ton tai: `SHOW TABLES IN QuanLyCTDTDB;`
+- [x] Kiem tra FK dung: `SELECT * FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA='QuanLyCTDTDB';`
+- [x] Kiem tra encoding: `SHOW CREATE DATABASE QuanLyCTDTDB;` -> utf8mb4_unicode_ci
 
 ### Spring Boot Project
-- [ ] Chay `./mvnw spring-boot:run` -> khong co compile error
-- [ ] Truy cap `localhost:8080` -> redirect den `/login`
-- [ ] Kiem tra `application.properties`: DB URL, username, password dung XAMPP
-- [ ] `spring.jpa.hibernate.ddl-auto=validate` -> Hibernate validate schema khop voi entity
-- [ ] Thu muc `uploads/` duoc tao sau khi khoi dong (hoac tao tay)
+- [x] Chay `./mvnw spring-boot:run` -> khong co compile error
+- [x] Truy cap `localhost:8080` -> redirect den `/login`
+- [x] Kiem tra `application.properties`: DB URL, username, password dung XAMPP
+- [x] `spring.jpa.hibernate.ddl-auto=validate` -> Hibernate validate schema khop voi entity
+- [x] Thu muc `uploads/` duoc tao sau khi khoi dong (hoac tao tay)
 
 ---
 
 ## PHASE 1: FOUNDATION (KHONG CODE BUSINESS TRUOC KHI XONG)
 
-### Enums (10 enum types — khop voi 01_create_tables.sql)
-- [ ] `LoaiNguoiDung.java`  -> Admin, GiangVien, SinhVien, DoanhNghiep
-- [ ] `VaiTro.java`          -> PDT, TTDTXS, CVHT, CNHP
-- [ ] `TrangThaiHocKy.java` -> SapDienRa, DangDienRa, DaKetThuc
-- [ ] `TrangThaiCTDT.java`  -> BanNhap, ChoDuyet, DaDuyet, DaHuy
-- [ ] `ChucDanhBCN.java`    -> ChuNhiem, ThuKy, UyVien
-- [ ] `LoaiHocPhan.java`    -> LyThuyet, ThucHanh, DoAn, ThucTap, KienTap
-- [ ] `TrangThaiHocPhan.java` -> BanNhap, ChoDuyet, DaDuyet
-- [ ] `LoaiGiangVien.java`  -> GiangVienTruong, DoanhNghiep
-- [ ] `TrangThaiDoanhNghiep.java` -> DangHopTac, TamNgung
-- [ ] `TrangThaiLopHocPhan.java`  -> DangMo, DaDong, DaHuy
-- [ ] `TrangThaiSinhVien.java`    -> DangHoc, BaoLuu, ThoiHoc, TotNghiep
-- [ ] `TrangThaiDotKT.java`       -> ChuanBi, ChoDuyet, DaDuyet, DaThucHien, DaHuy
-- [ ] `TrangThaiDotTT.java`       -> ChuanBi, ChoDuyet, DaDuyet, DangThucHien, DaKetThuc
-- [ ] `TrangThaiThucTap.java`     -> DaPhanCong, DangThucTap, DaKetThuc, DaHuy
-- [ ] `LoaiThucTap.java`          -> Truong, DoanhNghiep
+### Enums (15 enum types — khop voi 01_create_tables.sql va src/main/java/.../enums/)
+- [x] `LoaiNguoiDung.java`  -> Admin, GiangVien, SinhVien, DoanhNghiep
+- [x] `VaiTro.java`          -> PDT, TTDTXS, CVHT, CNHP
+- [x] `TrangThaiHocKy.java` -> SapDienRa, DangDienRa, DaKetThuc
+- [x] `TrangThaiCTDT.java`  -> BanNhap, ChoDuyet, DaDuyet, DaHuy
+- [x] `ChucDanhBCN.java`    -> ChuNhiem, ThuKy, UyVien
+- [x] `LoaiHocPhan.java`    -> LyThuyet, ThucHanh, DoAn, ThucTap, KienTap
+- [x] `TrangThaiHocPhan.java` -> BanNhap, ChoDuyet, DaDuyet
+- [x] `LoaiGiangVien.java`  -> GiangVienTruong, DoanhNghiep
+- [x] `TrangThaiDoanhNghiep.java` -> DangHopTac, TamNgung
+- [x] `TrangThaiLopHocPhan.java`  -> DangMo, DaDong, DaHuy
+- [x] `TrangThaiSinhVien.java`    -> DangHoc, BaoLuu, ThoiHoc, TotNghiep
+- [x] `TrangThaiDotKT.java`       -> ChuanBi, ChoDuyet, DaDuyet, DaThucHien, DaHuy
+- [x] `TrangThaiDotTT.java`       -> ChuanBi, ChoDuyet, DaDuyet, DangThucHien, DaKetThuc, DaHuy
+- [x] `TrangThaiThucTap.java`     -> DaPhanCong, DangThucTap, DaKetThuc, DaHuy
+- [x] `LoaiThucTap.java`          -> Truong, DoanhNghiep
 
 ### Entities (20 bang -> toi thieu 20 entity/id class)
 
 #### Simple PK entities
-- [ ] `HocKyNamHoc.java`          - @Id MaHocKy VARCHAR(20)
-- [ ] `NguoiDung.java`            - @Id MaNguoiDung, LoaiNguoiDung enum, TrangThaiTK BIT
-- [ ] `SinhVien.java`             - @Id MaSV, @OneToOne NguoiDung, @ManyToOne LopHanhChinh
-- [ ] `GiangVien.java`            - @Id MaGV, @OneToOne NguoiDung, LoaiGiangVien enum
-- [ ] `DoanhNghiep.java`          - @Id MaDoanhNghiep
-- [ ] `LopHanhChinh.java`         - @Id MaLopHC, @ManyToOne CTDT (nullable), @ManyToOne GiangVien (coVan)
-- [ ] `ChuongTrinhDaoTao.java`    - @Id MaCTDT, @ManyToOne NguoiTao, @ManyToOne NguoiDuyet
-- [ ] `HocPhan.java`              - @Id MaHocPhan, @ManyToOne GiangVien (chuNhiemHP)
-- [ ] `VaiTroThucTap.java`        - @Id MaVaiTro
-- [ ] `DotKienTap.java`           - @Id MaDotKT (AUTO), @ManyToOne LopHanhChinh, DoanhNghiep, GiangVien
-- [ ] `DotThucTap.java`           - @Id MaDotTT (AUTO), @ManyToOne CTDT_HocPhan (composite FK)
+- [x] `HocKyNamHoc.java`
+- [x] `NguoiDung.java`
+- [x] `SinhVien.java`
+- [x] `GiangVien.java`
+- [x] `DoanhNghiep.java`
+- [x] `LopHanhChinh.java`
+- [x] `ChuongTrinhDaoTao.java`
+- [x] `HocPhan.java`
+- [x] `VaiTroThucTap.java`
+- [x] `DotKienTap.java`
+- [x] `DotThucTap.java`
 
 #### Composite PK entities (can EmbeddedId class)
-- [ ] `NhomNguoiDungId.java`      - @Embeddable: MaNguoiDung, VaiTro
-- [ ] `NhomNguoiDung.java`        - @EmbeddedId NhomNguoiDungId, @ManyToOne NguoiDung
-- [ ] `BCN_ThanhVienId.java`      - @Embeddable: MaCTDT, MaGV, ChucDanh
-- [ ] `BCN_ThanhVien.java`        - @EmbeddedId BCN_ThanhVienId, @ManyToOne CTDT, GiangVien
-- [ ] `DoiNguGiangVienHPId.java`  - @Embeddable: MaHocPhan, MaGiangVien
-- [ ] `DoiNguGiangVienHP.java`    - @EmbeddedId DoiNguGiangVienHPId
-- [ ] `CTDT_HocPhanId.java`       - @Embeddable: MaCTDT, MaHocPhan
-- [ ] `CTDT_HocPhan.java`         - @EmbeddedId CTDT_HocPhanId, @ManyToOne CTDT, HocPhan
-- [ ] `LopHocPhanId.java`         - @Embeddable: MaCTDT, MaHocPhan, MaHocKy, MaLopHocPhan
-- [ ] `LopHocPhan.java`           - @EmbeddedId LopHocPhanId, @ManyToOne GiangVien (nullable)
-- [ ] `DanhSachSVLopHPId.java`    - @Embeddable: MaSV, MaCTDT, MaHocPhan, MaHocKy, MaLopHocPhan
-- [ ] `DanhSachSinhVienLopHocPhan.java` - @EmbeddedId, @ManyToOne SinhVien, LopHocPhan
-- [ ] `DanhSachSinhVienKienTapId.java`  - @Embeddable: MaDotKT, MaSV
-- [ ] `DanhSachSinhVienKienTap.java`    - @EmbeddedId
-- [ ] `DanhSachThucTap.java`      - @Id MaThucTap (AUTO), @ManyToOne DotThucTap, SinhVien
-- [ ] `KetQuaThucTap.java`        - @Id MaKetQua (AUTO), @ManyToOne DanhSachThucTap, VaiTroThucTap
+- [x] `NhomNguoiDungId.java` + `NhomNguoiDung.java`
+- [x] `BcnThanhVienId.java` + `BcnThanhVien.java`
+- [x] `DoiNguGiangVienHpId.java` + `DoiNguGiangVienHp.java`
+- [x] `CtdtHocPhanId.java` + `CtdtHocPhan.java`
+- [x] `LopHocPhanId.java` + `LopHocPhan.java`
+- [x] `DanhSachSvLopHocPhanId.java` + `DanhSachSvLopHocPhan.java`
+- [x] `DanhSachSvKienTapId.java` + `DanhSachSvKienTap.java`
+- [x] `DanhSachThucTap.java` (@Id MaThucTap AUTO)
+- [x] `KetQuaThucTap.java`   (@Id MaKetQua  AUTO)
 
-#### BaseAuditEntity (nen co)
-- [ ] `BaseAuditEntity.java`      - created_at, updated_at (@CreationTimestamp, @UpdateTimestamp)
+#### BaseAuditEntity (khong hien thuc — bo qua, created_at/updated_at dat truc tiep o tung entity)
+- [ ] `BaseAuditEntity.java`      - chua can thiet, deferred
 
-### Repositories (1 interface moi entity co nghiep vu)
-- [ ] `HocKyNamHocRepository`     - findByTrangThai, findFirstByTrangThaiOrderByNgayBatDauAsc
-- [ ] `NguoiDungRepository`       - findByTenDangNhap, findByEmail, findByLoaiNguoiDung
-- [ ] `SinhVienRepository`        - findByMaLopHC, findByNguoiDung_MaNguoiDung
-- [ ] `GiangVienRepository`       - findByNguoiDung_MaNguoiDung
-- [ ] `NhomNguoiDungRepository`   - findById_MaNguoiDung, deleteById_MaNguoiDungAndId_VaiTro
-- [ ] `DoanhNghiepRepository`     - findByTrangThai, findByTenDoanhNghiepContaining(Pageable)
-- [ ] `LopHanhChinhRepository`    - findByMaCoVan, findByMaCTDT
-- [ ] `ChuongTrinhDaoTaoRepository` - findByTrangThai, findByNguoiTao_MaNguoiDung
-- [ ] `BCN_ThanhVienRepository`   - findById_MaCTDT, existsById_MaCTDTAndId_MaGV
-- [ ] `HocPhanRepository`         - findByTrangThai, findByChuNhiemHP_MaGV
-- [ ] `DoiNguGiangVienHPRepository` - findById_MaHocPhan, existsById_MaHocPhanAndId_MaGiangVien
-- [ ] `CTDT_HocPhanRepository`    - findById_MaCTDT, existsById_MaCTDTAndId_MaHocPhan
-- [ ] `LopHocPhanRepository`      - findById_MaCTDTAndId_MaHocPhan, findByMaGiangVienIsNull, findByMaGiangVien
-- [ ] `DanhSachSVLopHPRepository` - findById_MaCTDTAndId_MaHocPhanAndId_MaHocKyAndId_MaLopHocPhan
-- [ ] `DotKienTapRepository`      - findByMaLopHC, findByMaHocKy_MaHocKy, findByTrangThai
-- [ ] `DanhSachSVKienTapRepository` - findById_MaDotKT, existsById
-- [ ] `DotThucTapRepository`      - findByMaHocKy_MaHocKy, findByTrangThai
-- [ ] `DanhSachThucTapRepository` - findByMaDotTT_MaDotTT, findByMaSV_MaSV, existsByMaDotTT_MaDotTTAndMaSV_MaSV
-- [ ] `VaiTroThucTapRepository`   - findAll (dung cho select option)
-- [ ] `KetQuaThucTapRepository`   - findByMaThucTap_MaThucTap
+> Ten file thuc te dung CamelCase nhe (Bcn thay vi BCN, Ctdt thay vi CTDT, Sv thay vi SV)
+> de phu hop convention Java class naming. Ten BANG MySQL van giu nguyen dung
+> `BCN_ThanhVien`, `CTDT_HocPhan` qua `@Table(name="...")`.
+
+### Repositories (1 interface moi entity co nghiep vu) — DA XONG 20/20
+- [x] `HocKyNamHocRepository`, `NguoiDungRepository` (+ `@EntityGraph` cho nhomNguoiDungs)
+- [x] `SinhVienRepository`, `GiangVienRepository`, `NhomNguoiDungRepository`
+- [x] `DoanhNghiepRepository`, `LopHanhChinhRepository`
+- [x] `ChuongTrinhDaoTaoRepository`, `BcnThanhVienRepository`
+- [x] `HocPhanRepository`, `DoiNguGiangVienHpRepository`, `CtdtHocPhanRepository`
+- [x] `LopHocPhanRepository`, `DanhSachSvLopHocPhanRepository`
+- [x] `DotKienTapRepository`, `DanhSachSvKienTapRepository`
+- [x] `DotThucTapRepository`, `DanhSachThucTapRepository`
+- [x] `VaiTroThucTapRepository`, `KetQuaThucTapRepository`
 
 ### Security
-- [ ] `CustomUserDetails.java`    - implement UserDetails, wrap NguoiDung
-- [ ] `UserDetailsServiceImpl.java` - loadUserByUsername (tim theo TenDangNhap hoac Email)
+- [x] `CustomUserDetails.java`    - wrap NguoiDung, tra roles cho Spring Security
+- [x] `UserDetailsServiceImpl.java` - loadUserByUsername (tim theo TenDangNhap)
   - Map LoaiNguoiDung -> ROLE_ADMIN, ROLE_GIANG_VIEN, ROLE_SINH_VIEN, ROLE_DOANH_NGHIEP
   - Map VaiTro trong NhomNguoiDung -> ROLE_PDT, ROLE_TTDTXS, ROLE_CVHT, ROLE_CNHP
   - Kiem tra TrangThaiTK = 1
-- [ ] `CustomAuthenticationProvider.java` - dung BCrypt verify password
-- [ ] `SecurityConfig.java`
-  - BCryptPasswordEncoder bean
-  - Cau hinh permitAll: /login, /css/**, /js/**, /webjars/**
-  - Cau hinh hasRole: /nguoi-dung/** (PDT), /doanh-nghiep/** (PDT), /hoc-phan/** (CNHP, BCN)...
-  - formLogin: /login, defaultSuccessUrl: /dashboard, failureUrl: /login?error
-  - logout: /logout -> /login?logout
-  - sessionManagement: maximumSessions(1)
+- [x] `SecurityConfig.java`
+  - [x] BCryptPasswordEncoder bean
+  - [x] DaoAuthenticationProvider qua `AuthenticationManagerBuilder` (khong tao `CustomAuthenticationProvider` rieng)
+  - [x] Cau hinh permitAll: /login, /css/**, /js/**, /webjars/**, /uploads/**
+  - [ ] Cau hinh hasRole theo URL pattern — xem `02_Mô Tả & Thiết kế dữ liệu.md` § 7 (Phase 2.3)
+  - [x] formLogin: /login, defaultSuccessUrl: /dashboard, failureUrl: /login?error
+  - [x] logout: /logout -> /login?logout
+  - [ ] sessionManagement: maximumSessions(1) — deferred
 
 ### Config
-- [ ] `WebMvcConfig.java` - addResourceHandlers cho /uploads/** -> file.upload-dir
-- [ ] Tao thu muc `src/main/resources/static/uploads/.gitkeep`
+- [x] `WebMvcConfig.java` - addResourceHandlers cho /uploads/** -> file.upload-dir
+- [ ] Tao thu muc `src/main/resources/static/uploads/.gitkeep` — deferred, dung `uploads/` o root
 
 ---
 
 ## PHASE 2: MODULE P0 — CORE
 
 ### Auth + Dashboard
-- [ ] `AuthController.java`
-  - GET /login -> templates/auth/login.html
-  - GET / -> redirect /dashboard
-- [ ] `DashboardController.java`
-  - GET /dashboard -> lay thong ke theo role, truyen model
-  - activeMenu = "dashboard"
-- [ ] `templates/auth/login.html`         - form login, khong extend base
-- [ ] `templates/dashboard/dashboard.html` - thong ke tong quan theo role
-- [ ] `templates/layout/base.html`         - sidebar theo role + flash message + navbar
-- [ ] TEST: Dang nhap 4 LoaiNguoiDung + 4 VaiTro trong NhomNguoiDung
+- [x] `AuthController.java`               - GET /login, GET /
+- [x] `DashboardController.java`          - GET /dashboard (thong ke theo role)
+- [x] `ProfileController.java`            - GET /profile (khong co trong checklist goc, da them)
+- [x] `templates/auth/login.html`
+- [x] `templates/dashboard/dashboard.html`
+- [x] `templates/layout/base.html`         - sidebar theo role + flash message + navbar
+- [x] `templates/profile/profile.html`
+- [x] `templates/error/{403,404,500}.html`
+- [x] TEST: Dang nhap admin, tran.van.an, le.thi.bich -> redirect /dashboard OK
 
-### Quan ly Nguoi Dung [PDT, TTDTXS]
-- [ ] `NguoiDungDTO.java`               - form binding (tao/sua GV, SV, Admin)
-- [ ] `NguoiDungExcelDTO.java`          - Excel import mapping
-- [ ] `NguoiDungService.java` interface
-- [ ] `NguoiDungServiceImpl.java`
-  - getAll(Pageable, filter), getById, create, update, toggleStatus
-  - createWithRole (tao NguoiDung + NhomNguoiDung + SinhVien/GiangVien)
-  - importFromExcel(MultipartFile)
-- [ ] `NguoiDungController.java`
-  - GET  /nguoi-dung                  - list + filter + search
-  - GET  /nguoi-dung/them             - form tao moi
-  - POST /nguoi-dung/them
-  - GET  /nguoi-dung/{ma}/sua
-  - POST /nguoi-dung/{ma}/sua
-  - POST /nguoi-dung/{ma}/khoa        - toggle TrangThaiTK
-  - POST /nguoi-dung/import           - Excel import
-- [ ] `templates/nguoidung/list.html`
-- [ ] `templates/nguoidung/form.html`
-- [ ] `ExcelImportUtil.java`            - doc .xlsx, map sang NguoiDungExcelDTO
-- [ ] TEST: Import Excel (hop le + loi trung TenDangNhap)
+### Quan ly Nguoi Dung [PDT, TTDTXS] — DA XONG
+- [x] `NguoiDungDTO.java`, `NguoiDungExcelDTO.java`
+- [x] `NguoiDungService.java` + `NguoiDungServiceImpl.java`
+  - [x] search(Pageable, keyword, loai), findById, create, update, toggleStatus
+  - [x] createWithRole (tao NguoiDung + NhomNguoiDung + SinhVien/GiangVien)
+  - [x] importFromExcel(MultipartFile)
+  - [x] findByIdWithRoles (them 2025-Q2 batch 2 — fix LazyInit)
+- [x] `NguoiDungController.java`
+  - [x] GET  /nguoi-dung                  - list + filter + search
+  - [x] GET  /nguoi-dung/them             - form tao moi
+  - [x] POST /nguoi-dung/them
+  - [x] GET  /nguoi-dung/sua/{ma}
+  - [x] POST /nguoi-dung/sua/{ma}
+  - [x] POST /nguoi-dung/doi-trang-thai/{ma}
+  - [x] POST /nguoi-dung/import           - Excel import
+  - [x] GET  /nguoi-dung/chi-tiet/{ma}
+- [x] `templates/nguoi-dung/danh-sach.html`, `form.html`, `chi-tiet.html`, `import.html`
+  > Template path dung kebab-case tieng Viet khong dau (thay vi `nguoidung/list.html`)
+- [x] `ExcelImportUtil.java`, `FileStorageUtil.java`
+- [x] TEST: Import Excel (hop le + loi trung TenDangNhap), list hien thi day du vai tro
 
-### Quan ly Doanh Nghiep [PDT, TTDTXS]
-- [ ] `DoanhNghiepDTO.java`
-- [ ] `DoanhNghiepService.java` interface + `DoanhNghiepServiceImpl.java`
-  - CRUD, toggleTrangThai
-- [ ] `DoanhNghiepController.java`
-  - GET  /doanh-nghiep
-  - GET  /doanh-nghiep/them
-  - POST /doanh-nghiep/them
-  - GET  /doanh-nghiep/{ma}/sua
-  - POST /doanh-nghiep/{ma}/sua
-  - POST /doanh-nghiep/{ma}/doi-trang-thai
-- [ ] `templates/doanhnghiep/list.html`
-- [ ] `templates/doanhnghiep/form.html`
-- [ ] TEST: Tao DN moi, doi trang thai, xem list voi filter
+### Quan ly Doanh Nghiep [PDT, TTDTXS] — DA XONG (Phase 2.2)
+- [x] Repository va Entity da co (Phase 1)
+- [x] `DoanhNghiepDTO.java` (validate @NotBlank, @Email, @Pattern phone)
+- [x] `DoanhNghiepService.java` + `DoanhNghiepServiceImpl.java`
+  - [x] search(Pageable, keyword, trangThai)
+  - [x] CRUD (create voi sinh ma tu dong neu bo trong)
+  - [x] toggleTrangThai (DangHopTac <-> TamNgung)
+  - [x] delete voi guard: chan khi con DotKienTap / DanhSachThucTap tham chieu
+  - [x] sinhMaDoanhNghiep (DN001, DN002, ...)
+  - [x] getThongKe
+- [x] `DoanhNghiepController.java`
+  - [x] GET  /doanh-nghiep                  - list + filter + search + thongKe
+  - [x] GET  /doanh-nghiep/them              - form tao
+  - [x] POST /doanh-nghiep/them
+  - [x] GET  /doanh-nghiep/sua/{ma}
+  - [x] POST /doanh-nghiep/sua/{ma}
+  - [x] POST /doanh-nghiep/doi-trang-thai/{ma}
+  - [x] POST /doanh-nghiep/xoa/{ma}         - kem guard khi con tham chieu
+  - [x] GET  /doanh-nghiep/chi-tiet/{ma}
+- [x] `templates/doanh-nghiep/danh-sach.html`, `form.html`, `chi-tiet.html`
+- [x] Them menu sidebar trong `layout/base.html`
+- [x] Them URL rule `hasAnyRole('PDT','TTDTXS','ADMIN')` trong `SecurityConfig.java`
+- [x] TEST: Tao DN moi, doi trang thai, xem list voi filter
+
+### UI Refactor Phase 1+2 (2026-Q2) — DA XONG
+- [x] Refactor `static/css/main.css` theo design system v2 (shadows, transitions, focus ring, stat-card variant)
+- [x] Refactor `layout/base.html` navbar gradient + active sidebar accent bar
+- [x] Refactor `auth/login.html` split-panel brand + form layout
+- [x] Refactor `dashboard/dashboard.html` — bo inline style, group stat theo nghiep vu
+- [x] Refactor detail pages (Nguoi Dung + Doanh Nghiep) dung `.info-row` pattern
+- [x] Fix bug nghiem trong: `nguoi-dung/form.html` truong `loaiNguoiDung` bi disabled khi edit
+      lam form khong submit duoc gia tri (gay `@NotNull` validation) — thay bang readonly text + hidden input
+- [x] Fix `NguoiDungController.suaForm`: populate hocHam/hocVi/chuyenNganh (GV) va maLopHC (SV)
+- [x] Fix `NguoiDungServiceImpl.update`: ho tro doi maLopHC cho SinhVien, khong ghi de null cho GV
+- [x] Bo sung `activeMenu="nguoi-dung"` trong moi handler cua `NguoiDungController`
 
 ---
 
-## PHASE 3: MODULE P1 — NGHIEP VU CHINH
+## PHASE 3: MODULE P1 — NGHIEP VU CHINH  (DA HOAN THANH — 2026-Q2)
+
+Toan bo 5 module P1 (HocKy, LopHanhChinh, HocPhan, CTDT, LopHocPhan) da:
+- Co DTO + service interface + service impl + controller + templates.
+- Duoc fix 6 bug code va sync docs trong dot review 2026-Q2 (xem muc "Fix 2026-Q2" ben duoi).
+- Security URL rules da cau hinh day du trong `SecurityConfig.filterChain`.
+
+### Tien do Phase 3 (cap nhat 2026-Q2)
+- [x] **Fix compile error** `HocKyNamHocController`: loai bo enum sai `ChuanBi`,
+      bo sung derived getter `getHocKyThu/getNamBatDau/getNamKetThuc` tren entity,
+      them field tuong ung vao DTO, tu sinh `MaHocKy` + `TenHocKy` o service.
+- [x] **Fix LazyInitializationException** 4 endpoint (`hoc-phan/form`, `ctdt/*`,
+      `lop-hanh-chinh/*`, `lop-hoc-phan/*`): them JOIN FETCH o tat ca repository
+      chinh + doi `giangVienRepo.findAll()` -> `findAllFetchNguoiDung()` trong
+      cac controller dropdown GV.
+- [x] **Tao templates lop-hoc-phan** (chua co) gom `danh-sach.html` + `chi-tiet.html`
+      + truyen `hocPhanMap` tu controller de hien thi tenHocPhan cho EmbeddedId LHP.
+- [x] **Viet hoa co dau toan bo UI** 4 module (`ctdt`, `hoc-phan`, `lop-hanh-chinh`,
+      `lop-hoc-phan`) + module `nguoi-dung` + layout `base.html` (menu sidebar,
+      navbar, modal). Map enum `LoaiHocPhan`, `LoaiNguoiDung`, `VaiTro` sang nhan
+      tieng Viet truc tiep trong Thymeleaf.
+- [x] **Fix nut "Chinh Sua" nguoi dung**: doi tu nut co label "Sua" + `bi-pencil-square`
+      + cot 110px -> icon-only `bi-pencil` (174px) de dong bo voi 3 nut hanh dong
+      khac (Xem/Khoa/Xoa) theo batch 4.
+- [x] **Fix field sai o `nguoi-dung/form.html`**: `lhc.tenLopHC` -> `lhc.tenLop`
+      (khop entity `LopHanhChinh`).
+- [x] **Refresh seed v2** `scripts/02_seed_data.sql`:
+      - Doi format `MaSV` tu `SV001` sang `SV2024001` theo docs/02 §1.
+      - Them `CREATE DATABASE IF NOT EXISTS` vao `01_create_tables.sql` (khop README).
+      - Mo rong thanh 18 NguoiDung, 6 GV, 10 SV, 12 LopHocPhan; auto-add all SV
+        DangHoc vao DanhSachSinhVienKienTap (docs/02 §3.7).
+      - Bao gom 2 ban ghi `DaCanhBao=1` minh hoa 2 trang thai: da xu ly + chua xu ly.
+      - Cap nhat `docs/02 §4` dong bo so ban ghi moi.
+- [x] **Controller + Service Phase 3 con lai** — tat ca 5 module da hoan thanh
+
+### Fix 2026-Q2 batch 3 (mo rong module + soft-check phan cong)
+
+- [x] **BCN module** — them class quan ly Ban Chu Nhiem CTDT:
+  - `dto/BcnThanhVienDTO.java` (maGV, chucDanh, ngayBoNhiem, ghiChu).
+  - `service/BcnThanhVienService` + `impl/BcnThanhVienServiceImpl` (themThanhVien,
+    xoaThanhVien, findByCtdt — guard 1 CTDT chi 1 ChuNhiem).
+  - `repository/BcnThanhVienRepository.findByCtdtFetch` (JOIN FETCH GV+NguoiDung).
+  - `repository/BcnThanhVienRepository.findFirstByChuongTrinhDaoTao_MaCTDTAndId_ChucDanh`
+    (dung de guard duplicate Chu Nhiem).
+  - 2 endpoint tren `ChuongTrinhDaoTaoController`: `/ctdt/chi-tiet/{ma}/bcn/them`
+    va `/ctdt/chi-tiet/{ma}/bcn/xoa`.
+  - Tab "Ban Chu Nhiem" trong `templates/ctdt/chi-tiet.html` kem modal them.
+
+- [x] **DoiNguGV module** — quan ly doi ngu GV cua Hoc Phan:
+  - `dto/DoiNguGvDTO.java` (maHocPhan, maGV, trangThai).
+  - `service/DoiNguGvService` + `impl/DoiNguGvServiceImpl` (them, xoa, toggleTrangThai,
+    findByHocPhan) — service guard chan xoa GV la ChuNhiemHP.
+  - `repository/DoiNguGiangVienHpRepository.findByHocPhanFetch` (JOIN FETCH).
+  - 3 endpoint tren `HocPhanController`: `/hoc-phan/chi-tiet/{ma}/doi-ngu/them`,
+    `/hoc-phan/chi-tiet/{ma}/doi-ngu/toggle`, `/hoc-phan/chi-tiet/{ma}/doi-ngu/xoa`.
+  - Section "Doi Ngu Giang Vien" trong `templates/hoc-phan/chi-tiet.html` voi
+    badge Dang day / Tam ngung + nut toggle/xoa.
+  - Khong set cot `ngay_them` (schema khong co) — hien thi `created_at` trong template.
+
+- [x] **Soft-check khi phan cong GV cho LopHocPhan** (WF-05.1 BUOC 3):
+  - `LopHocPhanController.phanCong` query `DoiNguGiangVienHpRepository.findById(id)`
+    truoc khi goi service. Neu GV khong thuoc doi ngu hoac TrangThai=false,
+    van gan MaGiangVien nhung flash warningMsg thay vi successMsg.
+  - Design decision: KHONG chan cung de dap ung truong hop khan cap (GV thay the
+    dot xuat). User duoc huong dan bo sung doi ngu tai chi-tiet HP.
+
+- [x] **HocKyThu filter khi tao lop hang loat** (fix bug bao cao tai chat):
+  - `LopHocPhanServiceImpl.taoLopHocPhanChoCTDT` nay parse chu so sau "HK" trong
+    MaHocKy (format `HKn-YYYY`) va chi INSERT lop cho HP co
+    `CtdtHocPhan.hocKyThu == parsedKy`. Truoc day doc het HP cua CTDT sang mot ky,
+    gay bug: chon ky nao cung tao het tat ca HP.
+  - Signature moi: `taoLopHocPhanChoCTDT(maCTDT, maHocKy, Map<String,Integer> soLopOverride)`
+    cho phep override SoLop per-HP theo ky (giu `CtdtHocPhan.soLopDuKien` lam default).
+
+- [x] **Ke Hoach Mo Lop hien thi du kien theo ky** — fix bug "tim lan 2 khong ra":
+  - `LopHocPhanController.danhSach` nay luon bo sung `hpDuKien` (list `CtdtHocPhan`
+    fetch qua `findByCtdtAndKyFetch` JOIN FETCH hocPhan) va `daMoCount` (map
+    maHP -> so lop da mo) vao model.
+  - Template `lop-hoc-phan/danh-sach.html` them card "Ke Hoach Mo Lop" voi badge
+    "Da mo" / "Chua mo" — user thay HP du kien ngay ca khi chua bam tao.
+  - Modal tao hang loat pre-fill so lop = soLopDuKien, cho user chinh per-HP.
+
+- [x] **Fix LazyInit o chi-tiet Hoc Phan va Lop Hanh Chinh**:
+  - `HocPhanRepository.findByIdFetch` JOIN FETCH ChuNhiemHP + NguoiDung
+    -> trang chi-tiet HP nay hien thi duoc "MaGV — Ho Ten" chu nhiem (truoc day
+    template render bi LazyInitException voi `open-in-view=false`).
+  - `SinhVienRepository.findByLopFetch` JOIN FETCH NguoiDung
+    -> trang chi-tiet Lop Hanh Chinh hien duoc danh sach SV kem ho ten.
+
+### Fix 2026-Q2 batch 4 (HK auto-derive + file upload @InitBinder + form error UX + sidebar RBAC)
+
+- [x] **HK status auto-derive + validation**:
+  - [x] `deriveStatus(ngayBatDau, ngayKetThuc)`: compute TrangThai tu dates, khong user input.
+  - [x] `create()` + `update()`: throw BusinessException neu user chon trang thai sai voi ngay.
+  - [x] `doiTrangThai()`: chi cho phep when (today >= ngayBatDau AND today <= ngayKetThuc).
+  - [x] `update()`: cho phep "revive" HK DaKetThuc neu admin sua ngay sang tuong lai.
+  - [x] `resyncStatuses()` call tren `findAll()` — tuong thich admin back-date ngay.
+  - [x] UI: xoa nut "Kich Hoat" khoi danh-sach (status tu-derive tu ngay).
+  - [x] Form hint: them huong dan 3 rule derive status + canh bao chi 1 HK active.
+
+- [x] **File upload binding fix** (`@InitBinder` disallow):
+  - [x] `HocPhanController.initHocPhanBinder()`: disallow `fileDeCuong` field.
+  - [x] `ChuongTrinhDaoTaoController.initCtdtBinder()`: disallow `fileWord` field.
+  - [x] Root cause: Spring co gang convert `MultipartFile -> String` -> ConversionNotSupportedException.
+  - [x] File van duoc nhan qua `@RequestParam MultipartFile` (khong anh huong).
+
+- [x] **Form POST error UX** (never redirect on error):
+  - [x] `#fields.hasErrors('*')` BAT BUOC nam BEN TRONG `<form th:object>` (binding context).
+  - [x] `errorMsg` (non-binding) co the nam ngoai, render qua `layout/base.html` global block.
+  - [x] Controller catch exception -> `model.addAttribute("errorMsg", ...)` -> return form (KHONG redirect).
+  - [x] Giu nguyen input, hien loi tuc khi, user sua va submit lai.
+
+- [x] **Sidebar RBAC expansion** (read access cho GV + SV):
+  - [x] Sidebar section "Dao Tao" nay hien cho PDT/TTDTXS/CNHP/ADMIN/GV/SV (truoc chi PDT/TTDTXS/CNHP/ADMIN).
+  - [x] Menu items Hoc Phan / CTDT / Lop Hoc Phan mo `sec:authorize` cho GV + SV xem (read-only).
+  - [x] Writes van bi chan qua `@PreAuthorize` method-level + inline `sec:authorize` button Tao/Sua/Xoa.
+  - [x] Template danh-sach hien thi duoc, chi button action bi ẩn.
+
+- [x] **Other fixes**:
+  - [x] NguoiDung chi-tiet: fix LazyInit `sv.getLopHanhChinh()` -> repo.findByIdFetch().
+  - [x] Login logout alert: xoa param.logout alert (thay bang successMsg tu backend).
+  - [x] Edit button: icon-only `bi-pencil` (dong bo voi 3 icon Xem/Khoa/Xoa).
+
+### Fix 2026-Q2 (dot review Phase 3)
+
+- [x] **B1 — Link tai file de cuong 404**: doi `@{/files/...}` -> `@{/uploads/...}`
+      trong `hoc-phan/danh-sach.html` va `hoc-phan/chi-tiet.html`. Resource handler
+      trong `WebMvcConfig` chi expose `/uploads/**`.
+- [x] **B2 — CTDT mat file upload**: `ChuongTrinhDaoTaoController.them()` truoc day
+      set `fileWord` tren entity detached (transaction da dong) — path bi mat.
+      Giai phap: them `ChuongTrinhDaoTaoService.updateFileWord(ma, path)` goi sau
+      `create()` de luu correctly. Dong thoi bo sung xu ly file cho `sua()`.
+- [x] **B3 — HocPhan bo qua user input**: `HocPhanServiceImpl.create()` auto-gen
+      `HP001` khong dung format docs (`HP-MATHE`). Fix: uu tien `dto.maHocPhan`
+      neu user nhap (co uniqueness check), fallback autogen neu trong.
+- [x] **B4 — CTDT phe duyet thieu audit**: `pheduyet()` khong set `nguoiDuyet` +
+      `ngayDuyet`. Fix: load NguoiDung + set `LocalDateTime.now()` khi DaDuyet.
+- [x] **B5 — HocKy doi trang thai bi block**: Roadmap §3.1 yeu cau auto-close HK
+      cu khi kich hoat HK moi, nhung service throw BusinessException. Fix: thay
+      `ensureNoOtherActiveExcept` bang `autoCloseOtherActive` (cascade set DaKetThuc).
+- [x] **B6 — CTDT xoa HP khong co guard state**: `xoaHocPhan()` cho phep xoa ke
+      ca CTDT DaDuyet neu goi POST truc tiep. Fix: them server-side guard chan
+      xoa khi CTDT DaDuyet.
+
+### Van de con lai (chap nhan defer sang phase sau)
+
+- **KHONG defer** tao LopHocPhan thu cong — day la QUYET DINH THIET KE (xem
+  WF-04.2 BUOC 3 trong `03_WORKFLOW.md`): 1 CTDT mo nhieu nam, moi ky so lop
+  co the khac, user PHAI chon HocKy + co the override SoLop per-HP. Khong co
+  khai niem "auto cascade khi pheduyet" nua.
+- Phase 2.3 "Bao mat toan cuc URL + test 403": da co URL rules trong
+  SecurityConfig nhung chua co integration test voi `@WithMockUser` —
+  defer sang giai doan Pre-Prod Hardening.
+- `LopHocPhan` chua co ngay bat dau / ket thuc ky — hien dua vao `HocKyNamHoc`.
+  Neu can lich hoc chi tiet tung tuan, se them bang `LichHoc` o Phase 6.
 
 ### Quan ly Hoc Ky Nam Hoc [PDT, TTDTXS]
-- [ ] `HocKyNamHocService.java` interface + impl
+- [x] `HocKyNamHocService.java` interface + impl
   - CRUD, setTrangThai (chi 1 HK o trang thai DangDienRa)
-- [ ] `HocKyNamHocController.java` (CRUD + toggle trang thai)
-- [ ] `templates/hocky/list.html`, `form.html`
+- [x] `HocKyNamHocController.java` (CRUD + toggle trang thai)
+- [x] `templates/hoc-ky/danh-sach.html`, `form.html`
 
-### Quan ly Lop Hanh Chinh [PDT, TTDTXS]
-- [ ] `LopHanhChinhService.java` interface + impl
-  - CRUD, assignCoVan
-- [ ] `LopHanhChinhController.java`
-- [ ] `templates/lophanhchinh/list.html`, `form.html`
+### Quan ly Lop Hanh Chinh [PDT, TTDTXS] — DA XONG (Phase 3)
+- [x] `LopHanhChinhDTO.java` (@Pattern ma lop, @Size, @NotBlank)
+- [x] `LopHanhChinhService.java` + `LopHanhChinhServiceImpl.java`
+  - [x] CRUD + search(keyword, maCTDT, khoaHoc)
+  - [x] phanCongCoVan(maLop, maGV) — chap nhan null de huy phan cong
+  - [x] delete guard: chan khi lop van co SinhVien
+  - [x] getThongKe (tong, daCoCVHT, chuaCoCVHT, soKhoaHoc)
+- [x] `LopHanhChinhController.java` (7 endpoint: list, chi-tiet, CRUD, phan-cong-cvht, xoa)
+- [x] `templates/lop-hanh-chinh/danh-sach.html`, `form.html`, `chi-tiet.html`
+  > Template dung kebab-case tieng Viet: `lop-hanh-chinh/*` thay cho `lophanhchinh/*`
 
-### Quan ly Hoc Phan [BCN/CNHP, TTDTXS]
-- [ ] `HocPhanDTO.java`
-- [ ] `HocPhanService.java` interface + `HocPhanServiceImpl.java`
-  - CRUD, submitForApproval (BanNhap -> ChoDuyet)
-  - approve/reject (ChoDuyet -> DaDuyet/BanNhap)
-  - addToDoiNgu, removeFromDoiNgu
-- [ ] `HocPhanController.java`
-  - GET  /hoc-phan                       - list + filter
-  - GET  /hoc-phan/them
-  - POST /hoc-phan/them
-  - GET  /hoc-phan/{ma}                  - detail + danh sach doi ngu GV
-  - GET  /hoc-phan/{ma}/sua
-  - POST /hoc-phan/{ma}/sua
-  - POST /hoc-phan/{ma}/nop-duyet        - BanNhap -> ChoDuyet
-  - POST /hoc-phan/{ma}/phe-duyet        - ChoDuyet -> DaDuyet [TTDTXS]
-  - POST /hoc-phan/{ma}/tu-choi          - ChoDuyet -> BanNhap [TTDTXS]
-  - POST /hoc-phan/{ma}/them-gv          - them vao DoiNguGiangVienHP
-  - POST /hoc-phan/{ma}/xoa-gv/{maGV}   - xoa khoi doi ngu
-- [ ] `templates/hocphan/list.html`, `form.html`, `detail.html`
-- [ ] TEST: BCN tao -> nop -> TTDTXS duyet -> CNHP quan ly doi ngu
+### Quan ly Hoc Phan [CNHP, TTDTXS] — DA XONG (Phase 3)
+- [x] `HocPhanDTO.java` (@NotBlank, @Min/@Max soTinChi, @NotNull loaiHocPhan)
+- [x] `HocPhanService.java` + `HocPhanServiceImpl.java`
+  - [x] CRUD + findAll(keyword) voi JOIN FETCH ChuNhiemHP.NguoiDung
+  - [x] guiChoDuyet (BanNhap -> ChoDuyet)
+  - [x] pheduyet (ChoDuyet -> DaDuyet) + gui email CNHP qua EmailService
+  - [x] tuChoi (ChoDuyet -> BanNhap) + ly do + email CNHP
+  - [x] toggleTrangThai (DaDuyet <-> BanNhap)
+  - [x] uploadDeCuong
+  - [x] **Fix 2026-Q2**: create uu tien `dto.maHocPhan` do user nhap
+        (format `HP-MATHE` theo docs/02 §1), fallback autogen neu trong
+- [x] `HocPhanController.java` (10 endpoint: list, them, sua, chi-tiet, gui-cho-duyet, phe-duyet, tu-choi, toggle, ...)
+- [x] `templates/hoc-phan/danh-sach.html`, `form.html`, `chi-tiet.html`
+  - [x] **Fix 2026-Q2**: doi `@{/files/...}` -> `@{/uploads/...}` khop voi
+        `WebMvcConfig.addResourceHandlers("/uploads/**")`. Link tai de cuong nay moi hoat dong.
+- [x] TEST: CNHP tao -> nop -> TTDTXS duyet -> email gui CNHP (MockEmailServiceImpl log)
 
-### Quan ly CTDT [BCN, TTDTXS]
-- [ ] `ChuongTrinhDaoTaoDTO.java`
-- [ ] `CTDT_HocPhanDTO.java`            - mapping chi tiet HP trong CTDT
-- [ ] `ChuongTrinhDaoTaoService.java` interface + impl
-  - CRUD CTDT
-  - addHocPhan, removeHocPhan (quan ly CTDT_HocPhan)
-  - submitForApproval, approve (khi duyet: tu dong tao LopHocPhan)
-  - autoCreateLopHocPhan(maCTDT, maHocKy)  <- NGHIEP VU QUAN TRONG
-- [ ] `ChuongTrinhDaoTaoController.java`
-  - GET  /ctdt
-  - GET  /ctdt/them
-  - POST /ctdt/them
-  - GET  /ctdt/{ma}                      - detail + danh sach HP
-  - GET  /ctdt/{ma}/sua
-  - POST /ctdt/{ma}/sua
-  - POST /ctdt/{ma}/them-hoc-phan
-  - POST /ctdt/{ma}/xoa-hoc-phan/{maHP}
-  - POST /ctdt/{ma}/nop-duyet
-  - POST /ctdt/{ma}/phe-duyet            - [TTDTXS] -> trigger autoCreateLopHocPhan
-  - POST /ctdt/{ma}/tu-choi              - [TTDTXS]
-- [ ] `templates/ctdt/list.html`, `form.html`, `detail.html`
-- [ ] TEST: Duyet CTDT -> LopHocPhan duoc tao theo SoLopDuKien, MaGiangVien=NULL
+### Quan ly CTDT [PDT, TTDTXS] — DA XONG (Phase 3)
+- [x] `ChuongTrinhDaoTaoDTO.java`
+- [x] `CtdtHocPhanDTO.java` (@NotBlank, @Min/@Max hocKyThu)
+- [x] `ChuongTrinhDaoTaoService.java` + `ChuongTrinhDaoTaoServiceImpl.java`
+  - [x] CRUD + findAllFetchHocPhan (JOIN FETCH tranh LazyInitException)
+  - [x] guiChoDuyet (BanNhap -> ChoDuyet)
+  - [x] pheduyet — **Fix 2026-Q2**: set `nguoiDuyet` + `ngayDuyet` (audit trail).
+  - [x] themHocPhan / xoaHocPhan (quan ly CTDT_HocPhan)
+  - [x] **Fix 2026-Q2**: xoaHocPhan co server-side guard chan xoa khi CTDT DaDuyet
+  - [x] updateFileWord — **Fix 2026-Q2**: tach rieng de luu path file sau khi upload
+        (truoc day controller set tren entity detached -> path bi mat)
+  - [x] **Thiet ke (khong phai defer)**: tao LopHocPhan = manual action o
+        `/lop-hoc-phan/tao-hang-loat?maCTDT=&maHocKy=` + HocKyThu filter + per-HP
+        soLopOverride (xem batch 3 fix §). Ly do: 1 CTDT mo nhieu nam, moi ky
+        so lop khac, phai cho user chon ro.
+- [x] `ChuongTrinhDaoTaoController.java` (8 endpoint: list, CRUD, phe-duyet, chi-tiet, them-hp, xoa-hp)
+  - [x] **Fix 2026-Q2**: them() va sua() goi `ctdtService.updateFileWord(ma, path)`
+        thay vi `ctdt.setFileWord(path)` tren detached entity
+- [x] `templates/ctdt/danh-sach.html`, `form.html`, `chi-tiet.html`
+- [x] TEST: Duyet CTDT -> `nguoiDuyet` + `ngayDuyet` duoc set
 
-### Quan ly Lop Hoc Phan [BCN, TTDTXS, GV]
-- [ ] `LopHocPhanDTO.java`
-- [ ] `LopHocPhanService.java` interface + impl
-  - getByHocKy, getByGiangVien, getByLopHanhChinh
-  - assignGiangVien, removeGiangVien
-  - addSinhVien, removeSinhVien
-- [ ] `LopHocPhanController.java`
-  - GET  /lop-hoc-phan                   - list + filter theo HK, HP, GV
-  - GET  /lop-hoc-phan/{ctdt}/{hp}/{hk}/{nhom}  - chi tiet + danh sach SV
-  - POST /lop-hoc-phan/{ctdt}/{hp}/{hk}/{nhom}/gan-gv
-  - POST /lop-hoc-phan/{ctdt}/{hp}/{hk}/{nhom}/them-sv
-  - POST /lop-hoc-phan/{ctdt}/{hp}/{hk}/{nhom}/xoa-sv/{maSV}
-- [ ] `templates/lophocphan/list.html`, `detail.html`
-- [ ] TEST: Gan GV ngoai doi ngu -> hien canh bao, van cho phep
+### Quan ly Lop Hoc Phan [CNHP, TTDTXS, GV] — DA XONG (Phase 3)
+- [x] `LopHocPhanService.java` + `LopHocPhanServiceImpl.java`
+  - [x] taoLopHocPhanChoCTDT(maCTDT, maHocKy) — idempotent (skip neu da ton tai)
+  - [x] phanCongGiangVien + gui email thong bao GV qua EmailService
+  - [x] toggleTrangThai (DangMo <-> DaDong)
+  - [x] findByCTDTAndHocKy (JOIN FETCH)
+  - [x] findChuaPhanCongGV
+  - [x] dangKyLopHocPhan (guard trang thai DangMo + chan trung)
+  - [x] canhBaoSinhVien — set DaCanhBao + gui email CVHT
+  - [x] findSinhVienTrongLop
+- [x] `LopHocPhanController.java` (6 endpoint: list, tao-hang-loat, phan-cong, chi-tiet, dang-ky-sv, canh-bao-sv)
+- [x] `templates/lop-hoc-phan/danh-sach.html`, `chi-tiet.html`
+  > **Luu y thiet ke**: LopHocPhan su dung EmbeddedId 4 cot (MaCTDT + MaHocPhan + MaHocKy + MaLopHocPhan).
+  > Khong map truc tiep `@ManyToOne HocPhan` de tranh Hibernate 7 duplicate column error;
+  > controller phai truyen `hocPhanMap` rieng cho template render tenHocPhan.
+- [x] TEST: Phan cong GV -> email thong bao (MockEmailServiceImpl log)
+- [x] TEST: Canh bao SV -> DaCanhBao=true + email CVHT
 
 ---
 
-## PHASE 4: MODULE P2 — DANH GIA & CANH BAO
+## PHASE 4: MODULE P2 — DANH GIA & CANH BAO  (DA XONG 2026-Q2)
 
-### Nhan Xet Sinh Vien + Canh Bao [GV, CVHT]
-- [ ] `DanhSachSVLopHPService.java` interface + impl
-  - nhapNhanXet(id, nhanXet, daCanhBao) - neu daCanhBao=1: gui email den CVHT
-  - xuLyCanhBao(id, ketQuaXuLy)
-  - getSoCanhBaoChuaXuLy(maLopHC)
-- [ ] `EmailService.java` interface
-- [ ] `MockEmailServiceImpl.java`  - log ra console thay vi gui that (dung trong dev)
-- [ ] `DanhGiaController.java`
-  - GET  /danh-gia/lop/{ctdt}/{hp}/{hk}/{nhom}   - list SV + nhan xet
-  - POST /danh-gia/lop/{ctdt}/{hp}/{hk}/{nhom}/nhan-xet/{maSV}
-  - GET  /danh-gia/canh-bao                       - CVHT xem canh bao chua xu ly
-  - POST /danh-gia/canh-bao/{id}/xu-ly
-- [ ] `templates/danhgia/list.html`, `canhbao.html`
-- [ ] TEST: GV nhan xet DaCanhBao=1 -> MockEmailService log email CVHT
-- [ ] TEST: CVHT xu ly canh bao -> DaCanhBao van la 1 nhung KetQuaXuLy duoc luu
+### Nhan Xet Sinh Vien + Canh Bao [GV, CVHT, SV, PDT]
+- [x] `DanhGiaService.java` interface + `DanhGiaServiceImpl.java`
+  - [x] `nhapNhanXet(NhapNhanXetDTO, fullPK, maGvHienTai)` — luu NhanXet + DaCanhBao;
+        rising-edge (canhBaoCu=false && new=true) -> EmailService gui CVHT
+  - [x] `xuLyCanhBao(fullPK, ketQuaXuLy, maNguoiXuLy)` — set KetQuaXuLy + nguoiXuLy + ngayXuLy
+  - [x] `findCanhBaoChuaXuLy()` — danh sach toan truong cho CVHT/PDT (sort)
+  - [x] `findNhanXetCuaSV(maSV)` — SV xem nhan xet ve minh
+  - [x] `findLopDayCuaGV(maGV)` — GV thay danh sach lop dang day + so SV co canh bao
+  - [x] `findChiTietLop(fullPK)` — GV nhap nhan xet tung SV trong lop
+- [x] `NhapNhanXetDTO.java` — `@Size(max=1000) nhanXet`, `boolean daCanhBao`
+- [x] `EmailService.java` + `MockEmailServiceImpl.java` — DA CO tu Phase 3, reuse
+- [x] `DanhGiaController.java` (5 endpoint)
+  - [x] GET  `/danh-gia` — landing route theo role (GV/SV/CVHT/PDT phan luong rieng)
+  - [x] GET  `/danh-gia/lop/{maCTDT}/{maHocPhan}/{maHocKy}/{maLopHocPhan}` — GV nhap nhan xet
+  - [x] POST `/danh-gia/nhan-xet/{maSV}/{maCTDT}/{maHocPhan}/{maHocKy}/{maLopHocPhan}` — luu nhan xet
+  - [x] GET  `/danh-gia/canh-bao` — CVHT/PDT xem danh sach canh bao chua xu ly
+  - [x] POST `/danh-gia/canh-bao/{...4PK...}/xu-ly?maSV=&ketQuaXuLy=` — CVHT xu ly
+  - [x] `activeMenu="danh-gia"` set tren MOI GET handler
+- [x] `templates/danh-gia/{index,nhan-xet,canh-bao}.html`
+- [x] `DanhSachSvLopHocPhanRepository`: them 5 query JOIN FETCH cho OSIV=false:
+  - `findCanhBaoChuaXuLyAll` (sort), `findNhanXetByMaSV` (SV view),
+  - `findByLopHocPhanFullPK` (GV chi-tiet lop), `findByPK_Full` (4PK + maSV cho POST/xu-ly),
+  - `countCanhBaoChuaXuLyByGV(maGV)` (badge tren landing GV).
+- [x] `SecurityConfig.java`: `/danh-gia/**` permit GIANG_VIEN, CVHT, SINH_VIEN, PDT, ADMIN
+      (writes guard them o controller `@PreAuthorize`).
+- [x] `layout/base.html`: bo cap comment Phase 4 -> uncomment menu DANH GIA;
+      bell navbar `bi-bell-fill` cho CVHT click toi `/danh-gia/canh-bao`.
+- [x] TEST: GV nhap `daCanhBao=1` cho SV -> MockEmailService log `to=<emailCVHT cua lop SV>`.
+- [x] TEST: CVHT click bell navbar -> `/canh-bao` -> xu ly -> KetQuaXuLy + nguoiXuLy + ngayXuLy luu.
+- [x] TEST: SV `/danh-gia` -> chi thay nhan xet ve minh, ko thay SV khac (RBAC).
 
 ---
 
 ## PHASE 5: MODULE P3 — KIEN TAP & THUC TAP
 
-### Quan ly Kien Tap [BCN, TTDTXS, GV, DN]
-- [ ] `DotKienTapDTO.java`
-- [ ] `KienTapService.java` interface + impl
-  - CRUD DotKienTap, submitForApproval, approve, markDone
-  - getSinhVienCuaLop (lay tu LopHanhChinh -> DanhSachSinhVienKienTap)
-- [ ] `KienTapController.java`
-  - GET  /kien-tap
-  - GET  /kien-tap/them
-  - POST /kien-tap/them                 - tao dot + add SV tu LopHC
-  - GET  /kien-tap/{ma}                 - detail + list SV
-  - POST /kien-tap/{ma}/nop-duyet
-  - POST /kien-tap/{ma}/phe-duyet       - [TTDTXS]
-  - POST /kien-tap/{ma}/hoan-thanh      - DaDuyet -> DaThucHien [BCN/TTDTXS]
-  - POST /kien-tap/{ma}/nhan-xet-gv     - [GV]
-  - POST /kien-tap/{ma}/nhan-xet-dn     - [DN]
-- [ ] `templates/kientap/list.html`, `form.html`, `detail.html`
-- [ ] `FileStorageUtil.java`            - luu file upload, kiem tra extension
-- [ ] TEST: Tao dot -> duyet -> GV + DN nhap nhan xet rieng
+### Quan ly Kien Tap [BCN, TTDTXS, GV, DN] — DA XONG (2026-Q2)
+- [x] `DotKienTapDTO.java`
+- [x] `DotKienTapService.java` interface + impl
+- [x] Fix service layer theo nghiep vu Hybrid (auto-add + toggle + transitions):
+  - [x] `create()`: SET NguoiTao tu SecurityContext, validate DN DangHopTac,
+        AUTO-ADD tat ca SV `DangHoc` cua lop vao DanhSachSinhVienKienTap (DaThamGia=1).
+  - [x] `pheduyet()`: SET NguoiDuyet + NgayDuyet.
+  - [x] `hoanThanh(id)`: DaDuyet -> DaThucHien.
+  - [x] `huy(id)`: bat ky trang thai truoc DaHuy -> DaHuy (tru chinh DaHuy).
+  - [x] `capNhatDaThamGia(maDotKT, maSV, daThamGia)`: toggle co validation (khoa khi DaHuy).
+  - [x] `dongBoDanhSachSV(maDotKT)`: them SV DangHoc moi, khong xoa.
+  - [x] `nhanXetGV(maDotKT, maGV, text)`: validate currentUser == MaGVPhuTrach.
+  - [x] `nhanXetDN(maDotKT, maNguoiDung, text)`: validate currentUser == MaDoanhNghiep.
+- [x] `DotKienTapController.java` (12 endpoint):
+  - [x] GET  /kien-tap                              - list
+  - [x] GET  /kien-tap/them, POST /kien-tap/them
+  - [x] GET  /kien-tap/sua/{id}, POST /kien-tap/sua/{id}
+  - [x] POST /kien-tap/gui-phe-duyet/{id}
+  - [x] POST /kien-tap/phe-duyet/{id}               - [TTDTXS]
+  - [x] GET  /kien-tap/chi-tiet/{id}
+  - [x] POST /kien-tap/hoan-thanh/{id}              - [BCN/TTDTXS]
+  - [x] POST /kien-tap/huy/{id}                     - [BCN/TTDTXS]
+  - [x] POST /kien-tap/nhan-xet-gv/{id}             - [GV]
+  - [x] POST /kien-tap/nhan-xet-dn/{id}             - [DN]
+  - [x] POST /kien-tap/chi-tiet/{id}/sv/{maSV}/danh-dau
+  - [x] POST /kien-tap/chi-tiet/{id}/dong-bo
+  - [x] `activeMenu="kien-tap"` tren moi GET handler
+- [x] Templates (3 file):
+  - [x] `templates/kien-tap/danh-sach.html` — 5 stat-card, table 9 cot, action-cluster
+  - [x] `templates/kien-tap/form.html` — 3 fieldset (Co Ban / Kinh Phi / Minh Chung), file upload
+  - [x] `templates/kien-tap/chi-tiet.html` — detail-hero, state-machine button (mau theo §3.2),
+        bang DS SV voi toggle DaThamGia, nut Dong Bo, 2 form NhanXet GV/DN conditional theo role.
+- [x] Repository `DotKienTapRepository`:
+  - [x] `findAllFetchAll()` + `findByIdFetchAll()` JOIN FETCH lopHC, hocKy, gvPhuTrach,
+        doanhNghiep, nguoiTao, nguoiDuyet -> tuong thich `spring.jpa.open-in-view=false`.
+  - [x] `DanhSachSvKienTapRepository.findById_MaDotKTFetchSV()` JOIN FETCH SV+nguoiDung+lopHC.
+- [x] `FileStorageUtil.java` - luu file upload, kiem tra extension (DA CO tu Phase 2)
+- [x] TEST: Tao dot -> auto-add 3 SV DangHoc cua K22A (khong co SV BaoLuu)
+- [x] TEST: Toggle DaThamGia 1 SV -> van giu ban ghi, COUNT(DaThamGia=1) giam 1
+- [x] TEST: Dong bo danh sach khi them SV moi vao lop -> INSERT sinh vien moi
+- [x] TEST: Duyet dot -> GV + DN nhap nhan xet rieng (2 textarea khong ghi de)
+- [x] TEST: Huy dot -> khong toggle duoc DaThamGia nua
 
-### Quan ly Thuc Tap [PDT, TTDTXS, GV, SV, DN]
-- [ ] `DotThucTapDTO.java`
-- [ ] `DanhSachThucTapDTO.java`
-- [ ] `ThucTapExcelDTO.java`
-- [ ] `ThucTapService.java` interface + impl
-  - CRUD DotThucTap, submitForApproval, approve
-  - importPhanCong(MultipartFile): doc Excel, skip trung (MaDotTT, MaSV), bao loi
-  - nhapKetQua(maThucTap, maVaiTro, maNguoiDanhGia, diem, nhanXet)
-- [ ] `ThucTapController.java`
-  - GET  /thuc-tap
-  - GET  /thuc-tap/them
-  - POST /thuc-tap/them
-  - GET  /thuc-tap/{ma}                 - detail + phan cong list
-  - POST /thuc-tap/{ma}/nop-duyet
-  - POST /thuc-tap/{ma}/phe-duyet       - [TTDTXS]
-  - POST /thuc-tap/{ma}/import-phan-cong - [PDT] Excel import
-  - POST /thuc-tap/ket-qua/{maThucTap}  - [DN/GV/CVHT]
-  - GET  /thuc-tap/cua-toi              - [SV] xem phan cong cua ban than
-- [ ] `templates/thuctap/list.html`, `form.html`, `detail.html`
-- [ ] TEST: Import Excel co ban ghi trung -> skip + hien bao cao
-- [ ] TEST: DN nhap ket qua, GV nhap ket qua -> 2 ban ghi KetQuaThucTap voi MaVaiTro khac nhau
+### Quan ly Thuc Tap [PDT, TTDTXS, GV, SV, DN] — CORE DA XONG (2026-Q2)
+- [x] `DotThucTapDTO.java`
+- [x] `ThucTapExcelDTO.java`
+- [ ] `DanhSachThucTapDTO.java` (form nhap phan cong + ket qua) — DEFERRED Phase 5.3
+- [x] `DotThucTapService.java` interface + impl
+- [x] Fix service layer theo nghiep vu (core):
+  - [x] `create()`: validate HocPhan.LoaiHocPhan IN ('ThucTap','KienTap'); SET NguoiTao.
+  - [x] `pheduyet()`: SET NguoiDuyet + NgayDuyet, transition ChoDuyet -> DaDuyet.
+  - [x] `importSinhVien(maDotTT, list)` — parse text input (comma/newline), tra ve `ImportResultDTO`.
+  - [x] `capNhatKetQua(maDS, loaiThucTap, maDN, nhanXet)` — update DanhSachThucTap.
+  - [ ] `batDau(id)`: DaDuyet -> DangThucHien — DEFERRED Phase 5.3.
+  - [ ] `ketThuc(id)`: cascade DanhSachThucTap.TrangThai — DEFERRED Phase 5.3.
+  - [ ] `huy(id)` — DEFERRED Phase 5.3.
+  - [ ] `importPhanCong(maDotTT, MultipartFile)` — Excel parse — DEFERRED Phase 5.3.
+  - [ ] `nhapKetQua(maThucTap, maVaiTro, ...)` — upsert KetQuaThucTap — DEFERRED Phase 5.3.
+- [x] `DotThucTapController.java`:
+  - [x] GET  /thuc-tap, /thuc-tap/them (+POST), /thuc-tap/sua (+POST)
+  - [x] POST /thuc-tap/gui-phe-duyet/{id}
+  - [x] POST /thuc-tap/phe-duyet/{id}
+  - [x] GET  /thuc-tap/chi-tiet/{id}
+  - [x] POST /thuc-tap/chi-tiet/{id}/them-sv               (text-input version)
+  - [x] POST /thuc-tap/chi-tiet/{id}/cap-nhat-kq/{maDS}
+  - [x] `activeMenu="thuc-tap"` tren moi GET handler (UI/UX audit fix 2026-Q2)
+  - [x] Success message format theo UI design §16.1 (khong co dau cam thán)
+  - [ ] POST /thuc-tap/bat-dau/{id}             — DEFERRED Phase 5.3
+  - [ ] POST /thuc-tap/ket-thuc/{id}            — DEFERRED Phase 5.3
+  - [ ] POST /thuc-tap/huy/{id}                 — DEFERRED Phase 5.3
+  - [ ] POST /thuc-tap/import-phan-cong/{id}    — DEFERRED Phase 5.3 (Excel)
+  - [ ] POST /thuc-tap/ket-qua/{maThucTap}      — DEFERRED Phase 5.3
+  - [ ] GET  /thuc-tap/cua-toi                  — DEFERRED Phase 5.3
+- [x] Templates (3 file core):
+  - [x] `templates/thuc-tap/danh-sach.html` — 6 stat-card (Tong + 5 trang thai), table 9 cot.
+  - [x] `templates/thuc-tap/form.html` — 2 select rieng maCTDT + maHocPhan, disable khi sua.
+  - [x] `templates/thuc-tap/chi-tiet.html` — detail-hero, action cluster (gioi han ChuanBi/ChoDuyet
+        do thieu endpoint chuyen tiep), import-result panel, table phan cong + collapse form
+        cap-nhat-kq inline, sticky sidebar nhap ma SV.
+  - [ ] `templates/thuc-tap/cua-toi.html` (SV xem phan cong cua minh) — DEFERRED Phase 5.3
+- [x] Repository `DotThucTapRepository`:
+  - [x] `findAllFetchAll()` + `findByIdFetchAll()` JOIN FETCH ctdtHP+hocPhan+hocKy+nguoiTao+nguoiDuyet.
+  - [x] `DanhSachThucTapRepository.findByDotThucTap_MaDotTTFetchSV()` JOIN FETCH SV+DN+lopHC.
+- [x] TEST: Tao dot voi HP LyThuyet -> reject BusinessException.
+- [x] TEST: Phan cong SV qua text-input -> ImportResultDTO tra ve list lỗi cho ID khong ton tai.
+- [ ] TEST: Import Excel co 1 trung + 1 thieu MaDN khi LoaiThucTap=DN — DEFERRED Phase 5.3.
+- [ ] TEST: DN nhap ket qua + GV nhap ket qua -> 2 ban ghi KetQuaThucTap khac nhau — DEFERRED Phase 5.3.
+- [ ] TEST: Ket thuc dot -> cascade DanhSachThucTap.TrangThai = DaKetThuc — DEFERRED Phase 5.3.
+
+### UI/UX Audit Phase 5 (2026-Q2) — DA XONG
+- [x] Sidebar `layout/base.html`: bo cap comment Phase 5 -> uncomment menu KIEN TAP / THUC TAP.
+- [x] DotThucTapController: them `activeMenu="thuc-tap"` tat ca 8 GET/error-rerender path
+      (truoc do thieu -> sidebar item khong active highlight khi nguoi dung trong module).
+- [x] Detail page state-transition button: doi sang semantic color theo UI design §3.2:
+  - "Gui Phe Duyet" (ChuanBi -> ChoDuyet): `btn-warning text-dark` (truoc: `btn-info text-white`).
+  - "Hoan Thanh" (DaDuyet -> DaThucHien): `btn-success` (truoc: `btn-primary` — vi pham §9.5).
+- [x] thuc-tap/chi-tiet: chip `LoaiThucTap` da differentiate Truong (`chip-primary`)
+      vs DoanhNghiep (`chip-accent`); truoc do ca 2 cung `chip-primary`.
+- [x] thuc-tap/danh-sach: them stat-card "Cho Duyet" (truoc thieu, mat KPI cho TTDTXS).
+- [x] DotKienTap + DotThucTap controller: success message bo `!` (`Tao dot ... thanh cong!`
+      -> `Da tao dot ...`) theo UI content style §16.1.
 
 ---
 

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/base}">
+<head><title>Quản Lý Thực Tập</title></head>
+<body>
+<div layout:fragment="content">
+
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a th:href="@{/dashboard}" class="text-decoration-none">
+                    <i class="bi bi-house-door me-1"></i>Trang Chủ
+                </a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">Thực Tập</li>
+        </ol>
+    </nav>
+
+    <!-- UI consistency fix: chuyen sang format page-header-block chuan. -->
+    <div class="page-header-block mb-4">
+        <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+            <div class="flex-grow-1 min-w-0">
+                <p class="page-subtitle mb-1">Kiến Tập &amp; Thực Tập</p>
+                <h1 class="page-title h4 mb-1 d-flex align-items-center gap-2">
+                    <i class="bi bi-building-check text-primary" aria-hidden="true"></i>
+                    <span>Quản Lý Đợt Thực Tập</span>
+                </h1>
+                <p class="text-muted small mb-0">
+                    Tổ chức đợt thực tập theo CTĐT — Học Phần, theo dõi tiến độ và kết quả chấm điểm 3 bên (GV / CVHT / DN).
+                </p>
+            </div>
+            <div class="action-slot d-flex gap-2 flex-wrap">
+                <a th:href="@{/thuc-tap/them}" class="btn btn-primary btn-sm"
+                   sec:authorize="hasAnyRole('TTDTXS','ADMIN')">
+                    <i class="bi bi-plus-lg me-1"></i>Tạo Đợt Thực Tập
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6 stat cards — Phase 3: dung canonical _stat-card fragment.
+         col-6 col-md-4 col-xl auto-flex de fit het tren XL ma van wrap dep tren md. -->
+    <div class="row g-3 mb-4" th:if="${thongKe != null}">
+        <div class="col-6 col-md-4 col-xl">
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-collection', value=${thongKe['tong'] ?: 0},
+                  label='Tổng Đợt', variant='info', href=null)}"></div>
+        </div>
+        <div class="col-6 col-md-4 col-xl">
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-pencil-square', value=${thongKe['chuanBi'] ?: 0},
+                  label='Chuẩn Bị', variant='neutral', href=null)}"></div>
+        </div>
+        <div class="col-6 col-md-4 col-xl">
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-hourglass-split', value=${thongKe['choDuyet'] ?: 0},
+                  label='Chờ Duyệt', variant='warning', href=null)}"></div>
+        </div>
+        <div class="col-6 col-md-4 col-xl">
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-check2-circle', value=${thongKe['daDuyet'] ?: 0},
+                  label='Đã Duyệt', variant='success', href=null)}"></div>
+        </div>
+        <div class="col-6 col-md-4 col-xl">
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-play-circle-fill', value=${thongKe['dangThucHien'] ?: 0},
+                  label='Đang Thực Hiện', variant='orange', href=null)}"></div>
+        </div>
+        <div class="col-6 col-md-4 col-xl">
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-flag-fill', value=${thongKe['daKetThuc'] ?: 0},
+                  label='Đã Kết Thúc', variant='teal', href=null)}"></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span class="fw-semibold">
+                <i class="bi bi-building-check me-2"></i>Danh Sách Đợt Thực Tập
+            </span>
+            <span class="badge bg-light text-dark"
+                  th:text="'Tổng: ' + (${thongKe != null ? thongKe['tong'] : 0})">0</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width:50px;">STT</th>
+                            <th>Tên Đợt</th>
+                            <th>CTĐT</th>
+                            <th>Học Phần</th>
+                            <th>Học Kỳ</th>
+                            <th>Bắt Đầu</th>
+                            <th>Kết Thúc</th>
+                            <th>Trạng Thái</th>
+                            <th class="text-center" style="width:140px;">Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(danhSach)}">
+                            <td colspan="9">
+                                <!-- UI consistency: dung empty-state fragment chuan -->
+                                <div th:replace="~{fragments/_empty-state :: withCta(
+                                      icon='bi-building-check',
+                                      title='Chưa có đợt thực tập nào',
+                                      desc='Tạo đợt thực tập theo CTĐT — Học Phần để khởi động quy trình chấm điểm 3 bên.',
+                                      ctaHref='/thuc-tap/them',
+                                      ctaLabel='Tạo Đợt Đầu Tiên',
+                                      ctaIcon='bi-plus-lg')}"
+                                     sec:authorize="hasAnyRole('TTDTXS','ADMIN')"></div>
+                                <div th:replace="~{fragments/_empty-state :: simple(
+                                      icon='bi-building-check',
+                                      title='Chưa có đợt thực tập nào',
+                                      desc='Đợt thực tập sẽ được Trung Tâm Đào Tạo Xuất Sắc tổ chức theo lịch.')}"
+                                     sec:authorize="!hasAnyRole('TTDTXS','ADMIN')"></div>
+                            </td>
+                        </tr>
+                        <tr th:each="dot, stat : ${danhSach}"
+                            th:with="ctdtHP=${dot.ctdtHocPhan}">
+                            <td class="text-muted" th:text="${stat.index + 1}">1</td>
+                            <td>
+                                <a th:href="@{/thuc-tap/chi-tiet/{id}(id=${dot.maDotTT})}"
+                                   class="text-decoration-none fw-medium"
+                                   th:text="${dot.tenDotTT}">--</a>
+                            </td>
+                            <td class="small">
+                                <code th:if="${ctdtHP != null and ctdtHP.chuongTrinhDaoTao != null}"
+                                      th:text="${ctdtHP.chuongTrinhDaoTao.maCTDT}">--</code>
+                                <span th:unless="${ctdtHP != null and ctdtHP.chuongTrinhDaoTao != null}"
+                                      class="text-muted fst-italic">--</span>
+                            </td>
+                            <td class="small">
+                                <span th:if="${ctdtHP != null and ctdtHP.hocPhan != null}">
+                                    <code th:text="${ctdtHP.hocPhan.maHocPhan}">--</code>
+                                    <span class="text-muted ms-1"
+                                          th:text="${'— ' + ctdtHP.hocPhan.tenHocPhan}">--</span>
+                                </span>
+                                <span th:unless="${ctdtHP != null and ctdtHP.hocPhan != null}"
+                                      class="text-muted fst-italic">--</span>
+                            </td>
+                            <td class="small">
+                                <code th:if="${dot.hocKy != null}"
+                                      th:text="${dot.hocKy.maHocKy}">--</code>
+                                <span th:unless="${dot.hocKy != null}"
+                                      class="text-muted fst-italic">--</span>
+                            </td>
+                            <td class="small text-muted"
+                                th:text="${dot.ngayBatDau != null ?
+                                    #temporals.format(dot.ngayBatDau, 'dd/MM/yyyy') : '--'}">--</td>
+                            <td class="small text-muted"
+                                th:text="${dot.ngayKetThuc != null ?
+                                    #temporals.format(dot.ngayKetThuc, 'dd/MM/yyyy') : '--'}">--</td>
+                            <td>
+                                <span class="status-pill"
+                                      th:with="s=${dot.trangThai?.name()}"
+                                      th:classappend="${s == 'DaDuyet' or s == 'DaKetThuc' ? 'tone-success' :
+                                                      (s == 'ChoDuyet'      ? 'tone-warning' :
+                                                      (s == 'DangThucHien'  ? 'tone-info'    :
+                                                      (s == 'DaHuy'         ? 'tone-danger'  : 'tone-neutral')))}">
+                                    <span class="pill-dot" aria-hidden="true"></span>
+                                    <span th:text="${s == 'ChuanBi'      ? 'Chuẩn Bị'        :
+                                                   (s == 'ChoDuyet'     ? 'Chờ Duyệt'       :
+                                                   (s == 'DaDuyet'      ? 'Đã Duyệt'        :
+                                                   (s == 'DangThucHien' ? 'Đang Thực Hiện'  :
+                                                   (s == 'DaKetThuc'    ? 'Đã Kết Thúc'     :
+                                                   (s == 'DaHuy'        ? 'Đã Huỷ'          : '--')))))}">--</span>
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <div class="action-cluster">
+                                    <a th:href="@{/thuc-tap/chi-tiet/{id}(id=${dot.maDotTT})}"
+                                       class="btn btn-sm btn-outline-secondary"
+                                       data-bs-toggle="tooltip" data-bs-title="Chi Tiết"
+                                       aria-label="Xem chi tiết">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a th:if="${dot.trangThai != null
+                                            and dot.trangThai.name() != 'DaHuy'
+                                            and dot.trangThai.name() != 'DaKetThuc'
+                                            and dot.trangThai.name() != 'DangThucHien'}"
+                                       th:href="@{/thuc-tap/sua/{id}(id=${dot.maDotTT})}"
+                                       class="btn btn-sm btn-outline-primary"
+                                       sec:authorize="hasAnyRole('TTDTXS','ADMIN')"
+                                       data-bs-toggle="tooltip" data-bs-title="Chỉnh sửa"
+                                       aria-label="Chỉnh sửa">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

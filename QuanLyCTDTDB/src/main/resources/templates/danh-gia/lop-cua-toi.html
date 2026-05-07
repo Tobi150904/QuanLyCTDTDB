@@ -1,0 +1,345 @@
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/base}">
+<head><title>Nhận Xét Lớp Tôi Phụ Trách</title></head>
+<body>
+<div layout:fragment="content">
+
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a th:href="@{/dashboard}" class="text-decoration-none">
+                    <i class="bi bi-house-door me-1"></i>Trang Chủ
+                </a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">
+                Nhận Xét Lớp Tôi Phụ Trách
+            </li>
+        </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
+        <div>
+            <p class="page-subtitle">Đánh Giá &amp; Cảnh Báo</p>
+            <h4 class="page-title mb-0">Nhận Xét Lớp Tôi Phụ Trách</h4>
+            <small class="text-muted">
+                Tổng hợp tất cả nhận xét &amp; cảnh báo của giảng viên về sinh viên
+                trong các lớp hành chính do bạn cố vấn.
+            </small>
+        </div>
+        <a th:href="@{/danh-gia/canh-bao}"
+           sec:authorize="hasAnyRole('CVHT','PDT','ADMIN')"
+           class="btn btn-outline-warning btn-sm">
+            <i class="bi bi-bell me-1"></i>Đi Tới Cảnh Báo
+        </a>
+    </div>
+
+    <!--/* PDT/ADMIN truy cap URL nay -> tu controller filterMode = TAT_CA va
+           list rong + alert dieu huong. Khong duplicate logic toan he. */-->
+    <div th:if="${filterMode == 'TAT_CA'}"
+         class="alert alert-info" role="alert">
+        <i class="bi bi-info-circle me-2"></i>
+        Trang này dành riêng cho <strong>Cố Vấn Học Tập</strong>.
+        PDT/ADMIN vui lòng dùng <a th:href="@{/danh-gia/canh-bao}"
+        class="alert-link">Cảnh Báo Sinh Viên</a> để xem tổng hợp toàn trường.
+    </div>
+
+    <div class="row g-3 mb-4" th:if="${filterMode == 'CVHT'}">
+        <div class="col-6 col-md-3">
+            <div class="stat-card variant-info">
+                <div class="stat-card-icon"><i class="bi bi-chat-square-text"></i></div>
+                <div>
+                    <div class="stat-card-value" th:text="${tong}">0</div>
+                    <div class="stat-card-label">Tổng Nhận Xét</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card variant-success">
+                <div class="stat-card-icon"><i class="bi bi-chat-left-dots"></i></div>
+                <div>
+                    <div class="stat-card-value" th:text="${soNhanXetThuong}">0</div>
+                    <div class="stat-card-label">Nhận Xét Bình Thường</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card variant-warning">
+                <div class="stat-card-icon"><i class="bi bi-exclamation-triangle"></i></div>
+                <div>
+                    <div class="stat-card-value" th:text="${soCanhBao}">0</div>
+                    <div class="stat-card-label">Có Cảnh Báo</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card variant-danger">
+                <div class="stat-card-icon"><i class="bi bi-hourglass-split"></i></div>
+                <div>
+                    <div class="stat-card-value" th:text="${soChuaXuLy}">0</div>
+                    <div class="stat-card-label">Cảnh Báo Chưa Xử Lý</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card" th:if="${filterMode == 'CVHT'}">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span class="fw-semibold">
+                <i class="bi bi-list-check me-2"></i>Danh Sách Nhận Xét
+            </span>
+            <span class="badge bg-light text-dark">
+                <span id="lctHienThi" th:text="${tong}">0</span>
+                / <span th:text="${tong}">0</span>
+            </span>
+        </div>
+
+        <!-- Filter / Search toolbar -->
+        <div class="card-body border-bottom py-3" th:if="${tong > 0}">
+            <div class="row g-2 align-items-end">
+                <div class="col-md-4">
+                    <label for="lctSearchInput" class="form-label small fw-medium mb-1">
+                        <i class="bi bi-search me-1"></i>Tìm kiếm
+                    </label>
+                    <input type="search" id="lctSearchInput"
+                           data-testid="lct-search-input"
+                           class="form-control form-control-sm"
+                           placeholder="Tên SV, mã SV, mã HP, lớp HC, nhận xét...">
+                </div>
+                <div class="col-md-3">
+                    <label for="lctHocKyFilter" class="form-label small fw-medium mb-1">
+                        <i class="bi bi-calendar3 me-1"></i>Học kỳ
+                    </label>
+                    <select id="lctHocKyFilter"
+                            data-testid="lct-hocky-filter"
+                            class="form-select form-select-sm">
+                        <option value="">Tất cả</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="lctTypeFilter" class="form-label small fw-medium mb-1">
+                        <i class="bi bi-funnel me-1"></i>Loại
+                    </label>
+                    <select id="lctTypeFilter"
+                            data-testid="lct-type-filter"
+                            class="form-select form-select-sm">
+                        <option value="">Tất cả</option>
+                        <option value="cb-chua">Cảnh báo chưa xử lý</option>
+                        <option value="cb-da">Cảnh báo đã xử lý</option>
+                        <option value="thuong">Nhận xét bình thường</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="button" id="lctResetFilter"
+                            data-testid="lct-reset-filter-btn"
+                            class="btn btn-sm btn-outline-secondary w-100"
+                            title="Xoá bộ lọc">
+                        <i class="bi bi-x-lg me-1"></i>Xoá lọc
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="lctTable">
+                    <thead>
+                        <tr>
+                            <th style="width:50px;">STT</th>
+                            <th>Sinh Viên</th>
+                            <th>Lớp HC</th>
+                            <th>Học Kỳ</th>
+                            <th>Học Phần</th>
+                            <th>Nhận Xét Của GV</th>
+                            <th class="text-center" style="width:140px;">Trạng Thái</th>
+                            <th class="text-end" style="width:130px;">Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(nhanXetList)}">
+                            <td colspan="8">
+                                <div class="empty-state">
+                                    <i class="bi bi-emoji-smile"></i>
+                                    <p>Chưa có nhận xét nào về sinh viên trong lớp bạn phụ trách.</p>
+                                    <small class="text-muted d-block">
+                                        Nhận xét của giảng viên sẽ tự động xuất hiện ở đây
+                                        sau khi được nhập trong màn hình "Đánh Giá Sinh Viên".
+                                    </small>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr id="lctEmptyFilter" class="d-none">
+                            <td colspan="8">
+                                <div class="empty-state">
+                                    <i class="bi bi-funnel"></i>
+                                    <p>Không có nhận xét nào phù hợp với bộ lọc.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:each="nx, stat : ${nhanXetList}"
+                            th:with="hp=${hocPhanMap.get(nx.id.maHocPhan)},
+                                     hk=${hocKyMap != null ? hocKyMap.get(nx.id.maHocKy) : null},
+                                     daCanhBao=${nx.daCanhBao != null and nx.daCanhBao},
+                                     daXuLy=${nx.ketQuaXuLy != null and !#strings.isEmpty(nx.ketQuaXuLy)},
+                                     loai=${daCanhBao ? (daXuLy ? 'cb-da' : 'cb-chua') : 'thuong'}"
+                            class="lct-row"
+                            th:data-testid="'lct-row-' + ${stat.index}"
+                            th:data-hocky="${nx.id.maHocKy}"
+                            th:data-loai="${loai}"
+                            th:data-search="${(nx.sinhVien != null and nx.sinhVien.nguoiDung != null
+                                                ? nx.sinhVien.nguoiDung.hoTen : '') + ' '
+                                              + nx.id.maSV + ' '
+                                              + nx.id.maHocPhan + ' '
+                                              + nx.id.maHocKy + ' '
+                                              + (hk != null ? hk.tenHocKy : '') + ' '
+                                              + (nx.sinhVien != null and nx.sinhVien.lopHanhChinh != null
+                                                ? nx.sinhVien.lopHanhChinh.maLopHC : '') + ' '
+                                              + (hp != null ? hp.tenHocPhan : '') + ' '
+                                              + (nx.nhanXet != null ? nx.nhanXet : '')}">
+                            <td class="text-muted" th:text="${stat.index + 1}">1</td>
+                            <td>
+                                <div class="fw-medium"
+                                     th:text="${nx.sinhVien != null and nx.sinhVien.nguoiDung != null
+                                        ? nx.sinhVien.nguoiDung.hoTen
+                                        : nx.id.maSV}">--</div>
+                                <code class="small text-muted" th:text="${nx.id.maSV}">--</code>
+                            </td>
+                            <td class="small">
+                                <span th:if="${nx.sinhVien != null and nx.sinhVien.lopHanhChinh != null}"
+                                      th:text="${nx.sinhVien.lopHanhChinh.maLopHC}">--</span>
+                                <span th:unless="${nx.sinhVien != null and nx.sinhVien.lopHanhChinh != null}"
+                                      class="text-muted fst-italic">--</span>
+                            </td>
+                            <td>
+                                <div class="fw-medium small"
+                                     th:text="${hk != null ? hk.tenHocKy : nx.id.maHocKy}">--</div>
+                                <code class="small text-muted"
+                                      th:text="${nx.id.maHocKy}">--</code>
+                            </td>
+                            <td class="small">
+                                <code th:text="${nx.id.maHocPhan}">--</code>
+                                <span class="text-muted ms-1"
+                                      th:if="${hp != null}"
+                                      th:text="'— ' + ${hp.tenHocPhan}">--</span>
+                            </td>
+                            <td class="small"
+                                th:text="${nx.nhanXet != null and !#strings.isEmpty(nx.nhanXet)
+                                            ? nx.nhanXet : '—'}">--</td>
+                            <td class="text-center">
+                                <span th:if="${daCanhBao and !daXuLy}"
+                                      class="status-pill tone-warning"
+                                      data-testid="lct-status-cb-chua">
+                                    <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+                                    Cảnh báo chưa xử lý
+                                </span>
+                                <span th:if="${daCanhBao and daXuLy}"
+                                      class="status-pill tone-success"
+                                      data-testid="lct-status-cb-da">
+                                    <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+                                    Cảnh báo đã xử lý
+                                </span>
+                                <span th:unless="${daCanhBao}"
+                                      class="status-pill tone-info"
+                                      data-testid="lct-status-thuong">
+                                    <span class="pill-dot" aria-hidden="true"></span>
+                                    Nhận xét
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <a th:if="${daCanhBao and !daXuLy}"
+                                   th:href="@{/danh-gia/canh-bao}"
+                                   class="btn btn-sm btn-primary"
+                                   data-testid="lct-go-xuly-btn">
+                                    <i class="bi bi-pencil-square me-1"></i>Xử lý
+                                </a>
+                                <span th:unless="${daCanhBao and !daXuLy}"
+                                      class="text-muted small fst-italic">—</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<th:block layout:fragment="scripts">
+<script>
+(function() {
+    'use strict';
+    const searchInput  = document.getElementById('lctSearchInput');
+    const hocKyFilter  = document.getElementById('lctHocKyFilter');
+    const typeFilter   = document.getElementById('lctTypeFilter');
+    const resetBtn     = document.getElementById('lctResetFilter');
+    const counterEl    = document.getElementById('lctHienThi');
+    const emptyRow     = document.getElementById('lctEmptyFilter');
+    const rows         = document.querySelectorAll('.lct-row');
+
+    if (!searchInput || rows.length === 0) return;
+
+    // Auto-populate hoc-ky options.
+    const hocKyMap = new Map();
+    rows.forEach(r => {
+        const code = r.getAttribute('data-hocky');
+        if (!code || hocKyMap.has(code)) return;
+        const labelEl = r.querySelector('.fw-medium.small');
+        const label = labelEl ? labelEl.textContent.trim() : code;
+        hocKyMap.set(code, label);
+    });
+    Array.from(hocKyMap.entries())
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .forEach(([code, label]) => {
+            const opt = document.createElement('option');
+            opt.value = code;
+            opt.textContent = label === code ? code : (label + ' (' + code + ')');
+            hocKyFilter.appendChild(opt);
+        });
+
+    function normalize(s) {
+        return (s || '').toString().toLowerCase()
+            .normalize('NFD').replace(/[u0300-u036f]/g, '')
+            .replace(/đ/g, 'd');
+    }
+
+    function apply() {
+        const q    = normalize(searchInput.value.trim());
+        const hk   = hocKyFilter.value;
+        const loai = typeFilter.value;
+        let visible = 0;
+
+        rows.forEach(row => {
+            const haystack  = normalize(row.getAttribute('data-search'));
+            const rowHk     = row.getAttribute('data-hocky');
+            const rowLoai   = row.getAttribute('data-loai');
+
+            const matchSearch = !q    || haystack.indexOf(q) !== -1;
+            const matchHk     = !hk   || rowHk === hk;
+            const matchLoai   = !loai || rowLoai === loai;
+
+            const show = matchSearch && matchHk && matchLoai;
+            row.classList.toggle('d-none', !show);
+            if (show) visible++;
+        });
+
+        if (counterEl) counterEl.textContent = visible;
+        if (emptyRow)  emptyRow.classList.toggle('d-none', visible !== 0);
+    }
+
+    searchInput.addEventListener('input', apply);
+    hocKyFilter.addEventListener('change', apply);
+    typeFilter.addEventListener('change', apply);
+    resetBtn.addEventListener('click', function() {
+        searchInput.value = '';
+        hocKyFilter.value = '';
+        typeFilter.value  = '';
+        apply();
+    });
+})();
+</script>
+</th:block>
+
+</body>
+</html>

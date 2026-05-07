@@ -102,7 +102,7 @@ entity LopHocPhan {
   MaCTDT: VARCHAR(20) <<FK>>
   MaHocPhan: VARCHAR(20) <<FK>>
   MaHocKy: VARCHAR(20) <<FK>>
-  MaLopHocPhan: INT <<PK>>
+  MaLopHocPhan: INT
   MaGiangVien: VARCHAR(20) <<FK>>
   SiSoToiDa: INT
   SiSoThucTe: INT

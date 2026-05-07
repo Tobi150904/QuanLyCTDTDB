@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/base}">
+<head><title>Quản Lý Doanh Nghiệp</title></head>
+<body>
+<div layout:fragment="content">
+
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a th:href="@{/dashboard}" class="text-decoration-none">
+                    <i class="bi bi-house-door me-1"></i>Trang Chủ
+                </a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">Doanh Nghiệp</li>
+        </ol>
+    </nav>
+
+    <!-- Page Header — UI consistency fix: chuyen sang format page-header-block. -->
+    <div class="page-header-block mb-4">
+        <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+            <div class="flex-grow-1 min-w-0">
+                <p class="page-subtitle mb-1">Quản Trị</p>
+                <h1 class="page-title h4 mb-1 d-flex align-items-center gap-2">
+                    <i class="bi bi-building text-primary" aria-hidden="true"></i>
+                    <span>Quản Lý Doanh Nghiệp</span>
+                </h1>
+                <p class="text-muted small mb-0">
+                    Hồ sơ doanh nghiệp tiếp nhận thực tập / kiến tập, lĩnh vực và trạng thái hợp tác.
+                </p>
+            </div>
+            <div class="action-slot d-flex gap-2 flex-wrap">
+                <a th:href="@{/doanh-nghiep/them}" class="btn btn-primary btn-sm"
+                   sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
+                    <i class="bi bi-plus-lg me-1"></i>Thêm Mới
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stat summary — Phase 3: dung canonical _stat-card fragment -->
+    <div class="row g-3 mb-4" th:if="${thongKe != null}">
+        <div class="col-6 col-md-4">
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-building-fill', value=${thongKe['tongDoanhNghiep'] ?: 0},
+                  label='Tổng Cộng', variant='info', href=null)}"></div>
+        </div>
+        <div class="col-6 col-md-4">
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-check-circle-fill', value=${thongKe['dangHopTac'] ?: 0},
+                  label='Đang Hợp Tác', variant='success',
+                  href=${'/doanh-nghiep?trangThai=DangHopTac'})}"></div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div th:replace="~{fragments/_stat-card :: card(
+                  icon='bi-pause-circle-fill', value=${thongKe['tamNgung'] ?: 0},
+                  label='Tạm Ngưng', variant='warning',
+                  href=${'/doanh-nghiep?trangThai=TamNgung'})}"></div>
+        </div>
+    </div>
+
+    <!-- Search & Filter -->
+    <form th:action="@{/doanh-nghiep}" method="get" class="filter-toolbar mb-3" role="search">
+        <div class="filter-toolbar-title">
+            <i class="bi bi-funnel" aria-hidden="true"></i>
+            <span>Tìm kiếm</span>
+        </div>
+        <div class="row g-2">
+            <div class="col-12 col-md-6">
+                <div class="input-group input-group-sm search-bar">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="search"
+                           class="form-control"
+                           name="keyword"
+                           th:value="${keyword}"
+                           aria-label="Từ khoá tìm kiếm doanh nghiệp"
+                           placeholder="Tìm theo tên, lĩnh vực, người đại diện, email...">
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <select class="form-select form-select-sm" name="trangThai"
+                        aria-label="Lọc theo trạng thái">
+                    <option value="">-- Tất Cả Trạng Thái --</option>
+                    <option th:each="tt : ${trangThaiList}"
+                            th:value="${tt.name()}"
+                            th:text="${tt.name() == 'DangHopTac' ? 'Đang Hợp Tác' : 'Tạm Ngưng'}"
+                            th:selected="${trangThaiFilter != null and trangThaiFilter == tt}">
+                    </option>
+                </select>
+            </div>
+            <div class="col-6 col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary btn-sm flex-grow-1">
+                    <i class="bi bi-search me-1" aria-hidden="true"></i>Tìm kiếm
+                </button>
+                <a th:href="@{/doanh-nghiep}" class="btn btn-outline-secondary btn-sm"
+                   th:if="${(keyword != null and keyword != '') or trangThaiFilter != null}"
+                   data-bs-toggle="tooltip" data-bs-title="Xoá bộ lọc"
+                   aria-label="Xoá bộ lọc">
+                    <i class="bi bi-x-lg" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </form>
+
+    <!-- Table -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span class="fw-semibold">
+                <i class="bi bi-table me-2"></i>Danh Sách Doanh Nghiệp
+            </span>
+            <span class="badge bg-light text-dark" th:if="${pages != null}"
+                  th:text="'Tổng: ' + ${pages.totalElements}">0</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width:50px;">STT</th>
+                            <th>Mã</th>
+                            <th>Tên Doanh Nghiệp</th>
+                            <th>Lĩnh Vực</th>
+                            <th>Người Đại Diện</th>
+                            <th>Liên Hệ</th>
+                            <th>Trạng Thái</th>
+                            <th class="text-center" style="width:140px;">Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Empty state — UI consistency: dung empty-state fragment chuan -->
+                        <tr th:if="${pages == null or pages.isEmpty()}">
+                            <td colspan="8">
+                                <div th:if="${(keyword != null and keyword != '') or trangThaiFilter != null}"
+                                     th:replace="~{fragments/_empty-state :: withCta(
+                                            icon='bi-funnel',
+                                            title='Không có doanh nghiệp phù hợp',
+                                            desc='Thử xoá bộ lọc hoặc thay đổi từ khoá tìm kiếm.',
+                                            ctaHref='/doanh-nghiep',
+                                            ctaLabel='Xoá Bộ Lọc',
+                                            ctaIcon='bi-x-lg')}"></div>
+                                <div th:unless="${(keyword != null and keyword != '') or trangThaiFilter != null}"
+                                     th:replace="~{fragments/_empty-state :: withCta(
+                                            icon='bi-building',
+                                            title='Chưa có doanh nghiệp nào',
+                                            desc='Khai báo doanh nghiệp đầu tiên để liên kết với đợt kiến tập / thực tập.',
+                                            ctaHref='/doanh-nghiep/them',
+                                            ctaLabel='Thêm Doanh Nghiệp',
+                                            ctaIcon='bi-plus-lg')}"
+                                     sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')"></div>
+                            </td>
+                        </tr>
+                        <!-- Data rows -->
+                        <tr th:each="dn, stat : ${pages}">
+                            <td class="text-muted"
+                                th:text="${pages.number * pages.size + stat.index + 1}">1</td>
+                            <td><code th:text="${dn.maDoanhNghiep}"></code></td>
+                            <td>
+                                <a th:href="@{/doanh-nghiep/chi-tiet/{ma}(ma=${dn.maDoanhNghiep})}"
+                                   class="text-decoration-none fw-medium"
+                                   th:text="${dn.tenDoanhNghiep}">
+                                </a>
+                            </td>
+                            <td class="small text-muted" th:text="${dn.linhVuc ?: '--'}"></td>
+                            <td th:text="${dn.nguoiDaiDien ?: '--'}"></td>
+                            <td class="small">
+                                <div th:if="${dn.email != null and !dn.email.isEmpty()}">
+                                    <i class="bi bi-envelope me-1 text-muted" aria-hidden="true"></i>
+                                    <a th:href="'mailto:' + ${dn.email}"
+                                       th:text="${dn.email}"
+                                       class="text-decoration-none"></a>
+                                </div>
+                                <div th:if="${dn.soDienThoai != null and !dn.soDienThoai.isEmpty()}"
+                                     class="text-muted">
+                                    <i class="bi bi-telephone me-1" aria-hidden="true"></i>
+                                    <span th:text="${dn.soDienThoai}"></span>
+                                </div>
+                                <span th:if="${(dn.email == null or dn.email.isEmpty()) and
+                                              (dn.soDienThoai == null or dn.soDienThoai.isEmpty())}"
+                                      class="text-muted">--</span>
+                            </td>
+                            <td>
+                                <span class="status-pill"
+                                      th:classappend="${dn.trangThai.name() == 'DangHopTac'} ? 'tone-success' : 'tone-neutral'">
+                                    <span class="pill-dot" aria-hidden="true"></span>
+                                    <span th:text="${dn.trangThai.name() == 'DangHopTac' ? 'Đang Hợp Tác' : 'Tạm Ngưng'}">--</span>
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <div class="action-cluster">
+                                    <a th:href="@{/doanh-nghiep/chi-tiet/{ma}(ma=${dn.maDoanhNghiep})}"
+                                       class="btn btn-sm btn-outline-secondary"
+                                       data-bs-toggle="tooltip" data-bs-title="Chi Tiết"
+                                       aria-label="Xem chi tiết">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a th:href="@{/doanh-nghiep/sua/{ma}(ma=${dn.maDoanhNghiep})}"
+                                       class="btn btn-sm btn-outline-primary"
+                                       sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')"
+                                       data-bs-toggle="tooltip" data-bs-title="Chỉnh Sửa"
+                                       aria-label="Chỉnh sửa">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form th:action="@{/doanh-nghiep/doi-trang-thai/{ma}(ma=${dn.maDoanhNghiep})}"
+                                          method="post" class="d-inline m-0"
+                                          sec:authorize="hasAnyRole('PDT','TTDTXS','ADMIN')">
+                                        <input type="hidden"
+                                               th:name="${_csrf.parameterName}"
+                                               th:value="${_csrf.token}">
+                                        <button type="submit"
+                                                class="btn btn-sm"
+                                                th:classappend="${dn.trangThai.name() == 'DangHopTac'} ? 'btn-outline-warning' : 'btn-outline-success'"
+                                                th:data-bs-title="${dn.trangThai.name() == 'DangHopTac'} ? 'Tạm Ngưng Hợp Tác' : 'Kích Hoạt Hợp Tác'"
+                                                th:aria-label="${dn.trangThai.name() == 'DangHopTac'} ? 'Tạm ngưng hợp tác' : 'Kích hoạt hợp tác'"
+                                                data-bs-toggle="tooltip">
+                                            <i class="bi"
+                                               th:classappend="${dn.trangThai.name() == 'DangHopTac'} ? 'bi-pause' : 'bi-play'">
+                                            </i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination + page-size selector + summary
+             UI consistency: dung _pagination fragment chuan, dong bo voi
+             cac trang nguoi-dung va hoc-phan. -->
+        <div th:if="${pages != null and pages.totalElements > 0}"
+             class="card-footer p-0 border-top">
+            <div th:replace="~{fragments/_pagination :: bar(
+                  page=${pages},
+                  baseUrl='/doanh-nghiep',
+                  queryString=${
+                    (keyword != null and keyword != '' ? '&keyword=' + keyword : '') +
+                    (trangThaiFilter != null ? '&trangThai=' + trangThaiFilter.name() : '')
+                  })}"></div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

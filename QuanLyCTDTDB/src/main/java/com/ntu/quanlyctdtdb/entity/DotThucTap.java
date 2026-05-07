@@ -26,8 +26,8 @@ public class DotThucTap {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumns({
-        @JoinColumn(name = "MaCTDT", referencedColumnName = "MaCTDT"),
-        @JoinColumn(name = "MaHocPhan", referencedColumnName = "MaHocPhan")
+        @JoinColumn(name = "MaCTDT"),
+        @JoinColumn(name = "MaHocPhan")
     })
     private CtdtHocPhan ctdtHocPhan;
 

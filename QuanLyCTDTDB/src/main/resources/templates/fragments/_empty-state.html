@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<!--/*
+ * fragments/_empty-state.html
+ *
+ * Empty state reusable — su dung trong tbody, card-body, hoac vung fillable.
+ *
+ * Variant chinh:
+ *   simple(icon, title, desc)
+ *     <td colspan="..."> ... </td> goi tu trang (vi colspan dynamic).
+ *   withCta(icon, title, desc, ctaHref, ctaLabel, ctaIcon)
+ *
+ * Su dung trong table:
+ *   <tr th:if="${#lists.isEmpty(items)}">
+ *     <td colspan="9">
+ *       <div th:replace="~{fragments/_empty-state :: simple(
+ *           icon='bi-inbox', title='Chưa có dữ liệu',
+ *           desc='Bấm thêm để tạo mục đầu tiên')}"></div>
+ *     </td>
+ *   </tr>
+ */-->
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="simple(icon, title, desc)" class="empty-state">
+    <i th:class="${'bi ' + icon}" aria-hidden="true"></i>
+    <p class="mb-1 fw-semibold text-strong" th:text="${title}">Chưa có dữ liệu</p>
+    <small class="text-muted d-block" th:if="${desc}" th:text="${desc}">Mô tả</small>
+</div>
+
+<div th:fragment="withCta(icon, title, desc, ctaHref, ctaLabel, ctaIcon)"
+     class="empty-state">
+    <i th:class="${'bi ' + icon}" aria-hidden="true"></i>
+    <p class="mb-1 fw-semibold text-strong" th:text="${title}">Chưa có dữ liệu</p>
+    <small class="text-muted d-block mb-3" th:if="${desc}" th:text="${desc}">Mô tả</small>
+    <a th:if="${ctaHref}" th:href="@{${ctaHref}}" class="btn btn-sm btn-primary">
+        <i th:if="${ctaIcon}" th:class="${'bi ' + ctaIcon + ' me-1'}" aria-hidden="true"></i>
+        <span th:text="${ctaLabel}">Thêm mới</span>
+    </a>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<!--/*
+ * fragments/_detail-hero.html
+ *
+ * Hero header cho trang chi tiet — surface phang voi accent border, KHONG
+ * gradient mau loe loet (theo dinh huong "University Admin chinh thong").
+ *
+ * Variant CSS .detail-hero-flat (moi trong main.css Phase 1) thay the variant
+ * gradient cu .detail-hero (van duoc giu cho backward compat).
+ *
+ * Goi:
+ *   <div th:replace="~{fragments/_detail-hero :: hero(
+ *       eyebrow='HỌC PHẦN', title='Cơ sở dữ liệu',
+ *       icon='bi-book',
+ *       code='IT4400', desc='3 tín chỉ',
+ *       statusLabel='Đang dùng', statusTone='success'
+ *   )}"></div>
+ *
+ * Trang chi tiet voi cac action phuc tap nen viet INLINE markup theo mau:
+ *
+ *   <header class="detail-hero-flat mb-4">
+ *     <div class="d-flex align-items-start gap-3 flex-wrap">
+ *       <div class="detail-hero-icon"><i class="bi bi-book"></i></div>
+ *       <div class="flex-grow-1 min-w-0">
+ *         <div class="detail-hero-eyebrow-flat">HỌC PHẦN</div>
+ *         <h1 class="detail-hero-title-flat" th:text="${hp.tenHocPhan}">...</h1>
+ *         <div class="detail-hero-meta-flat">
+ *           <span><i class="bi bi-hash"></i><code th:text="${hp.maHocPhan}">IT4400</code></span>
+ *           <span class="status-pill tone-success">Đang dùng</span>
+ *         </div>
+ *       </div>
+ *       <div class="detail-hero-actions-flat">
+ *         <a class="btn btn-sm btn-primary" ...>Sửa</a>
+ *       </div>
+ *     </div>
+ *   </header>
+ */-->
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<header th:fragment="hero(eyebrow, title, icon, code, desc, statusLabel, statusTone)"
+        class="detail-hero-flat mb-4">
+    <div class="d-flex align-items-start gap-3 flex-wrap">
+        <div class="detail-hero-icon" aria-hidden="true" th:if="${icon}">
+            <i th:class="${'bi ' + icon}"></i>
+        </div>
+        <div class="flex-grow-1 min-w-0">
+            <div th:if="${eyebrow}" class="detail-hero-eyebrow-flat"
+                 th:text="${eyebrow}">EYEBROW</div>
+            <h1 class="detail-hero-title-flat h4 mb-2" th:text="${title}">Tiêu đề</h1>
+            <div class="detail-hero-meta-flat">
+                <span th:if="${code}">
+                    <i class="bi bi-hash" aria-hidden="true"></i>
+                    <code th:text="${code}">CODE</code>
+                </span>
+                <span th:if="${desc}" th:text="${desc}">Mô tả</span>
+                <span th:if="${statusLabel}"
+                      th:class="${'status-pill tone-' + (statusTone ?: 'neutral')}">
+                    <span class="pill-dot" aria-hidden="true"></span>
+                    <span th:text="${statusLabel}">Trạng thái</span>
+                </span>
+            </div>
+        </div>
+    </div>
+</header>
+
+</body>
+</html>
