@@ -63,7 +63,22 @@ public class LopHanhChinhServiceImpl implements LopHanhChinhService {
                         || Objects.equals(l.getKhoaHoc(), khoaHoc))
                 .toList();
     }
-
+    
+    @Override
+    @Transactional(readOnly = true)
+    public List<LopHanhChinh> searchByCoVan(String keyword, String maCTDT,
+                                              String khoaHoc, String maCoVan) {
+        // Phase 8 — CVHT view: chi tra ve cac lop co coVan.maGV trung
+        // voi current user. Defense-in-depth: maCoVan blank -> list rong
+        // de tranh leak toan bo lop khi NguoiDung khong co GiangVien record.
+        if (maCoVan == null || maCoVan.isBlank()) {
+            return List.of();
+        }
+        return search(keyword, maCTDT, khoaHoc).stream()
+                .filter(l -> l.getCoVan() != null
+                        && Objects.equals(l.getCoVan().getMaGV(), maCoVan))
+                .toList();
+    }
     @Override
     @Transactional(readOnly = true)
     public LopHanhChinh findById(String maLopHC) {
@@ -153,6 +168,31 @@ public class LopHanhChinhServiceImpl implements LopHanhChinhService {
         m.put("daCoCVHT", all.stream().filter(l -> l.getCoVan() != null).count());
         m.put("chuaCoCVHT", all.stream().filter(l -> l.getCoVan() == null).count());
         m.put("soKhoaHoc", all.stream().map(LopHanhChinh::getKhoaHoc).distinct().count());
+        return m;
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, Object> getThongKeByCoVan(String maCoVan) {
+        Map<String, Object> m = new HashMap<>();
+        if (maCoVan == null || maCoVan.isBlank()) {
+            m.put("tong", 0L);
+            m.put("daCoCVHT", 0L);
+            m.put("chuaCoCVHT", 0L);
+            m.put("soKhoaHoc", 0L);
+            return m;
+        }
+        List<LopHanhChinh> mine = lopHCRepo.findByCoVan_MaGV(maCoVan);
+        m.put("tong", (long) mine.size());
+        // Voi CVHT view: tat ca lop trong list deu co CVHT (la current user),
+        // 'daCoCVHT' = tong, 'chuaCoCVHT' = 0. Giu key cho UI nhat quan.
+        m.put("daCoCVHT", (long) mine.size());
+        m.put("chuaCoCVHT", 0L);
+        m.put("soKhoaHoc", mine.stream()
+                .map(LopHanhChinh::getKhoaHoc)
+                .filter(Objects::nonNull)
+                .distinct()
+                .count());
         return m;
     }
 }

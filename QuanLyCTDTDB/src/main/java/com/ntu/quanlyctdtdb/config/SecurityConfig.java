@@ -135,7 +135,7 @@ public class SecurityConfig {
                             .hasRole("DOANH_NGHIEP")
                 .requestMatchers("/doanh-nghiep/**").hasAnyRole("PDT", "TTDTXS", "ADMIN")
                 .requestMatchers("/hoc-ky/**").hasAnyRole("PDT", "TTDTXS", "ADMIN")
-                .requestMatchers("/lop-hanh-chinh/**").hasAnyRole("PDT", "TTDTXS", "ADMIN")
+                .requestMatchers("/lop-hanh-chinh/**").hasAnyRole("PDT", "TTDTXS", "ADMIN", "CVHT")
 
                 // Hoc Phan: CNHP(RW), TTDTXS(W duyet/tu choi), PDT(R), ADMIN, GV(R), SV(R).
                 //   SV can xem HP de tra cuu mon hoc, GV can xem HP minh day,

@@ -160,11 +160,12 @@
                                     </div>
                                     <div class="col-md-3">
                                         <div class="form-check">
-                                            <input type="hidden" name="daCanhBao" value="false">
+                                            <input type="hidden" name="_daCanhBao" value="on">
                                             <input class="form-check-input" type="checkbox"
                                                    th:id="'cb-' + ${ds.sinhVien.maSV}"
                                                    name="daCanhBao" value="true"
-                                                   th:checked="${ds.daCanhBao}">
+                                                   th:checked="${ds.daCanhBao}"
+                                                   th:attr="data-testid='cb-canh-bao-' + ${ds.sinhVien.maSV}">
                                             <label class="form-check-label small"
                                                    th:for="'cb-' + ${ds.sinhVien.maSV}">
                                                 <i class="bi bi-exclamation-triangle text-warning me-1"></i>

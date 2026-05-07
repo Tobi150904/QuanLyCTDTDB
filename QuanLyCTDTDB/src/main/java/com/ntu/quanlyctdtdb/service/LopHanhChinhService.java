@@ -12,6 +12,9 @@ public interface LopHanhChinhService {
 
     List<LopHanhChinh> search(String keyword, String maCTDT, String khoaHoc);
 
+    List<LopHanhChinh> searchByCoVan(String keyword, String maCTDT,
+            String khoaHoc, String maCoVan);
+    
     LopHanhChinh findById(String maLopHC);
 
     LopHanhChinh create(LopHanhChinhDTO dto);
@@ -24,4 +27,6 @@ public interface LopHanhChinhService {
     void delete(String maLopHC);
 
     Map<String, Object> getThongKe();
+    
+    Map<String, Object> getThongKeByCoVan(String maCoVan);
 }
