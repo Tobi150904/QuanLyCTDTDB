@@ -5,10 +5,12 @@ import com.ntu.quanlyctdtdb.entity.GiangVien;
 import com.ntu.quanlyctdtdb.entity.HocPhan;
 import com.ntu.quanlyctdtdb.enums.LoaiHocPhan;
 import com.ntu.quanlyctdtdb.enums.TrangThaiHocPhan;
+import com.ntu.quanlyctdtdb.enums.VaiTro;
 import com.ntu.quanlyctdtdb.exception.BusinessException;
 import com.ntu.quanlyctdtdb.exception.ResourceNotFoundException;
 import com.ntu.quanlyctdtdb.repository.GiangVienRepository;
 import com.ntu.quanlyctdtdb.repository.HocPhanRepository;
+import com.ntu.quanlyctdtdb.repository.NhomNguoiDungRepository;
 import com.ntu.quanlyctdtdb.service.EmailService;
 import com.ntu.quanlyctdtdb.service.HocPhanService;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +35,8 @@ public class HocPhanServiceImpl implements HocPhanService {
     private final HocPhanRepository hocPhanRepo;
     private final GiangVienRepository giangVienRepo;
     private final EmailService emailService;
-
+    private final NhomNguoiDungRepository nhomNguoiDungRepo;
+    
     @Override
     @Transactional(readOnly = true)
     public List<HocPhan> findAll(String keyword) {
@@ -138,7 +141,24 @@ public class HocPhanServiceImpl implements HocPhanService {
             throw new BusinessException("Chi co the gui cho duyet hoc phan o trang thai BanNhap");
         }
         hp.setTrangThai(TrangThaiHocPhan.ChoDuyet);
-        return hocPhanRepo.save(hp);
+        HocPhan saved = hocPhanRepo.save(hp);
+
+        // Plug-in email notification: thong bao tat ca TTDTXS de giam lag duyet.
+        // Try/catch isolated — loi gui email khong duoc rollback transaction
+        // chinh (luu trang thai HP quan trong hon).
+        try {
+            String hoTenCNHP = hp.getChuNhiemHP() != null
+                    && hp.getChuNhiemHP().getNguoiDung() != null
+                    ? hp.getChuNhiemHP().getNguoiDung().getHoTen() : "(khong xac dinh)";
+            for (String email : nhomNguoiDungRepo.findEmailsByVaiTro(VaiTro.TTDTXS)) {
+                emailService.guiThongBaoChoDuyetHocPhan(
+                        email, hp.getMaHocPhan(), hp.getTenHocPhan(), hoTenCNHP);
+            }
+        } catch (Exception e) {
+            log.warn("Khong gui duoc email thong bao cho TTDTXS ve HP {}: {}",
+                     ma, e.getMessage());
+        }
+        return saved;
     }
 
     @Override

@@ -17,4 +17,18 @@ public interface EmailService {
     /** Thong bao CNHP khi HP bi tu choi */
     void guiTuChoiHocPhan(String emailCNHP, String maHocPhan,
                            String tenHocPhan, String lyDo);
+    
+    /**
+     * Thong bao TTDTXS khi CNHP gui Hoc Phan cho duyet (BanNhap -> ChoDuyet).
+     * Goi tu HocPhanServiceImpl.guiChoDuyet() de giam lag duyet.
+     */
+    void guiThongBaoChoDuyetHocPhan(String emailTTDTXS, String maHocPhan,
+                                     String tenHocPhan, String hoTenCNHP);
+
+    /**
+     * Thong bao TTDTXS khi CNHP/PDT gui Chuong Trinh Dao Tao cho duyet
+     * (BanNhap -> ChoDuyet). Goi tu ChuongTrinhDaoTaoServiceImpl.guiChoDuyet().
+     */
+    void guiThongBaoChoDuyetCTDT(String emailTTDTXS, String maCTDT,
+                                  String tenCTDT, String hoTenNguoiTao);
 }

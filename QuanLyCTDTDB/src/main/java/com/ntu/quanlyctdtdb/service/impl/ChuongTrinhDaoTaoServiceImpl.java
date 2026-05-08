@@ -4,10 +4,13 @@ import com.ntu.quanlyctdtdb.dto.ChuongTrinhDaoTaoDTO;
 import com.ntu.quanlyctdtdb.dto.CtdtHocPhanDTO;
 import com.ntu.quanlyctdtdb.entity.*;
 import com.ntu.quanlyctdtdb.enums.TrangThaiCTDT;
+import com.ntu.quanlyctdtdb.enums.VaiTro;
 import com.ntu.quanlyctdtdb.exception.BusinessException;
 import com.ntu.quanlyctdtdb.exception.ResourceNotFoundException;
 import com.ntu.quanlyctdtdb.repository.*;
 import com.ntu.quanlyctdtdb.service.ChuongTrinhDaoTaoService;
+import com.ntu.quanlyctdtdb.service.EmailService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -27,7 +30,9 @@ public class ChuongTrinhDaoTaoServiceImpl implements ChuongTrinhDaoTaoService {
     private final CtdtHocPhanRepository ctdtHocPhanRepo;
     private final HocPhanRepository hocPhanRepo;
     private final NguoiDungRepository nguoiDungRepo;
-
+    private final NhomNguoiDungRepository nhomNguoiDungRepo;
+    private final EmailService emailService;
+    
     @Override
     @Transactional(readOnly = true)
     public List<ChuongTrinhDaoTao> findAll() {
@@ -80,7 +85,23 @@ public class ChuongTrinhDaoTaoServiceImpl implements ChuongTrinhDaoTaoService {
             throw new BusinessException("Chi co the gui cho duyet CTDT o trang thai BanNhap");
         }
         ctdt.setTrangThai(TrangThaiCTDT.ChoDuyet);
-        return ctdtRepo.save(ctdt);
+        ChuongTrinhDaoTao saved = ctdtRepo.save(ctdt);
+
+        // Plug-in email notification: thong bao tat ca TTDTXS de giam lag duyet.
+        // Try/catch isolated — loi gui email khong duoc rollback transaction
+        // chinh (luu trang thai CTDT quan trong hon).
+        try {
+            String hoTenNguoiTao = ctdt.getNguoiTao() != null
+                    ? ctdt.getNguoiTao().getHoTen() : "(khong xac dinh)";
+            for (String email : nhomNguoiDungRepo.findEmailsByVaiTro(VaiTro.TTDTXS)) {
+                emailService.guiThongBaoChoDuyetCTDT(
+                        email, ctdt.getMaCTDT(), ctdt.getTenCTDT(), hoTenNguoiTao);
+            }
+        } catch (Exception e) {
+            log.warn("Khong gui duoc email thong bao cho TTDTXS ve CTDT {}: {}",
+                     ma, e.getMessage());
+        }
+        return saved;
     }
 
     @Override

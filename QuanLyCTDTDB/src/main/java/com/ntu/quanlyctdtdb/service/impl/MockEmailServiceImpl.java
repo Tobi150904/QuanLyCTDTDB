@@ -40,4 +40,18 @@ public class MockEmailServiceImpl implements EmailService {
         log.info("[EMAIL-MOCK] TuChoiHP -> To: {} | {} - {} | LyDo: {}",
                  emailCNHP, maHocPhan, tenHocPhan, lyDo);
     }
+    
+    @Override
+    public void guiThongBaoChoDuyetHocPhan(String emailTTDTXS, String maHocPhan,
+                                            String tenHocPhan, String hoTenCNHP) {
+        log.info("[EMAIL-MOCK] ChoDuyetHP -> To(TTDTXS): {} | {} - {} | CNHP: {}",
+                 emailTTDTXS, maHocPhan, tenHocPhan, hoTenCNHP);
+    }
+
+    @Override
+    public void guiThongBaoChoDuyetCTDT(String emailTTDTXS, String maCTDT,
+                                         String tenCTDT, String hoTenNguoiTao) {
+        log.info("[EMAIL-MOCK] ChoDuyetCTDT -> To(TTDTXS): {} | {} - {} | NguoiTao: {}",
+                 emailTTDTXS, maCTDT, tenCTDT, hoTenNguoiTao);
+    }
 }

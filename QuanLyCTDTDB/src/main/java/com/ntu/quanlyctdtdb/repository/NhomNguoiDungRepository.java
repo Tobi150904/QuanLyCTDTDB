@@ -30,4 +30,18 @@ public interface NhomNguoiDungRepository extends JpaRepository<NhomNguoiDung, Nh
             @Param("vaiTro") VaiTro vaiTro);
 
     void deleteByNguoiDung_MaNguoiDung(String maNguoiDung);
+    
+    /**
+    * Lay danh sach email cua tat ca NguoiDung dang co vai tro {@code vaiTro}
+    * va tai khoan dang active. Dung de gui email thong bao den nhom (vd
+    * tat ca TTDTXS) khi co su kien workflow can duyet.
+    *
+    * <p>Filter null/blank o tang DB de tranh List rong ngam o caller.</p>
+    */
+   @Query("SELECT n.nguoiDung.email FROM NhomNguoiDung n "
+        + "WHERE n.id.vaiTro = :vaiTro "
+        + "  AND n.nguoiDung.email IS NOT NULL "
+        + "  AND n.nguoiDung.email <> '' "
+        + "  AND n.nguoiDung.trangThaiTK = true")
+   List<String> findEmailsByVaiTro(@Param("vaiTro") VaiTro vaiTro);
 }
