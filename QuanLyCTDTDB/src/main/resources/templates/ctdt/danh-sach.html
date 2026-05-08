@@ -219,8 +219,27 @@
                                        aria-label="Chỉnh sửa">
                                         <i class="bi bi-pencil" aria-hidden="true"></i>
                                     </a>
-                                    <!-- Phe duyet — dung confirm modal global thay vi confirm() -->
-                                    <form sec:authorize="hasAnyRole('BGH','TTDTXS','ADMIN')"
+									<!-- Gui duyet — BanNhap -> ChoDuyet (CNHP/PDT chu dong gui).
+                                         Dung modal voi data-confirm-action="gui duyet". -->
+                                    <form sec:authorize="hasAnyRole('PDT','TTDTXS','CNHP','ADMIN')"
+                                          th:if="${ctdt.trangThai.name() == 'BanNhap'}"
+                                          th:action="@{'/ctdt/gui-duyet/' + ${ctdt.maCTDT}}"
+                                          method="post" class="d-inline"
+                                          data-confirm-action="gui duyet"
+                                          th:data-item-name="|CTĐT ${ctdt.maCTDT} - ${ctdt.tenCTDT}|"
+                                          onsubmit="return confirmDeleteFromForm(this, event)">
+                                        <input type="hidden" th:name="${_csrf.parameterName}"
+                                                              th:value="${_csrf.token}">
+                                        <button type="submit" class="btn btn-sm btn-primary"
+                                                data-bs-toggle="tooltip"
+                                                data-bs-title="Gửi CTĐT cho TTĐTXS phê duyệt"
+                                                aria-label="Gửi duyệt">
+                                            <i class="bi bi-send" aria-hidden="true"></i>
+                                        </button>
+                                    </form>
+                                    <!-- Phe duyet — ChoDuyet -> DaDuyet. Dung modal voi
+                                         data-confirm-action="phe duyet" de modal hien title
+                                         "Xac Nhan Phe Duyet" + nut xanh thay vi modal "Xoa". -->                                    <form sec:authorize="hasAnyRole('BGH','TTDTXS','ADMIN')"
                                           th:if="${ctdt.trangThai.name() == 'ChoDuyet'}"
                                           th:action="@{'/ctdt/phe-duyet/' + ${ctdt.maCTDT}}"
                                           method="post" class="d-inline"
@@ -244,7 +263,7 @@
                                 <div th:replace="~{fragments/_empty-state :: simple(
                                         icon='bi-journal-bookmark',
                                         title='Chưa có chương trình đào tạo nào',
-                                        desc='B��t đầu bằng cách tạo CTĐT đầu tiên cho khóa học mới.')}"></div>
+                                        desc='Bắt đầu bằng cách tạo CTĐT đầu tiên cho khóa học mới.')}"></div>
                                 <div class="text-center mb-3"
                                      sec:authorize="hasAnyRole('PDT','ADMIN')">
                                     <a th:href="@{/ctdt/them}" class="btn btn-primary btn-sm">
@@ -293,7 +312,7 @@
 
     function normalize(s) {
         return (s || '').toString().toLowerCase()
-            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .normalize('NFD').replace(/[u0300-u036f]/g, '')
             .replace(/đ/g, 'd');
     }
 

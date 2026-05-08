@@ -94,28 +94,79 @@ function showLoading(button) {
 }
 
 // =============================================================================
-// 6. confirmDelete — xac nhan truoc khi submit form xoa
-// =============================================================================
-// Wrapper: Thymeleaf 3.1 cam string concatenation trong th:onsubmit (DOM event
-// handler attribute). Dat ten muc xoa vao data-item-name qua th:attr, roi goi
-// helper nay trong onsubmit thuan text.
+// 6. confirmDelete / confirmAction — xac nhan truoc khi submit form
+// Cac action ho tro:
+//   - (mac dinh)         -> Xac Nhan Xoa | btn-danger | bi-trash | \"Xoa\"
+//   - \"phe duyet\"        -> Xac Nhan Phe Duyet | btn-success | bi-check2-circle
+//   - \"gui duyet\"        -> Xac Nhan Gui Duyet | btn-primary | bi-send
+//   - \"huy\"              -> Xac Nhan Huy | btn-warning | bi-x-circle
 function confirmDeleteFromForm(form, event) {
-    var name = form.getAttribute('data-item-name');
-    return confirmDelete(form, event, name);
+    var name   = form.getAttribute('data-item-name');
+    var action = form.getAttribute('data-confirm-action'); // optional
+    return confirmDelete(form, event, name, action);
 }
 
-function confirmDelete(form, event, itemName) {
-    event.preventDefault();
-    var msg = itemName
-        ? ('Bạn có chắc muốn xoá "' + itemName + '"? Hành động này không thể hoàn tác.')
-        : 'Bạn có chắc muốn xoá mục này? Hành động này không thể hoàn tác.';
+// Profile dinh nghia text + class theo action key (loai bo dau de match
+// du user nhap \"Phe Duyet\" hay \"phe duyet\").
+var CONFIRM_ACTION_PROFILES = {
+    'phe duyet': {
+        title:    'Xác Nhận Phê Duyệt',
+        verb:     'phê duyệt',
+        btnText:  'Phê Duyệt',
+        btnClass: 'btn btn-sm btn-success',
+        btnIcon:  'bi-check2-circle'
+    },
+    'gui duyet': {
+        title:    'Xác Nhận Gửi Duyệt',
+        verb:     'gửi duyệt',
+        btnText:  'Gửi Duyệt',
+        btnClass: 'btn btn-sm btn-primary',
+        btnIcon:  'bi-send'
+    },
+    'huy': {
+        title:    'Xác Nhận Huỷ',
+        verb:     'huỷ',
+        btnText:  'Huỷ Bỏ',
+        btnClass: 'btn btn-sm btn-warning',
+        btnIcon:  'bi-x-circle'
+    }
+};
 
-    // Dung Bootstrap modal neu co, ngac khong dung confirm() trong JS thuan
+var CONFIRM_DELETE_PROFILE = {
+    title:    'Xác Nhận Xoá',
+    verb:     'xoá',
+    btnText:  'Xoá',
+    btnClass: 'btn btn-sm btn-danger',
+    btnIcon:  'bi-trash'
+};
+
+function _normalizeAction(s) {
+    return (s || '').toString().toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/đ/g, 'd').trim();
+}
+
+function confirmDelete(form, event, itemName, action) {
+    event.preventDefault();
+
+    var key = _normalizeAction(action);
+    var profile = CONFIRM_ACTION_PROFILES[key] || CONFIRM_DELETE_PROFILE;
+
+    var msg = itemName
+        ? ('Bạn có chắc muốn ' + profile.verb + ' \"' + itemName + '\"?'
+           + (profile === CONFIRM_DELETE_PROFILE ? ' Hành động này không thể hoàn tác.' : ''))
+        : ('Bạn có chắc muốn ' + profile.verb + ' mục này?'
+           + (profile === CONFIRM_DELETE_PROFILE ? ' Hành động này không thể hoàn tác.' : ''));
+
+    // Dung Bootstrap modal neu co, neu khong dung confirm() trong JS thuan
     var modalEl = document.getElementById('confirmDeleteModal');
     if (modalEl) {
-        document.getElementById('confirmDeleteModalLabel').textContent = 'Xác Nhận Xoá';
+        document.getElementById('confirmDeleteModalLabel').textContent = profile.title;
         document.getElementById('confirmDeleteModalBody').textContent = msg;
         var confirmBtn = document.getElementById('confirmDeleteBtn');
+        confirmBtn.className = profile.btnClass;
+        confirmBtn.innerHTML = '<i class=\"bi ' + profile.btnIcon
+                             + ' me-1\" aria-hidden=\"true\"></i>' + profile.btnText;
         confirmBtn.onclick = function () {
             form.submit();
         };

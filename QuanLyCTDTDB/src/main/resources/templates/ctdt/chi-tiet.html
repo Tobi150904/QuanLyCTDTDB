@@ -59,6 +59,34 @@
                    class="btn btn-light btn-sm">
                     <i class="bi bi-pencil me-1"></i>Sửa
                 </a>
+                <!-- Gui duyet: BanNhap -> ChoDuyet -->
+                <form sec:authorize="hasAnyRole('PDT','TTDTXS','CNHP','ADMIN')"
+                      th:if="${ctdt.trangThai.name() == 'BanNhap'}"
+                      th:action="@{'/ctdt/gui-duyet/' + ${ctdt.maCTDT}}"
+                      method="post" class="d-inline m-0"
+                      data-confirm-action="gui duyet"
+                      th:data-item-name="|CTĐT ${ctdt.maCTDT} - ${ctdt.tenCTDT}|"
+                      onsubmit="return confirmDeleteFromForm(this, event)">
+                    <input type="hidden" th:name="${_csrf.parameterName}"
+                                          th:value="${_csrf.token}">
+                    <button type="submit" class="btn btn-warning btn-sm">
+                        <i class="bi bi-send me-1"></i>Gửi Duyệt
+                    </button>
+                </form>
+                <!-- Phe duyet: ChoDuyet -> DaDuyet -->
+                <form sec:authorize="hasAnyRole('TTDTXS','ADMIN')"
+                      th:if="${ctdt.trangThai.name() == 'ChoDuyet'}"
+                      th:action="@{'/ctdt/phe-duyet/' + ${ctdt.maCTDT}}"
+                      method="post" class="d-inline m-0"
+                      data-confirm-action="phê duyệt"
+                      th:data-item-name="|CTĐT ${ctdt.maCTDT} - ${ctdt.tenCTDT}|"
+                      onsubmit="return confirmDeleteFromForm(this, event)">
+                    <input type="hidden" th:name="${_csrf.parameterName}"
+                                          th:value="${_csrf.token}">
+                    <button type="submit" class="btn btn-success btn-sm">
+                        <i class="bi bi-check2-circle me-1"></i>Phê Duyệt
+                    </button>
+                </form>
                 <a th:href="@{/ctdt}" class="btn btn-outline-light btn-sm">
                     <i class="bi bi-arrow-left me-1"></i>Quay Lại
                 </a>

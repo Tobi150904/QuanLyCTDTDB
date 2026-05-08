@@ -237,7 +237,7 @@
                                        aria-label="Chỉnh sửa">
                                         <i class="bi bi-pencil"></i>
                                     </a>
-                                    <form sec:authorize="hasAnyRole('CNHP','ADMIN')"
+                                   <form sec:authorize="hasAnyRole('CNHP','ADMIN')"
                                           th:if="${hp.trangThai?.name() == 'BanNhap'}"
                                           th:action="@{/hoc-phan/gui-cho-duyet/{ma}(ma=${hp.maHocPhan})}"
                                           method="post" class="d-inline m-0">
@@ -252,6 +252,36 @@
                                           th:action="@{/hoc-phan/phe-duyet/{ma}(ma=${hp.maHocPhan})}"
                                           method="post" class="d-inline m-0">
                                         <button class="btn btn-sm btn-outline-success"
+                                                data-bs-toggle="tooltip" data-bs-title="Phê duyệt"
+                                                aria-label="Phê duyệt">
+                                            <i class="bi bi-check-lg"></i>
+                                        </button>
+                                    </form>                                  
+                                    <form sec:authorize="hasAnyRole('CNHP','ADMIN')"
+                                          th:if="${hp.trangThai?.name() == 'BanNhap'}"
+                                          th:action="@{/hoc-phan/gui-cho-duyet/{ma}(ma=${hp.maHocPhan})}"
+                                          method="post" class="d-inline m-0"
+                                          data-confirm-action="gui duyet"
+                                          th:data-item-name="|HP ${hp.maHocPhan} - ${hp.tenHocPhan}|"
+                                          onsubmit="return confirmDeleteFromForm(this, event)">
+                                        <input type="hidden" th:name="${_csrf.parameterName}"
+                                                              th:value="${_csrf.token}">
+                                        <button class="btn btn-sm btn-primary"
+                                                data-bs-toggle="tooltip" data-bs-title="Gửi chờ duyệt"
+                                                aria-label="Gửi chờ duyệt">
+                                            <i class="bi bi-send"></i>
+                                        </button>
+                                    </form>
+                                    <form sec:authorize="hasAnyRole('TTDTXS','ADMIN')"
+                                          th:if="${hp.trangThai?.name() == 'ChoDuyet'}"
+                                          th:action="@{/hoc-phan/phe-duyet/{ma}(ma=${hp.maHocPhan})}"
+                                          method="post" class="d-inline m-0"
+                                          data-confirm-action="phê duyệt"
+                                          th:data-item-name="|HP ${hp.maHocPhan} - ${hp.tenHocPhan}|"
+                                          onsubmit="return confirmDeleteFromForm(this, event)">
+                                        <input type="hidden" th:name="${_csrf.parameterName}"
+                                                              th:value="${_csrf.token}">
+                                        <button class="btn btn-sm btn-success"
                                                 data-bs-toggle="tooltip" data-bs-title="Phê duyệt"
                                                 aria-label="Phê duyệt">
                                             <i class="bi bi-check-lg"></i>

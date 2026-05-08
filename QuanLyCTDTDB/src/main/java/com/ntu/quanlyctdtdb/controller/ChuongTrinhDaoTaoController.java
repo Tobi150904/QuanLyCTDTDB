@@ -216,6 +216,24 @@ public class ChuongTrinhDaoTaoController {
         }
         return "redirect:/ctdt";
     }
+    
+    /**
+     * Gui duyet CTDT: BCN/CNHP/PDT bam "Gui duyet" de chuyen CTDT tu trang thai
+     * BanNhap -> ChoDuyet. Sau buoc nay, TTDTXS/ADMIN moi co the phe duyet.
+     * Tach rieng khoi /phe-duyet de respect quyet trinh duyet (CNHP soan
+     * khung CTDT, sau do TTDTXS duyet cuoi).
+     */
+    @PreAuthorize("hasAnyRole('PDT','TTDTXS','CNHP','ADMIN')")
+    @PostMapping("/gui-duyet/{ma}")
+    public String guiduyet(@PathVariable String ma, RedirectAttributes ra) {
+        try {
+            ctdtService.guiChoDuyet(ma);
+            ra.addFlashAttribute("successMsg", "Da gui CTDT cho duyet!");
+        } catch (Exception e) {
+            ra.addFlashAttribute("errorMsg", e.getMessage());
+        }
+        return "redirect:/ctdt";
+    }
 
     /* ====================== QUAN LY HOC PHAN TRONG CTDT ====================== */
     @GetMapping("/chi-tiet/{ma}")
